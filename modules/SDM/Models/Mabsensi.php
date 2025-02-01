@@ -114,7 +114,7 @@ class Mabsensi extends \App\Models\PrModel
                           (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) as gaji_harian,
                           -- Perbaikan SUM() dengan FILTER
                           COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja,
-                          COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 * rk.upah_jam AS gaji_jam,
+                          ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam,
                           rk.upah_lembur,
                           rk.upah_lembur_we,
                           rk.upah_jam,

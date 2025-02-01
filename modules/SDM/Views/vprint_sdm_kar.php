@@ -172,7 +172,7 @@
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Telepon</span> : <?= !empty($detail) ? $detail[0]->no_hp : ''?></p>
         </td>
         <td style="width: 50%; vertical-align: top;">
-          <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Tanggal</span> : <?= !empty($row) ? fdate_eng_to_ind($row->periode_awal) : ''?></p>
+          <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Tanggal</span> : <?= !empty($row) ? ($row->periode_awal) : ''?></p>
           <!-- <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Kode Karyawan</span> : .......................</p> -->
         </td>
       </tr>

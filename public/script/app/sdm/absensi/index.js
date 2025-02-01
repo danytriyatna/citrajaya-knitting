@@ -105,7 +105,7 @@ $(document).ready(function () {
         columns: [
             {
 				title: 'Shift', field: 'nama_shift', headerSort:false, sorter: 'string', frozen: true,
-				width: 180, align:'center', editor:"list", editorParams:{values:{"NORMAL":"NORMAL", "SHIFT PAGI":"SHIFT PAGI"}}
+				width: 180, align:'center', editor:"list", editorParams:{values:{"NORMAL":"NORMAL", "SHIFT PAGI":"SHIFT PAGI", "SHIFT MALAM":"SHIFT MALAM", "ART":"ART"}}
 			} ,
             
 			{

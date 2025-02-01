@@ -407,7 +407,7 @@ class Absensi extends BaseController
                   $jam_lembur = 0;
                   if(!empty($lemburAk)){
                     $status_lembur = 1;
-                    $jam_lembur = $lemburAk / 60 + 1;
+                    $jam_lembur = $lemburAk / 60 - 1;
 
                     $jam_lembur = round($jam_lembur); 
                   }

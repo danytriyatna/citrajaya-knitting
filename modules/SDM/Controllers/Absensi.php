@@ -216,6 +216,7 @@ class Absensi extends BaseController
         $durasi_kerja = 8 * 60;
         $jadwal_masuk = "08:00";
         $jadwal_pulang = "17:00";
+        $id_shift = 1;
         // ged data shift
         $prms['nama_shift'] = $x['nama_shift'];
         $dt_shift = $this->mshift->getData(null, 0, 1, null, null, $prms);
@@ -354,7 +355,7 @@ class Absensi extends BaseController
               if(!empty($nip)){
                 $pr_kr['nip'] = $nip;
                 $get_karyawan = $this->mkaryawan->getData(null, 0, 1, null, null, $pr_kr);
-
+                $id_shift = 1;
                 $durasi_kerja = 8 * 60;
                 $jadwal_masuk = "08:00";
                 $jadwal_pulang = "17:00";

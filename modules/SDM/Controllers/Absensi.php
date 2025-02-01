@@ -225,15 +225,17 @@ class Absensi extends BaseController
           $id_shift = $dt_shift->id;
           $jadwal_masuk = $dt_shift->jam_masuk;
           $jadwal_pulang = $dt_shift->jam_pulang;
-          if(!empty($x['jam_keluar'])){
+          if(!empty($x['jam_masuk'])){
             // $jam_awal  = new DateTime($dt_shift->jam_masuk);
             // $jam_akhir = new DateTime($x['jam_keluar']);
             
             // $interval = $jam_awal->diff($jam_akhir);
             // $durasi_kerja = ($interval->h * 60) + $interval->i; // Konversi ke menit
 
-            $timestamp_masuk = strtotime($dt_shift->jam_masuk);
-            $timestamp_keluar = strtotime($x['jam_keluar']);
+            // $timestamp_masuk = strtotime($dt_shift->jam_masuk);
+            // $timestamp_keluar = strtotime($x['jam_keluar']);
+            $timestamp_masuk = strtotime($x['jam_masuk']);
+            $timestamp_keluar = strtotime($dt_shift->jam_pulang);
 
             // Hitung selisih dalam detik
             $selisih_detik = $timestamp_keluar - $timestamp_masuk;
@@ -366,7 +368,7 @@ class Absensi extends BaseController
                   $id_shift = $dt_shift->id;
                   $jadwal_masuk = $dt_shift->jam_masuk;
                   $jadwal_pulang = $dt_shift->jam_pulang;
-                  if(!empty($jamOut)){
+                  if(!empty($jamIn)){
                     // $jam_awal  = new DateTime($dt_shift->jam_masuk);
                     // $jam_akhir = new DateTime($jamOut);
                     
@@ -374,8 +376,11 @@ class Absensi extends BaseController
                     // $durasi_kerja = ($interval->h * 60) + $interval->i; // Konversi ke menit
 
                     // Konversi waktu ke timestamp
-                    $timestamp_masuk = strtotime($dt_shift->jam_masuk);
-                    $timestamp_keluar = strtotime($jamOut);
+                    // $timestamp_masuk = strtotime($dt_shift->jam_masuk);
+                    // $timestamp_keluar = strtotime($jamOut);
+
+                    $timestamp_masuk = strtotime($jamIn);
+                    $timestamp_keluar = strtotime($dt_shift->jam_pulang);
 
                     // Hitung selisih dalam detik
                     $selisih_detik = $timestamp_masuk - $timestamp_keluar;

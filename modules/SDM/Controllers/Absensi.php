@@ -241,7 +241,10 @@ class Absensi extends BaseController
             $selisih_detik = $timestamp_keluar - $timestamp_masuk;
 
             $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detik
-            if($durasi_kerja < 0){
+
+            if($durasi_kerja > 5){
+              $durasi_kerja = $durasi_kerja - 1;
+            }else if($durasi_kerja < 0){
               $durasi_kerja = 0;
             }
           }
@@ -385,8 +388,11 @@ class Absensi extends BaseController
                     // Hitung selisih dalam detik
                     $selisih_detik = $timestamp_masuk - $timestamp_keluar;
 
-                    $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detik
-                    if($durasi_kerja < 0){
+                    $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detikif
+
+                    if($durasi_kerja > 5){
+                      $durasi_kerja = $durasi_kerja - 1;
+                    } else if($durasi_kerja < 0){
                       $durasi_kerja = 0;
                     }
                   }

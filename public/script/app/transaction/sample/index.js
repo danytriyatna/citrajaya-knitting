@@ -301,7 +301,8 @@ $(document).ready(function () {
     const inpp_trans = $("#warnaTrans");
 
     function cardFormatter(cell, formatterParams, onRendered){
-        var data = cell.getRow().getData(); // Ambil data row
+        let data = cell.getRow().getData(); // Ambil data row
+        // console.log(data)
         let btnAksi = `<button type="button" class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
                         <button type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
                          <button type="button" hidden  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`
@@ -341,6 +342,7 @@ $(document).ready(function () {
                     <div class="row">
                       <div class="col-sm-3 text-start">
                         <h6 class="f-w-700 m-b-6">${data.kode_sample}</h6>
+                        <p class="f-w-500 m-y-0">${data.style}</p>
                         <p class="f-w-500 m-y-0">${data.deskripsi}</p>
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>

@@ -112,6 +112,7 @@ class Sample extends BaseController
           "kode_sample" => $row->kode_sample,
           "tgl_deadline" => $row->tgl_deadline,
           "deskripsi" => $row->deskripsi,
+          "style" => $row->style,
           "status" => $row->status == 0 ? "Draft" : "Approval",
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sample/"  . $row->file_name : "",
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,

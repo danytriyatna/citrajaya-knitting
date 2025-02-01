@@ -18,4 +18,5 @@ $routes->group('sdm/penggajian', ['namespace' => 'Modules\SDM\Controllers'], sta
 	$routes->post('form/(:any)', 'Penggajian::form/$1');
 	$routes->get('delete/(:any)', 'Penggajian::delete/$1');
 	$routes->get('generate', 'Penggajian::printSlip_gaji');
+	$routes->get('generate_kar', 'Penggajian::printSlip_gaji_karyawan');
 });

@@ -92,7 +92,8 @@ class Mpenggajian extends \App\Models\PrModel
 
         $builder->select("sdd.id, sdd.id_sdm_gaji, sdd.id_karyawan, sdd.nip, sdd.posisi, sdd.hadir, sdd.izin, sdd.sakit, sdd.alpha, sdd.gaji_harian, sdd.lembur,
                           sdd.bonus, sdd.potongan, sdd.durasi_kerja as jam_kerja,
-                          sdd.lembur_we, sdd.uang_lembur, sdd.gaji, rk.full_name");
+                          sdd.lembur_we, sdd.uang_lembur, sdd.gaji, 
+                          rk.full_name, rk.nip, rk.posisi, rk.no_hp, rk.alamat");
 
         $builder->join("ref_karyawan rk", "sdd.id_karyawan = rk.id");
 
@@ -112,6 +113,11 @@ class Mpenggajian extends \App\Models\PrModel
 
             if(!empty($params['posisi'])){
                 $builder->where('sdd.posisi', $params['posisi']);
+            }
+
+
+            if(!empty($params['id_sdm_gaji'])){
+                $builder->where('sdd.id_sdm_gaji', $params['id_sdm_gaji']);
             }
 
             if (!empty($order)) {

@@ -108,8 +108,37 @@ $(document).ready(function () {
 
     let inpTglA = $("#filter_tgl_from");
     let inpTglS = $("#filter_tgl_to");
+
+    //Create custom filter
+    let vprint = false;
+
+    let buttonRowAction = function(cell) {
+
+        const data = cell.getData();
+
+        let params = {
+            data_id : inpid.val(),
+            nip : data.nip,
+        };
+
+        // Buat query string
+        let queryString = $.param(params); // Convert objek ke query string
+        let fullUrl = `sdm/penggajian/generate_kar?${queryString}`;
+
+        let fmBtnEdit = ` <a target="_blank" href="${fullUrl}" class="btn btn-sm btn-warning text-dark" title='print'><i class="fa fa-print" title='print'></i></a>`;
+
+        return fmBtnEdit;
+    };
+
     let dtList = new Tabulator("#dt-penggajian", {
         columns: [
+            {
+                headerSort: false,  
+                title: 'Aksi', 
+                formatter: buttonRowAction,
+                width: '5%', align: "center", cssClass: "text-center",
+                visible: inpid.val().length > 0 ? true : false, frozen:true
+            },
             
 			{
 				title: 'NIK', field: 'nip', headerSort:false, sorter: 'string',

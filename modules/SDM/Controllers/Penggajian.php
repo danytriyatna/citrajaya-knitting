@@ -294,7 +294,7 @@ class Penggajian extends BaseController
               $dtIn["izin"] = $r["izin"]; 
               $dtIn["sakit"] = $r["sakit"]; 
               $dtIn["alpha"] = $r["alpha"]; 
-              $dtIn["gaji_harian"] = $r["gaji_harian"]; 
+              $dtIn["gaji_harian"] = $r["gaji_jam"]; 
               $dtIn["lembur"] = $r["lembur"]; 
               $dtIn["lembur_we"] = $r["lembur_we"]; 
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
@@ -441,6 +441,24 @@ class Penggajian extends BaseController
     $params_det['id_sdm_gaji'] = $id;
     $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
     return view($this->views.'\vprint_sdm', $this->data);
+  }
+
+
+  function printSlip_gaji_karyawan(){
+    $id = $this->request->getGet('data_id');
+    $nip = $this->request->getGet('nip');
+
+    $id = decrypt($id);
+
+    $stdData = $this->mgaji->getData($id);  
+    $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
+    $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
+    $this->data['row'] = $stdData;
+
+    $params_det['id_sdm_gaji'] = $id;
+    $params_det['nip'] = $nip;
+    $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+    return view($this->views.'\vprint_sdm_kar', $this->data);
   }
 
   public function deactivate($id = NULL)

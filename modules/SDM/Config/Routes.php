@@ -20,3 +20,9 @@ $routes->group('sdm/penggajian', ['namespace' => 'Modules\SDM\Controllers'], sta
 	$routes->get('generate', 'Penggajian::printSlip_gaji');
 	$routes->get('generate_kar', 'Penggajian::printSlip_gaji_karyawan');
 });
+
+$routes->group('sdm/borongan', ['namespace' => 'Modules\SDM\Controllers'], static function ($routes) {
+	$routes->get('/', 'Borongan::index');
+	$routes->post('list', 'Borongan::lists');
+	$routes->get('generate_kar', 'Borongan::print_borongan');
+});

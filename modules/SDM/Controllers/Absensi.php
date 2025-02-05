@@ -347,14 +347,14 @@ class Absensi extends BaseController
               $jamInJd = $xr[8];
               $jamIn = $xr[9];
 
-              $terlambat = $xr[11];
+              $terlambat = $xr[10];
 
-              $jamInOutJd = $xr[13];
-              $jamOut = $xr[14];
+              $jamInOutJd = $xr[12];
+              $jamOut = $xr[13];
 
-              $lemburA = !empty($xr[15]) ? $xr[15] / 60 : 0;
-              $lemburD = $xr[16];
-              $lemburAk = $xr[17];
+              $lemburA = !empty($xr[14]) ? $xr[14] / 60 : 0;
+              $lemburD = $xr[15];
+              $lemburAk = $xr[16];
 
               // lakukan penginputan atau save data sesuai dengan nik
               if(!empty($nip)){

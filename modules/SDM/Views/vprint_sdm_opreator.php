@@ -150,7 +150,7 @@
             </p>
           </td>
           <td class="text-right" style="width: 50%;">
-            <h3><b><u>Slip Gaji Karyawan</u></b></h3>
+            <h3><b><u>Slip Gaji Operator</u></b></h3>
           </td>
         </tr>
       </tbody>
@@ -182,10 +182,10 @@
   <table class="w-100">
     <thead>
       <tr>
-        <th class="text-left" style="width: 75%;"><Style></Style></th>
-        <th class="text-left" style="width: 25%;">Harga</th>
-        <th class="text-left" style="width: 25%;">Qty</th>
-        <th class="text-left" style="width: 25%;">Harga Total</th>
+        <th class="text-left" style="width: 40%;"><Style></Style></th>
+        <th class="text-right" style="width: 20%;">Harga</th>
+        <th class="text-right" style="width: 20%;">Qty</th>
+        <th class="text-right" style="width: 20%;">Harga Total</th>
       </tr>
     </thead>
     <tbody>
@@ -200,9 +200,9 @@
         ?> 
         <tr>
           <td><?= $r->keterangan_style ?></td>
-          <td>Rp <?= format_angka($r->harga, 2) ?></td>
-          <td>Rp <?= ($r->qty) ?></td>
-          <td>Rp <?= format_angka($r->harga_total, 2) ?></td>
+          <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>
+          <td class="text-right"><?= ($r->qty) ?></td>
+          <td class="text-right">Rp <?= format_angka($r->harga_total, 2) ?></td>
         </tr>
       <?php } ?>
     </tbody>

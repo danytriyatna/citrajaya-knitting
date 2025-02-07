@@ -162,7 +162,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "id_gudang" => $data['id_gudang'],
                     ];
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang);
+                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     $dataLots = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,

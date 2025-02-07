@@ -439,8 +439,16 @@ class Penggajian extends BaseController
     $this->data['row'] = $stdData;
 
     $params_det['id_sdm_gaji'] = $id;
-    $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
-    return view($this->views.'\vprint_sdm', $this->data);
+    $list = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+
+    for ($i=0; $i < !empty($list) ; $i++) { 
+      $list[$i]->gaji_jam = $list[$i]->gaji_harian;
+      $list[$i]->total = $list[$i]->gaji;
+      $i++;
+    }
+    
+    $this->data['detail'] = $list;
+    return view($this->views.'\vprint_sdm_all', $this->data);
   }
 
 
@@ -457,6 +465,23 @@ class Penggajian extends BaseController
 
     $params_det['id_sdm_gaji'] = $id;
     $params_det['nip'] = $nip;
+    $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+    return view($this->views.'\vprint_sdm_kar', $this->data);
+  }
+
+
+  
+  function printSlip_gaji_all(){
+    $id = $this->request->getGet('data_id');
+
+    $id = decrypt($id);
+
+    $stdData = $this->mgaji->getData($id);  
+    $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
+    $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
+    $this->data['row'] = $stdData;
+
+    $params_det['id_sdm_gaji'] = $id;
     $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
     return view($this->views.'\vprint_sdm_kar', $this->data);
   }

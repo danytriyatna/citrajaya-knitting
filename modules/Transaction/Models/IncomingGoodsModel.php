@@ -166,6 +166,9 @@ class IncomingGoodsModel extends \App\Models\PrModel
         if (!empty($idLotNo)) {
             $builder->where('id', $idLotNo);
         }
+        if (!empty($idGudang)) {
+            $builder->where('id_gudang', $idGudang);
+        }
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }

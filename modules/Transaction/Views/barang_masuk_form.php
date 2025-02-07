@@ -43,7 +43,7 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="">
+            <input type="text" id="price" pattern="\d{10,13}" name="price" class="form-control" placeholder="Ketikkan Price" value="">
           </div>
         </div>
 

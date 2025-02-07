@@ -292,6 +292,30 @@ inpQty.keyup(function (e) {
     // }
 })
 
+inpUnitPrice.on("input", function(e){
+    e.target.value = formatRupiah( e.target.value)
+})
+
+function formatRupiah(value){
+    value = value.replace(/[^,\d]/g, '').toString();
+     // Pisahkan angka menjadi ribuan
+    let split = value.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/g);
+ 
+     // Tambahkan titik jika ada ribuan
+     if (ribuan) {
+         let separator = sisa ? '.' : '';
+         rupiah += separator + ribuan.join('.');
+     }
+ 
+     // Gabungkan dengan bagian desimal, jika ada
+     rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+ 
+    return rupiah ? 'Rp ' + rupiah : '';
+}
+
 function openModalDetail(row = null){
     if(row){
         let data = row.getData()
@@ -305,7 +329,7 @@ function openModalDetail(row = null){
         } else{
             $('input[type=checkbox]').prop('checked',false);
         }
-        inpUnitPrice.val(data.price)
+        inpUnitPrice.val(formatRupiah(data.price.toString()))
         inpDisc.val(data.disc)
     } else{
         inpBarang.val("")
@@ -319,6 +343,8 @@ function openModalDetail(row = null){
     modalDet.modal("show")
 
     btnSimpanDetail.off("click").on("click",function(){
+        
+        let price = parseFloat(inpUnitPrice.val().replace(/[^\d]/g, ''));
         let grandPrice = 0;
         let discPrice = 0;
         let taxAfterPrice = 0;
@@ -349,7 +375,7 @@ function openModalDetail(row = null){
             });
         }
     
-        if(inpUnitPrice.val().length == 0 || inpUnitPrice.val() <= 0){
+        if(price.length == 0){
             return Swal.fire({
                 text: "Unit Price tidak boleh kosong",
                 icon: 'error',
@@ -366,7 +392,7 @@ function openModalDetail(row = null){
                 timer: 2000
             });
         }
-        if(!regex.test(inpUnitPrice.val())){
+        if(!regex.test(price)){
             return Swal.fire({
                 text: "Unit Price harus berupa angka",
                 icon: 'error',
@@ -384,7 +410,7 @@ function openModalDetail(row = null){
         }
     
         if(inpCheckTax.is(':checked') && inpDisc.val().length > 0){
-            grandPrice = parseFloat(inpQty.val()) * parseFloat(inpUnitPrice.val())
+            grandPrice = parseFloat(inpQty.val()) * parseFloat(price)
             discPrice = grandPrice * (inpDisc.val()/100) 
             priceAfterDisc = grandPrice - discPrice;
             taxAfterPrice = priceAfterDisc * (inpTax.val()/100)
@@ -392,19 +418,19 @@ function openModalDetail(row = null){
             tax = inpTax.val()
             disc = inpDisc.val()
         } else if(inpCheckTax.is(':checked')){
-            grandPrice = parseFloat(inpQty.val()) * parseFloat(inpUnitPrice.val())
+            grandPrice = parseFloat(inpQty.val()) * parseFloat(price)
             taxAfterPrice = grandPrice * (inpTax.val()/100)
             grandPrice = grandPrice + taxAfterPrice
             tax = inpTax.val()
             disc =""
         } else if(inpDisc.val().length > 0){
-            grandPrice = parseFloat(inpQty.val()) * parseFloat(inpUnitPrice.val())
+            grandPrice = parseFloat(inpQty.val()) * parseFloat(price)
             discPrice = grandPrice * (inpDisc.val()/100) 
             grandPrice = grandPrice - discPrice
             tax = ""
             disc = inpDisc.val()
         } else{
-            grandPrice = parseFloat(inpQty.val()) * parseFloat(inpUnitPrice.val())
+            grandPrice = parseFloat(inpQty.val()) * parseFloat(price)
             tax = ""
             disc = ""
         }
@@ -416,7 +442,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQty.val(),
-                price                       : inpUnitPrice.val(),
+                price                       : price,
                 grand_price                 : grandPrice,
                 disc_price:discPrice,
                 tax_price:taxAfterPrice,
@@ -433,7 +459,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQty.val(),
-                price                       : inpUnitPrice.val(),
+                price                       : price,
                 grand_price                 : grandPrice,
                 disc_price                  : discPrice,
                 tax_price                   : taxAfterPrice,

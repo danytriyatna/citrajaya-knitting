@@ -4,9 +4,21 @@ $(document).ready(function () {
     let inpData         = $('#data_id');
     let inpNamaGudang = $('#nama_gudang');
     let inpKeterangan       = $('#keterangan');
-
+    let selectTipe = $('#tipe');
+    let selectCMT = $('#id_cmt');
     let isModal       = $("#modal-form-add-po");
+    let divCMT = $('#div-cmt');
+    selectTipe.on("change",function(e){
+        var nilai = e.target.value;
 
+        selectCMT.val("").trigger("change")
+        if(nilai == 1){
+            divCMT.addClass("d-none")
+        } else{
+            divCMT.removeClass("d-none")
+        } 
+        
+    })
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
         let fmBtnEdit = "";        
@@ -33,13 +45,30 @@ $(document).ready(function () {
                         inpData.val(data_row.id)
                         inpNamaGudang.val(data_row.nama_gudang)
                         inpKeterangan.val(data_row.keterangan)
-
+                        console.log(data_row)
+                        selectTipe.val(data_row.id_tipe).trigger("change")
+                        if(data_row.id_tipe == 1){
+                            divCMT.addClass("d-none")
+                            selectCMT.val("").trigger("change")
+                        } else{
+                            divCMT.removeClass("d-none")
+                            selectCMT.val(data_row.id_cmt).trigger("change")
+                        } 
+                       
                         isModal.modal("show");
                     }   
                 }
             },
             {
                 title: "Nama Gudang", field: "nama_gudang", headerSort: false,
+                width: "20%"
+            },
+            {
+                title: "Tipe", field: "tipe", headerSort: false,
+                width: "20%"
+            },
+            {
+                title: "CMT", field: "cmt", headerSort: false,
                 width: "20%"
             },
            
@@ -114,7 +143,7 @@ $(document).ready(function () {
         inpData.val("")
         inpNamaGudang.val("")
         inpKeterangan.val("")
-
+        selectCMT.val("").trigger("change")
         isModal.modal("show");
     });
 
@@ -137,6 +166,8 @@ $(document).ready(function () {
                     dataId : inpData.val(),
                     nama_gudang   : inpNamaGudang.val(),
                     keterangan : inpKeterangan.val(),
+                    tipe : selectTipe.val(),
+                    cmt : selectCMT.val(),
                 },
                 dataType: "json",
                 beforeSend: function () {

@@ -222,8 +222,8 @@
       </tr>
       <tr>
         <td class="text-center">
-          <p><b>Mengetahui</b></p><br>
-          <p>( HRD )</p>
+          <!-- <p><b>Mengetahui</b></p><br>
+          <p>( HRD )</p> -->
         </td>
         <td class="text-left">
           <p>
@@ -232,6 +232,27 @@
             ke rek. karyawan<br>
             BNI (no. rek) (nama pemilik rek)
           </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br>
+
+  <table class="w-100">
+    <tbody>
+      <tr>
+        <td class="text-center" style="width: 60%;">&nbsp;</td>
+        <td class="text-center" style="width: 40%;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td class="text-center">
+          <p><b>Karyawan</b></p><br>
+          <p>( <?= !empty($detail) ? $row->nama_operator : '.......................'?> )</p>
+        </td>
+        <td class="text-center">
+          <p><b>Owner</b></p><br>
+          <p>( ....................... )</p>
         </td>
       </tr>
     </tbody>

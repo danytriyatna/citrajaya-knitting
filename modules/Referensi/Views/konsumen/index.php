@@ -74,6 +74,39 @@
     </div>
   </div>
 </div>
+
+
+
+
+<div id="modal-form-add-harga" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Form Master Harga Proses</h5>
+        <input type="hidden" id="style_id">
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+<!--         
+        <div class="alert alert-secondary p-y-8 text-muted">
+          <i>*) Wajib diisi</i>
+        </div> -->
+
+        <div>
+          <div class="row">
+            <div class="col-sm-12">
+              <div id="dt-detail-harga" class="table-responsive table-striped"></div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-harga" type="button" class="m-s-5 btn btn-success"> <i class="fa fa-save"></i> Simpan Harga Proses</button>
+      </div>
+    </div>
+  </div>
+</div>
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>

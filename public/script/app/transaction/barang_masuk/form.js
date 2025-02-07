@@ -365,6 +365,30 @@ inpLotNo.keyup(function (e){
 })
 
 
+inpPrice.on("input", function(e){
+    e.target.value = formatRupiah( e.target.value)
+})
+
+function formatRupiah(value){
+    value = value.replace(/[^,\d]/g, '').toString();
+     // Pisahkan angka menjadi ribuan
+    let split = value.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/g);
+ 
+     // Tambahkan titik jika ada ribuan
+     if (ribuan) {
+         let separator = sisa ? '.' : '';
+         rupiah += separator + ribuan.join('.');
+     }
+ 
+     // Gabungkan dengan bagian desimal, jika ada
+     rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+ 
+    return rupiah ? 'Rp ' + rupiah : '';
+}
+
 inpPrice.keyup(function (e) {
 
     if(inpBarang.val().length === 0){
@@ -377,15 +401,15 @@ inpPrice.keyup(function (e) {
         });
     }
 
-    if(!regex.test(e.target.value)){
-        e.target.value = ""
-        return Swal.fire({
-            text: "Price harus berupa angka",
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
+    // if(!regex.test(e.target.value)){
+    //     e.target.value = ""
+    //     return Swal.fire({
+    //         text: "Price harus berupa angka",
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
 
 })
 
@@ -547,7 +571,7 @@ function openModalDetail(row = null){
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
-        inpPrice.val(data.price)
+        inpPrice.val(formatRupiah(data.price.toString()))
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
     } else{
@@ -562,7 +586,7 @@ function openModalDetail(row = null){
     modalDet.modal("show")
 
     btnSimpanDetail.off("click").on("click",function(){
-
+        let price = parseFloat(inpPrice.val().replace(/[^\d]/g, ''));
         if(inpBarang.val().length == 0){
             return Swal.fire({
                 text: "Barang harus dipilih",
@@ -591,7 +615,7 @@ function openModalDetail(row = null){
             });
         }
 
-        if(!regex.test(inpPrice.val())){
+        if(!regex.test(price)){
             return Swal.fire({
                 text: "Price harus berupa angka",
                 icon: 'error',
@@ -616,7 +640,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQtyItem.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 lot_no                   : inpLotNo.val(),
                 nama_unit                 : inpUnit.val(),
             });
@@ -627,7 +651,7 @@ function openModalDetail(row = null){
                 nama_barang                 : inpBarang.val(),
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 qty                         : inpQtyItem.val(),
                 lot_no                   : inpLotNo.val(),
                 nama_unit                   : inpUnit.val(),

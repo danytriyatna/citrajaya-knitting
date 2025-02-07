@@ -365,7 +365,7 @@ class WalkorderModel extends \App\Models\PrModel
         $builder->select("
                             twpu.id, twpu.id_walkorder_proses, twpu.id_ukuran, twpu.qty, twpu.qty_prod, twpu.ref_detail_id,
                             rk.kode_ukuran, rk.keterangan, rk.key_ukuran,
-                            twp.id_walkorder, tw.tipe_id,
+                            twp.id_walkorder, tw.tipe_id, tw.id_konsumen, tw.keterangan_style,
                             rw.kode_warna, rw.id as id_warna,
                             (
                                 case when tw.tipe_id = 1 then 

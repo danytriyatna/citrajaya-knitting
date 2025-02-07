@@ -5,18 +5,19 @@ namespace Modules\Referensi\Controllers;
 use App\Controllers\BaseController;
 use App\Models\FileModel;
 use Modules\Referensi\Models\GudangModel;
+use Modules\Referensi\Models\OperatorModel;
 
 class RefGudang extends BaseController
 {
     protected $mGudang;
-
+    protected $mOperator;
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/gudang';
 
     function __construct()
     {
         $this->MOD_ALIAS = "MOD_REFERENSI_GUDANG";
-
+        $this->mOperator = new OperatorModel();
         $this->mGudang = new GudangModel();
         $this->files  = new FileModel();
     }
@@ -26,8 +27,15 @@ class RefGudang extends BaseController
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
         }
-
+        $sortCMT = [
+            [
+                'field' => 'nama_operator',
+                'dir' => 'ASC'
+            ]
+        ];
+        $dataCMT = $this->mOperator->getData(null, 0, 99999, $sortCMT);
         $this->data['titlehead'] = "Master Data Gudang";
+        $this->data['cmt'] = $dataCMT;
 
         return view($this->views . '\gudang\index', $this->data);
     }
@@ -83,6 +91,10 @@ class RefGudang extends BaseController
                     "aksi" => $btnAction ? $btnAction : '',
                     "id"   => ($id),
                     "nama_gudang" => $row->nama_gudang,
+                    "tipe" => $row->tipe == 1 ? "NON CMT" : "CMT",
+                    "id_tipe" => $row->tipe,
+                    "cmt" => $row->nama_operator,
+                    "id_cmt" => $row->id_cmt,
                     "keterangan" => $row->keterangan,
                 )
             );
@@ -95,6 +107,8 @@ class RefGudang extends BaseController
         $id         = $this->request->getPost('dataId');
         $nama_gudang = $this->request->getPost('nama_gudang');
         $keterangan = $this->request->getPost('keterangan');
+        $tipe = $this->request->getPost('tipe');
+        $cmt = $this->request->getPost('cmt');
 
 
 
@@ -104,6 +118,8 @@ class RefGudang extends BaseController
         $arr_isi = [
             'nama_gudang' => $nama_gudang,
             'keterangan' => $keterangan,
+            'tipe' => $tipe,
+            'id_cmt' => !empty($cmt) ? $cmt : null,
         ];
 
 

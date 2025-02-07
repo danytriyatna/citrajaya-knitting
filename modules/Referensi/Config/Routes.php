@@ -29,9 +29,11 @@ $routes->group("master-data/konsumen", ['namespace' => 'Modules\Referensi\Contro
 
     $routes->post('list', 'RefKonsumen::lists');
     $routes->post('simpan', 'RefKonsumen::save');
+    $routes->post('simpanHarga', 'RefKonsumen::saveHarga');
     $routes->get('delete/(:any)', 'RefKonsumen::deactivate/$1');
 
     $routes->post('get_data_style', 'RefKonsumen::getStyle_data');
+    $routes->post('get_data_proses', 'RefKonsumen::getStyleHarga_data');
 });
 
 $routes->group("master-data/karyawan", ['namespace' => 'Modules\Referensi\Controllers'], static function ($routes) {

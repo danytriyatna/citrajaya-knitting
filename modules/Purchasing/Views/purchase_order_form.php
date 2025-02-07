@@ -37,7 +37,7 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="unit_price">Unit Price</label>
           <div class="col-md-9">
-            <input type="text" id="unit_price" name="unit_price" class="form-control" placeholder="Ketikkan unit price" value="">
+            <input type="text" id="unit_price" name="unit_price" pattern="\d{10,13}" class="form-control" placeholder="Ketikkan unit price" value="">
             <small class="form-text">Hanya menerima input berupa angka, penulisan koma bisa menggunakan titik ( . ), contoh: 100000.50, 8500.99</small>
           </div>
         </div>

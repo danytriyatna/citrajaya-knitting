@@ -216,7 +216,16 @@ $(document).ready(function () {
     }
 
 
+    let buttonRowActionStyle = function(cell) {
+        let fmBtnEdit = "";        
+        fmBtnEdit = "<button class='btn btn-warning btn-xs open_form' type='button' title='proses'><i class='fa fa-clone' title='proses'></i></button>";
+        return fmBtnEdit;
+    };
+
+
     // set tanle style konsumen yang didapat dari order dan sample 
+    let inpStyle = $("#style_id")
+    let isModalHrg = $("#modal-form-add-harga");
     let dtListStyle = new Tabulator("#dt-detail-style", {
         columns: [
             {
@@ -225,6 +234,25 @@ $(document).ready(function () {
             },
             {
                 title: "Style", field: "keterangan_style",  sorter: "string", headerSort:false, align: "center", 
+            },
+            {
+                headerSort: false,  
+                title: 'Proses', 
+                formatter: buttonRowActionStyle,
+                width: 100, align: "center", cssClass: "text-center",
+                cellClick: function(e, cell) {
+                    let row = cell.getRow();
+                    let data_row = row.getData();
+                    if(e.target.title === 'proses'){
+                        inpStyle.val(data_row.id)
+                        
+                        setTimeout(() => {
+                            getKonsumenStyleHarga()
+                            dtListStyleProses.redraw(true)
+                        }, 400);
+                        isModalHrg.modal("show");
+                    }   
+                }
             },
         ],
         layout: 'fitColumns',
@@ -261,12 +289,12 @@ $(document).ready(function () {
             success: function (response) {
                 Swal.close();
                 if(response.status == true){
-                    Swal.fire({
-                        text: response.message,
-                        icon: 'success',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
+                    // Swal.fire({
+                    //     text: response.message,
+                    //     icon: 'success',
+                    //     showConfirmButton: false,
+                    //     timer: 2000
+                    // });
                     dtListStyle.setData(response.data)
                 }else{
                     // Swal.fire({
@@ -292,4 +320,126 @@ $(document).ready(function () {
         });
     }
     
+
+    // style get list harga 
+    let dtListStyleProses = new Tabulator("#dt-detail-harga", {
+        columns: [
+            {
+                title: "No.", formatter: "rownum",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
+                width:"40"
+            },
+            {
+                title: "Proses", field: "nama_proses",  sorter: "string", headerSort:false, align: "center", 
+            },
+            {
+				title: 'Harga', field: 'harga_borongan', headerSort:false, sorter: 'string', align: "center", editor:"number", 
+                width: 220, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'
+			} ,
+        ],
+        layout: 'fitColumns',
+        locale: 'id',
+        placeholder: "Tidak ada data",
+        pagination: false,
+        paginationSize: 99,
+        paginationButtonCount: 2,
+        paginationDataSent: {
+            sorters: "order",
+        },
+        selectable: false
+	});
+
+    function getKonsumenStyleHarga(){
+        dtListStyleProses.clearData();
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/konsumen/get_data_proses',
+            data: {
+                konsumen : inpData.val(),
+                style : inpStyle.val(),
+            },
+            dataType: "json",
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function (response) {
+                Swal.close();
+                if(response.status == true){
+                    dtListStyleProses.setData(response.data)
+                }else{
+                    console.log(response.message)
+                }
+            },
+            error: function (e) {
+                let msg = e.responseJSON.message;
+                Swal.close();
+                console.log(msg);
+            },
+        });
+    }
+
+
+    $("#btn-save-harga").on("click", function(e){
+        e.preventDefault()
+
+        let listData = JSON.stringify(dtListStyleProses.getData());
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/konsumen/simpanHarga',
+            data: {
+                konsumen : inpData.val(),
+                style : inpStyle.val(),
+                list_proses : listData,
+            },
+            dataType: "json",
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function (response) {
+    
+                if(response.status == true){
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    // dtList.setData()
+                    Swal.close();
+                    isModalHrg.modal("hide");
+                }else{
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            },
+            error: function (e) {
+                let msg = e.responseJSON.message;
+                Swal.close();
+    
+                Swal.fire({
+                    text: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            },
+        });
+    });
 });

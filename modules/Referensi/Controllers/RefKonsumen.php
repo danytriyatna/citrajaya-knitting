@@ -5,10 +5,12 @@ namespace Modules\Referensi\Controllers;
 use App\Controllers\BaseController;
 use App\Models\FileModel;
 use Modules\Referensi\Models\KonsumenModel;
+use Modules\Referensi\Models\ProsesProduksiModel;
 
 class RefKonsumen extends BaseController
 {
     protected $mkonsumen;
+    protected $mproses;
 
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/konsumen';
@@ -18,6 +20,7 @@ class RefKonsumen extends BaseController
         $this->MOD_ALIAS = "MOD_REFERENSI_KONSUMEN";
      
         $this->mkonsumen = new KonsumenModel();
+        $this->mproses = new ProsesProduksiModel();
         $this->files  = new FileModel();
     }
 
@@ -108,6 +111,47 @@ class RefKonsumen extends BaseController
             //throw $th;
             $msg    = "Gagal mengambil data Style Konsumen !";
         }
+
+        $build_array['status']  = $status;
+        $build_array['message'] = $msg;
+        $build_array['data']    = $data;
+        return $this->response->setJSON($build_array);
+    }
+
+    public function getStyleHarga_data(){
+        $id_konsumen = $this->request->getPost('konsumen');
+        $id_konsumen_style = $this->request->getPost('style');
+        $id_progres = $this->request->getPost('progres');
+
+        $status = false;
+        $msg    = "Konsumen belum memiliki style";
+        $data   = [];
+        // try {
+            $id_konsumen = \decrypt($id_konsumen);
+            $params['id_konsumen'] = $id_konsumen;
+            $params['id_konsumen_style'] = $id_konsumen_style;
+            // $params['id_progres'] = $id_progres;
+            $style_data = $this->mkonsumen->getDataHarga(null, 0, 999, null, null, $params);
+            if(!empty($style_data)){
+                $data   = $style_data;
+                $status = true;
+                $msg    = "Berhasil mengambil data Styke Konsumen !";
+            }else{
+                $style_data = $this->mproses->getData(null, 0, 9999);
+                for ($i=0; $i < count($style_data) ; $i++) { 
+                    $style_data[$i]->nama_proses = $style_data[$i]->nama;  
+                    $style_data[$i]->id_proses = $style_data[$i]->id;  
+                    $style_data[$i]->harga_borongan = 0;
+                }
+                $data   = $style_data;
+                $status = true;
+                $msg    = "Berhasil mengambil data Styke Konsumen !";
+            }
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        //     print_r($th);exit;
+        //     $msg    = "Gagal mengambil data Style Konsumen !";
+        // }
 
         $build_array['status']  = $status;
         $build_array['message'] = $msg;
@@ -446,6 +490,54 @@ class RefKonsumen extends BaseController
             $id = decrypt($id);
             $this->mkonsumen->updateRecord($this->mkonsumen->table, $arr_isi, 'id', $id);
             $msg    = "Data berhasil diupdate !";
+            $status = true;
+        }
+
+        $build_array['message'] = $msg;
+        $build_array['status']  = $status;
+
+        return $this->response->setJSON($build_array);
+    }
+
+    function saveHarga(){
+        $konsumen           = $this->request->getPost('konsumen');
+        $style = $this->request->getPost('style');
+        $dataProses = $this->request->getPost('list_proses');
+
+        $msg    = "Data gagal ditambahkan !";
+        $status = false;
+
+        if(!empty($dataProses)){
+            $data = json_decode($dataProses, true);
+            $konsumen = \decrypt($konsumen);
+            foreach ($data as $xr) {
+                $arr_isi = [
+                    'id_konsumen'   => $konsumen, 
+                    'id_konsumen_style' => $style,
+                    'id_proses'  => $xr['id_proses'],
+                    'harga_borongan'  => $xr['harga_borongan'],
+                ];
+        
+                // $style_data = json_decode($dataStyle, true);
+
+                $prm['id_proses'] = $xr['id_proses'];
+                $prm['id_konsumen_style'] = $style;
+
+                $row = $this->mkonsumen->getDataHarga(null, 0, 9999, null, null, $prm);
+
+                if(empty($row)){
+                    $id = $this->mkonsumen->insertRecordGetid('ref_konsumen_style_harga', $arr_isi);
+                    $msg    = "Data berhasil ditambahkan !";
+                    $status = true;
+                }else{
+                    $id = $row->id;
+                    $this->mkonsumen->updateRecord('ref_konsumen_style_harga', $arr_isi, 'id', $id);
+                    $msg    = "Data berhasil diupdate !";
+                    $status = true;
+                }
+            }
+
+            $msg    = "Data berhasil ditambahkan !";
             $status = true;
         }
 

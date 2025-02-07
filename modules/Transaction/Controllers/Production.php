@@ -11,6 +11,7 @@ use Modules\Transaction\Models\SampleModel;
 use Modules\Referensi\Models\ProsesProduksiModel;
 use Modules\Referensi\Models\OperatorModel;
 use Modules\Transaction\Models\DeliveryModel;
+use Modules\Referensi\Models\KonsumenModel;
 
 class Production extends BaseController
 {
@@ -23,6 +24,7 @@ class Production extends BaseController
   protected $mPproduksi;
   protected $mOperator;
   protected $mdelivery;
+  protected $mkonsumen;
 
   function __construct()
   {
@@ -34,7 +36,7 @@ class Production extends BaseController
     $this->mPproduksi = new ProsesProduksiModel();
     $this->mOperator = new OperatorModel();
     $this->mdelivery = new DeliveryModel();
-
+    $this->mkonsumen = new KonsumenModel();
     
   }
 
@@ -168,7 +170,15 @@ class Production extends BaseController
     foreach ($results as $row) {
       $id = encrypt($row->id);
 
-
+      // get harga tarif proses 
+      $prm['id_konsumen'] = $row->id_konsumen;
+      $prm['style'] = $row->keterangan_style;
+      $prm['id_proses'] = $id_proses;
+      $get_harga = $this->mkonsumen->getDataHarga(null, 0, 9999, null, null, $prm);
+      $harga_proses = 0;
+      if(!empty($get_harga)){
+        $harga_proses = $get_harga[0]->harga_borongan;
+      }
       array_push(
         $build_array["data"],
         array(
@@ -180,6 +190,7 @@ class Production extends BaseController
           "id_warna"            => $row->id_warna,
           "qty"                 => $row->qty,
           "harga_satuan"        => $row->harga_satuan,
+          "harga_proses"        => $row->harga_proses,
         )
       );
     }
@@ -357,6 +368,16 @@ class Production extends BaseController
       $qty_prod = !empty($row->qty_prod) ? $row->qty_prod : 0;
       $qty = $row->qty - $qty_prod;
 
+      // get harga tarif proses 
+      $prm['id_konsumen'] = $row->id_konsumen;
+      $prm['style'] = $row->keterangan_style;
+      $prm['id_proses'] = $id_proses;
+      $get_harga = $this->mkonsumen->getDataHarga(null, 0, 9999, null, null, $prm);
+      $harga_proses = 0;
+      if(!empty($get_harga)){
+        $harga_proses = $get_harga[0]->harga_borongan;
+      }
+
       array_push(
         $data,
         array(
@@ -369,6 +390,7 @@ class Production extends BaseController
           "ref_detail_id"       => $row->ref_detail_id,
           "qty"                 => $qty,
           "harga_satuan"        => $row->harga,
+          'harga_proses'        => $harga_proses
         )
       );
     }
@@ -404,6 +426,17 @@ class Production extends BaseController
           $result = $this->mWalkorder->getListProduksiUkuran($params);
           if(!empty($result)){
               foreach ($result as $r) {
+
+                  // get harga tarif proses 
+                  $prm['id_konsumen'] = $r->id_konsumen;
+                  $prm['style'] = $r->keterangan_style;
+                  $prm['id_proses'] = $proses;
+                  $get_harga = $this->mkonsumen->getDataHarga(null, 0, 9999, null, null, $prm);
+                  $harga_proses = 0;
+                  if(!empty($get_harga)){
+                    $harga_proses = $get_harga[0]->harga_borongan;
+                  }
+
                   $isi = [];
                   $isi["id_walkorder"]  = $r->id_walkorder;
                   $isi["id_walkorder_proses"]  = $r->id;
@@ -416,6 +449,7 @@ class Production extends BaseController
                   $isi["kode_warna"]    = $r->kode_warna;
                   $isi["kode_ukuran"]   = $r->kode_ukuran;
                   $isi["key_ukuran"]    = $r->key_ukuran;
+                  $isi["harga_proses"]    = $r->harga_proses;
                   $data[] = $isi;
 
                   $isi_slc = [];
@@ -471,6 +505,17 @@ class Production extends BaseController
       $result = $this->mWalkorder->getListProduksiUkuran($params);
 
       foreach ($result as $r) {
+
+        // get harga tarif proses 
+        $prm['id_konsumen'] = $r->id_konsumen;
+        $prm['style'] = $r->keterangan_style;
+        $prm['id_proses'] = $proses;
+        $get_harga = $this->mkonsumen->getDataHarga(null, 0, 9999, null, null, $prm);
+        $harga_proses = 0;
+        if(!empty($get_harga)){
+          $harga_proses = $get_harga[0]->harga_borongan;
+        }
+
         $isi = [];
         $isi["id_walkorder"]  = $r->id_walkorder;
         $isi["id_walkorder_proses"]  = $r->id;
@@ -483,6 +528,7 @@ class Production extends BaseController
         $isi["kode_warna"]    = $r->kode_warna;
         $isi["kode_ukuran"]   = $r->kode_ukuran;
         $isi["key_ukuran"]    = $r->key_ukuran;
+        $isi["harga_proses"]    = $r->harga_proses;
         $data[] = $isi;
       }
 

@@ -6,6 +6,7 @@ class GudangModel extends \App\Models\PrModel
 {
 
     protected $table = "ref_gudang";
+    protected $tableCMT = "ref_operator";
     protected $_data = null;
     protected $primaryKey = 'id';
 
@@ -17,8 +18,8 @@ class GudangModel extends \App\Models\PrModel
     function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $builder = $this->db->table($this->table . " uk");
-
-        $builder->select("uk.id, uk.nama_gudang, uk.keterangan");
+        $builder->join($this->tableCMT . " abx", "uk.id_cmt = abx.id", "left");
+        $builder->select("uk.id, uk.nama_gudang, uk.keterangan, uk.tipe, abx.nama_operator, abx.id as id_cmt");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -26,13 +27,14 @@ class GudangModel extends \App\Models\PrModel
                 $builder->groupStart();
                 $builder->where('LOWER(uk.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(uk.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(abx.nama_operator) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
-                $builder->orderBy('id');
+                $builder->orderBy('uk.id');
             }
 
             if (empty($offset)) $offset = 0;

@@ -222,7 +222,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "id_gudang" => $rowData['id_gudang'],
                     ];
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang);
+                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $rowData['id_gudang']);
                     $dataLots = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,

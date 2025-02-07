@@ -79,7 +79,7 @@ class SampleModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_sample_ukuran abx");
 
-        $builder->select("abx.id,xb.id_walkorder_proses,abx.id,bbx.id as id_ukuran, dbx.id as id_warna, bbx.kode_ukuran,dbx.kode_warna, abx.qty, abx.harga_satuan");
+        $builder->select("abx.id,xb.id_walkorder_proses,abx.id,bbx.id as id_ukuran, dbx.id as id_warna, bbx.kode_ukuran,dbx.kode_warna, abx.qty, abx.harga_satuan, x.keterangan_style");
         $builder->join("ref_ukuran bbx", "abx.id_ukuran = bbx.id", "inner");
         $builder->join("trans_sample_det cbx", "abx.id_sample_det = cbx.id AND abx.id_sample = cbx.id_sample ", "inner");
         $builder->join("ref_warna dbx", "cbx.id_warna_1 = bbx.id", "inner");
@@ -88,6 +88,7 @@ class SampleModel extends \App\Models\PrModel
         $builder->join("trans_walkorder_proses_ukuran xb", "xa.id = xb.id_walkorder_proses", "left");
         $builder->groupBy("abx.id");
         $builder->groupBy("dbx.kode_warna");
+        $builder->groupBy("x.keterangan_style");
         $builder->groupBy("dbx.id");
         $builder->groupBy("bbx.kode_ukuran");
         $builder->groupBy("bbx.id");

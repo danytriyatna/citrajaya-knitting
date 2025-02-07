@@ -159,7 +159,10 @@ class BarangKeluar extends BaseController
 
             $params['id_gudang'] = $idGudang;
         } else {
-            return $this->response->setJSON([]);
+            $build_array = array(
+                "data" => array()
+            );
+            return $this->response->setJSON($build_array);
         }
 
         $results = $this->mRef->getDataBarang(null, $start, $limit, $order, $filters, $params);

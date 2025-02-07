@@ -236,7 +236,7 @@ dtListBarang.on("rowClick", function(e, row){
     inpIdBarang.val(idBarang)
     inpKodeBarang.val(kodeBarang)
     inpBarang.val(`${namaBarang}`)
-    inpPrice.val(`${price}`)
+    inpPrice.val(`${formatRupiah(price.toString())}`)
     inpQtyPO.val(qty)
     inpLotNo.val("")
     $("#modal-barang").modal("hide");
@@ -340,6 +340,26 @@ if(detailData.length > 0){
         }
     }, 1000);
 } 
+
+function formatRupiah(value){
+    value = value.replace(/[^,\d]/g, '').toString();
+     // Pisahkan angka menjadi ribuan
+    let split = value.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/g);
+ 
+     // Tambahkan titik jika ada ribuan
+     if (ribuan) {
+         let separator = sisa ? '.' : '';
+         rupiah += separator + ribuan.join('.');
+     }
+ 
+     // Gabungkan dengan bagian desimal, jika ada
+     rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+ 
+    return rupiah ? 'Rp ' + rupiah : '';
+}
 
 inpLotNo.keyup(function (e){
     let lotNo = inpLotNo.val()
@@ -509,7 +529,7 @@ function openModalDetail(row = null){
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
-        inpPrice.val(data.price)
+        inpPrice.val(formatRupiah(data.price.toString()))
         selectGudang.val(data.id_gudang).trigger("change")
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)

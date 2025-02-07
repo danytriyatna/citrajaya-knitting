@@ -13,6 +13,22 @@
       padding: 0;
     }
 
+    .mt-0 {
+      margin-top: 0px;
+    }
+
+    .mb-0 {
+      margin-bottom: 0px;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
     .sheet {
       width: 100%;
       height: 100%;
@@ -79,10 +95,24 @@
     for ($i = 0; $i < $data['qtyp']; $i++) { 
     ?>
       <div class="item">
-        <img src="<?= base_url(); ?>/uploads/media/qrcode/<?= $fileName; ?>" alt="QR Code" width="192px" height="192px">
+        <h1 class="mt-0 mb-0">smithberlin</h1>
+        <table>
+          <tbody>
+            <tr>
+              <td class="text-left" style="width: 50%;">
+                <p class="mt-0 mb-0">POLO KEVAN</p>
+                <p class="mt-0 mb-0">BLACK</p>
+              </td>
+              <td class="text-right" style="width: 50%;">
+                <h2 class="mt-0 mb-0">XL</h2>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <img src="<?= base_url(); ?>/uploads/media/qrcode/<?= $fileName; ?>" alt="QR Code" width="160px" height="160px">
         <div class="details">
-          <b><?= $data['noSample'] ?></b><br>
-          <em><?= $data['deskripsi'] ?: '-' ?></em> | <em><?= strtoupper($data['ukuran']) ?: '-' ?></em> | <em><?= $data['warna'] ?: '-' ?></em> | <em><?= $data['qty'] ?: '-' ?></em>
+          <h2 class="mt-0 mb-0"><?= $data['noSample'] ?></h2>
+          <!-- <em><?= $data['deskripsi'] ?: '-' ?></em> | <em><?= strtoupper($data['ukuran']) ?: '-' ?></em> | <em><?= $data['warna'] ?: '-' ?></em> | <em><?= $data['qty'] ?: '-' ?></em> -->
         </div>
       </div>
     <?php 

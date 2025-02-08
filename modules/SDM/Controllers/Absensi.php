@@ -235,6 +235,13 @@ class Absensi extends BaseController
             // $timestamp_masuk = strtotime($dt_shift->jam_masuk);
             // $timestamp_keluar = strtotime($x['jam_keluar']);
             $timestamp_masuk = strtotime($x['jam_masuk']);
+            
+            $time_jadwalmasuk = strtotime($dt_shift->jam_masuk);
+
+            if($timestamp_masuk < $time_jadwalmasuk){
+              $timestamp_masuk = $time_jadwalmasuk;
+            }
+
             $timestamp_keluar = strtotime($dt_shift->jam_pulang);
 
             // Hitung selisih dalam detik
@@ -383,6 +390,13 @@ class Absensi extends BaseController
                     // $timestamp_keluar = strtotime($jamOut);
 
                     $timestamp_masuk = strtotime($jamIn);
+
+                    $time_jadwalmasuk = strtotime($dt_shift->jam_masuk);
+
+                    if($timestamp_masuk < $time_jadwalmasuk){
+                      $timestamp_masuk = $time_jadwalmasuk;
+                    }
+
                     $timestamp_keluar = strtotime($dt_shift->jam_pulang);
 
                     // Hitung selisih dalam detik

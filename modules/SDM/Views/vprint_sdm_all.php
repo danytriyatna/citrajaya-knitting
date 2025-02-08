@@ -183,7 +183,15 @@
     </thead>
 
     <tbody>
-        <?php foreach ($detail as $r) { ?>
+        <?php 
+            $gaji_harian = 0;
+            $lembur = 0;
+            $lembur_we = 0;
+            $uang_lembur = 0;
+            $bonus = 0;
+            $potongan = 0;
+            $total_pendapatan_total = 0;
+            foreach ($detail as $r) { ?>
             <?php 
                 $gaji = !empty($r) ? $r->gaji_harian : 0;
                 $lembur = !empty($r) ? $r->uang_lembur  : 0;
@@ -192,25 +200,52 @@
                 $jml_pendapatan = $gaji + $lembur + $bonus;
                 $potongan = !empty($r) ? $r->potongan  : 0;
                 $total_pendapatan = $jml_pendapatan - $potongan;
+
+
+                $gaji_harian = $gaji_harian + $r->gaji_harian;
+                $lembur = $lembur + $r->lembur;
+                $lembur_we = $lembur_we + $r->lembur_we;
+                $uang_lembur = $uang_lembur + $r->uang_lembur;
+                $bonus = $bonus + $r->bonus;
+                $potongan = $potongan + $r->potongan;
+                $total_pendapatan_total = $total_pendapatan_total + $total_pendapatan;
             ?>
             <tr>
                 <td style="border: 1px solid black; padding: 8px;"><?= $r->nip; ?></td>
                 <td style="border: 1px solid black; padding: 8px;"><?= $r->posisi; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->hadir; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->izin; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->sakit; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->alpha; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->jam_kerja; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= format_angka($r->gaji_harian); ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->lembur; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= $r->lembur_we; ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= format_angka($r->uang_lembur); ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= format_angka($r->bonus); ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= format_angka($r->potongan); ?></td>
-                <td style="border: 1px solid black; padding: 8px;"><?= format_angka($total_pendapatan); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->hadir; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->izin; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->sakit; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->alpha; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->jam_kerja; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->gaji_harian); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur_we; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->uang_lembur); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->bonus); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->potongan); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($total_pendapatan); ?></td>
             </tr>
         <?php } ?>
     </tbody>
+    <tfoot>
+        <tr>
+          <td style="border: 1px solid black; padding: 8px;" colspan="7"> Total</td>
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($gaji_harian); ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur; ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur_we; ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($uang_lembur); ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($bonus); ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($potongan); ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($total_pendapatan_total); ?></td>
+      </tr>
+    </tfoot>
 </table>
 
   
@@ -224,8 +259,7 @@
       </tr>
       <tr>
         <td class="text-center">
-          <p><b>Karyawan</b></p><br>
-          <p>( <?= !empty($detail) ? $detail[0]->full_name : '.......................'?> )</p>
+          
         </td>
         <td class="text-center">
           <p><b>Owner</b></p><br>

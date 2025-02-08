@@ -180,6 +180,8 @@
                 <th class="text-center" style="width: 45%;">NAMA BARANG</th>
                 <th class="text-center" style="width: 20%;">BANYAKNYA</th>
                 <th class="text-center" style="width: 20%;">HARGA SATUAN</th>
+                <th class="text-center" style="width: 20%;">NO LOT</th>
+                <th class="text-center" style="width: 20%;">KETERANGAN</th>
             </tr>
         </thead>
         <tbody>
@@ -190,6 +192,59 @@
                     <td><?= $row->nama_barang ?></td>
                     <td class="text-right"><?= $row->qty ?></td>
                     <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round($row->price)) : "" ?></td>
+                    <td><?= $row->lot_no ?></td>
+                    <td><?= $row->keterangan ?></td>
+                </tr>
+            <?php endforeach ?>
+
+        </tbody>
+    </table>
+
+    <br>
+
+    <table class="table-bordered w-100">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 40px;">No.</th>
+                <th class="text-center" style="width: 25%;">NO SO</th>
+                <th class="text-center" style="width: 70%;">DETAIL</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            <?php $i = 1;
+            foreach ($dataSO as $row) : ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td><?= $row->kode_sales_order ?></td>
+                    <td>
+                        <table class="table-bordered w-100 py-4">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Colour</th>
+                                    <?php foreach ($row->ukuran as $u) : ?>
+                                        <th><?= strtoupper($u) == 'ALL_' ? "ALL" : strtoupper($u) ?></th>
+                                    <?php endforeach; ?>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $iq = 1;
+                                foreach ($row->detail as $rowData) : ?>
+                                    <tr>
+                                        <td><?= $iq++ ?></td>
+                                        <td><?= $rowData->colour ?></td>
+                                        <?php foreach ($row->ukuran as $u) : ?>
+                                            <td class="text-right"><?= $rowData->$u ?></td>
+                                        <?php endforeach; ?>
+                                        <td><?= $rowData->total_harga ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </td>
                 </tr>
             <?php endforeach ?>
 

@@ -3,6 +3,7 @@
 let inpTglReceive = $('#tanggal');
 let inpBarang = $('#namaBarang');
 let inpKeterangan = $('#trans_desc');
+let inpKeteranganDet = $('#keterangan');
 let inpIdBarang = $('#idBarang');
 let inpKodeBarang = $('#kodeBarang');
 let inpQtyItem = $('#qty_item');
@@ -13,10 +14,15 @@ let inpEdit = $('#edit');
 let spanBarang = $('#spanBarang');
 let selectGudangAsal = $('#gudang_asal');
 let selectGudangTujuan = $('#gudang_tujuan');
+let selectProses = $('#select_proses');
+let inpCMT = $('#cmt');
+let inpIdCMT = $('#id_cmt');
+let divCMT = $('#div-cmt');
 let selectTipe = $('#tipe');
 let inpLotNo = $('#lot_no');
 let inpIdLot = $('#id_lot');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
+let dataSO = $("#data-so").val().replace(/&quot;/ig,'"');
 let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
 let btnView = $('#btn-view');
@@ -31,23 +37,29 @@ let inpIdGudangAsal = $('#id_gudang_asal');
 if(inpIdHeader.val().length == 0){
     selectGudangAsal.val("").trigger("change")
     selectGudangTujuan.val("").trigger("change")
-  
+} else{
+    setTimeout(() => {
+        try {
+            checkCMT(selectGudangTujuan.val())
+            if(dataSO.length > 0){
+                dtList.setData(dataSO)
+            }
+        } catch (e) {
+            console.error("Error parsing JSON:", e);
+        }
+    }, 1000);
 }
-
-    if(selectTipe.val() == 1){
-        btnView.addClass("d-none")
-    } else{
-        btnView.removeClass("d-none")
-    } 
 
 if(inpStatus.val() == 0){
     btnAdd.show()
+    btnView.show()
     btnSimpan.show()
     btnApprove.show()
 } else{
     btnAdd.hide()
     btnSimpan.hide()
-    btnApprove.hide()
+    btnApprove.hide() 
+    btnView.hide()
 }
 const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 
@@ -139,25 +151,24 @@ let searchThreadBarang = null;
 let elSearchBarang = $("#tb-search");
 if (elSearchBarang != null) {
     elSearchBarang.on("keyup", function (e) {
-        if ($(this).val().length < 3 && e.keyCode > 13) {
-            return;
-        }
-        clearTimeout(searchThreadBarang);
-        searchThreadBarang = setTimeout(function () {
-            dtListBarang.setFilter("", "like", elSearchBarang.val());
-        }, 600);
+        
     });
 }
 
+let searchSO = null;
 let elSearchSO = $("#tb-search-so");
     if (elSearchSO != null) {
         elSearchSO.on("keyup", function (e) {
             if ($(this).val().length < 3 && e.keyCode > 13) {
                 return;
             }
-            getDetail(elSearchSO.val())
+            clearTimeout(searchSO);
+            searchSO = setTimeout(function () {
+                dtListSample.setFilter("", "like", elSearchSO.val());
+            }, 600);
         });
     }
+
 
 
 dtListBarang.on("rowClick", function(e, row){
@@ -219,6 +230,165 @@ let buttonRowAction = function(cell) {
 
     return fmBtnEdit + " " + fmBtnDelete;
 };
+let buttonRowSOAction = function(cell) {
+    let fmBtnDelete = "";        
+    let fmBtnEdit = "";        
+
+    if (inpStatus.val() == 0){
+        fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
+    }
+   
+
+    return fmBtnEdit + " " + fmBtnDelete;
+};
+
+
+let dtList = new Tabulator("#dt-list", {
+    pagination: true, 
+    paginationSize: 10,
+    paginationButtonCount: 5,
+    columns: [
+        {title: "ID", field: "id", width: "10%",visible:false},
+        {
+            headerSort: false,  
+            title: '#', 
+            formatter: buttonRowSOAction,
+            width: '10%', align: "center", cssClass: "text-center",
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                if (e.target.title === 'delete') {
+                    Swal.fire({
+                        title: "Apakah anda yakin ingin menghapus data?",
+                        icon: 'question',
+                        confirmButtonText: 'Hapus',
+                        confirmButtonColor: '#dc3545',
+                        showCancelButton: true,
+                        cancelButtonText: 'Batal',
+                        cancelButtonColor: '#6C757D'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            row.delete(); 
+                        }
+                    })
+                } 
+            
+            }
+        },
+        {title: "No. SO", field: "kode_sales_order", width: "20%"},
+        {
+            title: "Detail",
+            field: "detail",
+            width:"70%",
+            formatter: function(cell, formatterParams) {
+                let data = cell.getValue();
+                let listUkuran = cell.getData().key_ukuran;
+              
+                if (!data || data.length === 0) return "No Data";
+
+                let tableHtml = `<table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #ddd; padding:5px;">No.</th>
+                            <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
+                            listUkuran.forEach( row => {
+                                tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
+                            })
+                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                data.forEach(row => {
+                    tableHtml += `<tr>
+                        <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
+                        <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
+                        listUkuran.forEach( x => {
+                            let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
+                            tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
+                        })
+                      tableHtml +=  `<td style="border:1px solid #ddd;">${formatRupiah(row.total_harga)}</td>
+                    </tr>`;
+                });
+
+                tableHtml += `</tbody></table>`;
+
+                return tableHtml;
+            }
+        }
+    ],
+    placeholder: "Tidak ada data",
+});
+
+function cardFormatter(cell, formatterParams, onRendered){
+    let data = cell.getRow().getData(); // Ambil data row
+    
+    // HTML Card Layout
+    var cardHtml = `<div class="card shadow-sm">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-sm-3 text-start">
+                    <h6 class="f-w-700 m-b-6">${data.kode_sales_order}</h6>
+                    <p class="f-w-500 m-y-0">${data.deskripsi}</p>
+                    <hr class="m-y-8" />
+            
+                  </div>
+                  <div class="col-sm-9">
+                       <div id="dt-list-detail-${data.id}" class="table-responsive table-striped"></div>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+
+    onRendered(()=>{
+        
+        document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', ()=>{
+            fileSalesOrder.val('')
+            linkFileSalesOrder.attr('src', "")
+            getDetail(data.id)
+        });
+        document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', ()=>{
+            window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
+        });
+        document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
+            if (confirm("Anda yakin akan menghapus data?")) {
+                window.location.replace(baseUrl + "/trans/sales-order/delete/list" + data.id);
+            }
+        });
+        
+        let isColumn = [
+            {headerSort: false,title:"No", field:"no",   width: "5%"},
+            {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+        ]
+
+        for (const el of data.key_ukuran) {
+            const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
+            isColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
+        }
+
+        isColumn.push(
+            {
+                headerSort: false, cssClass: 'text-center', title:"Amount", field:"total_harga",formatter: "money", 
+                formatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",  // Simbol mata uang Rupiah
+                    precision: 0,   // Tidak ada desimal
+                },
+                hozAlign:"right", cssClass: 'text-end', width:"15%"})
+
+        new Tabulator(`#dt-list-detail-${data.id}`, {
+            data: data.detail, 
+            layout:"fitColumns",
+            resizableColumnFit:true,
+            pagination: true, 
+            paginationSize: 10,
+            paginationButtonCount: 5,
+            columns: isColumn,
+        });
+    });
+
+    return cardHtml; // Return HTML Card
+}
 
 let dtListDetail = new Tabulator("#dt-list-detail", {
     pagination: true, 
@@ -263,7 +433,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         {title:"ITEM CODE", field:"kode_barang",hozAlign:"left", width:"15%"},
         {title:"ITEM DESCRIPTION", field:"nama_barang", hozAlign:"left",width:"25%"},
-        {title:"QTY", field:"qty", hozAlign:"center",width:"10%",editor: "number"},
+        {title:"QTY", field:"qty", hozAlign:"center",width:"10%"},
         {title:"UNIT", field:"nama_unit", hozAlign:"center",width:"15%"},
         {title:"PRICE", field:"price", formatter : "money",
             formatterParams: {
@@ -273,6 +443,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
                 precision: 0,   // Tidak ada desimal
         },width:"10%"},
         {title:"LOT NO", width:"15%", field:"lot_no", hozAlign:"left"},
+        {title:"KETERANGAN", width:"15%", field:"keterangan", hozAlign:"left"},
     ],
     locale: 'id',    
     // layout: 'fitColumns',
@@ -291,6 +462,31 @@ if(detailData.length > 0){
 } 
 
 
+inpPrice.on("input", function(e){
+    e.target.value = formatRupiah( e.target.value)
+})
+
+function formatRupiah(value){
+    value = value.replace(/[^,\d]/g, '').toString();
+     // Pisahkan angka menjadi ribuan
+    let split = value.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/g);
+ 
+     // Tambahkan titik jika ada ribuan
+     if (ribuan) {
+         let separator = sisa ? '.' : '';
+         rupiah += separator + ribuan.join('.');
+     }
+ 
+     // Gabungkan dengan bagian desimal, jika ada
+     rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+ 
+    return rupiah ? 'Rp ' + rupiah : '';
+}
+
+
 inpPrice.keyup(function (e) {
 
     if(inpBarang.val().length === 0){
@@ -303,28 +499,37 @@ inpPrice.keyup(function (e) {
         });
     }
 
-    if(!regex.test(e.target.value)){
-        e.target.value = ""
-        return Swal.fire({
-            text: "Price harus berupa angka",
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
+    // if(!regex.test(e.target.value)){
+    //     e.target.value = ""
+    //     return Swal.fire({
+    //         text: "Price harus berupa angka",
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
 
 })
 
+selectGudangTujuan.on("change",function(e){
+    checkCMT(e.target.value)
+})
 
-selectTipe.on("change",function(e){
-    var nilai = e.target.value;
-    if(nilai == 1){
-        btnView.addClass("d-none")
-    } else{
-        btnView.removeClass("d-none")
+function checkCMT(nilai){
+    if(dataGudang.length > 0){
+        let resGudang = dataGudang.find(x => x.id == nilai);
+        console.log(resGudang)
+        if(resGudang.tipe == 1){
+            divCMT.addClass("d-none")
+            inpCMT.val()
+            inpIdCMT.val("")
+        } else{
+            divCMT.removeClass("d-none")
+            inpCMT.val(resGudang.nama_operator)
+            inpIdCMT.val(resGudang.id_cmt)
+        } 
     } 
-    
-})
+}
 
 inpQtyItem.keyup(function (e) {
 
@@ -423,6 +628,15 @@ function submitData(status,message){
         });
     }
 
+    if(dtList.getData().length == 0){
+        return Swal.fire({
+            text: "Data SO tidak boleh kosong",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
     if(dtListDetail.getData().length == 0){
         return Swal.fire({
             text: "Data detail tidak boleh kosong",
@@ -464,7 +678,12 @@ btnAdd.click(function(){
 })
 
 btnView.click(function(){
+    setTimeout(() => {
+        dtListSample.redraw(true)
+    }, 500);
     $("#modal-so").modal("show")
+    dtListSample.deselectRow();
+   
 })
 
 function checkLotNo(value){
@@ -499,11 +718,12 @@ function openModalDetail(row = null){
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
-        inpPrice.val(data.price)
+        inpPrice.val(formatRupiah(data.price.toString()))
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
         inpIdLot.val(data.lot_id)
         inpQtyExist.val(data.qty_exist)
+        inpKeteranganDet.html(data.keterangan)
     } else{
         inpBarang.val("")
         inpIdBarang.val("")
@@ -514,10 +734,12 @@ function openModalDetail(row = null){
         inpEdit.val("")
         inpQtyExist.val("")
         inpIdLot.val("")
+        inpKeteranganDet.html("")
     }
     modalDet.modal("show")
 
     btnSimpanDetail.off("click").on("click",function(){
+        let price = parseFloat(inpPrice.val().replace(/[^\d]/g, ''));
         if(inpBarang.val().length == 0){
             return Swal.fire({
                 text: "Barang harus dipilih",
@@ -546,7 +768,7 @@ function openModalDetail(row = null){
             });
         }
 
-        if(!regex.test(inpPrice.val())){
+        if(!regex.test(price)){
             return Swal.fire({
                 text: "Price harus berupa angka",
                 icon: 'error',
@@ -579,11 +801,12 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQtyItem.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 qty_exist                         : inpQtyExist.val(),
                 lot_no                   : inpLotNo.val(),
                 lot_id                   : inpIdLot.val(),
                 nama_unit                 : inpUnit.val(),
+                keterangan                 : inpKeteranganDet.val(),
             });
         } else{
 
@@ -592,12 +815,13 @@ function openModalDetail(row = null){
                 nama_barang                 : inpBarang.val(),
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 qty                         : inpQtyItem.val(),
                 qty_exist                         : inpQtyExist.val(),
                 lot_no                   : inpLotNo.val(),
                 lot_id                   : inpIdLot.val(),
                 nama_unit                   : inpUnit.val(),
+                keterangan:inpKeteranganDet.val()
             });
         }
         modalDet.modal("hide")
@@ -606,55 +830,160 @@ function openModalDetail(row = null){
  
 }
 
-function getDetail(kodeOrder) {
-    $.ajax({
-        url: `/trans/sales-order/view`,
-        type: 'GET',
-        data:{kodeOrder:kodeOrder},
-        dataType: 'json', 
-        success: function(data) {
-            drawTableRefSO(data.ukuran,data.data)
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching data:', error);
-        }
-    });
-}
-
-function drawTableRefSO(ukuran,detail){
-    let isColumn = [
-        {headerSort: false,title:"No", field:"no",   width: "5%"},
-        {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
-    ]
-
-    for (const el of ukuran) {
-        const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
-        isColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
-    }
-
-    isColumn.push(
+let dtListSample = new Tabulator("#dt-list-sample", {
+    columns: [
+        {title: "ID", field: "id", width: "20%",visible:false},
+        {title: "No. SO", field: "kode_sales_order", width: "20%"},
         {
-            headerSort: false, cssClass: 'text-center', title:"Amount", field:"total_harga",formatter: "money", 
-            formatterParams: {
-                decimal: ",",
-                thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            },
-            hozAlign:"right", cssClass: 'text-end', width:"15%"})
+            title: "Detail",
+            field: "detail",
+            width:"80%",
+            formatter: function(cell, formatterParams) {
+                let data = cell.getValue();
+                let listUkuran = cell.getData().key_ukuran;
+              
+                if (!data || data.length === 0) return "No Data";
 
-    new Tabulator(`#dt-list-sample`, {
-        data: detail, 
-        layout:"fitColumns",
-        resizableColumnFit:true,
-        pagination: true, 
-        paginationSize: 10,
-        paginationButtonCount: 5,
-        columns: isColumn,
-    });
+                let tableHtml = `<table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #ddd; padding:5px;">No.</th>
+                            <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
+                            listUkuran.forEach( row => {
+                                tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
+                            })
+                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                data.forEach(row => {
+                    tableHtml += `<tr>
+                        <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
+                        <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
+                        listUkuran.forEach( x => {
+                            let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
+                            tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
+                        })
+                      tableHtml +=  `<td style="border:1px solid #ddd;">${formatRupiah(row.total_harga)}</td>
+                    </tr>`;
+                });
+
+                tableHtml += `</tbody></table>`;
+
+                return tableHtml;
+            }
+        }
+    ],
+    
+    locale: 'id',    
+    ajaxURL: "/trans/sales-order/list",
+    ajaxConfig: "POST",
+    sortMode: "remote",
+    filterMode: "remote",
+    placeholder: "Tidak ada data",
+    selectableRows: true,
+    ajaxRequesting: function (url, params) {
+        params.start = params.size * (params.page - 1);
+        params.length = params.size;
+    },
+    ajaxResponse: function (url, params, response) {
+        let pageSize = dtListSample.getPageSize();
+        let pageNo = dtListSample.getPage();
+        let startRow = (pageSize * (pageNo - 1)) + 1;
+        let endRow = response.data.length + startRow - 1;
+        if (response.data.length === 0) {
+            startRow = 0; endRow = 0;
+        }
+        let recordsFiltered = parseInt(response.recordsFiltered);
+        let recordsTotal = parseInt(response.recordsTotal);
+
+        $("#table-footer .tabulator-startrow").text(startRow);
+        $("#table-footer .tabulator-endrow").text(endRow);
+        $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+
+        let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+        elTotalFilteredRow.text("");
+        if (recordsTotal > recordsFiltered) {
+            elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+                + " entri keseluruhan)");
+        }
+        return response;
+    },
+    footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+        + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+        + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+    pagination: true,
+    paginationMode: "remote",
+    paginationSize: 25,
+    paginationButtonCount: 10,
+    dataSendParams: {
+        sorters: "order"
+    },
+});
+
+dtListSample.on("rowClick", function(e, row){
+    if(dtList.getData().some(x=>x.id == row.getData().id)){
+        return Swal.fire({
+            text: `SO ${row.getData().kode_sales_order} telah dipilih`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    dtList.addRow(row.getData())
+    $("#modal-so").modal("hide");
+})
+
+// function getDetail(kodeOrder) {
+//     $.ajax({
+//         url: `/trans/sales-order/view`,
+//         type: 'GET',
+//         data:{kodeOrder:kodeOrder},
+//         dataType: 'json', 
+//         success: function(data) {
+//             drawTableRefSO(data.ukuran,data.data)
+//         },
+//         error: function(xhr, status, error) {
+//             console.error('Error fetching data:', error);
+//         }
+//     });
+// }
+
+// function drawTableRefSO(ukuran,detail){
+//     let isColumn = [
+//         {headerSort: false,title:"No", field:"no",   width: "5%"},
+//         {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+//     ]
+
+//     for (const el of ukuran) {
+//         const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
+//         isColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
+//     }
+
+//     isColumn.push(
+//         {
+//             headerSort: false, cssClass: 'text-center', title:"Amount", field:"total_harga",formatter: "money", 
+//             formatterParams: {
+//                 decimal: ",",
+//                 thousand: ".",
+//                 symbol: "Rp",  // Simbol mata uang Rupiah
+//                 precision: 0,   // Tidak ada desimal
+//             },
+//             hozAlign:"right", cssClass: 'text-end', width:"15%"})
+
+//     new Tabulator(`#dt-list-sample`, {
+//         data: detail, 
+//         layout:"fitColumns",
+//         resizableColumnFit:true,
+//         pagination: true, 
+//         paginationSize: 10,
+//         paginationButtonCount: 5,
+//         columns: isColumn,
+//     });
 
 
-}
+// }
 
 
 
@@ -666,9 +995,12 @@ function simpanData(status) {
             id:inpIdHeader.val(),
             id_gudang_asal:selectGudangAsal.val(),
             id_gudang_tujuan:selectGudangTujuan.val(),
+            id_cmt:inpIdCMT.val(),
+            id_proses:selectProses.val(),
             tipe:selectTipe.val(),
             tanggal:formatLocaleDate(inpTglReceive.val()),
             data:dtListDetail.getData(),
+            dataSO:dtList.getData(),
             keterangan:inpKeterangan.val(),
             status:status
         },

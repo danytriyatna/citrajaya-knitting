@@ -6,6 +6,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 {
 
     protected $table = "trans_barang_trf_detail";
+    protected $tblDetSO = "trans_barang_trf_so";
+    protected $tblSO = "trans_sales_order";
     protected $tblBarang = "ref_barang";
     protected $tblSatuan = "ref_satuan";
     protected $tblGudang = "ref_gudang";
@@ -25,7 +27,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no", "left");
-        $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
+        $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price, uk.keterangan");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);
@@ -80,6 +82,20 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
+    function getDataDetailSO($idHeader = null)
+    {
+        $builder = $this->db->table($this->tblDetSO . " abx");
+
+        $builder->select("bbx.id,abx.id_so, bbx.kode_sales_order");
+        $builder->join($this->tblSO . " bbx", "abx.id_so = bbx.id", "left");
+
+        $builder->where("abx.id_header", $idHeader);
+        $this->_data = $builder->get()->getResult();
+
 
         return $this->_data;
     }

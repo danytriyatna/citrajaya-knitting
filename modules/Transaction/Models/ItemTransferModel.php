@@ -7,6 +7,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
     protected $table = "trans_barang_trf_header";
     protected $tblDet = "trans_barang_trf_detail";
+    protected $tblDetSO = "trans_barang_trf_so";
 
     protected $tblGudang = "ref_gudang";
     protected $tblBarang = "ref_barang";
@@ -84,6 +85,17 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataProses()
+    {
+        $builder = $this->db->table("_jenis_proses_produksi abx");
+        $builder->select("abx.nama, abx.id");
+        $builder->where("active", "1");
+        $builder->orderBy("abx.seq", "ASC");
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
+
     function generateKodePersediaan()
     {
         $kd = "TRF";
@@ -114,7 +126,7 @@ class ItemTransferModel extends \App\Models\PrModel
         return $kodejadi;
     }
 
-    function trxInsertUpdateRecord($data, $id, $detail)
+    function trxInsertUpdateRecord($data, $id, $detail, $dataSO)
     {
         $this->db->transStart();
         try {
@@ -124,6 +136,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     "id_header" => $id,
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
+                $this->deleteRecordMultipleColumn($this->tblDetSO, $arrDelete);
                 $arrParam =  [
                     "id" => $id,
                 ];
@@ -131,6 +144,15 @@ class ItemTransferModel extends \App\Models\PrModel
             } else {
                 $data['kode_transaksi'] = $this->generateKodePersediaan();
                 $id = $this->insertRecordGetid($this->table,  $data);
+            }
+
+            foreach ($dataSO as $rowData) {
+                $dataDetail = [
+                    "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
+                    "id_header" => $id,
+                ];
+
+                $this->insertRecordGetid($this->tblDetSO, $dataDetail);
             }
 
             foreach ($detail as $rowData) {
@@ -142,6 +164,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $dataDetail = [
                     "id_barang" => $idBarang,
                     "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                    "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
                     "id_header" => $id,
                     "qty" => $rowData['qty'],
                     "price" => !empty($rowData['price']) ? $rowData['price'] : null,

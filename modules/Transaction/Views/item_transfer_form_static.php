@@ -1,7 +1,122 @@
 <?= $this->extend('template'); ?>
 
 <?= $this->section('modal') ?>
+<div id="modal-detail-item" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Form Detail Item</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_item">Item</label>
+          <div class="col-md-9">
+            <div class="input-group">
+              <input type="text" id="namaBarang" readonly name="namaBarang" class="form-control" placeholder="Pilih Barang" required>
+              <input type="hidden" id="idDetail" name="idDetail" class="form-control" required>
+              <input type="hidden" id="edit" name="edit" class="form-control" required>
+              <input type="hidden" id="idBarang" name="idBarang" class="form-control" required>
+              <input type="hidden" id="kodeBarang" name="kodeBarang" class="form-control" required>
+              <span id="spanBarang" class="input-group-text bg-white" id="basic-addon11"><i class="ti-search"></i></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_unit">Unit</label>
+          <div class="col-md-9">
+            <input type="text" id="unit" name="unit" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+          </div>
+        </div>
+        <div class="form-group row ">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">QTY Remain </label>
+          <div class="col-md-9">
+            <input type="text" id="qty_exist" name="qty_exist" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">Qty</label>
+          <div class="col-md-9">
+            <input type="text" id="qty_item" name="qty_item" class="form-control" placeholder="Ketikkan qty item" value="">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
+          <div class="col-md-9">
+            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="lot_no">Lot No.</label>
+          <div class="col-md-9">
+            <input type="hidden" id="id_lot" name="id_lot">
+            <input type="text" id="lot_no" name="lot_no" class="form-control" placeholder="Ketikkan nomor lot" value="">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="lot_no">Keterangan</label>
+          <div class="col-md-9">
+            <textarea rows="3" id="keterangan" name="keterangan" class="form-control" placeholder="Ketikkan uraian deskripsi"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-success" id="btn-simpan-det">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="modal-barang" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">List Barang</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="col-md-4" style="float: right; position: relative; right: 15px;">
+              <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
+                <input type="text" id="tb-search" class="form-control" placeholder="Pencarian . . .">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="dt-list-barang" class="table-responsive table-striped"></div>
+        </div>
+      </div>
 
+    </div>
+  </div>
+</div>
+<div id="modal-so" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">List Data Sales Order / Sample</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="col-md-4" style="float: right; position: relative; right: 15px;">
+              <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
+                <input type="text" id="tb-search-so" class="form-control" placeholder="Pencarian . . .">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="dt-list-sample" class="table-responsive table-striped"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>
@@ -34,7 +149,12 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="trans_no">Trans No.</label>
                     <div class="col-md-9">
-                      <input type="text" id="trans_no" name="trans_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="" readonly>
+                      <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
+                      <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
+                      <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
+                      <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
+                      <input type="hidden" id="id_cmt" name="id_cmt" value="<?= !empty($resData->id_cmt) ? $resData->id_cmt : null ?>" class="form-control" required>
+                      <input type="text" id="trans_no" name="trans_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->kode_transaksi) ? $resData->kode_transaksi : null ?>" readonly>
                     </div>
                   </div>
                 </div>
@@ -42,7 +162,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tanggal">Date</label>
                     <div class="col-md-8">
-                      <input type="text" id="tanggal" name="tanggal" class="form-control datepicker" placeholder="Pilih tanggal transfer" value="">
+                      <input type="text" id="tanggal" name="tanggal" class="form-control datepicker" placeholder="Pilih tanggal transfer" value="<?= !empty($resData->tanggal) ? $resData->tanggal : null ?>">
                     </div>
                   </div>
                 </div>
@@ -53,8 +173,14 @@
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_warehouse">Transfer From</label>
                     <div class="col-md-8">
                       <select id="gudang_asal" name="gudang_asal" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
-                        <option value="1" selected>Warehouse 1</option>
-                        <option value="2">Warehouse 2</option>
+                        <?php foreach ($gudang as $item) : ?>
+                          <?php if (!empty($resData->id_gudang_asal) && $resData->id_gudang_asal == $item->id) { ?>
+                            <option selected value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                          <?php } else { ?>
+                            <option value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                          <?php } ?>
+
+                        <?php endforeach; ?>
                       </select>
                     </div>
                   </div>
@@ -64,22 +190,42 @@
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="gudang_tujuan">Transfer To</label>
                     <div class="col-md-8">
                       <select id="gudang_tujuan" name="gudang_tujuan" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
-                        <option value="1">Warehouse 1</option>
-                        <option value="2" selected>Warehouse 2</option>
+                        <?php foreach ($gudang as $item) : ?>
+                          <?php if (!empty($resData->id_gudang_tujuan) && $resData->id_gudang_tujuan == $item->id) { ?>
+                            <option selected value="<?= $item->id ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?></option>
+                          <?php } else { ?>
+                            <option value="<?= $item->id ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?></option>
+                          <?php } ?>
+
+                        <?php endforeach; ?>
                       </select>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="row">
-                <div class="offset-sm-6 col-sm-6">
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_proses">Proses</label>
+                    <div class="col-md-8">
+                      <select id="select_proses" name="select_proses" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
+                        <?php foreach ($proses as $item) : ?>
+                          <?php if (!empty($resData->id_proses) && $resData->id_proses == $item->id) { ?>
+                            <option selected value="<?= $item->id ?>"><?= $item->nama ?></option>
+                          <?php } else { ?>
+                            <option value="<?= $item->id ?>"><?= $item->nama ?></option>
+                          <?php } ?>
+
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 d-none" id="div-cmt">
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">CMT</label>
                     <div class="col-md-8">
-                      <select id="select_cmt" name="select_cmt" class="form-select select2" data-placeholder="-- Pilih CMT --">
-                        <option value="1">CMT 1</option>
-                        <option value="2" selected>CMT 2</option>
-                      </select>
+                      <input type="text" id="cmt" name="cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
                     </div>
                   </div>
                 </div>
@@ -96,123 +242,44 @@
           </div>
 
           <hr>
-
+          <div class="col-sm-3 mb-2">
+            <button type="button" class="btn btn-sm btn-primary" id="btn-view"> <i class="fa fa-plus"></i></button>
+          </div>
           <div class="row">
             <div class="col-sm-12">
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th style="width: 120px;">
-                        <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i>&nbsp; Tambah</button>
-                      </th>
-                      <th>Sales Order</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <button type="button" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></button>
-                        <button type="button" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                      </td>
-                      <td>
-                        <h6 class="f-w-700 mb-0">SOD250100005</h6>
-                        <p class="mb-0">Gamis Zipper Stripe</p>
-                      </td>
-                      <td>
-                        <table class="table table-sm mb-0">
-                          <thead>
-                            <tr>
-                              <th class="bg-transparent">No.</th>
-                              <th class="bg-transparent">Colour</th>
-                              <th class="bg-transparent">ALL</th>
-                              <th class="bg-transparent">Amount</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>1</td>
-                              <td>KOPI TUA</td>
-                              <td>24</td>
-                              <td>Rp 2.760.000</td>
-                            </tr>
-                            <tr>
-                              <td>2</td>
-                              <td>HITAM</td>
-                              <td>24</td>
-                              <td>Rp 2.760.000</td>
-                            </tr>
-                            <tr>
-                              <td>3</td>
-                              <td>M47</td>
-                              <td>24</td>
-                              <td>Rp 2.760.000</td>
-                            </tr>
-                            <tr>
-                              <td>4</td>
-                              <td>M79</td>
-                              <td>24</td>
-                              <td>Rp 2.760.000</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <div id="dt-list" class="table-responsive table-striped"></div>
             </div>
           </div>
 
           <hr>
-
+          <div class="col-sm-3 mb-2">
+            <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+          </div>
           <div class="row">
             <div class="col-sm-12">
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th style="width: 120px;">
-                        <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i>&nbsp; Tambah</button>
-                      </th>
-                      <th>ITEM CODE</th>
-                      <th>DESCRIPTION</th>
-                      <th>QTY</th>
-                      <th>UNIT</th>
-                      <th>LOT NO</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <button type="button" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></button>
-                        <button type="button" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                      </td>
-                      <td>BRG241100002</td>
-                      <td>Kain Sutera</td>
-                      <td>1</td>
-                      <td>Pcs</td>
-                      <td>9901289</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div class="row">
+                <div id="dt-list-detail" class="table-responsive table-striped"></div>
+
+              </div>
+              <br>
+
+              <div class="row">
+                <div class="col-sm-10">
+                  <a href="trans/item-transfer" class="btn btn-default m-e-5">
+                    <span class="fa fa-arrow-left"></span> Kembali
+                  </a>
+                  <button class='btn btn-success' id="btn-simpan">
+                    <span class="fa fa-save"></span> Simpan
+                  </button>
+                  <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
+                </div>
               </div>
             </div>
           </div>
 
           <br>
 
-          <div class="row">
-            <div class="col-sm-10">
-              <a href="javascript:void(0)" class="btn btn-default m-e-5">
-                <span class="fa fa-arrow-left"></span> Kembali
-              </a>
-              <button type="button" class="btn btn-success">
-                <span class="fa fa-save"></span> Simpan
-              </button>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -222,5 +289,9 @@
 <?= $this->endSection('content'); ?>
 
 <?= $this->section('script'); ?>
-
+<script src="script/app/transaction/transfer/form.js"></script>
+<script>
+  let dataGudang = <?php echo json_encode($gudang); ?>;
+  // let dataSO = <?php echo !empty($dataSO) ? json_encode($dataSO) : null; ?>;
+</script>
 <?= $this->endSection('script'); ?>

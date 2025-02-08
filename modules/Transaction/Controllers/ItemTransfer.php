@@ -14,6 +14,7 @@ use Modules\Transaction\Models\ItemTransferModel;
 use Modules\Transaction\Models\BarangMasukDetailModel;
 use Modules\Referensi\Models\GudangModel;
 use Modules\Transaction\Models\ItemTransferDetailModel;
+use Modules\Transaction\Models\SalesOrderModel;
 
 class ItemTransfer extends BaseController
 {
@@ -26,7 +27,7 @@ class ItemTransfer extends BaseController
   protected $mSatuan;
   protected $mBarangMasuk;
   protected $mGudang;
-
+  protected $mSalesOrder;
   function __construct()
   {
     $this->MOD_ALIAS = "MOD_TRANSAKSI_BARANG_MASUK";
@@ -37,6 +38,7 @@ class ItemTransfer extends BaseController
     $this->mRef = new ItemTransferModel();
     $this->mRefDet = new ItemTransferDetailModel();
     $this->mGudang = new GudangModel();
+    $this->mSalesOrder = new SalesOrderModel();
   }
 
   public function index()
@@ -125,15 +127,61 @@ class ItemTransfer extends BaseController
     return $this->response->setJSON($build_array);
   }
 
-  public function form_static()
+  public function form_static($id = null)
   {
 
     if (!$this->auth->loggedIn()) {
       return redirect()->to('/auth/login');
     }
+    $this->data['id'] = $id;
+    if ($id != "") {
+      $id = decrypt($id);
+      $resData = $this->mRef->getData($id);
+      $tanggal = date("d F Y", strtotime($resData->tanggal));
+      $resData->tanggal = $tanggal;
 
-    $this->data['titlehead'] = "Item Transfer (Static)";
+      $sort = [
+        [
+          'field' => 'uk.id',
+          'dir' => 'ASC'
+        ]
+      ];
 
+      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+      $resDataDetSO = $this->mRefDet->getDataDetailSO($id);
+      $dataSO = [];
+      foreach ($resDataDetSO as $rowData) {
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sales_order'] = $rowData->id_so;
+        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($rowData->id_so) : [];
+        $rowData->id = encrypt($rowData->id_so);
+        $rowData->detail = $detail;
+        $rowData->key_ukuran = $dtUkuran;
+        $dataSO[] = $rowData;
+      }
+
+
+      // foreach ($resDataDetail as &$rowData) {
+      //     $rowData->id_barang = encrypt($rowData->id_barang);
+      // }
+
+
+      $this->data['resData'] = $resData;
+      $this->data['detail'] = json_encode($resDataDetail);
+      $this->data['dataSO'] = json_encode($dataSO);
+    }
+    $this->data['titlehead'] = "Item Transfer";
+    $sortGudang = [
+      [
+        'field' => 'nama_gudang',
+        'dir' => 'ASC'
+      ]
+    ];
+    $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
+    $resDataProses = $this->mRef->getDataProses();
+    $this->data['gudang']    = $resDataGudang;
+    $this->data['proses']    = $resDataProses;
     return view($this->views . '\item_transfer_form_static', $this->data);
   }
 
@@ -175,6 +223,7 @@ class ItemTransfer extends BaseController
       ]
     ];
     $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
+
     $this->data['gudang']    = $resDataGudang;
     return view($this->views . '\item_transfer_form', $this->data);
   }
@@ -188,9 +237,12 @@ class ItemTransfer extends BaseController
     $statusData = $this->request->getPost('status');
     $id_gudang_asal = $this->request->getPost('id_gudang_asal');
     $id_gudang_tujuan = $this->request->getPost('id_gudang_tujuan');
+    $id_cmt = $this->request->getPost('id_cmt');
+    $id_proses = $this->request->getPost('id_proses');
     $keterangan = $this->request->getPost('keterangan');
     $tipe = $this->request->getPost('tipe');
     $dataDetail = $this->request->getPost('data');
+    $dataSO = $this->request->getPost('dataSO');
     if ($id != "") {
       $id = decrypt($id);
     }
@@ -198,6 +250,8 @@ class ItemTransfer extends BaseController
     $dataHeader = [
       "id_gudang_asal" => !empty($id_gudang_asal) ? $id_gudang_asal : null,
       "id_gudang_tujuan" => !empty($id_gudang_tujuan) ? $id_gudang_tujuan : null,
+      "id_cmt" => !empty($id_cmt) ? $id_cmt : null,
+      "id_proses" => !empty($id_proses) ? $id_proses : null,
       "tanggal" => $tanggal,
       "status" => $statusData,
       "keterangan" => $keterangan,
@@ -211,7 +265,7 @@ class ItemTransfer extends BaseController
       $dataHeader['created_by'] = $this->get_userid();
     }
     // print_r($data);exit;
-    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
+    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO);
     if ($res) {
       $status = true;
       $msg = "Data berhasil disimpan!";
@@ -242,9 +296,25 @@ class ItemTransfer extends BaseController
           'dir' => 'ASC'
         ]
       ];
+      $resDataDetSO = $this->mRefDet->getDataDetailSO($id);
+      $dataSO = [];
+      foreach ($resDataDetSO as $rowData) {
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sales_order'] = $rowData->id_so;
+        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($rowData->id_so) : [];
+        $rowData->id = encrypt($rowData->id_so);
+        $rowData->detail = $detail;
+        $keysUkuran = !empty($detail) ? array_keys(get_object_vars($detail[0])) : [];
+        $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga"];
+        $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
+        $rowData->ukuran = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
+        $dataSO[] = $rowData;
+      }
 
       $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
       $this->data['data'] = !empty($resData) ? $resData : [];
+      $this->data['dataSO'] = !empty($dataSO) ? $dataSO : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }
     $html = view($this->views . '\item_transfer_print', $this->data);

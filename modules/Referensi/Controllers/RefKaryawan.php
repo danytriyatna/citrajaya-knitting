@@ -116,6 +116,7 @@ class RefKaryawan extends BaseController
         $upah_lembur =  $this->request->getPost('upah_lembur');
         $upah_harian =  $this->request->getPost('upah_harian');
         $upah_lembur_we =  $this->request->getPost('upah_lembur_we');
+        $upah_perjam =  $this->request->getPost('upah_perjam');
 
 
         $msg    = "Data gagal ditambahkan !";
@@ -137,7 +138,8 @@ class RefKaryawan extends BaseController
             'no_hp' => $no_hp,
             'upah_lembur' => $upah_lembur,
             'upah_harian' => $upah_harian,
-            'upah_lembur_we' => $upah_lembur_we
+            'upah_lembur_we' => $upah_lembur_we,
+            'upah_perjam' => $upah_perjam
         ];
 
         

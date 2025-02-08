@@ -530,7 +530,7 @@ class RefKonsumen extends BaseController
                     $msg    = "Data berhasil ditambahkan !";
                     $status = true;
                 }else{
-                    $id = $row->id;
+                    $id = $row[0]->id;
                     $this->mkonsumen->updateRecord('ref_konsumen_style_harga', $arr_isi, 'id', $id);
                     $msg    = "Data berhasil diupdate !";
                     $status = true;

@@ -15,6 +15,7 @@ $(document).ready(function () {
     let inpUpahHarian    = $('#upah_harian');
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
+    let inpUpahPerjam    = $('#upah_perjam')
 
     let isModal       = $("#modal-form-add-po");
 
@@ -58,7 +59,7 @@ $(document).ready(function () {
                         inpPosisi.val(data_row.posisi)
                         inpTglBergabung.val(data_row.tgl_bergabung)
                         inpJenisKelamin.val(data_row.jenis_kelamin).trigger('change');
-
+                        
 
 
 
@@ -66,6 +67,7 @@ $(document).ready(function () {
                             inpUpahHarian.val(data_row.upah_harian).trigger('change');
                             inpUpahLembur.val(data_row.upah_lembur).trigger('change');
                             inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
+                            inpUpahPerjam.val(data_row.upah_perjam).trigger('change');
 
                         }, 500);
                         isModal.modal("show");
@@ -197,6 +199,7 @@ $(document).ready(function () {
         if(inpUpahHarian.val().length == 0) validation = false
         if(inpUpahLembur.val().length == 0) validation = false
         if(inpUpahLemburWe.val().length == 0) validation = false
+        if(inpUpahPerjam.val().length == 0) validation = false
     
         if(validation){
             $.ajax({
@@ -216,6 +219,7 @@ $(document).ready(function () {
                     upah_lembur : inpUpahHarian.val(),
                     upah_harian : inpUpahLembur.val(),
                     upah_lembur_we : inpUpahLemburWe.val(),
+                    upah_perjam : inpUpahPerjam.val()
                 },
                 dataType: "json",
                 beforeSend: function () {

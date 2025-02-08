@@ -124,6 +124,18 @@
           </div>
         </div>
 
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_perjam">Upah Perjam<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <input type="number" name="upah_perjam" value="" id="upah_perjam" min="0" step="1" pattern="[0-9]*" class="form-control" 
+                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
+                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
+            <div class="invalid-feedback">
+              Upah Perjam tidak valid
+            </div>
+          </div>
+        </div>
+
         
         
       </div>

@@ -789,7 +789,7 @@ class SalesOrder extends BaseController
     // $save_name  = $hex_data. '_'. time() . '.png';
     $save_name  = $warna . '-' . $noSample . '.png';
     $data_warna = $this->mSalesOrder->getDataDetailSalesOrder($trans);
-    dd($data);
+    // dd($data);
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
     if (!file_exists($dir)) {

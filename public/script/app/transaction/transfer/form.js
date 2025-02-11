@@ -302,7 +302,7 @@ let dtList = new Tabulator("#dt-list", {
                             listUkuran.forEach( row => {
                                 tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
                             })
-                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Amount</th>
+                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -315,7 +315,7 @@ let dtList = new Tabulator("#dt-list", {
                             let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
                             tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
                         })
-                      tableHtml +=  `<td style="border:1px solid #ddd;">${formatRupiah(row.total_harga)}</td>
+                      tableHtml +=  `<td style="border:1px solid #ddd;">${row.qty}</td>
                     </tr>`;
                 });
 
@@ -845,7 +845,12 @@ function openModalDetail(row = null){
 let dtListSample = new Tabulator("#dt-list-sample", {
     columns: [
         {title: "ID", field: "id", width: "20%",visible:false},
-        {title: "No. SO", field: "kode_sales_order", width: "20%"},
+        {title: "Informasi", field: "kode_sales_order", width: "20%",
+            formatter: function (cell) {
+                let rowData = cell.getRow().getData();
+                return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
+            },
+        },
         {
             title: "Detail",
             field: "detail",
@@ -864,7 +869,7 @@ let dtListSample = new Tabulator("#dt-list-sample", {
                             listUkuran.forEach( row => {
                                 tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
                             })
-                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Amount</th>
+                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -877,7 +882,7 @@ let dtListSample = new Tabulator("#dt-list-sample", {
                             let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
                             tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
                         })
-                      tableHtml +=  `<td style="border:1px solid #ddd;">${formatRupiah(row.total_harga)}</td>
+                      tableHtml +=  `<td style="border:1px solid #ddd;">${(row.qty)}</td>
                     </tr>`;
                 });
 

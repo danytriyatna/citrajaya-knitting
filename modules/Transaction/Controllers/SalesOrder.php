@@ -114,6 +114,13 @@ class SalesOrder extends BaseController
       $pru['id_sales_order'] = $row->id;
       $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
       $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id) : [];
+      if (!empty($detail)) {
+        for ($i = 0; $i < count($detail); $i++) {
+          $drow = $detail[$i];
+          $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
+          $detail[$i]->qty      = $allQty;
+        }
+      }
       array_push(
         $build_array["data"],
         array(
@@ -773,7 +780,7 @@ class SalesOrder extends BaseController
 
   function getQrcode()
   {
-    
+
     $ukuran = $this->request->getGet("ukuran");
     $qty = $this->request->getGet("qty");
     $qtyp = $this->request->getGet("qtyp");
@@ -816,7 +823,7 @@ class SalesOrder extends BaseController
       'warna_2' => ''
     ];
 
-    if(!empty($data_warna)){
+    if (!empty($data_warna)) {
       $wrn = explode(' - ', $data_warna[0]->colour);
 
       $data['warna_2'] = !empty($wrn[1]) ? trim($wrn[1]) : '-';

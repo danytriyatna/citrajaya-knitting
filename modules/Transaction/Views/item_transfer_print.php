@@ -233,7 +233,7 @@
                                     <?php foreach ($row->ukuran as $u) : ?>
                                         <th><?= strtoupper($u) == 'ALL_' ? "ALL" : strtoupper($u) ?></th>
                                     <?php endforeach; ?>
-                                    <th>Amount</th>
+                                    <th>Total Qty</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -246,7 +246,7 @@
                                         <?php foreach ($row->ukuran as $u) : ?>
                                             <td class="text-right"><?= $rowData->$u ?></td>
                                         <?php endforeach; ?>
-                                        <td class="text-right"><?= !empty($rowData->total_harga) ? "Rp." . number_format(round($rowData->total_harga)) : "" ?></td>
+                                        <td class="text-right"><?= $rowData->qty ?></td>
 
                                     </tr>
                                 <?php endforeach; ?>

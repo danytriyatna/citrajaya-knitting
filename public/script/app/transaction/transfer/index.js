@@ -25,6 +25,10 @@ $(document).ready(function () {
                 width: "20%", 
 			} ,
             {
+				title: 'CMT', field: 'nama_operator', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "20%", 
+			} ,
+            {
 				title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
                 width: "15%",hozAlign:"center",
 			},

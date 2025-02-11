@@ -29,12 +29,12 @@ class PurchaseDetailModel extends \App\Models\PrModel
 
             $builder->where('uk.id_header', $params['id_header']);
         }
-        if (!empty($params['isReceive']) && $params['isReceive']) {
-            $builder->groupStart();
-            $builder->where("qty_receive < qty");
-            $builder->orWhere("qty_receive IS NULL");
-            $builder->groupEnd();
-        }
+        // if (!empty($params['isReceive']) && $params['isReceive']) {
+        //     $builder->groupStart();
+        //     // $builder->where("qty_receive < qty");
+        //     // $builder->orWhere("qty_receive IS NULL");
+        //     $builder->groupEnd();
+        // }
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {

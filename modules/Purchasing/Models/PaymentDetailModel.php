@@ -20,7 +20,7 @@ class PaymentDetailModel extends \App\Models\PrModel
     function getDataDetail($idHeader = null)
     {
         $builder = $this->db->table($this->table . " uk");
-        $builder->select("uk.id,uk.id_header,concat(uk.qty_receive, '/',uk.qty) as qty_status, uk.po_no,uk.po_date, uk.do_date, uk.qty, uk.qty_receive, uk.hutang, uk.total_bayar,sisa_bayar");
+        $builder->select("uk.id,uk.id_header,concat(uk.qty_receive, '/',uk.qty) as qty_status, uk.po_no,uk.po_date, uk.do_date, uk.qty, uk.qty_receive, uk.hutang, uk.total_bayar,sisa_bayar,uk.diskon, uk.grand_total");
         $builder->where("uk.id_header", $idHeader);
 
         $this->_data = $builder->get()->getResult();

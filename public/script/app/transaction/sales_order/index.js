@@ -351,7 +351,7 @@ $(document).ready(function () {
                             inpp_buyer.html(data.nama)
 
                             setTimeout(() => {
-                                // inpp_trans.html(data.id);
+                                inpp_trans.html(data.id);
                                 mdlPrint.modal("show");
                             }, 500);
                         } 
@@ -981,6 +981,7 @@ $(document).ready(function () {
         const dt_deskripsi = inpp_deskripsi.html()
         const dt_buyer = inpp_buyer.html()
         const dt_warna = inpp_warna.html()
+        const dt_trans = inpp_trans.html()
         // inpp_trans
 
         // Query parameters
@@ -992,11 +993,12 @@ $(document).ready(function () {
             deskripsi : dt_deskripsi,
             buyer : '',
             warna : dt_warna,
+            trans : dt_trans
           };
   
           // Buat query string
           let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/sample/generate?${queryString}`;
+          let fullUrl = `trans/sales-order/generate?${queryString}`;
   
           // Buka link di tab baru
           window.open(fullUrl, '_blank');

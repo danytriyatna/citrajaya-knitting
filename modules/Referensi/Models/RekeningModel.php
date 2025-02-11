@@ -9,6 +9,7 @@ class RekeningModel extends \App\Models\PrModel
     protected $_data = null;
     protected $primaryKey = 'id';
 
+
     public function __construct()
     {
         parent::__construct();

@@ -46,7 +46,8 @@ if(inpStatus.val() == 0){
     btnSimpan.hide()
     btnApprove.hide()
 }
-const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+// const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+const regex = /^[0-9.,]+$/;
 
 
 
@@ -381,7 +382,7 @@ inpPrice.on("input", function(e){
 })
 
 function formatRupiah(value){
-    value = value.replace(/[^,\d]/g, '').toString();
+    value = value.replace(/[^\d]/g, '').toString();
    
      // Pisahkan angka menjadi ribuan
     let split = value.split(',');
@@ -423,6 +424,11 @@ inpPrice.keyup(function (e) {
     // }
 
 })
+
+inpQtyItem.on("input", function(e){
+    e.target.value =  e.target.value.replace(",", ".");
+})
+
 
 inpQtyItem.keyup(function (e) {
 

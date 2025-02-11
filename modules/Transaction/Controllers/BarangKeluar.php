@@ -215,7 +215,7 @@ class BarangKeluar extends BaseController
                 ]
             ];
 
-            $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+            $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
             // foreach ($resDataDetail as &$rowData) {
             //     $rowData->id_barang = encrypt($rowData->id_barang);
             // }

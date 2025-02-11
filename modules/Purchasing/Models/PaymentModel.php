@@ -173,6 +173,8 @@ class PaymentModel extends \App\Models\PrModel
                         "hutang" => !empty($rowData['hutang']) ? $rowData['hutang'] : 0,
                         "sisa_bayar" => !empty($rowData['sisa_bayar']) ? $rowData['sisa_bayar'] : 0,
                         "total_bayar" => !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0,
+                        "diskon" => !empty($rowData['diskon']) ? $rowData['diskon'] : 0,
+                        "grand_total" => !empty($rowData['diskon']) ? $rowData['total_bayar'] - $rowData['diskon'] : $rowData['total_bayar'],
                         "qty" => !empty($rowData['qty']) ? $rowData['qty'] : 0,
                         "qty_receive" => !empty($rowData['qty_receive']) ? $rowData['qty_receive'] : 0,
                         "id_po" => !empty($rowData['id_header']) ? $rowData['id_header'] : null,

@@ -25,7 +25,8 @@ let btnApprove = $('#btn-approve');
 let btnSimpanDetail = $('#btn-simpan-det');
 let modalDet = $('#modal-detail-item');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
-const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+// const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+const regex = /^[0-9.,]+$/;
    
 if(inpStatus.val() == 0){
     btnAdd.show()
@@ -280,16 +281,20 @@ if(detailData.length > 0){
     }, 1000);
 } 
 
+inpQty.on("input", function(e){
+    e.target.value =  e.target.value.replace(",", ".");
+})
+
 inpQty.keyup(function (e) {
-    // if(!regex.test(e.target.value)){
-    //     e.target.value = ""
-    //     return Swal.fire({
-    //         text: "Quantity harus berupa angka",
-    //         icon: 'error',
-    //         showConfirmButton: false,
-    //         timer: 2000
-    //     });
-    // }
+    if(!regex.test(e.target.value)){
+        e.target.value = ""
+        return Swal.fire({
+            text: "Quantity harus berupa angka",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
 })
 
 inpUnitPrice.on("input", function(e){
@@ -297,7 +302,7 @@ inpUnitPrice.on("input", function(e){
 })
 
 function formatRupiah(value){
-    value = value.replace(/[^,\d]/g, '').toString();
+    value = value.replace(/[^\d]/g, '').toString();
      // Pisahkan angka menjadi ribuan
     let split = value.split(',');
     let sisa = split[0].length % 3;
@@ -344,7 +349,7 @@ function openModalDetail(row = null){
 
     btnSimpanDetail.off("click").on("click",function(){
         
-        let price = parseFloat(inpUnitPrice.val().replace(/[^\d]/g, ''));
+        let price = parseFloat(inpUnitPrice.val().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.'));
         let grandPrice = 0;
         let discPrice = 0;
         let taxAfterPrice = 0;
@@ -434,7 +439,7 @@ function openModalDetail(row = null){
             tax = ""
             disc = ""
         }
-    
+       
         if(row){
             row.update({
                 id:inpIdDetail.val(),
@@ -653,7 +658,7 @@ let dtListDetailPO = new Tabulator("#dt-list-po", {
                 precision: 0,   // Tidak ada desimal
             }, hozAlign:"right",
         },
-        {title:"DISC (%)", field:"disc", hozAlign:"center",width:"10%"},
+        {title:"DISC (%)", field:"disc", hozAlign:"center",width:"10%",visible:false},
         {title:"TAX (%)", field:"tax", hozAlign:"center",width:"10%"},
         {title:"AMOUNT", width:"15%", field:"grand_price",formatter: "money", formatterParams: {
             decimal: ",",

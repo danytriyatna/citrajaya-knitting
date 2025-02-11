@@ -25,7 +25,7 @@ $routes->group('trans/sales-order', ['namespace' => 'Modules\Transaction\Control
   $routes->get('delete/list(:any)', 'SalesOrder::deleteList/$1');
   $routes->get('delete/detail(:any)', 'SalesOrder::deleteDetailList/$1');
   $routes->post('generate', 'SalesOrder::generateQRCode');
-  $routes->get('generate', 'Sample::getQrcode');
+  $routes->get('generate', 'SalesOrder::getQrcode');
   $routes->post('getSample', 'SalesOrder::getSampleBuyer');
   $routes->get('print/(:any)', 'SalesOrder::print/$1');
   $routes->get('view', 'SalesOrder::view');

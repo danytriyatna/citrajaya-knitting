@@ -12,6 +12,7 @@ class ItemTransferModel extends \App\Models\PrModel
     protected $tblGudang = "ref_gudang";
     protected $tblBarang = "ref_barang";
     protected $tblBuyer = "ref_konsumen";
+    protected $tblOperator = "ref_operator";
     protected $tblKategori = "ref_kategori_persediaan";
     protected $tblSatuan = "ref_satuan";
     protected $tblTrxBarang = "trans_barang";
@@ -31,7 +32,9 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblGudang . " abx", "uk.id_gudang_asal = abx.id", "left");
         $builder->join($this->tblGudang . " bbx", "uk.id_gudang_tujuan = bbx.id", "left");
-        $builder->select("uk.id,uk.tanggal,uk.tipe, abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan, uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan");
+        $builder->join($this->tblOperator . " cbx", "uk.id_cmt = cbx.id", "left");
+
+        $builder->select("uk.id,uk.tanggal,uk.tipe,uk.id_cmt,uk.tipe,id_proses, cbx.nama_operator,  abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan, uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -179,7 +182,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "id_gudang_tujuan" => $data['id_gudang_tujuan'],
                     ];
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang);
+                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang_tujuan']);
                     $dataLots = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,

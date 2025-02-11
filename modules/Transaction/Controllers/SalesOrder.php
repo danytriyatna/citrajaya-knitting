@@ -773,6 +773,7 @@ class SalesOrder extends BaseController
 
   function getQrcode()
   {
+    
     $ukuran = $this->request->getGet("ukuran");
     $qty = $this->request->getGet("qty");
     $qtyp = $this->request->getGet("qtyp");
@@ -780,12 +781,15 @@ class SalesOrder extends BaseController
     $deskripsi = $this->request->getGet("deskripsi");
     $buyer = $this->request->getGet("buyer");
     $warna = $this->request->getGet("warna");
+    $trans = $this->request->getGet("trans");
 
+    $trans = decrypt($trans);
     /* Data */
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
     $save_name  = $warna . '-' . $noSample . '.png';
-
+    $data_warna = $this->mSalesOrder->getDataDetailSalesOrder($trans);
+    dd($data);
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
     if (!file_exists($dir)) {
@@ -809,7 +813,14 @@ class SalesOrder extends BaseController
       'deskripsi' => $deskripsi,
       'buyer' => $buyer,
       'warna' => $warna,
+      'warna_2' => ''
     ];
+
+    if(!empty($data_warna)){
+      $wrn = explode(' - ', $data_warna[0]->colour);
+
+      $data['warna_2'] = trim($wrn[1]);
+    }
 
     /* QR Data  */
     $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);

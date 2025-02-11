@@ -38,15 +38,16 @@
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="unit_price">Unit Price</label>
           <div class="col-md-9">
             <input type="text" id="unit_price" name="unit_price" pattern="\d{10,13}" class="form-control" placeholder="Ketikkan unit price" value="">
-            <small class="form-text">Hanya menerima input berupa angka, penulisan koma bisa menggunakan titik ( . ), contoh: 100000.50, 8500.99</small>
+            <small class="form-text">Hanya menerima input berupa angka karena mata uang rupiah</small>
           </div>
         </div>
         <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="disc_item">Disc (%)</label>
-          <div class="col-md-5">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label d-none" for="disc_item">Disc (%)</label>
+          <div class="col-md-5 d-none">
             <input type="text" id="disc_item" name="disc_item" class="form-control" placeholder="Ketikkan nilai diskon" value="0">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-2"></div>
+          <div class=" col-md-4">
             <div class="form-check">
               <input type="hidden" id="tax" name="tax" value="<?= !empty($tax->nilai) ? $tax->nilai : 0 ?>" class="form-control" required>
               <input class="form-check-input" type="checkbox" value="" id="check_tax">

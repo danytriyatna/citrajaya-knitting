@@ -185,6 +185,8 @@ class PurchasePayment extends BaseController
     $id_rek = $this->request->getPost('id_rek');
     $totalBayar = $this->request->getPost('totalBayar');
     $hutang = $this->request->getPost('hutang');
+    $diskon = $this->request->getPost('diskon');
+    // $grandTotal = $this->request->getPost('grandTotal');
     // $sisaBayar = $this->request->getPost('sisaBayar');
     $dataDetail = $this->request->getPost('data');
     if ($id != "") {
@@ -199,8 +201,10 @@ class PurchasePayment extends BaseController
       "pay_date" => $pp_date,
       "id_rek" => $id_rek,
       "total_bayar" => $totalBayar,
-      "sisa_bayar" => $hutang - $totalBayar,
+      "sisa_bayar" => $diskon == null ? $hutang - $totalBayar - $diskon : $hutang - $totalBayar,
       "hutang" => $hutang,
+      "diskon" => $diskon,
+      // "grand_total" => $totalBayar - $diskon,
       "status" => 1
     ];
     if ($id) {
@@ -240,10 +244,10 @@ class PurchasePayment extends BaseController
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }
-    
+
     $html = view($this->views . '\purchase_payment_print', $this->data);
 
-    
+
     $dompdf->generate($html, 'paymeny.pdf', true);
     exit;
   }

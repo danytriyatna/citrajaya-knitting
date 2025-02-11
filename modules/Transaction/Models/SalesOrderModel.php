@@ -151,7 +151,7 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetailSalesOrder($idSalesOrder)
+    function getDataDetailSalesOrder($idSalesOrder = null, $idSalesOrderDet = null)
     {
         $builder = $this->db->table("trans_sales_order_det" . " abx");
         $builder->select("abx.id,ROW_NUMBER
@@ -216,7 +216,14 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder->join("ref_warna w6", "abx.id_warna_6 = w6.id", "left");
         $builder->join("ref_warna w7", "abx.id_warna_7 = w7.id", "left");
         $builder->join("ref_warna w8", "abx.id_warna_8 = w8.id", "left");
-        $builder->where("abx.id_sales_order", $idSalesOrder);
+        
+        if(!empty($idSalesOrder)){
+            $builder->where("abx.id_sales_order", $idSalesOrder);
+        }
+        
+        if(!empty($idSalesOrderDet)){
+            $builder->where("abx.id", $idSalesOrderDet);
+        }
         $builder->groupBy(array("abx.id", "w1.kode_warna", "w2.kode_warna", "w3.kode_warna", "w4.kode_warna", "w5.kode_warna", "w6.kode_warna", "w7.kode_warna", "w8.kode_warna"));
         $this->_data = $builder->get()->getResult();
         return $this->_data;

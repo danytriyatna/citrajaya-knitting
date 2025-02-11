@@ -67,6 +67,13 @@ $routes->group("master-data/satuan", ['namespace' => 'Modules\Referensi\Controll
     $routes->post('simpan', 'RefSatuan::save');
     $routes->get('delete/(:any)', 'RefSatuan::deactivate/$1');
 });
+$routes->group("master-data/rekening", ['namespace' => 'Modules\Referensi\Controllers'], static function ($routes) {
+    $routes->get('/', 'RefRekening::index');
+
+    $routes->post('list', 'RefRekening::lists');
+    $routes->post('simpan', 'RefRekening::save');
+    $routes->get('delete/(:any)', 'RefRekening::deactivate/$1');
+});
 $routes->group("master-data/jenis_barang", ['namespace' => 'Modules\Referensi\Controllers'], static function ($routes) {
     $routes->get('/', 'RefJenisBarang::index');
 

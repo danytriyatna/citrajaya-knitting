@@ -15,6 +15,7 @@ use Modules\Transaction\Models\BarangMasukDetailModel;
 use Modules\Referensi\Models\GudangModel;
 use Modules\Transaction\Models\ItemTransferDetailModel;
 use Modules\Transaction\Models\SalesOrderModel;
+use Modules\Referensi\Models\OperatorModel;
 
 class ItemTransfer extends BaseController
 {
@@ -28,6 +29,7 @@ class ItemTransfer extends BaseController
   protected $mBarangMasuk;
   protected $mGudang;
   protected $mSalesOrder;
+  protected $mOperator;
   function __construct()
   {
     $this->MOD_ALIAS = "MOD_TRANSAKSI_BARANG_MASUK";
@@ -39,6 +41,7 @@ class ItemTransfer extends BaseController
     $this->mRefDet = new ItemTransferDetailModel();
     $this->mGudang = new GudangModel();
     $this->mSalesOrder = new SalesOrderModel();
+    $this->mOperator = new OperatorModel();
   }
 
   public function index()
@@ -119,6 +122,7 @@ class ItemTransfer extends BaseController
           "tanggal" => fdate_eng_to_ind($row->tanggal),
           "gudang_asal" => $row->gudang_asal,
           "gudang_tujuan" => $row->gudang_tujuan,
+          "nama_operator" => !empty($row->nama_operator) ? $row->nama_operator : "NON CMT",
           "keterangan" => $row->keterangan,
           "status" => $status
         )
@@ -147,7 +151,7 @@ class ItemTransfer extends BaseController
         ]
       ];
 
-      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
       $resDataDetSO = $this->mRefDet->getDataDetailSO($id);
       $dataSO = [];
       foreach ($resDataDetSO as $rowData) {
@@ -167,6 +171,7 @@ class ItemTransfer extends BaseController
       // }
 
 
+
       $this->data['resData'] = $resData;
       $this->data['detail'] = json_encode($resDataDetail);
       $this->data['dataSO'] = json_encode($dataSO);
@@ -180,6 +185,14 @@ class ItemTransfer extends BaseController
     ];
     $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
     $resDataProses = $this->mRef->getDataProses();
+    $sortOperator = [
+      [
+        'field' => 'nama_operator',
+        'dir' => 'ASC'
+      ]
+    ];
+    $dataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
+    $this->data['operator']    = $dataOperator;
     $this->data['gudang']    = $resDataGudang;
     $this->data['proses']    = $resDataProses;
     return view($this->views . '\item_transfer_form_static', $this->data);

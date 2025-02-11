@@ -26,12 +26,15 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
-        $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no", "left");
+        $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no AND gbx.id_gudang = $params[id_gudang]", "left");
         $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price, uk.keterangan");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);
         }
+        // if (!empty($params['id_gudang'])) {
+        //     $builder->where('gbx.id_gudang', $params['id_gudang']);
+        // }
         if ($params['isReceive']) {
             $builder->groupStart();
             $builder->where("qty_receive < qty");
@@ -90,8 +93,9 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->tblDetSO . " abx");
 
-        $builder->select("bbx.id,abx.id_so, bbx.kode_sales_order");
+        $builder->select("bbx.id,abx.id_so, bbx.kode_sales_order, cbx.nama, bbx.deskripsi");
         $builder->join($this->tblSO . " bbx", "abx.id_so = bbx.id", "left");
+        $builder->join("ref_konsumen cbx", "bbx.id_konsumen = cbx.id", "inner");
 
         $builder->where("abx.id_header", $idHeader);
         $this->_data = $builder->get()->getResult();

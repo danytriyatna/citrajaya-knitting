@@ -35,7 +35,8 @@ if(inpStatus.val() == 0){
     btnSimpan.hide()
     btnApprove.hide()
 }
-const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+// const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
+const regex = /^[0-9.,]+$/;
 let dtList = new Tabulator("#dt-list", {
     columns: [
         {
@@ -342,7 +343,7 @@ if(detailData.length > 0){
 } 
 
 function formatRupiah(value){
-    value = value.replace(/[^,\d]/g, '').toString();
+    value = value.replace(/[^\d]/g, '').toString();
      // Pisahkan angka menjadi ribuan
     let split = value.split(',');
     let sisa = split[0].length % 3;
@@ -376,6 +377,10 @@ inpLotNo.keyup(function (e){
     checkLotNo(e.target.value)
 })
 
+inpQtyItem.on("input", function(e){
+    e.target.value =  e.target.value.replace(",", ".");
+})
+
 inpQtyItem.keyup(function (e) {
 
     if(inpBarang.val().length === 0){
@@ -398,15 +403,15 @@ inpQtyItem.keyup(function (e) {
         });
     }
 
-    if(e.target.value > parseFloat(inpQtyPO.val())){
-        e.target.value = ""
-        return Swal.fire({
-                    text: `Barang hanya memiliki quantity ${inpQtyPO.val()}` ,
-                    icon: 'error',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-    }
+    // if(e.target.value > parseFloat(inpQtyPO.val())){
+    //     e.target.value = ""
+    //     return Swal.fire({
+    //                 text: `Barang hanya memiliki quantity ${inpQtyPO.val()}` ,
+    //                 icon: 'error',
+    //                 showConfirmButton: false,
+    //                 timer: 2000
+    //             });
+    // }
 })
 
 spanPoNo.click(function () {

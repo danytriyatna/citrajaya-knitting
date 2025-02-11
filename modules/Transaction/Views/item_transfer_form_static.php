@@ -40,7 +40,7 @@
             <input type="text" id="qty_item" name="qty_item" class="form-control" placeholder="Ketikkan qty item" value="">
           </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row  d-none">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
             <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="">
@@ -208,7 +208,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_proses">Proses</label>
                     <div class="col-md-8">
-                      <select id="select_proses" name="select_proses" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
+                      <select id="select_proses" name="select_proses" class="form-select select2" data-placeholder="-- Pilih Proses --">
                         <?php foreach ($proses as $item) : ?>
                           <?php if (!empty($resData->id_proses) && $resData->id_proses == $item->id) { ?>
                             <option selected value="<?= $item->id ?>"><?= $item->nama ?></option>
@@ -225,7 +225,16 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">CMT</label>
                     <div class="col-md-8">
-                      <input type="text" id="cmt" name="cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+                      <select id="select_cmt" name="select_cmt" class="form-control custom-select select2" data-placeholder="-- Pilih CMT --">
+                        <?php foreach ($operator as $rowData) : ?>
+                          <?php if (!empty($resData->id_cmt) && $resData->id_cmt == $rowData->id) { ?>
+                            <option selected value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
+                          <?php } else { ?>
+                            <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
+                          <?php } ?>
+                        <?php endforeach ?>
+                      </select>
+                      <!-- <input type="text" id="cmt" name="cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly> -->
                     </div>
                   </div>
                 </div>

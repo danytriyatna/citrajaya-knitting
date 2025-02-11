@@ -158,7 +158,10 @@
                                     <td><?= $data->gudang_tujuan ?></td>
                                 </tr>
                                 <tr>
-                                    <td>&nbsp;</td>
+                                    <th><small>CMT</small></th>
+                                </tr>
+                                <tr>
+                                    <td><?= !empty($data->nama_operator) ? $data->nama_operator : "NON CMT" ?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -179,7 +182,7 @@
                 <th class="text-center" style="width: 40px;">No.</th>
                 <th class="text-center" style="width: 45%;">NAMA BARANG</th>
                 <th class="text-center" style="width: 20%;">BANYAKNYA</th>
-                <th class="text-center" style="width: 20%;">HARGA SATUAN</th>
+                <th class="text-center" style="width: 20%;">SATUAN</th>
                 <th class="text-center" style="width: 20%;">NO LOT</th>
                 <th class="text-center" style="width: 20%;">KETERANGAN</th>
             </tr>
@@ -191,7 +194,7 @@
                     <td><?= $i++ ?></td>
                     <td><?= $row->nama_barang ?></td>
                     <td class="text-right"><?= $row->qty ?></td>
-                    <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round($row->price)) : "" ?></td>
+                    <td><?= $row->nama_unit ?></td>
                     <td><?= $row->lot_no ?></td>
                     <td><?= $row->keterangan ?></td>
                 </tr>
@@ -206,7 +209,7 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 40px;">No.</th>
-                <th class="text-center" style="width: 25%;">NO SO</th>
+                <th class="text-center" style="width: 25%;">INFORMASI</th>
                 <th class="text-center" style="width: 70%;">DETAIL</th>
 
             </tr>
@@ -216,7 +219,11 @@
             foreach ($dataSO as $row) : ?>
                 <tr>
                     <td><?= $i++ ?></td>
-                    <td><?= $row->kode_sales_order ?></td>
+                    <td>
+                        No SO: <?= $row->kode_sales_order ?></br>
+                        Style:<?= !empty($row->style) ? $row->style : $row->deskripsi ?></br>
+                        Buyer:<?= $row->nama ?></br>
+                    </td>
                     <td>
                         <table class="table-bordered w-100 py-4">
                             <thead>
@@ -239,7 +246,8 @@
                                         <?php foreach ($row->ukuran as $u) : ?>
                                             <td class="text-right"><?= $rowData->$u ?></td>
                                         <?php endforeach; ?>
-                                        <td><?= $rowData->total_harga ?></td>
+                                        <td class="text-right"><?= !empty($rowData->total_harga) ? "Rp." . number_format(round($rowData->total_harga)) : "" ?></td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

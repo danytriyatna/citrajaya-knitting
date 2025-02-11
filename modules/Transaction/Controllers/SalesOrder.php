@@ -819,7 +819,7 @@ class SalesOrder extends BaseController
     if(!empty($data_warna)){
       $wrn = explode(' - ', $data_warna[0]->colour);
 
-      $data['warna_2'] = !eempty($wrn[1]) ? trim($wrn[1]) : '-';
+      $data['warna_2'] = !empty($wrn[1]) ? trim($wrn[1]) : '-';
     }
 
     /* QR Data  */

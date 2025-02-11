@@ -551,7 +551,7 @@ function openModalDetail(row = null){
     modalDet.modal("show")
 
     btnSimpanDetail.off("click").on("click",function(){
-
+        let price = parseFloat(inpPrice.val().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.'));
         if(inpBarang.val().length == 0){
             return Swal.fire({
                 text: "Barang harus dipilih",
@@ -596,7 +596,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQtyItem.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 id_gudang                   : selectGudang.val(),
                 qty_receive                 :inpQtyPO.val(),
                 nama_gudang                    : $('#select_warehouse option:selected').text(),
@@ -611,7 +611,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 id_gudang                   : selectGudang.val(),
-                price                         : inpPrice.val(),
+                price                         : price,
                 qty_receive:inpQtyPO.val(),
                 nama_gudang                    : $('#select_warehouse option:selected').text(),
                 qty                         : inpQtyItem.val(),

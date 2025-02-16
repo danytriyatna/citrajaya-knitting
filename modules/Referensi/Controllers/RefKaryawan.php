@@ -93,6 +93,7 @@ class RefKaryawan extends BaseController
                     "upah_lembur" => $row->upah_lembur,
                     "upah_harian" => $row->upah_harian,
                     "upah_lembur_we" => $row->upah_lembur_we,
+                    "upah_jam" => $row->upah_jam,
                 )
             );
         }
@@ -116,7 +117,7 @@ class RefKaryawan extends BaseController
         $upah_lembur =  $this->request->getPost('upah_lembur');
         $upah_harian =  $this->request->getPost('upah_harian');
         $upah_lembur_we =  $this->request->getPost('upah_lembur_we');
-        $upah_perjam =  $this->request->getPost('upah_perjam');
+        $upah_jam =  $this->request->getPost('upah_jam');
 
 
         $msg    = "Data gagal ditambahkan !";
@@ -139,7 +140,7 @@ class RefKaryawan extends BaseController
             'upah_lembur' => $upah_lembur,
             'upah_harian' => $upah_harian,
             'upah_lembur_we' => $upah_lembur_we,
-            'upah_perjam' => $upah_perjam
+            'upah_jam' => $upah_jam
         ];
 
         

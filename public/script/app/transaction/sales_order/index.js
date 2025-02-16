@@ -4,41 +4,42 @@ $(document).ready(function () {
 
     $("[data-politespace]").politespace();
 
-    let inpData           = $('#data_id');
-    let inpNoSalesOrder   = $('#no_sales_order');
-    let inpDeskripsi      = $('#desc_style');
-    let inpStyle          = $('#style');
-    let inpBuyer          = $('#select_buyer');
-    let inpTglTransaksi   = $('#tgl_sales_order');
-    let inpTglDeadline    = $('#tgl_deadline');
-    let inpKetSalesOrder  = $('#ket_sales_order');
-    let inpUangDP         = $('#uang_dp');
-    let inpPoWarna1       = $('#po_warna1');
-    let inpPoWarna2       = $('#po_warna2');
-    let inpPoWarna3       = $('#po_warna3');
-    let inpPoWarna4       = $('#po_warna4');
-    let inpPoWarna5       = $('#po_warna5');
-    let inpPoWarna6       = $('#po_warna6');
-    let inpPoWarna7       = $('#po_warna7');
-    let inpPoWarna8       = $('#po_warna8');
+    const inpData           = $('#data_id');
+    const inpNoSalesOrder   = $('#no_sales_order');
+    const inpDeskripsi      = $('#desc_style');
+    const inpStyle          = $('#style');
+    const inpBuyer          = $('#select_buyer');
+    const inpTglTransaksi   = $('#tgl_sales_order');
+    const inpTglDeadline    = $('#tgl_deadline');
+    const inpKetSalesOrder  = $('#ket_sales_order');
+    const inpUangDP         = $('#uang_dp');
+    const inpPoWarna1       = $('#po_warna1');
+    const inpPoWarna2       = $('#po_warna2');
+    const inpPoWarna3       = $('#po_warna3');
+    const inpPoWarna4       = $('#po_warna4');
+    const inpPoWarna5       = $('#po_warna5');
+    const inpPoWarna6       = $('#po_warna6');
+    const inpPoWarna7       = $('#po_warna7');
+    const inpPoWarna8       = $('#po_warna8');
 
-    let fileSalesOrder     = $('#fileSalesOrder');
-    let fileSalesOrderOld  = $('#fileSalesOrderOld');
-    let linkFileSalesOrder = $('#linkFileSalesOrder');
-    let deskripsiText      = $('#deskripsiText');
-    let tglSalesOrderText  = $('#tglSalesOrderText');
-    let buyerText          = $('#buyerText');
-    let tglDeadlineText    = $('#tglDeadlineText');
-    let noSalesOrderText   = $('#noSalesOrderText');
-    let fotoText           = $('#fotoText');
-    let rowDet             = $("#rowDet")
+    const fileSalesOrder     = $('#fileSalesOrder');
+    const fileSalesOrderOld  = $('#fileSalesOrderOld');
+    const linkFileSalesOrder = $('#linkFileSalesOrder');
+    const deskripsiText      = $('#deskripsiText');
+    const tglSalesOrderText  = $('#tglSalesOrderText');
+    const buyerText          = $('#buyerText');
+    const tglDeadlineText    = $('#tglDeadlineText');
+    const noSalesOrderText   = $('#noSalesOrderText');
+    const fotoText           = $('#fotoText');
+    const rowDet             = $("#rowDet")
 
-    let isModal            = $("#modal-form-add-po");
-    let isModalPO          = $("#modal-form-po");
+    const isModal            = $("#modal-form-add-po");
+    const isModalPO          = $("#modal-form-po");
     var idSalesOrder       = null
     var idSalesOrderDet    = null
 
-    let btnSend            = $("#btn-send");
+    const btnSend            = $("#btn-send");
+    const brcStyle            = $("#style_input");
 
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
@@ -289,6 +290,7 @@ $(document).ready(function () {
                     <div class="row">
                       <div class="col-sm-3 text-start">
                         <h6 class="f-w-700 m-b-6">${data.kode_sales_order}</h6>
+                        <p class="f-w-500 m-y-0">${data.style}</p>
                         <p class="f-w-500 m-y-0">${data.deskripsi}</p>
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>
@@ -348,6 +350,8 @@ $(document).ready(function () {
                             inpp_warna.html(data_row.colordasar);
                             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
                             inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+
+                            brcStyle.val(data.style)
                             inpp_buyer.html(data.nama)
 
                             setTimeout(() => {
@@ -401,8 +405,11 @@ $(document).ready(function () {
         inpTglTransaksi.val("")
         inpTglDeadline.val("")
         inpKetSalesOrder.val("")
+        inpStyle.val("")
         inpSample.val("").trigger("change")
-        inpUangDP.val("0").trigger("change");
+        setTimeout(() => {
+            inpUangDP.val("0").trigger("change");
+        }, 1000);
         rowDet.hide()
         btnSend.hide()
         isModal.modal("show");
@@ -475,7 +482,18 @@ $(document).ready(function () {
             url: `/trans/sales-order/detail/${id}`,
             type: 'GET',
             dataType: 'json', 
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
             success: function(data) {
+                
                 idSalesOrder = id
                 rowDet.show()
                 inpData.val(data.id)
@@ -483,16 +501,23 @@ $(document).ready(function () {
                 inpNoSalesOrder.val(data.kode_sales_order)
                 fileSalesOrderOld.val(data.gambar_id)
                 inpKetSalesOrder.val(data.keterangan)
-                inpBuyer.val(data.id_konsumen).trigger('change')
+                inpStyle.val(data.style)
+                
                 
                 setTimeout(() => {
-                    inpSample.attr('value', data.id_sample)
+                    inpBuyer.val(data.id_konsumen).trigger('change')
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(data.tgl_deadline))
                         inpTglTransaksi.val(formatterDate(data.tgl_transaksi))
-                    }, 600);
+                        Swal.close();
+                        setTimeout(() => {
+                            inpSample.attr('value', data.id_sample);
+                            inpSample.val(data.id_sample).trigger("change");
+                            inpUangDP.val(data.uang_dp).trigger("change");
+                        }, 1000);
+                    }, 2000);
                 }, 1000);
-                inpUangDP.val(data.uang_dp).trigger("change");
+                
                 if(data.file_gambar){
                     fileSalesOrderOld.val(data.gambar_id)
                     linkFileSalesOrder.removeClass("d-none")
@@ -513,6 +538,7 @@ $(document).ready(function () {
                 
             },
             error: function(xhr, status, error) {
+                Swal.close();
                 console.error('Error fetching data:', error);
             }
         });
@@ -574,7 +600,18 @@ $(document).ready(function () {
             url: `/trans/sales-order/detail-qty/${id}/${idDet}`,
             type: 'GET',
             dataType: 'json', 
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
             success: function(data) {
+                Swal.close();
                 isModal.modal("hide")
                 noSalesOrderText.html(data.kode_sales_order)
                 deskripsiText.html(data.deskripsi)
@@ -601,6 +638,7 @@ $(document).ready(function () {
                 }, 500);
             },
             error: function(xhr, status, error) {
+                Swal.close();
                 console.error('Error fetching data:', error);
             }
         });
@@ -838,13 +876,21 @@ $(document).ready(function () {
             url: '/trans/sales-order/getSample', // point to server-side controller method
             dataType: "json", // what to expect back from the server
             type: "post",
-            beforeSend: function() {
-                
-              },
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
             data: { 
                   'buyers': inpBuyer.val(),
               },
             success: function (res) {
+              Swal.close();
               inpSample.empty()
               if(res.status){
                 isSampleData = res.data
@@ -874,6 +920,7 @@ $(document).ready(function () {
             error: function (res) {
               let msg = res.responseJSON.message;
               console.log(res.responseJSON.message)
+              Swal.close();
             },
           });
     }
@@ -890,21 +937,23 @@ $(document).ready(function () {
         let isin = isSampleData.filter((isi) => val == isi.id);
         if(isin.length > 0){
             if(inpData.val().length == 0){
-                inpTglTransaksi.val("")
-                inpTglDeadline.val("")
-                let tglTr = isin[0].tgl_transaksi.split('-')
-                let tglTransaksi = tglTr['2'] + '-' + tglTr['1']+ '-' + tglTr['0']
-                // inpTglTransaksi.datepicker('setDate', tglTransaksi); //.val(changeTgl(isin[0].tgl_transaksi))
-                let tglD = isin[0].tgl_deadline.split('-')
-                let tglDead = tglD['2'] + '-' + tglD['1']+ '-' + tglD['0']
-                // inpTglDeadline.datepicker('setDate', tglDead); //.val(changeTgl(isin[0].tgl_transaksi))
-                inpStyle.val(isin[0].style)
-                setTimeout(() => {
-                    inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
-                    inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))
-                }, 600);
-                inpKetSalesOrder.val(isin[0].deskripsi)
-                inpDeskripsi.val(isin[0].deskripsi)
+               setTimeout(() => {
+                    inpTglTransaksi.val("")
+                    inpTglDeadline.val("")
+                    let tglTr = isin[0].tgl_transaksi.split('-')
+                    let tglTransaksi = tglTr['2'] + '-' + tglTr['1']+ '-' + tglTr['0']
+                    // inpTglTransaksi.datepicker('setDate', tglTransaksi); //.val(changeTgl(isin[0].tgl_transaksi))
+                    let tglD = isin[0].tgl_deadline.split('-')
+                    let tglDead = tglD['2'] + '-' + tglD['1']+ '-' + tglD['0']
+                    // inpTglDeadline.datepicker('setDate', tglDead); //.val(changeTgl(isin[0].tgl_transaksi))
+                    inpStyle.val(isin[0].style)
+                    setTimeout(() => {
+                        inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
+                        inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))
+                    }, 600);
+                    inpKetSalesOrder.val(isin[0].deskripsi)
+                    inpDeskripsi.val(isin[0].deskripsi)
+               }, 1000);
             }
         }
     });
@@ -982,6 +1031,8 @@ $(document).ready(function () {
         const dt_buyer = inpp_buyer.html()
         const dt_warna = inpp_warna.html()
         const dt_trans = inpp_trans.html()
+
+        const dt_style = brcStyle.val()
         // inpp_trans
 
         // Query parameters
@@ -993,7 +1044,8 @@ $(document).ready(function () {
             deskripsi : dt_deskripsi,
             buyer : '',
             warna : dt_warna,
-            trans : dt_trans
+            trans : dt_trans,
+            style : dt_style
           };
   
           // Buat query string

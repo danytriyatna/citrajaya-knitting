@@ -95,7 +95,8 @@
     for ($i = 0; $i < $data['qtyp']; $i++) { 
     ?>
       <div class="item">
-        <h1 class="mt-0 mb-0"><?= $data['deskripsi'] ?: '-' ?></h1>
+        <h1 class="mt-0 mb-0"><?= $data['style'] ?: '-' ?></h1>
+        <h3 class="mt-0 mb-0"><?= $data['deskripsi'] ?: '-' ?></h3>
         <table>
           <tbody>
             <tr>

@@ -131,6 +131,7 @@ class SalesOrder extends BaseController
           "kode_sales_order" => $row->kode_sales_order,
           "tgl_deadline" => $row->tgl_deadline,
           "deskripsi" => $row->deskripsi,
+          "style" => $row->style,
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,
           "status"  => $status,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
@@ -185,6 +186,7 @@ class SalesOrder extends BaseController
 
     $build_array =  array(
       "id"   => encrypt($results->id),
+      "style" => $results->style,
       "keterangan" => $results->keterangan,
       "id_konsumen" => $results->id_konsumen,
       "tgl_transaksi" => $results->tgl_transaksi,
@@ -236,6 +238,7 @@ class SalesOrder extends BaseController
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
     $uang_dp = $this->request->getPost('uang_dp');
+    $style = $this->request->getPost('style');
 
 
     $this->validation->setRules([
@@ -289,7 +292,8 @@ class SalesOrder extends BaseController
       'deskripsi' => $deskripsi,
       'tgl_transaksi' => $tglTransaksi,
       'tgl_deadline' => $tglDeadline,
-      // 'id_sample' => $sampleId,
+      'uang_dp' => $uang_dp,
+      'style' => $style,
       // 'kode_sales_order' => $noSalesOrder,
       'active' => 1,
       // 'status' => 1,
@@ -372,7 +376,7 @@ class SalesOrder extends BaseController
           'ref_id' => $id,
           'ref_kode' => $noSalesOrder,
           'id_konsumen' => $idKonsumen,
-          'keterangan_style' => $keterangan,
+          'keterangan_style' => $style,
           'tgl_deadline' => $tglDeadline,
           'tgl_transaksi' => date("Y-m-d"),
           // 'id_style' => $id,
@@ -789,6 +793,7 @@ class SalesOrder extends BaseController
     $buyer = $this->request->getGet("buyer");
     $warna = $this->request->getGet("warna");
     $trans = $this->request->getGet("trans");
+    $style = $this->request->getGet("style");
 
     $trans = decrypt($trans);
     /* Data */
@@ -820,6 +825,7 @@ class SalesOrder extends BaseController
       'deskripsi' => $deskripsi,
       'buyer' => $buyer,
       'warna' => $warna,
+      'style' => $style,
       'warna_2' => ''
     ];
 

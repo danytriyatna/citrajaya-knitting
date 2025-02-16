@@ -351,6 +351,7 @@
         <h5 class="modal-title text-bold">Cetak Barcode</h5>
         <input type="hidden" id="id_sample_qty">
         <input type="hidden" id="id_sample_det_qty">
+        <input type="hidden" id="style_input">
         <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">

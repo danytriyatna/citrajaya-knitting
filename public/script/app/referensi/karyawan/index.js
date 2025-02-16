@@ -15,7 +15,7 @@ $(document).ready(function () {
     let inpUpahHarian    = $('#upah_harian');
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
-    let inpUpahPerjam    = $('#upah_perjam')
+    let inpUpahPerjam    = $('#upah_jam')
 
     let isModal       = $("#modal-form-add-po");
 
@@ -42,7 +42,7 @@ $(document).ready(function () {
                             window.location.replace(baseUrl + "/master-data/karyawan/delete/" + data_row.id);
                         }
                     }else if(e.target.title === 'edit'){
-
+                        resetInput()
 
                         inpData.val(data_row.id)
                         
@@ -67,7 +67,7 @@ $(document).ready(function () {
                             inpUpahHarian.val(data_row.upah_harian).trigger('change');
                             inpUpahLembur.val(data_row.upah_lembur).trigger('change');
                             inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
-                            inpUpahPerjam.val(data_row.upah_perjam).trigger('change');
+                            inpUpahPerjam.val(data_row.upah_jam).trigger('change');
 
                         }, 500);
                         isModal.modal("show");
@@ -162,6 +162,17 @@ $(document).ready(function () {
     }
 
     $("#btn-add").on("click", function(){
+       
+        resetInput()
+        isModal.modal("show");
+    });
+
+    $("#btn-save").on("click", function(e){
+        e.preventDefault()
+        simpanData()
+    });
+
+    function resetInput(){
         inpData.val("")
         inpNip.val("")
         inpNama.val("")
@@ -171,17 +182,14 @@ $(document).ready(function () {
         inpPosisi.val("")
         inpTglBergabung.val("")
         inpJenisKelamin.val("")
-        inpUpahHarian.val("")
-        inpUpahLembur.val("")
-        inpUpahLemburWe.val("")
 
-        isModal.modal("show");
-    });
-
-    $("#btn-save").on("click", function(e){
-        e.preventDefault()
-        simpanData()
-    });
+        setTimeout(() => {
+            inpUpahHarian.val("").trigger('change');
+            inpUpahLembur.val("").trigger('change');
+            inpUpahLemburWe.val("").trigger('change');
+            inpUpahPerjam.val("").trigger('change');
+        }, 500);
+    }
 
     
     function simpanData() {
@@ -189,18 +197,30 @@ $(document).ready(function () {
         let validation = true
 
         if(inpNip.val().length == 0) validation = false
+        console.log("masuk nip", inpNip.val())
         if(inpNama.val().length == 0) validation = false
+        console.log("masuk inpNama", inpNama.val())
         if(inpEmail.val().length == 0) validation = false
+        console.log("masuk inpEmail", inpEmail.val())
         if(inpAlamat.val().length == 0) validation = false
+        console.log("masuk inpAlamat", inpAlamat.val())
         if(inpNoHP.val().length == 0) validation = false
+        console.log("masuk inpNoHP", inpNoHP.val())
         if(inpPosisi.val().length == 0) validation = false
+        console.log("masuk inpPosisi", inpPosisi.val())
         if(inpTglBergabung.val().length == 0) validation = false
+        console.log("masuk inpTglBergabung", inpTglBergabung.val())
         if(inpJenisKelamin.val().length == 0) validation = false
+        console.log("masuk inpJenisKelamin", inpJenisKelamin.val())
         if(inpUpahHarian.val().length == 0) validation = false
+        console.log("masuk inpUpahHarian", inpUpahHarian.val())
         if(inpUpahLembur.val().length == 0) validation = false
+        console.log("masuk inpUpahLembur", inpUpahLembur.val())
         if(inpUpahLemburWe.val().length == 0) validation = false
+        console.log("masuk inpUpahLemburWe", inpUpahLemburWe.val())
         if(inpUpahPerjam.val().length == 0) validation = false
-    
+        console.log("masuk inpUpahPerjam", inpUpahPerjam.val())
+
         if(validation){
             $.ajax({
                 type: 'POST',
@@ -219,7 +239,7 @@ $(document).ready(function () {
                     upah_lembur : inpUpahHarian.val(),
                     upah_harian : inpUpahLembur.val(),
                     upah_lembur_we : inpUpahLemburWe.val(),
-                    upah_perjam : inpUpahPerjam.val()
+                    upah_jam : inpUpahPerjam.val()
                 },
                 dataType: "json",
                 beforeSend: function () {
@@ -244,6 +264,7 @@ $(document).ready(function () {
                         dtList.setData()
                         Swal.close();
                         isModal.modal("hide");
+                        resetInput()
                     }else{
                         Swal.fire({
                             text: response.message,

@@ -206,9 +206,14 @@
         </tr>
       <?php } ?>
     </tbody>
+    <tfoot>
+      <th class="text-left"  style="border-top:solid;">Total</th>
+      <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga, 2) ?></th>
+      <th class="text-right" style="border-top:solid;"><?= $qty ?></th>
+      <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga_total, 2) ?></th>
+    </tfoot>
   </table>
   
-  <hr>
 
   <br>
 
@@ -222,8 +227,8 @@
       </tr>
       <tr>
         <td class="text-center">
-          <!-- <p><b>Mengetahui</b></p><br>
-          <p>( HRD )</p> -->
+          <p><b>Mengetahui</b></p><br>
+          <p>( HRD )</p>
         </td>
         <td class="text-left">
           <p>

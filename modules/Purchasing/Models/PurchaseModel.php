@@ -22,12 +22,12 @@ class PurchaseModel extends \App\Models\PrModel
         parent::__construct();
     }
 
-    function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null, $latest = null)
     {
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
-        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, uk.qty, uk.qty_payment, uk.total, uk.total_payment");
+        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, uk.qty, uk.qty_payment, uk.total, uk.total_payment, uk.approve_status");
 
         if (!empty($params['isReceive']) && $params['isReceive']) {
             $builder->groupStart();
@@ -38,6 +38,10 @@ class PurchaseModel extends \App\Models\PrModel
 
         if (!empty($params['isHutang']) && $params['isHutang']) {
             $builder->whereIn("status", 1);
+        }
+
+        if (!empty($params['isReceive']) && $params['isReceive']) {
+            $builder->where("approve_status", 1);
         }
 
 
@@ -66,6 +70,10 @@ class PurchaseModel extends \App\Models\PrModel
             $builder->where("uk.id", $id);
 
             $this->_data = $builder->get()->getRow();
+        }
+
+        if ($latest) {
+            $this->_data = $builder->orderBy('id', 'DESC')->limit(1)->get()->getRow();
         }
 
         return $this->_data;

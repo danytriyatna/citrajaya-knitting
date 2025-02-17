@@ -32,7 +32,7 @@ class ProductionModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " abx");
 
         $builder->select("abx.id, abx.id_walkorder,  abx.kode_walkorder, abx.id_konsumen, abx.id_style, abx.qty, abx.file_id,
-                        abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style,
+                        abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style, abx.keterangan,
                         abx.tipe_id, cbx.file_name,abx.kode_prod");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
@@ -51,6 +51,8 @@ class ProductionModel extends \App\Models\PrModel
             if (!empty($params['id_konsumen'])) {
                 $builder->where('abx.id_konsumen', $params['id_konsumen']);
             }
+
+            if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
 
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
@@ -91,6 +93,8 @@ class ProductionModel extends \App\Models\PrModel
         if (!empty($params['id_konsumen'])) {
             $builder->where('abx.id_konsumen', $params['id_konsumen']);
         }
+
+        if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
 
         $this->_data = $builder->get()->getRow()->_cnt;
 

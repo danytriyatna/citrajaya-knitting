@@ -33,10 +33,17 @@
                 <label class="control-label text-start text-md-end m-e-8" for="filter_status">Status</label>
                 <select id="filter_status" name="filter_status" class="form-control custom-select select2">
                   <option value="0">All</option>
-                  <option value="1">Draft</option>
-                  <option value="2">Process</option>
-                  <option value="3">Done</option>
+                  <option value="1">Sample</option>
+                  <option value="2">Sales Order</option>
                 </select>
+              </div>
+            </div>
+            <div class="col-sm-4 offset-md-5">
+              <div class="form-group">
+                <div class="input-group mb-3">
+                  <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
+                  <input type="text" id="tb-search" class="form-control p-s-0" id="tb-search" placeholder="Pencarian" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                </div>
               </div>
             </div>
           </div>

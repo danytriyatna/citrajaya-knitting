@@ -69,7 +69,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="pp_cr">PP Date</label>
                     <div class="col-md-8">
-                      <input type="text" id="pp_cr" name="pp_cr" class="form-control datepicker" placeholder="Pilih tanggal PP" value="<?= !empty($resData) ? $resData->pay_date : null ?>">
+                      <input type="text" id="pp_cr" name="pp_cr" class="form-control datepicker" placeholder="Pilih tanggal PP" value="<?= !empty($resData) ? $resData->pay_date : date("d F Y", now()) ?>">
                     </div>
                   </div>
                 </div>

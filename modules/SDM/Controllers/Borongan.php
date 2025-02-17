@@ -101,6 +101,10 @@ class Borongan extends BaseController
             $keterangan_style = $row->keterangan_style;
           }
 
+          if(!empty($row->keterangan)){
+            $keterangan_style .= ' '. $row->keterangan;
+          }
+
           array_push(
               $build_array["data"],
               array(

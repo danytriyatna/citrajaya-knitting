@@ -33,6 +33,7 @@ class PaymentDetailModel extends \App\Models\PrModel
         $builder->select("uk.id as id_header, uk.po_no, uk.po_date, uk.po_date + concat(ebx.name)::INTERVAL AS do_date, uk.qty, uk.qty_payment as qty_receive, concat(uk.qty_payment, '/',uk.qty) as qty_status, uk.total as hutang, uk.total_payment as total_bayar,(uk.total - uk.total_payment) as sisa_bayar");
         $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
         $builder->where("uk.status!=", 2);
+        $builder->where("uk.approve_status", 1);
         $builder->where("uk.id_vendor", $idVendor);
 
         $this->_data = $builder->get()->getResult();

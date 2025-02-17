@@ -67,6 +67,10 @@ $(document).ready(function () {
 				title: 'PAYMENT STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
                 width: "15%",hozAlign:"center",
 			},
+            {
+				title: 'STATUS PO', field: 'approve_status', formatter : "html", align: "left", headerSort:false,
+                width: "15%",hozAlign:"left",
+			},
 				
         ],
         // layout: 'fitColumns',

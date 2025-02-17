@@ -108,7 +108,7 @@ $(document).ready(function () {
         columns: [
             {
 				title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', editor:"list",
+				align:'center',
 			} ,
             
 			{

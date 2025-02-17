@@ -18,6 +18,7 @@ let spanBarang = $('#spanBarang');
 let selectTerm = $('#select_term');
 let inpUnit = $('#unit');
 let inpStatus = $('#status');
+let inpApproveStatus = $('#approve_status');
 let inpTax = $('#tax');
 let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
@@ -28,12 +29,24 @@ let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
 // const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 const regex = /^[0-9.,]+$/;
    
-if(inpStatus.val() == 0){
+// if(inpStatus.val() == 0){
+//     btnAdd.show()
+//     btnSimpan.show()
+//     btnApprove.show()
+// } else{
+//     btnAdd.hide()
+//     btnSimpan.hide()
+//     btnApprove.hide()
+// }
+
+if(inpApproveStatus.val() == 0){
     btnAdd.show()
     btnSimpan.show()
+    btnApprove.show()
 } else{
     btnAdd.hide()
     btnSimpan.hide()
+    btnApprove.hide()
 }
 
 let dtList = new Tabulator("#dt-list", {
@@ -240,6 +253,26 @@ dtList.on("rowClick", function(e, row){
     inpIdBarang.val(idBarang)
     inpKodeBarang.val(kodeBarang)
     inpBarang.val(`${namaBarang}`)
+
+    $.ajax({
+        url: `/purchasing/purchase-order/check-unit-price?id_vendor=${inpIdVendor.val()}&id_barang=${idBarang}`,
+        type: 'GET',
+        dataType: 'json', 
+        success: function(data) {
+            
+            if(data.status == true){
+                inpUnitPrice.val(formatRupiah(data.unit_price));
+            }
+            else {
+                inpUnitPrice.val(formatRupiah("0"));
+            }
+            
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+    
     $("#modal-barang").modal("hide");
 })
 
@@ -267,6 +300,14 @@ spanBarang.click(function () {
 });
 
 btnAdd.click(function(){
+    if (inpIdVendor.val() == null || inpIdVendor.val() == "" || inpIdVendor.val() == " ") {
+        return Swal.fire({
+            text: "Vendor Harus dipilih dahulu!",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     openModalDetail()
 })
 
@@ -524,13 +565,65 @@ btnSimpan.on("click",function(e){
         cancelButtonColor: '#6C757D'
     }).then((result) => {
         if (result.isConfirmed) {
-            simpanData()
+            simpanData("draft")
         }
     })
   
 })
 
-function simpanData() {
+btnApprove.on("click",function(e){
+    e.preventDefault()
+    if(inpTglPO.val().length == 0){
+        return Swal.fire({
+            text: "PO Date harus diisi",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(inpTglExpec.val().length == 0){
+        return Swal.fire({
+            text: "Expected Date harus diisi",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(inpVendor.val().length == 0){
+        return Swal.fire({
+            text: "Vendor harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(dtListDetailPO.getData().length == 0){
+        return Swal.fire({
+            text: "Data detail tidak boleh kosong",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    Swal.fire({
+        title: "Apakah anda ingin approve data Purchase Order?",
+        icon: 'question',
+        confirmButtonText: 'Approve',
+        confirmButtonColor: '#198754',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            simpanData("approve")
+        }
+    })
+  
+})
+
+function simpanData(stringButton) {
+    alert(stringButton);
+    false;
     let totalQty = dtListDetailPO.getData().reduce((sum, item) => sum + parseFloat(item.qty), 0);
     let totalGrandPrice = dtListDetailPO.getData().reduce((sum, item) => sum + parseFloat(item.grand_price), 0);
     $.ajax({
@@ -546,6 +639,7 @@ function simpanData() {
             qty:totalQty,
             total:totalGrandPrice,
             data:dtListDetailPO.getData(),
+            buttonType:stringButton
         },
         dataType: "json",
         beforeSend: function () {
@@ -598,7 +692,11 @@ let buttonRowAction = function(cell) {
     let fmBtnDelete = "";        
     let fmBtnEdit = "";        
 
-    if (inpStatus.val() == 0){
+    // if (inpStatus.val() == 0){
+    //     fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
+    //     fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
+    // }
+    if (inpApproveStatus.val() == 0){
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
         fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
     }

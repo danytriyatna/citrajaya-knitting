@@ -25,15 +25,14 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-3">
-              <!-- <div hidden class="form-group m-b-0 d-flex align-items-center">
-                <label class="control-label text-start text-md-end m-e-8" for="filter_status">Status</label>
+              <div hidden class="form-group m-b-0 d-flex align-items-center">
+                <label class="control-label text-start text-md-end m-e-8" for="filter_status">Transaksi</label>
                 <select id="filter_status" name="filter_status" class="form-control custom-select select2">
                   <option value="0">All</option>
-                  <option value="1">Draft</option>
-                  <option value="2">Process</option>
-                  <option value="3">Done</option>
+                  <option value="1">Sample</option>
+                  <option value="2">Sales Order</option>
                 </select>
-              </div> -->
+              </div>
             </div>
             <div class="col-sm-4 offset-md-5">
               <div class="form-group">

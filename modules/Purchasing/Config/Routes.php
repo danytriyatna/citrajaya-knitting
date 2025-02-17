@@ -7,6 +7,7 @@ $routes->group('purchasing/purchase-order', ['namespace' => 'Modules\Purchasing\
   $routes->post('save', 'PurchaseOrder::save');
   $routes->get('form', 'PurchaseOrder::form');
   $routes->get('form/(:any)', 'PurchaseOrder::form/$1');
+  $routes->get('check-unit-price', 'PurchaseOrder::checkUnitPrice');
 });
 
 $routes->group('purchasing/receive-item', ['namespace' => 'Modules\Purchasing\Controllers'], static function ($routes) {

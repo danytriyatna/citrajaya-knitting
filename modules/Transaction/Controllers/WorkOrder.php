@@ -66,8 +66,13 @@ class WorkOrder extends BaseController
     $limit      = $this->request->getPost('length');
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
+    $filter_trans = $this->request->getPost('filter_trans');
 
     $params = [];
+
+    if(!empty($filter_trans)){
+      $params['tipe_id'] = $filter_trans;
+    }
 
     $results = $this->mWalkorder->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mWalkorder->getDataCnt($filters, $params);
@@ -459,6 +464,7 @@ class WorkOrder extends BaseController
         'qty' => $data->qty,
         'file_id' => $data->file_id,
         'keterangan_style' => $data->keterangan_style,
+        'keterangan' => $data->keterangan,
         'tgl_transaksi' => date('Y-m-d'),
         'tgl_deadline' => $data->tgl_deadline,
         'status' => 1

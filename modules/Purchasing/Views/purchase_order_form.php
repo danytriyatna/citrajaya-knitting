@@ -154,6 +154,7 @@
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="po_no">PO No.</label>
                     <div class="col-md-9">
                       <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
+                      <input type="hidden" id="approve_status" name="approve_status" value="<?= !empty($resData->approve_status) ? $resData->approve_status : null ?>" class="form-control">
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
                       <input type="text" id="po_no" name="po_no" class="form-control" value="<?= !empty($resData->po_no) ? $resData->po_no : null ?>" readonly placeholder="Diisi otomatis oleh sistem">
@@ -164,7 +165,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tgl_po">PO Date</label>
                     <div class="col-md-8">
-                      <input type="text" id="tgl_po" name="tgl_po" class="form-control datepicker" placeholder="Pilih tanggal PO" value="<?= !empty($resData->po_date) ? $resData->po_date : null ?>">
+                      <input type="text" id="tgl_po" name="tgl_po" class="form-control datepicker" placeholder="Pilih tanggal PO" value="<?= !empty($resData->po_date) ? $resData->po_date : date("d F Y", now()) ?>">
                     </div>
                   </div>
                 </div>
@@ -210,7 +211,7 @@
               <div class="form-group row">
                 <label class="control-label text-start text-md-end col-md-2 col-form-label" for="ship_to">Ship To</label>
                 <div class="col-md-10">
-                  <textarea rows="3" id="ship_to" name="ship_to" class="form-control" placeholder="Ketikkan uraian pengiriman"><?= !empty($resData->ship_to) ? $resData->ship_to : null ?></textarea>
+                  <textarea rows="3" id="ship_to" name="ship_to" class="form-control" placeholder="Ketikkan uraian pengiriman"><?= !empty($resData->ship_to) ? $resData->ship_to : $shipTo ?></textarea>
                 </div>
               </div>
             </div>
@@ -237,6 +238,9 @@
                   </a>
                   <button class='btn btn-success' id="btn-simpan">
                     <span class="fa fa-save"></span> Simpan
+                  </button>
+                  <button class='btn btn-info' id="btn-approve">
+                  <i class="fa fa-paper-plane"></i></span> Approval
                   </button>
                 </div>
               </div>

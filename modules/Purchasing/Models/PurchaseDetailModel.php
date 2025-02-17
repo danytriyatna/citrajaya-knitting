@@ -84,4 +84,15 @@ class PurchaseDetailModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getUnitPrice($vendor = null, $barang = null)
+    {
+        // dd(decrypt($vendor), decrypt($barang));
+        $builder = $this->db->table($this->table . " uk");
+        $builder->join("trans_po_header hd", "CAST(uk.id_header AS INTEGER) = hd.id", "inner");
+        $builder->select("uk.id, uk.id_header, uk.id_barang, uk.disc_price, uk.tax_price, uk.tax, uk.disc, uk.price, uk.grand_price, (uk.grand_price/uk.qty) as price_2, hd.id_vendor");
+        $this->_data = $builder->where("id_vendor", decrypt($vendor))->where("id_barang", decrypt($barang))->orderBy('id', 'DESC')->limit(1)->get()->getRow();
+
+        return $this->_data;
+    }
 }

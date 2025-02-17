@@ -26,7 +26,7 @@ class WalkorderModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.ref_id, abx.ref_kode, abx.kode_walkorder, abx.id_konsumen, abx.id_style, abx.qty, abx.file_id,
                           abx.ref_kode, abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style,
-                          abx.tipe_id, cbx.file_name, abx.id_gudang
+                          abx.tipe_id, cbx.file_name, abx.id_gudang, abx.keterangan
                         ");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");

@@ -96,6 +96,12 @@ class PurchaseOrder extends BaseController
       } else if ($row->status == 2) {
         $status = "<span class='badge bg-success'>Dibayar Penuh</span>";
       }
+      $approve_status = "";
+      if ($row->approve_status == 1) {
+        $approve_status = "<span class='badge bg-info'>APPROVED</span>";
+      } else {
+        $approve_status = "<span class='badge bg-warning'>DRAFT</span>";
+      } 
       array_push(
         $build_array["data"],
         array(
@@ -110,7 +116,8 @@ class PurchaseOrder extends BaseController
           "total" => $row->total,
           "total_payment" => $row->total_payment,
           "sisa" => $row->total -  $row->total_payment,
-          "status" => $status
+          "status" => $status,
+          "approve_status" => $approve_status
         )
       );
     }
@@ -151,6 +158,11 @@ class PurchaseOrder extends BaseController
 
 
     $this->data['titlehead'] = "Form Purchase Order";
+    $this->data['shipTo'] = null;
+    $addNew = $this->mPO->getData(null, null, null, null, null, null, true);
+    if (isset($addNew) && empty($id)) {
+      $this->data['shipTo'] = $addNew->ship_to;
+    }
     $resTerm = $this->mPO->getRefTerm();
     $resTax = $this->mPO->getRefTax();
     $this->data['term'] = $resTerm;
@@ -171,6 +183,11 @@ class PurchaseOrder extends BaseController
     $total = $this->request->getPost('total');
     $qty = $this->request->getPost('qty');
     $dataDetail = $this->request->getPost('data');
+    $buttonType = $this->request->getPost('buttonType');
+    $approve_status = 0;
+    if (isset($buttonType) && $buttonType == "approve") {
+      $approve_status = 1;
+    }
     if ($id != "") {
       $id = decrypt($id);
     }
@@ -187,7 +204,8 @@ class PurchaseOrder extends BaseController
       "total_payment" => 0,
       "total" => $total,
       "qty" => $qty,
-      "status" => 0
+      "status" => 0,
+      "approve_status" => $approve_status,
     ];
     if ($id) {
       $dataHeader['updated_at'] = date("Y-m-d H:i:s");
@@ -237,5 +255,24 @@ class PurchaseOrder extends BaseController
 
     $dompdf->generate($html, 'po.pdf', true);
     exit;
+  }
+
+  public function checkUnitPrice()
+  {
+
+    $build_array = [];
+    $build_array["code"] = 200;
+    $build_array["status"] = false;
+    $build_array["unit_price"] = null;
+
+    $id_vendor = $this->request->getGet('id_vendor');
+    $id_barang = $this->request->getGet('id_barang');
+
+    $oldUnitPrice = $this->mPODetail->getUnitPrice($id_vendor, $id_barang);
+    if (isset($oldUnitPrice)) {
+      $build_array["unit_price"] = $oldUnitPrice->price;
+      $build_array["status"] = true;
+    }
+    return $this->response->setJSON($build_array);
   }
 }

@@ -164,7 +164,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tgl_receive">Receive Date</label>
                     <div class="col-md-8">
-                      <input type="text" id="tgl_receive" name="tgl_receive" class="form-control datepicker" placeholder="Pilih tanggal Receive" value="<?= !empty($resData->rec_date) ? $resData->rec_date : null ?>">
+                      <input type="text" id="tgl_receive" name="tgl_receive" class="form-control datepicker" placeholder="Pilih tanggal Receive" value="<?= !empty($resData->rec_date) ? $resData->rec_date : date("d F Y", now()) ?>">
                     </div>
                   </div>
                 </div>
@@ -192,9 +192,9 @@
                 </div>
                 <div class="col-sm-6">
                   <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="form_no">Form No.</label>
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="form_no">No. Surat Jalan</label>
                     <div class="col-md-8">
-                      <input type="text" id="form_no" name="form_no" class="form-control" placeholder="Ketikkan form no." value="<?= !empty($resData->form_no) ? $resData->form_no : null ?>">
+                      <input type="text" id="form_no" name="form_no" class="form-control" placeholder="Ketikkan No. Surat Jalan" value="<?= !empty($resData->form_no) ? $resData->form_no : null ?>">
                     </div>
                   </div>
                 </div>

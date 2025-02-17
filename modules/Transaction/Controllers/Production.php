@@ -57,9 +57,14 @@ class Production extends BaseController
     $limit      = $this->request->getPost('length');
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
+    $filter_trans = $this->request->getPost('filter_trans');
 
     $params = [];
 
+    if(!empty($filter_trans)){
+      $params['tipe_id'] = $filter_trans;
+    }
+    
     $results = $this->mProduksi->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mProduksi->getDataCnt($filters, $params);
     $totaldata = $this->mProduksi->getDataCnt(null, $params);

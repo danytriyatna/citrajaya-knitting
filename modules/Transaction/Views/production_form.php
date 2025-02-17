@@ -222,6 +222,7 @@
             <div class="col-sm-3 text-center">
               <h6 class="f-w-700 m-b-6"><?= $row->kode_prod; ?></h6>
               <h5 class="f-w-700 m-b-12"><?= $row->keterangan_style; ?></h5>
+              <h7 class="f-w-700 m-b-12"><?= $row->keterangan; ?></h7>
               <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi); ?></p>
               <p class="m-y-0"><em>Deadline: <?= fdate_eng_to_ind($row->tgl_deadline); ?></em></p>
               <p class="f-w-700 m-t-4"><?= $row->konsumen_nama; ?></p>

@@ -172,6 +172,7 @@
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">IZIN</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">SAKIT</th>
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">ROLLING SHIFT</th>
+            <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">JAM KERJA</th>
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">GAJI/UPAH</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HK</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HL</th>
@@ -184,6 +185,7 @@
 
     <tbody>
         <?php 
+            $jam_kerja = 0;
             $gaji_harian = 0;
             $lembur = 0;
             $lembur_we = 0;
@@ -202,6 +204,7 @@
                 $total_pendapatan = $jml_pendapatan - $potongan;
 
 
+                $jam_kerja = $jam_kerja + $r->jam_kerja;
                 $gaji_harian = $gaji_harian + $r->gaji_harian;
                 $lembur = $lembur + $r->lembur;
                 $lembur_we = $lembur_we + $r->lembur_we;
@@ -212,6 +215,7 @@
             ?>
             <tr>
                 <td style="border: 1px solid black; padding: 8px;"><?= $r->nip; ?></td>
+                <td style="border: 1px solid black; padding: 8px;"><?= $r->full_name; ?></td>
                 <td style="border: 1px solid black; padding: 8px;"><?= $r->posisi; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->hadir; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->izin; ?></td>
@@ -237,6 +241,7 @@
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
+          <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= ($jam_kerja); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($gaji_harian); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur; ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur_we; ?></td>

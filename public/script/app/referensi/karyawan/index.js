@@ -236,8 +236,8 @@ $(document).ready(function () {
                     tgl_bergabung : inpTglBergabung.val(),
                     jenis_kelamin : inpJenisKelamin.val(),
                     no_hp : inpNoHP.val(),
-                    upah_lembur : inpUpahHarian.val(),
-                    upah_harian : inpUpahLembur.val(),
+                    upah_harian : inpUpahHarian.val(),
+                    upah_lembur : inpUpahLembur.val(),
                     upah_lembur_we : inpUpahLemburWe.val(),
                     upah_jam : inpUpahPerjam.val()
                 },

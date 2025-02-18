@@ -622,8 +622,6 @@ btnApprove.on("click",function(e){
 })
 
 function simpanData(stringButton) {
-    alert(stringButton);
-    false;
     let totalQty = dtListDetailPO.getData().reduce((sum, item) => sum + parseFloat(item.qty), 0);
     let totalGrandPrice = dtListDetailPO.getData().reduce((sum, item) => sum + parseFloat(item.grand_price), 0);
     $.ajax({

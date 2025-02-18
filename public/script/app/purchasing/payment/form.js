@@ -146,14 +146,35 @@ let dtListPayment = new Tabulator("#dt-list-payment", {
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             }},
-        {title:"REMAINING AMOUNT", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
+        {title:"DISCOUNT", field:"diskon", hozAlign:"right",width:"15%",formatter: "money",
+            editor:"number",cellEdited: checkDiskon,
             formatterParams: {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             }},
-        {title:"PAYMENT AMOUNT", field:"total_bayar", hozAlign:"right",width:"15%",formatter: "money",
+
+        {title:"Remaining", field:"remaining", hozAlign:"right",width:"15%",formatter: "money",
+            formatterParams: {
+                decimal: ",",
+                thousand: ".",
+                symbol: "Rp",  // Simbol mata uang Rupiah
+                precision: 0,   // Tidak ada desimal
+            },
+            mutator: function(value, data) {
+                return (data.hutang || 0) - (data.diskon || 0);
+            }
+        },
+
+        // {title:"REMAINING AMOUNT", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
+        //     formatterParams: {
+        //         decimal: ",",
+        //         thousand: ".",
+        //         symbol: "Rp",  // Simbol mata uang Rupiah
+        //         precision: 0,   // Tidak ada desimal
+        //     }},
+        {title:"PAYMENT", field:"total_bayar", hozAlign:"right",width:"15%",formatter: "money",
             editor:"number",cellEdited: checkRegex,
             formatterParams: {
                 decimal: ",",
@@ -161,26 +182,28 @@ let dtListPayment = new Tabulator("#dt-list-payment", {
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             }},
-            {title:"DISCOUNT", field:"diskon", hozAlign:"right",width:"15%",formatter: "money",
-                editor:"number",cellEdited: checkDiskon,
-                formatterParams: {
-                    decimal: ",",
-                    thousand: ".",
-                    symbol: "Rp",  // Simbol mata uang Rupiah
-                    precision: 0,   // Tidak ada desimal
-                }},
-            {title:"GRAND TOTAL", field:"grand_total", hozAlign:"right",width:"15%",formatter: "money",
-                editor:"number",
-                formatterParams: {
-                    decimal: ",",
-                    thousand: ".",
-                    symbol: "Rp",  // Simbol mata uang Rupiah
-                    precision: 0,   // Tidak ada desimal
-                },
-                mutator: function(value, data) {
-                    return (data.total_bayar || 0) - (data.diskon || 0);
-                }
-            },
+        
+        // {title:"PAYMENT", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
+        //     formatterParams: {
+        //         decimal: ",",
+        //         thousand: ".",
+        //         symbol: "Rp",  // Simbol mata uang Rupiah
+        //         precision: 0,   // Tidak ada desimal
+        //     }},
+        
+            
+            // {title:"GRAND TOTAL", field:"grand_total", hozAlign:"right",width:"15%",formatter: "money",
+            //     editor:"number",
+            //     formatterParams: {
+            //         decimal: ",",
+            //         thousand: ".",
+            //         symbol: "Rp",  // Simbol mata uang Rupiah
+            //         precision: 0,   // Tidak ada desimal
+            //     },
+            //     mutator: function(value, data) {
+            //         return (data.total_bayar || 0) - (data.diskon || 0);
+            //     }
+            // },
     ],
     locale: 'id',    
     // layout: 'fitColumns',
@@ -214,10 +237,42 @@ function checkRegex(cell) {
 
     } 
 }
+
+// function checkDiskon(cell) {
+//     let row = cell.getRow();
+//     if (row) { 
+//         if(!regex.test(row.getData().total_bayar)){
+//             cell.restoreOldValue();
+//             return Swal.fire({
+//                 text: "Diskon harus berupa angka",
+//                 icon: 'error',
+//                 showConfirmButton: false,
+//                 timer: 2000
+//             });
+//         }  
+//         let selisihBayar = row.getData().hutang-row.getData().diskon;
+//         if(selisihBayar < 0){
+//             cell.restoreOldValue();
+//             return Swal.fire({
+//                 text: "Diskon lebih besar dari yang dibayarkan",
+//                 icon: 'error',
+//                 showConfirmButton: false,
+//                 timer: 2000
+//             });
+//         }
+
+//         let remainAmount = row.getData().total_bayar - row.getData().diskon;
+        
+
+//         row.update({ grand_total: remainAmount });
+
+//     } 
+// }
+
 function checkDiskon(cell) {
     let row = cell.getRow();
     if (row) { 
-        if(!regex.test(row.getData().total_bayar)){
+        if(!regex.test(row.getData().hutang)){
             cell.restoreOldValue();
             return Swal.fire({
                 text: "Diskon harus berupa angka",
@@ -237,8 +292,9 @@ function checkDiskon(cell) {
             });
         }
 
-        let remainAmount = row.getData().total_bayar - row.getData().diskon;
-        row.update({ grand_total: remainAmount });
+        let remainAmount = row.getData().hutang - row.getData().diskon;
+
+        row.update({ remaining: remainAmount });
 
     } 
 }

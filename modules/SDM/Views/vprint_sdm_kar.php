@@ -137,7 +137,7 @@
       <tbody>
         <tr>
           <td style="width: 120px;">
-            <img src="https://i.ibb.co.com/twN7mWBk/logo-citraknitt-text-dark.png" alt="Logo Text CJK" width="270px" style="height: auto;">
+            <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:100px;">
             &nbsp;
           </td>
         </tr>
@@ -213,7 +213,7 @@
         <td>Rp 0,00</td>
       </tr>
       <tr>
-        <td>Bonus</td>
+        <td>Penambahan dan lain-lain</td>
         <td>Rp <?= format_angka($bonus, 2) ?></td>
       </tr>
     </tbody>
@@ -255,15 +255,16 @@
       </tr>
       <tr>
         <td class="text-center">
-          <!-- <p><b>Mengetahui</b></p><br>
-          <p>( HRD )</p> -->
+          <p><b>Mengetahui</b></p><br>
+          <p>( HRD )</p>
         </td>
         <td class="text-left">
           <p>
             Pembayaran gaji telah dilakukan<br>
             oleh perusahaan secara transfer<br>
             ke rek. karyawan<br>
-            BNI (no. rek) (nama pemilik rek)
+            BNI (no. rek) (nama pemilik rek) / <br>
+            bisa dilkaukan pembayaran Cash
           </p>
         </td>
       </tr>
@@ -284,8 +285,12 @@
           <p>( <?= !empty($detail) ? $detail[0]->full_name : '.......................'?> )</p>
         </td>
         <td class="text-center">
-          <p><b>Owner</b></p><br>
-          <p>( ....................... )</p>
+          <p><b>Menyetujui</b></p><br>
+          <p>( Pimpinan )</p>
+        </td>
+        <td class="text-center">
+          <p><b>Bagian Keuangan</b></p><br>
+          <p>(...................)</p>
         </td>
       </tr>
     </tbody>

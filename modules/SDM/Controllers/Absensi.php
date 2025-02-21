@@ -138,7 +138,7 @@ class Absensi extends BaseController
                   "status_kehadiran" => $status_kehadiran,
                   "hari_hadir" => $row->hari_hadir,
                   "keterangan_kehadiran" => $row->keterangan_kehadiran,
-                  "status_lembur" => $row->status_lembur,
+                  "status_lembur" => $status_lembur,
                   "jml_lembur" => $row->jml_lembur,
                   "keterangan_lembur" => $row->keterangan_lembur,
                   "id_shift" => $row->id_shift,
@@ -279,7 +279,7 @@ class Absensi extends BaseController
           $status_kehadiran = 4;
         }
 
-        $status_lembur = 0;
+        $status_lembur = $x['status_lembur'];
         if($x['status_lembur'] == "-"){
           $status_lembur = 0;
         } else if($x['status_lembur'] == "Lembur Weekday"){

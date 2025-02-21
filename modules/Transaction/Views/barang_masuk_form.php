@@ -179,7 +179,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tanggal">Date</label>
                     <div class="col-md-8">
-                      <input type="text" id="tanggal" name="tanggal" class="form-control datepicker" placeholder="Pilih tanggal" value="<?= !empty($resData->tanggal) ? $resData->tanggal : null ?>">
+                      <input type="text" id="tanggal" name="tanggal" class="form-control datepicker" placeholder="Pilih tanggal" value="<?= !empty($resData->tanggal) ? $resData->tanggal : date("d F Y", now()) ?>">
                     </div>
                   </div>
                 </div>

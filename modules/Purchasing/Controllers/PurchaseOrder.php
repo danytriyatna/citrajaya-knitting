@@ -112,7 +112,7 @@ class PurchaseOrder extends BaseController
           "term" => $row->term,
           "po_date" => fdate_eng_to_ind($row->po_date),
           "date_exc" => $row->date_exc,
-          "qty" => $row->qty_payment . "/" . $row->qty,
+          "qty" => $this->formatAngka($row->qty_payment) . "/" . $this->formatAngka($row->qty),
           "total" => $row->total,
           "total_payment" => $row->total_payment,
           "sisa" => $row->total -  $row->total_payment,
@@ -122,6 +122,10 @@ class PurchaseOrder extends BaseController
       );
     }
     return $this->response->setJSON($build_array);
+  }
+
+  function formatAngka($angka) {
+      return rtrim(rtrim(number_format($angka, 2, ".", ""), "0"), ".");
   }
 
   public function form($id = null)

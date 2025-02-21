@@ -270,7 +270,11 @@ $(document).ready(function () {
 			}, 
 
             {
-				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string',
+				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string', visible: false,
+				width: 100, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+			}, 
+            {
+				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
 				width: 100, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 

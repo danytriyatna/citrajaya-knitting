@@ -226,6 +226,7 @@ class Dashboard extends BaseController
               'date_exc' => $date_exc,
               'total_bayar' => $row->total_bayar,
               'dibayar' => $row->dibayar,
+              'pembayaran' => $row->pembayaran,
               'sisa_bayar' => $sisa_bayar,
           ));
 

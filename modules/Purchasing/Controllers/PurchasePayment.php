@@ -108,6 +108,7 @@ class PurchasePayment extends BaseController
           "pay_no" => $row->pay_no,
           "pay_date" => fdate_eng_to_ind($row->pay_date),
           "hutang" => $row->hutang,
+          "diskon" => $row->diskon,
           "total_bayar" => $row->total_bayar,
           "sisa_bayar" => $row->sisa_bayar,
           "status" => $status
@@ -189,6 +190,11 @@ class PurchasePayment extends BaseController
     // $grandTotal = $this->request->getPost('grandTotal');
     // $sisaBayar = $this->request->getPost('sisaBayar');
     $dataDetail = $this->request->getPost('data');
+    $buttonType = $this->request->getPost('buttonType');
+    $approve_status = 0;
+    if (isset($buttonType) && $buttonType == "approve") {
+      $approve_status = 1;
+    }
     if ($id != "") {
       $id = decrypt($id);
     }
@@ -201,11 +207,12 @@ class PurchasePayment extends BaseController
       "pay_date" => $pp_date,
       "id_rek" => $id_rek,
       "total_bayar" => $totalBayar,
-      "sisa_bayar" => $diskon == null ? $hutang - $totalBayar - $diskon : $hutang - $totalBayar,
+      // "sisa_bayar" => $diskon == null ? $hutang - $totalBayar - $diskon : $hutang - $totalBayar,
+      "sisa_bayar" => $diskon == null ? $hutang - $totalBayar : $hutang - $totalBayar - $diskon,
       "hutang" => $hutang,
       "diskon" => $diskon,
       // "grand_total" => $totalBayar - $diskon,
-      "status" => 1
+      "status" => $approve_status
     ];
     if ($id) {
       $dataHeader['updated_at'] = date("Y-m-d H:i:s");
@@ -215,7 +222,7 @@ class PurchasePayment extends BaseController
       $dataHeader['created_by'] = $this->get_userid();
     }
     // print_r($data);exit;
-    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
+    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $approve_status);
     if ($res) {
       $status = true;
       $msg = "Data berhasil disimpan!";

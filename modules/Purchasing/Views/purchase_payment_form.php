@@ -122,6 +122,9 @@
               <button class='btn btn-success' id="btn-simpan">
                 <span class="fa fa-save"></span> Simpan
               </button>
+              <button class='btn btn-info' id="btn-approve">
+                <i class="fa fa-paper-plane"></i></span> Approval
+              </button>
             </div>
           </div>
         </div>

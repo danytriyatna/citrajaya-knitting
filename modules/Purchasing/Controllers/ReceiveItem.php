@@ -101,7 +101,7 @@ class ReceiveItem extends BaseController
       } else if ($row->status == 1) {
         $status = "<span class='badge bg-success'>Approved</span>";
       }
-
+      $rec_date = date("Y-m-d", strtotime($row->rec_date));
       array_push(
         $build_array["data"],
         array(
@@ -110,8 +110,9 @@ class ReceiveItem extends BaseController
           "nama_vendor" => $row->nama_vendor,
           "po_no" => $row->po_no,
           "rec_no" => $row->rec_no,
+          // "date_exc" => fdate_eng_to_ind($row->date_exc),
           "date_exc" => fdate_eng_to_ind($row->date_exc),
-          "rec_date" => fdate_eng_to_ind($row->rec_date),
+          "rec_date" => fdate_eng_to_ind($rec_date),
           "qty" => $row->qty,
           "ship_to" => $row->ship_to,
           "form_no" => $row->form_no,

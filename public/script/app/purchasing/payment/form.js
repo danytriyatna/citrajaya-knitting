@@ -5,13 +5,16 @@ let inpIdHeader = $('#id_header');
 let inpPPDate = $('#pp_cr');
 let selectPaymentTipe = $('#select_payment_type');
 let btnSimpan = $('#btn-simpan');
+let btnApprove = $('#btn-approve');
 let inpStatus = $('#status');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
 const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 if(inpStatus.val() == 0){
     btnSimpan.show()
+    btnApprove.show()
 } else{
     btnSimpan.hide()
+    btnApprove.hide()
 }
 if(inpIdHeader.val().length == 0){
     selectPaymentTipe.val("").trigger("change")
@@ -155,25 +158,14 @@ let dtListPayment = new Tabulator("#dt-list-payment", {
                 precision: 0,   // Tidak ada desimal
             }},
 
-        {title:"Remaining", field:"remaining", hozAlign:"right",width:"15%",formatter: "money",
+        {title:"Remaining", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
             formatterParams: {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             },
-            mutator: function(value, data) {
-                return (data.hutang || 0) - (data.diskon || 0);
-            }
         },
-
-        // {title:"REMAINING AMOUNT", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
-        //     formatterParams: {
-        //         decimal: ",",
-        //         thousand: ".",
-        //         symbol: "Rp",  // Simbol mata uang Rupiah
-        //         precision: 0,   // Tidak ada desimal
-        //     }},
         {title:"PAYMENT", field:"total_bayar", hozAlign:"right",width:"15%",formatter: "money",
             editor:"number",cellEdited: checkRegex,
             formatterParams: {
@@ -232,8 +224,8 @@ function checkRegex(cell) {
             });
         }
 
-        let remainAmount = row.getData().hutang - row.getData().total_bayar;
-        row.update({ sisa_bayar: remainAmount });
+        let remainAmount = row.getData().hutang - row.getData().diskon - row.getData().total_bayar;
+        // row.update({ sisa_bayar: remainAmount });
 
     } 
 }
@@ -292,9 +284,9 @@ function checkDiskon(cell) {
             });
         }
 
-        let remainAmount = row.getData().hutang - row.getData().diskon;
+        let remainAmount = row.getData().hutang - row.getData().diskon - row.getData().total_bayar;
 
-        row.update({ remaining: remainAmount });
+        row.update({ sisa_bayar: remainAmount });
 
     } 
 }
@@ -336,6 +328,14 @@ btnSimpan.on("click",function(e){
             timer: 2000
         });
     }
+    // if(selectPaymentTipe.val() == null || selectPaymentTipe.val() == ""){
+    //     return Swal.fire({
+    //         text: "Payment Type harus dipilih",
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
     if(inpVendor.val().length == 0){
         return Swal.fire({
             text: "Vendor harus dipilih",
@@ -362,13 +362,55 @@ btnSimpan.on("click",function(e){
         cancelButtonColor: '#6C757D'
     }).then((result) => {
         if (result.isConfirmed) {
-            simpanData()
+            simpanData("draft")
         }
     })
   
 })
 
-function simpanData() {
+btnApprove.on("click",function(e){
+    e.preventDefault()
+    if(inpPPDate.val().length == 0){
+        return Swal.fire({
+            text: "PP Date harus diisi",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(inpVendor.val().length == 0){
+        return Swal.fire({
+            text: "Vendor harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(dtListPayment.getData().length == 0){
+        return Swal.fire({
+            text: "Data detail tidak boleh kosong",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    Swal.fire({
+        title: "Apakah anda ingin approve data Purchase Order?",
+        icon: 'question',
+        confirmButtonText: 'Simpan',
+        confirmButtonColor: '#198754',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            simpanData("approve")
+        }
+    })
+  
+})
+
+function simpanData(type) {
     let totalBayar = dtListPayment.getData().reduce((sum, item) => {
         let total = parseFloat(item.total_bayar);
         return sum + (isNaN(total) ? 0 : total);
@@ -390,6 +432,7 @@ function simpanData() {
         type: 'POST',
         url: '/purchasing/purchase-payment/save',
         data: {
+            id:inpIdHeader.val(),
             id_vendor:inpIdVendor.val(),
             pp_date:formatLocaleDate(inpPPDate.val()),
             id_rek:selectPaymentTipe.val(),
@@ -397,6 +440,7 @@ function simpanData() {
             diskon:diskon,
             hutang:hutang,
             sisaBayar:sisaBayar,
+            buttonType:type,
             data:dtListPayment.getData(),
         },
         dataType: "json",

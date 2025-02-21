@@ -25,7 +25,7 @@ class PaymentModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblRekening . " ebx", "uk.id_rek = ebx.id", "inner");
-        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, uk.sisa_bayar ");
+        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, uk.sisa_bayar, uk.diskon ");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -143,7 +143,7 @@ class PaymentModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function trxInsertUpdateRecord($data, $id, $detail)
+    function trxInsertUpdateRecord($data, $id, $detail, $approve_status)
     {
         $this->db->transStart();
         try {
@@ -192,7 +192,10 @@ class PaymentModel extends \App\Models\PrModel
                     if ($totalPayment >= $hutang) {
                         $status = 2;
                     }
-                    $this->updateRecords($this->tblPoHeader, array("status" => $status, "total_payment" => !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : null), $arrParam);
+
+                    $bayar = !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0;
+                    $diskon = !empty($rowData['diskon']) ? $rowData['diskon'] : 0;
+                    $this->updateRecords($this->tblPoHeader, array("status" => $status, "total_payment" => !empty($rowData['total_bayar']) ? $bayar : null , "diskon" => !empty($rowData['diskon']) ? $diskon : null), $arrParam);
                 }
             }
 

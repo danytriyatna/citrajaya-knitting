@@ -252,7 +252,7 @@ class Absensi extends BaseController
               $timestamp_masuk = $x_masuk;
             }else if(!empty($x['jam_keluar'])){  
               if($timestamp_keluar > $x['jam_keluar']){
-                $timestamp_keluar = $x['jam_keluar'];
+                $timestamp_keluar = strtotime($x['jam_keluar']);
               }
             }
 

@@ -203,6 +203,17 @@
                     </div>
                   </div>
                 </div>
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">No. Transfer</label>
+                    <div class="col-md-9">
+                      <div class="input-group">
+                        <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="">
+                        <span class="input-group-text bg-white"><i class="ti-search"></i></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="row">
                 <div class="col-sm-6">
@@ -248,6 +259,49 @@
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>No. SO</th>
+                      <th>Style</th>
+                      <th>Colour</th>
+                      <th>QTY</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>SOD250100005</td>
+                      <td>Gamis Zipper Stripe</td>
+                      <td>KOPI TUA</td>
+                      <td>100</td>
+                      <td>Rp 2.760.000</td>
+                    </tr>
+                    <tr>
+                      <td>SOD250100005</td>
+                      <td>Gamis Zipper Stripe</td>
+                      <td>HITAM</td>
+                      <td>100</td>
+                      <td>Rp 2.760.000</td>
+                    </tr>
+                    <tr>
+                      <td>SOD250100005</td>
+                      <td>Gamis Zipper Stripe</td>
+                      <td>M47</td>
+                      <td>100</td>
+                      <td>Rp 2.760.000</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 

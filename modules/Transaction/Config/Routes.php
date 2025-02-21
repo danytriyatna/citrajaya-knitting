@@ -93,7 +93,7 @@ $routes->group('trans/customer-receipt', ['namespace' => 'Modules\Transaction\Co
 
 $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
   $routes->get('/', 'ItemTransfer::index');
-  $routes->get('form_static', 'ItemTransfer::form_static');
+  $routes->get('form_static', 'ItemTransfer::form_static_v2');
   $routes->post('list', 'ItemTransfer::lists');
   $routes->get('print/(:any)', 'ItemTransfer::print/$1');
   $routes->get('form', 'ItemTransfer::form_static');

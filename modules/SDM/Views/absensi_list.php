@@ -61,6 +61,16 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
+        <div class="row">
+            <div class="col-sm-4 offset-md-8">
+              <div class="form-group">
+                <div class="input-group mb-3">
+                  <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
+                  <input type="text" class="form-control p-s-0" placeholder="Pencarian" aria-label="penca" id="tb-search" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="table-responsive">
               <div class="table-striped" id="dt-absensi"></div>
           </div>

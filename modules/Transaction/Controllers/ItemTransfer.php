@@ -205,6 +205,18 @@ class ItemTransfer extends BaseController
     return view($this->views . '\item_transfer_form_static', $this->data);
   }
 
+  public function form_static_v2()
+  {
+
+    if (!$this->auth->loggedIn()) {
+      return redirect()->to('/auth/login');
+    }
+
+    $this->data['titlehead'] = "Item Transfer (Static)";
+
+    return view($this->views . '\item_transfer_form_static_v2', $this->data);
+  }
+
   public function form($id = null)
   {
     if (!$this->auth->loggedIn()) {

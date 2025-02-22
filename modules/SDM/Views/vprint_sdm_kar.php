@@ -136,20 +136,18 @@
     <table class="w-100">
       <tbody>
         <tr>
-          <td style="width: 120px;">
-            <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:100px;">
+          <td style="width: 10%;">
+            <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:60px;">
             &nbsp;
           </td>
-        </tr>
-        <tr>
-          <td class="text-left" style="width: 50%;">
+          <td class="text-left" style="width: 70%;">
             <p class="text-sm">
               CV CITRA KNITT<br>
               Jl. Terusan Panyileukan Kav. No. 4<br>
               Bandung
             </p>
           </td>
-          <td class="text-right" style="width: 50%;">
+          <td class="text-right" style="width: 20%;">
             <h3><b><u>Slip Gaji Karyawan</u></b></h3>
           </td>
         </tr>

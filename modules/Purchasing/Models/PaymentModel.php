@@ -25,7 +25,7 @@ class PaymentModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblRekening . " ebx", "uk.id_rek = ebx.id", "inner");
-        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, uk.sisa_bayar, uk.diskon ");
+        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, (uk.total_bayar + COALESCE(uk.diskon, 0) + uk.sisa_bayar) as sisa_bayar, uk.diskon ");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -155,6 +155,7 @@ class PaymentModel extends \App\Models\PrModel
                 $arrParam =  [
                     "id" => $id,
                 ];
+                
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
                 $data['pay_no'] = $this->generateKodePO();
@@ -174,17 +175,19 @@ class PaymentModel extends \App\Models\PrModel
                         "sisa_bayar" => !empty($rowData['sisa_bayar']) ? $rowData['sisa_bayar'] : 0,
                         "total_bayar" => !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0,
                         "diskon" => !empty($rowData['diskon']) ? $rowData['diskon'] : 0,
-                        "grand_total" => !empty($rowData['diskon']) ? $rowData['total_bayar'] - $rowData['diskon'] : $rowData['total_bayar'],
+                        // "grand_total" => !empty($rowData['diskon']) ? $rowData['total_bayar'] - $rowData['diskon'] : $rowData['total_bayar'],
+                        "grand_total" => !empty($rowData['diskon']) ? $rowData['total_bayar'] + $rowData['diskon'] : $rowData['total_bayar'],
                         "qty" => !empty($rowData['qty']) ? $rowData['qty'] : 0,
                         "qty_receive" => !empty($rowData['qty_receive']) ? $rowData['qty_receive'] : 0,
-                        "id_po" => !empty($rowData['id_header']) ? $rowData['id_header'] : null,
+                        // "id_po" => !empty($rowData['id_header']) ? $rowData['id_header'] : null,
+                        "id_po" => !empty($rowData['id_po']) ? $rowData['id_po'] : null,
                         "id_header" => $id,
 
                     ];
 
                     $this->insertRecordGetid($this->tblDet, $dataDetail);
                     $arrParam =  [
-                        "id" => $rowData['id_header'],
+                        "id" => $rowData['id_po'],
                     ];
                     $status = 1;
                     $totalPayment = !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0;
@@ -193,8 +196,16 @@ class PaymentModel extends \App\Models\PrModel
                         $status = 2;
                     }
 
-                    $bayar = !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0;
+                    $getRemaining =  $this->getDataDetailRemaining($rowData['id_po']);
+                    if (isset($getRemaining)) {
+                        $bayar = $getRemaining->grand_total;
+                    }
+                    else {
+                        $bayar = !empty($rowData['total_bayar']) ? $rowData['total_bayar'] : 0;
+                    }
                     $diskon = !empty($rowData['diskon']) ? $rowData['diskon'] : 0;
+                    
+                    
                     $this->updateRecords($this->tblPoHeader, array("status" => $status, "total_payment" => !empty($rowData['total_bayar']) ? $bayar : null , "diskon" => !empty($rowData['diskon']) ? $diskon : null), $arrParam);
                 }
             }
@@ -210,5 +221,16 @@ class PaymentModel extends \App\Models\PrModel
             $this->db->transRollback();
             throw $e;
         }
+    }
+
+    function getDataDetailRemaining($idHeader = null)
+    {
+        $builder = $this->db->table("trans_po_pembayaran_detail uk");
+        $builder->select("sum(uk.total_bayar) as total_bayar, sum(uk.total_bayar)+sum(uk.diskon) as grand_total, (sum(uk.total_bayar)+sum(uk.diskon)) - sum(uk.sisa_bayar) as sisa_bayar");
+        $builder->where("uk.id_po", $idHeader);
+
+        $this->_data = $builder->get()->getRow();
+
+        return $this->_data;
     }
 }

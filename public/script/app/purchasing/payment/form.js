@@ -135,9 +135,10 @@ let dtListPayment = new Tabulator("#dt-list-payment", {
     paginationSize: 10,
     paginationButtonCount: 5,
     columns:[
-        {field:"id_header", visible:false},
+        {field:"id_po", visible:false},
         {field:"qty_receive", visible:false},
         {field:"qty", visible:false},
+        {title:"ID PO", field:"id_po", visible:false},
         {title:"PO NO.", field:"po_no", width:"15%"},
         {title:"PO DATE", field:"po_date", hozAlign:"center",width:"20%"},
         {title:"DUE DATE", field:"do_date", hozAlign:"center",width:"20%"},
@@ -157,8 +158,15 @@ let dtListPayment = new Tabulator("#dt-list-payment", {
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             }},
-
-        {title:"Remaining", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
+        {title:"PAID", field:"grand_total", hozAlign:"right",width:"15%",formatter: "money",
+            formatterParams: {
+                decimal: ",",
+                thousand: ".",
+                symbol: "Rp",  // Simbol mata uang Rupiah
+                precision: 0,   // Tidak ada desimal
+            },
+        },
+        {title:"REMAINING", field:"sisa_bayar", hozAlign:"right",width:"15%",formatter: "money",
             formatterParams: {
                 decimal: ",",
                 thousand: ".",
@@ -213,7 +221,7 @@ function checkRegex(cell) {
                 timer: 2000
             });
         }  
-        let selisihBayar = row.getData().hutang-row.getData().total_bayar;
+        let selisihBayar = row.getData().sisa_bayar-row.getData().total_bayar;
         if(selisihBayar < 0){
             cell.restoreOldValue();
             return Swal.fire({
@@ -224,8 +232,16 @@ function checkRegex(cell) {
             });
         }
 
-        let remainAmount = row.getData().hutang - row.getData().diskon - row.getData().total_bayar;
-        // row.update({ sisa_bayar: remainAmount });
+        let diskon = 0;
+        if (row.getData().diskon > 0) {
+            diskon = row.getData().diskon;
+        }
+
+        let remainAmount = row.getData().hutang - diskon - row.getData().grand_total - row.getData().total_bayar;
+        // if (row.getData().grand_total > 0) {
+        //     remainAmount = row.getData().hutang - diskon + row.getData().grand_total - row.getData().total_bayar;
+        // } 
+        row.update({ sisa_bayar: remainAmount });
 
     } 
 }
@@ -273,7 +289,7 @@ function checkDiskon(cell) {
                 timer: 2000
             });
         }  
-        let selisihBayar = row.getData().hutang-row.getData().diskon;
+        let selisihBayar = row.getData().sisa_bayar-row.getData().diskon;
         if(selisihBayar < 0){
             cell.restoreOldValue();
             return Swal.fire({
@@ -284,15 +300,26 @@ function checkDiskon(cell) {
             });
         }
 
-        let remainAmount = row.getData().hutang - row.getData().diskon - row.getData().total_bayar;
+        let total_bayar = 0;
+        if (row.getData().total_bayar > 0) {
+            total_bayar = row.getData().total_bayar;
+        }
+
+        let remainAmount = row.getData().hutang - row.getData().diskon - row.getData().grand_total - total_bayar;
 
         row.update({ sisa_bayar: remainAmount });
 
     } 
 }
 function getDataPayment(){
+    let id_header = $('#id_header').val();
+    let type = "edit";
+    if (id_header == null || id_header == undefined || id_header == "") {
+        id_header = $('#idVendor').val();
+        type = "new";
+    }
     $.ajax({
-        url: `/purchasing/purchase-payment/list-payment?idVendor=${$('#idVendor').val()}`,
+        url: `/purchasing/purchase-payment/list-payment?idVendor=${id_header}&type=${type}`,
         type: 'GET',
         dataType: 'json', 
         success: function(data) {
@@ -328,14 +355,14 @@ btnSimpan.on("click",function(e){
             timer: 2000
         });
     }
-    // if(selectPaymentTipe.val() == null || selectPaymentTipe.val() == ""){
-    //     return Swal.fire({
-    //         text: "Payment Type harus dipilih",
-    //         icon: 'error',
-    //         showConfirmButton: false,
-    //         timer: 2000
-    //     });
-    // }
+    if(selectPaymentTipe.val() == null || selectPaymentTipe.val() == ""){
+        return Swal.fire({
+            text: "Payment Type harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     if(inpVendor.val().length == 0){
         return Swal.fire({
             text: "Vendor harus dipilih",
@@ -378,6 +405,14 @@ btnApprove.on("click",function(e){
             timer: 2000
         });
     }
+    if(selectPaymentTipe.val() == null || selectPaymentTipe.val() == ""){
+        return Swal.fire({
+            text: "Payment Type harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     if(inpVendor.val().length == 0){
         return Swal.fire({
             text: "Vendor harus dipilih",
@@ -415,6 +450,10 @@ function simpanData(type) {
         let total = parseFloat(item.total_bayar);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);
+    let grandTotal = dtListPayment.getData().reduce((sum, item) => {
+        let total = parseFloat(item.grand_total);
+        return sum + (isNaN(total) ? 0 : total);
+    }, 0);
     let hutang = dtListPayment.getData().reduce((sum, item) => {
         let total = parseFloat(item.hutang);
         return sum + (isNaN(total) ? 0 : total);
@@ -437,6 +476,7 @@ function simpanData(type) {
             pp_date:formatLocaleDate(inpPPDate.val()),
             id_rek:selectPaymentTipe.val(),
             totalBayar:totalBayar,
+            grandTotal:grandTotal,
             diskon:diskon,
             hutang:hutang,
             sisaBayar:sisaBayar,

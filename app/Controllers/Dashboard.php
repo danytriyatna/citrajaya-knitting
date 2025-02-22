@@ -206,14 +206,20 @@ class Dashboard extends BaseController
 
           
           $po_date = "";
-          if(!empty($row->po_date)){
-              $po_date = fdate_eng_to_ind($row->po_date);
+          $due_date = "";
+          if(!empty($row->tgl_po)){
+              $po_date = fdate_eng_to_ind($row->tgl_po);
+              if (!empty($row->days)) {
+                $expr_date = date("Y-m-d", strtotime($row->tgl_po . " +".$row->days." days"));
+                $due_date = fdate_eng_to_ind($expr_date);
+              }
           }
 
           $date_exc = "";
           if(!empty($row->date_exc)){
               $date_exc = fdate_eng_to_ind($row->date_exc);
           }
+
 
           $sisa_bayar = (float) $row->total_bayar - (float) $row->dibayar;
 
@@ -226,8 +232,8 @@ class Dashboard extends BaseController
               'date_exc' => $date_exc,
               'total_bayar' => $row->total_bayar,
               'dibayar' => $row->dibayar,
-              'pembayaran' => $row->pembayaran,
               'sisa_bayar' => $sisa_bayar,
+              'due_date' => $due_date,
           ));
 
       }

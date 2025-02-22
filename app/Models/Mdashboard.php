@@ -144,9 +144,10 @@ class Mdashboard extends Model
         $builder = $this->db->table("trans_po_header ph");
 
         $builder->select(" ph.id, ph.po_no, ph.po_date as tgl_po, rv.nama, ph.date_exc, ph.total as total_bayar,
-                           (SELECT sum(tpo.total_bayar) from trans_po_pembayaran_detail tpo where tpo.id_header = ph.id) as dibayar, (COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0)) as pembayaran");
+                           (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id) as dibayar, COALESCE(ph.diskon, 0) as diskon, term.days");
 
         $builder->join("ref_vendor rv", "rv.id = ph.id_vendor", "left");
+        $builder->join("ref_term term", "term.id = ph.id_term", "left");
 
         if ($id == null or $id == "") {
             
@@ -159,8 +160,10 @@ class Mdashboard extends Model
                 $builder->groupEnd();
             }
 
-            // $builder->where("ph.total > (SELECT sum(tpo.total_bayar) from trans_po_pembayaran_detail tpo where tpo.id_header = ph.id)"); // kondisi untuk PO yang belum lunas
-            $builder->where('COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0) < ph.total');
+            $builder->where("ph.total > (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id)");
+            $builder->orWhere("ph.total_payment", 0); 
+            $builder->where("ph.approve_status", 1); 
+            // $builder->where('COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0) < ph.total');
 
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);

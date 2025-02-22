@@ -126,17 +126,33 @@ class PurchasePayment extends BaseController
     $build_array["status"] = false;
 
     $id_vendor = $this->request->getGet('idVendor');
+    $type = $this->request->getGet('type');
     if ($id_vendor != null) {
       $id_vendor = decrypt($id_vendor);
     }
 
-    $resData = $this->mRefDet->getDataDetail($id_vendor);
+    if ($type == "edit") {
+      $resData = $this->mRefDet->getDataDetail($id_vendor);
+    }
+    $new = false;
     if (empty($resData)) {
       $resData = $this->mRefDet->getDataPO($id_vendor);
+      $new = true;
     }
     foreach ($resData as &$rowData) {
       $rowData->do_date = date('d-m-Y', strtotime($rowData->do_date));
       $rowData->po_date = date('d-m-Y', strtotime($rowData->po_date));
+      if ($new) {
+        $getRemaining =  $this->mRefDet->getDataDetailRemaining($rowData->id_header);
+        if (isset($getRemaining->grand_total)) {
+          $rowData->grand_total = $getRemaining->grand_total;
+          // $rowData->sisa_bayar = $getRemaining->sisa_bayar;
+        }
+        else {
+          $rowData->grand_total = 0;
+          // $rowData->sisa_bayar = 0;
+        }
+      }
     }
     $build_array["message"] = "Data ditemukan";
     $build_array["data"] =  !empty($resData) ? $resData : [];
@@ -188,7 +204,7 @@ class PurchasePayment extends BaseController
     $hutang = $this->request->getPost('hutang');
     $diskon = $this->request->getPost('diskon');
     // $grandTotal = $this->request->getPost('grandTotal');
-    // $sisaBayar = $this->request->getPost('sisaBayar');
+    $sisaBayar = $this->request->getPost('sisaBayar');
     $dataDetail = $this->request->getPost('data');
     $buttonType = $this->request->getPost('buttonType');
     $approve_status = 0;
@@ -206,12 +222,14 @@ class PurchasePayment extends BaseController
       "id_vendor" => $id_vendor,
       "pay_date" => $pp_date,
       "id_rek" => $id_rek,
+      // "total_bayar" => $totalBayar,
       "total_bayar" => $totalBayar,
       // "sisa_bayar" => $diskon == null ? $hutang - $totalBayar - $diskon : $hutang - $totalBayar,
-      "sisa_bayar" => $diskon == null ? $hutang - $totalBayar : $hutang - $totalBayar - $diskon,
+      // "sisa_bayar" => $diskon == null ? $hutang - $totalBayar : $hutang - $totalBayar - $diskon,
+      "sisa_bayar" => $sisaBayar,
       "hutang" => $hutang,
       "diskon" => $diskon,
-      // "grand_total" => $totalBayar - $diskon,
+      // "grand_total" => $totalBayar + $diskon,
       "status" => $approve_status
     ];
     if ($id) {
@@ -221,7 +239,6 @@ class PurchasePayment extends BaseController
       $dataHeader['created_at'] = date("Y-m-d H:i:s");
       $dataHeader['created_by'] = $this->get_userid();
     }
-    // print_r($data);exit;
     $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $approve_status);
     if ($res) {
       $status = true;

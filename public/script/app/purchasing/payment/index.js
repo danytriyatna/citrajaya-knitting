@@ -33,6 +33,17 @@ $(document).ready(function () {
 			},
 
             {
+				title: 'REMAIN AMOUNT', field: 'sisa_bayar', headerSort:false, sorter: 'string', hozAlign:"right",
+				width: "13%", formatter : "money",
+                formatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",  // Simbol mata uang Rupiah
+                    precision: 0,   // Tidak ada desimal
+                },
+			},
+
+            {
 				title: 'DISCOUNT', field: 'diskon', headerSort:false, sorter: 'string', hozAlign:"right",
 				width: "10%", formatter : "money",
                 formatterParams: {
@@ -46,18 +57,6 @@ $(document).ready(function () {
             {
 				title: 'PAYMENT', field: 'total_bayar', headerSort:false, sorter: 'string', hozAlign:"right",
 				width: "10%", formatter : "money",
-                formatterParams: {
-                    decimal: ",",
-                    thousand: ".",
-                    symbol: "Rp",  // Simbol mata uang Rupiah
-                    precision: 0,   // Tidak ada desimal
-                },
-			},
-
-
-            {
-				title: 'REMAIN AMOUNT', field: 'sisa_bayar', headerSort:false, sorter: 'string', hozAlign:"right",
-				width: "13%", formatter : "money",
                 formatterParams: {
                     decimal: ",",
                     thousand: ".",

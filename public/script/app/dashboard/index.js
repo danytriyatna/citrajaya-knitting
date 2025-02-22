@@ -259,8 +259,12 @@ $(document).ready(function () {
 				width: 120
 			}, 
 
+            // {
+			// 	title: 'TGL<br>JATUH<br>TEMPO', field: 'date_exc', headerSort:false, sorter: 'string',
+			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			// }, 
             {
-				title: 'TGL<br>JATUH<br>TEMPO', field: 'date_exc', headerSort:false, sorter: 'string',
+				title: 'TGL<br>JATUH<br>TEMPO', field: 'due_date', headerSort:false, sorter: 'string',
 				width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
 			}, 
 
@@ -270,11 +274,7 @@ $(document).ready(function () {
 			}, 
 
             {
-				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string', visible: false,
-				width: 100, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
-            {
-				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
+				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string',
 				width: 100, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 

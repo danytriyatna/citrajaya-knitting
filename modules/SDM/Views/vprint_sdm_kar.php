@@ -201,7 +201,7 @@
     ?>
     <tbody>
       <tr>
-        <td>Gaji Pokok</td>
+        <td>Gaji</td>
         <td>Rp <?= format_angka($gaji, 2) ?></td>
       </tr>
       <tr>
@@ -260,11 +260,16 @@
         </td>
         <td class="text-left">
           <p>
-            Pembayaran gaji telah dilakukan<br>
+            Pembayaran gaji dilakukan<br>
+            melalui transfer ke rekening karyawan BNI terdaftar.<br>
+            Jika rekening belum terdaftar,<br>
+             maka pembayaran dilakukan secara tunai (cash).
+
+            <!-- Pembayaran gaji telah dilakukan<br>
             oleh perusahaan secara transfer<br>
             ke rek. karyawan<br>
             BNI (no. rek) (nama pemilik rek) / <br>
-            bisa dilkaukan pembayaran Cash
+            bisa dilkaukan pembayaran Cash -->
           </p>
         </td>
       </tr>

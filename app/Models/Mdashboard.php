@@ -162,6 +162,7 @@ class Mdashboard extends Model
 
             $builder->where("ph.total > (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id)");
             $builder->orWhere("ph.total_payment", 0); 
+            $builder->where("ph.active", 1); 
             $builder->where("ph.approve_status", 1); 
             // $builder->where('COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0) < ph.total');
 

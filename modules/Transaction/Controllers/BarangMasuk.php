@@ -11,6 +11,8 @@ use Modules\Referensi\Models\SatuanModel;
 use Modules\Transaction\Models\IncomingGoodsModel;
 use Modules\Transaction\Models\BarangMasukModel;
 use Modules\Transaction\Models\BarangMasukDetailModel;
+use Modules\Transaction\Models\ItemTransferDetailModel;
+use Modules\Transaction\Models\ItemTransferModel;
 use Modules\Referensi\Models\GudangModel;
 
 class BarangMasuk extends BaseController
@@ -21,6 +23,8 @@ class BarangMasuk extends BaseController
     protected $mJenisBarang;
     protected $mSatuan;
     protected $mBarangMasuk;
+    protected $mTrf;
+    protected $mTrfDet;
     protected $mGudang;
 
     protected $views = '\Modules\Transaction\Views';
@@ -36,6 +40,8 @@ class BarangMasuk extends BaseController
         $this->mRef = new BarangMasukModel();
         $this->mRefDet = new BarangMasukDetailModel();
         $this->mGudang = new GudangModel();
+        $this->mTrf = new ItemTransferModel();
+        $this->mTrfDet = new ItemTransferDetailModel();
         $this->files  = new FileModel();
     }
 
@@ -169,9 +175,12 @@ class BarangMasuk extends BaseController
             foreach ($resDataDetail as &$rowData) {
                 $rowData->id_barang = encrypt($rowData->id_barang);
             }
+            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+            $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
 
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
+            $this->data['dataSO'] = json_encode($resDataDetSO);
         }
         $reDataKategori = $this->mBarangMasuk->getRefKategoriPersedian();
         $sortGudang = [
@@ -203,6 +212,7 @@ class BarangMasuk extends BaseController
         $nama = $this->request->getPost('nama');
         $keterangan = $this->request->getPost('keterangan');
         $dataDetail = $this->request->getPost('data');
+        $no_ref_trf = $this->request->getPost('no_ref_trf');
         if ($id != "") {
             $id = decrypt($id);
         }
@@ -216,6 +226,7 @@ class BarangMasuk extends BaseController
             "jenis_transaksi" => 1,
             "id_gudang" => $id_gudang,
             "id_kategori" => $id_kategori,
+            "no_ref_trf" => $no_ref_trf,
             "keterangan" => $keterangan,
             "nama" => $nama
         ];
@@ -227,7 +238,7 @@ class BarangMasuk extends BaseController
             $dataHeader['created_by'] = $this->get_userid();
         }
         // print_r($data);exit;
-        $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
+        $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, null);
         if ($res) {
             $status = true;
             $msg = "Data berhasil disimpan!";
@@ -350,7 +361,10 @@ class BarangMasuk extends BaseController
             ];
 
             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+            $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
             $this->data['data'] = !empty($resData) ? $resData : [];
+            $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
             $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
         }
         $html = view($this->views . '\barang_masuk_print', $this->data);

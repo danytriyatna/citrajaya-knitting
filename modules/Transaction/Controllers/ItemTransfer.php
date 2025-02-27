@@ -62,8 +62,12 @@ class ItemTransfer extends BaseController
     $limit      = $this->request->getPost('length');
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
+    $isApprove      = $this->request->getPost('isApprove');
 
     $params = [];
+    if ($isApprove) {
+      $params['status'] = "2";
+    }
 
     $results = $this->mRef->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mRef->getDataCnt($filters, $params);
@@ -131,6 +135,45 @@ class ItemTransfer extends BaseController
     return $this->response->setJSON($build_array);
   }
 
+  public function listsSO()
+  {
+    $start      = $this->request->getPost('start');
+    $limit      = $this->request->getPost('length');
+    $filters    = $this->request->getPost('filter');
+    $order      = $this->request->getPost('sort');
+
+    $params = [];
+
+    $results = $this->mRef->getDataSO(null, $start, $limit, $order, $filters, $params);
+    $totalfiltered = $this->mRef->getDataSOCnt($filters, $params);
+    $totaldata = $this->mRef->getDataSOCnt(null, $params);
+    $maxpage = ceil($totalfiltered / $limit);
+
+    $build_array = array(
+      "last_page" => $maxpage,
+      "recordsTotal" => $totaldata,
+      "recordsFiltered" => $totalfiltered,
+      "data" => array()
+    );
+
+    foreach ($results as $row) {
+      array_push(
+        $build_array["data"],
+        array(
+          "id_konsumen" => $row->id_konsumen,
+          "kode_sales_order" => $row->kode_sales_order,
+          "style" => $row->style,
+          "deskripsi" => $row->deskripsi,
+          "buyer" => $row->buyer,
+          "color" => $row->color,
+          "qty" => $row->qty,
+          "amount" => $row->amount,
+        )
+      );
+    }
+    return $this->response->setJSON($build_array);
+  }
+
   public function form_static($id = null)
   {
 
@@ -152,36 +195,11 @@ class ItemTransfer extends BaseController
       ];
 
       $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
-      $resDataDetSO = $this->mRefDet->getDataDetailSO($id);
-      $dataSO = [];
-      foreach ($resDataDetSO as $rowData) {
-        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-        $pru['id_sales_order'] = $rowData->id_so;
-        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($rowData->id_so) : [];
-        if (!empty($detail)) {
-          for ($i = 0; $i < count($detail); $i++) {
-            $drow = $detail[$i];
-            $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
-            $detail[$i]->qty      = $allQty;
-          }
-        }
-        $rowData->id = encrypt($rowData->id_so);
-        $rowData->detail = $detail;
-        $rowData->key_ukuran = $dtUkuran;
-        $dataSO[] = $rowData;
-      }
-
-
-      // foreach ($resDataDetail as &$rowData) {
-      //     $rowData->id_barang = encrypt($rowData->id_barang);
-      // }
-
-
+      $resDataDetSO = $this->mRefDet->getDataDetSO($id);
 
       $this->data['resData'] = $resData;
       $this->data['detail'] = json_encode($resDataDetail);
-      $this->data['dataSO'] = json_encode($dataSO);
+      $this->data['dataSO'] = json_encode($resDataDetSO);
     }
     $this->data['titlehead'] = "Item Transfer";
     $sortGudang = [
@@ -260,6 +278,19 @@ class ItemTransfer extends BaseController
     return view($this->views . '\item_transfer_form', $this->data);
   }
 
+  function dataSO()
+  {
+    $noSO = $this->request->getGet("noSO");
+    $data = [];
+    $results = $this->mRef->getDataByNoTrf($noSO);
+
+
+    $data['status'] = true;
+    $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
+    $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
+    return $this->response->setJSON($data);
+  }
+
   function save()
   {
     $msg    = "Data gagal disimpan !";
@@ -328,33 +359,12 @@ class ItemTransfer extends BaseController
           'dir' => 'ASC'
         ]
       ];
-      $resDataDetSO = $this->mRefDet->getDataDetailSO($id);
-      $dataSO = [];
-      foreach ($resDataDetSO as $rowData) {
-        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-        $pru['id_sales_order'] = $rowData->id_so;
-        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($rowData->id_so) : [];
-        if (!empty($detail)) {
-          for ($i = 0; $i < count($detail); $i++) {
-            $drow = $detail[$i];
-            $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
-            $detail[$i]->qty      = $allQty;
-          }
-        }
+      $resDataDetSO = $this->mRefDet->getDataDetSO($id);
 
-        $rowData->id = encrypt($rowData->id_so);
-        $rowData->detail = $detail;
-        $keysUkuran = !empty($detail) ? array_keys(get_object_vars($detail[0])) : [];
-        $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga", "qty"];
-        $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
-        $rowData->ukuran = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
-        $dataSO[] = $rowData;
-      }
 
       $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
       $this->data['data'] = !empty($resData) ? $resData : [];
-      $this->data['dataSO'] = !empty($dataSO) ? $dataSO : [];
+      $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }
     $html = view($this->views . '\item_transfer_print', $this->data);

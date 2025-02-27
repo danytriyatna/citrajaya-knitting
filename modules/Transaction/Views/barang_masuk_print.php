@@ -195,7 +195,38 @@
 
         </tbody>
     </table>
+    <br>
 
+    <table class="table-bordered w-100">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 40px;">No.</th>
+                <th class="text-center" style="width: 30%;">Informasi</th>
+                <th class="text-center" style="width: 30%;">Colour</th>
+                <th class="text-center" style="width: 20%;">Qty</th>
+                <th class="text-center" style="width: 20%;">Amount</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            <?php $i = 1;
+            foreach ($dataSO as $row) : ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td>
+                        No SO: <?= $row->kode_sales_order ?></br>
+                        Style:<?= !empty($row->style) ? $row->style : $row->deskripsi ?></br>
+                        Buyer:<?= $row->buyer ?></br>
+                    </td>
+                    <td class="text-left"><?= $row->color ?></td>
+                    <td class="text-right"><?= $row->qty ?></td>
+                    <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td>
+                    </td>
+                </tr>
+            <?php endforeach ?>
+
+        </tbody>
+    </table>
     <table class="w-100">
         <tbody>
             <tr>

@@ -12,6 +12,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     protected $tblSatuan = "ref_satuan";
     protected $tblGudang = "ref_gudang";
     protected $tblTrxLots = "trans_lots";
+    protected $tblDetailSO = "trans_barang_trf_so_det";
 
     protected $_data = null;
     protected $primaryKey = 'id';
@@ -96,6 +97,20 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->select("bbx.id,abx.id_so, bbx.kode_sales_order, cbx.nama, bbx.deskripsi");
         $builder->join($this->tblSO . " bbx", "abx.id_so = bbx.id", "left");
         $builder->join("ref_konsumen cbx", "bbx.id_konsumen = cbx.id", "inner");
+
+        $builder->where("abx.id_header", $idHeader);
+        $this->_data = $builder->get()->getResult();
+
+
+        return $this->_data;
+    }
+
+    function getDataDetSO($idHeader = null)
+    {
+        $builder = $this->db->table($this->tblDetailSO . " abx");
+
+        $builder->select("abx.qty,abx.kode_sales_order,abx.id_konsumen,abx.style,abx.kode_sales_order,abx.deskripsi,abx.color,abx.amount,cbx.nama as buyer");
+        $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
 
         $builder->where("abx.id_header", $idHeader);
         $this->_data = $builder->get()->getResult();

@@ -209,8 +209,10 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 40px;">No.</th>
-                <th class="text-center" style="width: 25%;">INFORMASI</th>
-                <th class="text-center" style="width: 70%;">DETAIL</th>
+                <th class="text-center" style="width: 30%;">Informasi</th>
+                <th class="text-center" style="width: 30%;">Colour</th>
+                <th class="text-center" style="width: 20%;">Qty</th>
+                <th class="text-center" style="width: 20%;">Amount</th>
 
             </tr>
         </thead>
@@ -222,36 +224,11 @@
                     <td>
                         No SO: <?= $row->kode_sales_order ?></br>
                         Style:<?= !empty($row->style) ? $row->style : $row->deskripsi ?></br>
-                        Buyer:<?= $row->nama ?></br>
+                        Buyer:<?= $row->buyer ?></br>
                     </td>
-                    <td>
-                        <table class="table-bordered w-100 py-4">
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>Colour</th>
-                                    <?php foreach ($row->ukuran as $u) : ?>
-                                        <th><?= strtoupper($u) == 'ALL_' ? "ALL" : strtoupper($u) ?></th>
-                                    <?php endforeach; ?>
-                                    <th>Total Qty</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $iq = 1;
-                                foreach ($row->detail as $rowData) : ?>
-                                    <tr>
-                                        <td><?= $iq++ ?></td>
-                                        <td><?= $rowData->colour ?></td>
-                                        <?php foreach ($row->ukuran as $u) : ?>
-                                            <td class="text-right"><?= $rowData->$u ?></td>
-                                        <?php endforeach; ?>
-                                        <td class="text-right"><?= $rowData->qty ?></td>
-
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    <td class="text-left"><?= $row->color ?></td>
+                    <td class="text-right"><?= $row->qty ?></td>
+                    <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td>
                     </td>
                 </tr>
             <?php endforeach ?>

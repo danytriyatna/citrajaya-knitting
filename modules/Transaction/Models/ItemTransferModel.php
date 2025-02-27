@@ -8,6 +8,7 @@ class ItemTransferModel extends \App\Models\PrModel
     protected $table = "trans_barang_trf_header";
     protected $tblDet = "trans_barang_trf_detail";
     protected $tblDetSO = "trans_barang_trf_so";
+    protected $tblDetailSO = "trans_barang_trf_so_det";
 
     protected $tblGudang = "ref_gudang";
     protected $tblBarang = "ref_barang";
@@ -35,7 +36,9 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->join($this->tblOperator . " cbx", "uk.id_cmt = cbx.id", "left");
 
         $builder->select("uk.id,uk.tanggal,uk.tipe,uk.id_cmt,uk.tipe,id_proses, cbx.nama_operator,  abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan, uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan");
-
+        if (!empty($params['status'])) {
+            $builder->where('uk.status = 1');
+        }
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -74,7 +77,9 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->join($this->tblGudang . " bbx", "uk.id_gudang_tujuan = bbx.id", "left");
         $builder->select("count(1) as _cnt");
         $builder->where('uk.active = 1');
-
+        if (!empty($params['status'])) {
+            $builder->where('uk.status = 1');
+        }
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
             $builder->Where('LOWER(uk.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -83,6 +88,78 @@ class ItemTransferModel extends \App\Models\PrModel
             $builder->groupEnd();
         }
 
+        $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
+    function getDataSO($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table("trans_sales_order_det" . " abx");
+        $builder->join("trans_sales_order_ukuran" . " bbx", "bbx.id_sales_order_det = abx.id", "inner");
+        $builder->join("trans_sales_order" . " cbx", "abx.id_sales_order = cbx.id", "inner");
+        $builder->join("ref_warna" . " dbx", "abx.id_warna_1 = dbx.id", "left");
+        $builder->join("ref_warna" . " ebx", "abx.id_warna_2 = ebx.id", "left");
+        $builder->join("ref_konsumen" . " fbx", "fbx.id = cbx.id_konsumen", "left");
+
+        $builder->select("cbx.kode_sales_order,cbx.id_konsumen,cbx.deskripsi,cbx.style,SUM(bbx.harga_satuan) AS amount,SUM(bbx.qty) AS qty,CASE WHEN ebx.kode_warna IS NOT NULL THEN CONCAT(dbx.kode_warna,'-',ebx.kode_warna)  ELSE dbx.kode_warna END AS color,fbx.nama AS buyer");
+
+        if ($id == null or $id == "") {
+            $builder->where('cbx.active = 1');
+            $builder->where('cbx.status = 2');
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $builder->groupStart();
+                $builder->Where('LOWER(cbx.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(cbx.style) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(cbx.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(dbx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(ebx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->groupEnd();
+            }
+            $builder->groupBy("cbx.style,cbx.id_konsumen,cbx.kode_sales_order,cbx.deskripsi,dbx.kode_warna,ebx.kode_warna,fbx.nama");
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy('cbx.kode_sales_order');
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("abx.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+
+        return $this->_data;
+    }
+
+    function getDataSOCnt($filters = null, $params = null)
+    {
+        $builder = $this->db->table("trans_sales_order_det" . " abx");
+        $builder->join("trans_sales_order_ukuran" . " bbx", "bbx.id_sales_order_det = abx.id", "inner");
+        $builder->join("trans_sales_order" . " cbx", "abx.id_sales_order = cbx.id", "inner");
+        $builder->join("ref_warna" . " dbx", "abx.id_warna_1 = dbx.id", "left");
+        $builder->join("ref_warna" . " ebx", "abx.id_warna_2 = ebx.id", "left");
+        $builder->join("ref_konsumen" . " fbx", "fbx.id = cbx.id_konsumen", "left");
+        $builder->select("count(1) as _cnt");
+        $builder->where('cbx.active = 1');
+        $builder->where('cbx.status = 2');
+
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $builder->groupStart();
+            $builder->Where('LOWER(cbx.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(cbx.style) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(cbx.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(dbx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(ebx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->groupEnd();
+        }
+        $builder->groupBy("cbx.style,cbx.kode_sales_order,cbx.deskripsi,dbx.kode_warna,ebx.kode_warna,fbx.nama");
         $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;
@@ -98,6 +175,16 @@ class ItemTransferModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getDataByNoTrf($noTrf)
+    {
+        $builder = $this->db->table("trans_barang_trf_header abx");
+        $builder->select("abx.id");
+        $builder->where("kode_transaksi", $noTrf);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
 
     function generateKodePersediaan()
     {
@@ -139,7 +226,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     "id_header" => $id,
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
-                $this->deleteRecordMultipleColumn($this->tblDetSO, $arrDelete);
+                $this->deleteRecordMultipleColumn($this->tblDetailSO, $arrDelete);
                 $arrParam =  [
                     "id" => $id,
                 ];
@@ -151,11 +238,19 @@ class ItemTransferModel extends \App\Models\PrModel
 
             foreach ($dataSO as $rowData) {
                 $dataDetail = [
-                    "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
+                    // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
                     "id_header" => $id,
+                    "color" => $rowData['color'],
+                    "deskripsi" => $rowData['deskripsi'],
+                    "style" => !empty($rowData['style']) ? $rowData['style'] : null,
+                    "qty" => !empty($rowData['qty']) ? $rowData['qty'] : null,
+                    "amount" => !empty($rowData['amount']) ? $rowData['amount'] : null,
+                    "id_konsumen" => $rowData['id_konsumen'],
+                    "kode_sales_order" => $rowData['kode_sales_order'],
+
                 ];
 
-                $this->insertRecordGetid($this->tblDetSO, $dataDetail);
+                $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
             }
 
             foreach ($detail as $rowData) {

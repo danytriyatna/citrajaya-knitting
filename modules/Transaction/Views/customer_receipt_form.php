@@ -43,7 +43,7 @@
                     <div class="form-group row">
                       <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tgl_cr">CR Date</label>
                       <div class="col-md-8">
-                        <input <?= ($disabled_input)? 'disabled' : '' ?> type="text" id="tgl_cr" name="tgl_cr" class="form-control datepickerx" placeholder="Pilih tanggal CR" value="<?= !empty($row->tgl_transaksi)? $row->tgl_transaksi : '' ?>">
+                        <input <?= ($disabled_input)? 'disabled' : '' ?> type="text" id="tgl_cr" name="tgl_cr" class="form-control datepickerx" placeholder="Pilih tanggal CR" value="<?= !empty($row->tgl_transaksi)? $row->tgl_transaksi : date("d F Y", now()) ?>">
                       </div>
                     </div>
                   </div>

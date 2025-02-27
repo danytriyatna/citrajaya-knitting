@@ -115,7 +115,7 @@ class PurchaseOrder extends BaseController
           "qty" => $this->formatAngka($row->qty_payment) . "/" . $this->formatAngka($row->qty),
           "total" => $row->total,
           "total_payment" => $row->total_payment,
-          "sisa" => $row->total -  $row->total_payment,
+          "sisa" => (double)$row->total -  (double)$row->total_payment,
           "status" => $status,
           "approve_status" => $approve_status
         )

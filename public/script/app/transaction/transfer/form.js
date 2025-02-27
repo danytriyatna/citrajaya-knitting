@@ -247,12 +247,93 @@ let buttonRowSOAction = function(cell) {
 };
 
 
+// let dtList = new Tabulator("#dt-list", {
+//     pagination: true, 
+//     paginationSize: 10,
+//     paginationButtonCount: 5,
+//     columns: [
+//         {title: "ID", field: "id", width: "10%",visible:false},
+//         {
+//             headerSort: false,  
+//             title: '#', 
+//             formatter: buttonRowSOAction,
+//             width: '10%', align: "center", cssClass: "text-center",
+//             cellClick: function(e, cell) {
+//                 let row = cell.getRow();
+//                 if (e.target.title === 'delete') {
+//                     Swal.fire({
+//                         title: "Apakah anda yakin ingin menghapus data?",
+//                         icon: 'question',
+//                         confirmButtonText: 'Hapus',
+//                         confirmButtonColor: '#dc3545',
+//                         showCancelButton: true,
+//                         cancelButtonText: 'Batal',
+//                         cancelButtonColor: '#6C757D'
+//                     }).then((result) => {
+//                         if (result.isConfirmed) {
+//                             row.delete(); 
+//                         }
+//                     })
+//                 } 
+            
+//             }
+//         },
+//         {title: "Informasi", field: "kode_sales_order", width: "20%",
+//             formatter: function (cell) {
+//                 let rowData = cell.getRow().getData();
+//                 return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
+//             },
+//         },
+//         {
+//             title: "Detail",
+//             field: "detail",
+//             width:"70%",
+//             formatter: function(cell, formatterParams) {
+//                 let data = cell.getValue();
+//                 let listUkuran = cell.getData().key_ukuran;
+              
+//                 if (!data || data.length === 0) return "No Data";
+
+//                 let tableHtml = `<table style="width:100%; border-collapse:collapse;">
+//                     <thead>
+//                         <tr style="background:#f2f2f2;">
+//                             <th style="border:1px solid #ddd; padding:5px;">No.</th>
+//                             <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
+//                             listUkuran.forEach( row => {
+//                                 tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
+//                             })
+//                             tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>`;
+
+//                 data.forEach(row => {
+//                     tableHtml += `<tr>
+//                         <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
+//                         <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
+//                         listUkuran.forEach( x => {
+//                             let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
+//                             tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
+//                         })
+//                       tableHtml +=  `<td style="border:1px solid #ddd;">${row.qty}</td>
+//                     </tr>`;
+//                 });
+
+//                 tableHtml += `</tbody></table>`;
+
+//                 return tableHtml;
+//             }
+//         }
+//     ],
+//     placeholder: "Tidak ada data",
+// });
+
 let dtList = new Tabulator("#dt-list", {
     pagination: true, 
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        {title: "ID", field: "id", width: "10%",visible:false},
+        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
         {
             headerSort: false,  
             title: '#', 
@@ -278,52 +359,18 @@ let dtList = new Tabulator("#dt-list", {
             
             }
         },
-        {title: "Informasi", field: "kode_sales_order", width: "20%",
-            formatter: function (cell) {
-                let rowData = cell.getRow().getData();
-                return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
-            },
-        },
-        {
-            title: "Detail",
-            field: "detail",
-            width:"70%",
-            formatter: function(cell, formatterParams) {
-                let data = cell.getValue();
-                let listUkuran = cell.getData().key_ukuran;
-              
-                if (!data || data.length === 0) return "No Data";
-
-                let tableHtml = `<table style="width:100%; border-collapse:collapse;">
-                    <thead>
-                        <tr style="background:#f2f2f2;">
-                            <th style="border:1px solid #ddd; padding:5px;">No.</th>
-                            <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
-                            listUkuran.forEach( row => {
-                                tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
-                            })
-                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-                data.forEach(row => {
-                    tableHtml += `<tr>
-                        <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
-                        <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
-                        listUkuran.forEach( x => {
-                            let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
-                            tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
-                        })
-                      tableHtml +=  `<td style="border:1px solid #ddd;">${row.qty}</td>
-                    </tr>`;
-                });
-
-                tableHtml += `</tbody></table>`;
-
-                return tableHtml;
-            }
-        }
+        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        {title: "Style", field: "style", width: "20%"},
+        {title: "Deskripsi", field: "deskripsi", width: "20%"},
+        {title: "Buyer", field: "buyer", width: "20%"},
+        {title: "Colour", field: "color", width: "20%"},
+        {title: "Qty", field: "qty", width: "20%",editor:"number"},
+        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
+            decimal: ",",
+            thousand: ".",
+            symbol: "Rp",  // Simbol mata uang Rupiah
+            precision: 0,   // Tidak ada desimal
+        }},
     ],
     placeholder: "Tidak ada data",
 });
@@ -691,10 +738,10 @@ btnAdd.click(function(){
 
 btnView.click(function(){
     setTimeout(() => {
-        dtListSample.redraw(true)
+        dtListSO.redraw(true)
     }, 500);
     $("#modal-so").modal("show")
-    dtListSample.deselectRow();
+    dtListSO.deselectRow();
    
 })
 
@@ -842,59 +889,122 @@ function openModalDetail(row = null){
  
 }
 
-let dtListSample = new Tabulator("#dt-list-sample", {
-    columns: [
-        {title: "ID", field: "id", width: "20%",visible:false},
-        {title: "Informasi", field: "kode_sales_order", width: "20%",
-            formatter: function (cell) {
-                let rowData = cell.getRow().getData();
-                return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
-            },
-        },
-        {
-            title: "Detail",
-            field: "detail",
-            width:"80%",
-            formatter: function(cell, formatterParams) {
-                let data = cell.getValue();
-                let listUkuran = cell.getData().key_ukuran;
+// let dtListSample = new Tabulator("#dt-list-sample_", {
+//     columns: [
+//         {title: "ID", field: "id", width: "20%",visible:false},
+//         {title: "Informasi", field: "kode_sales_order", width: "20%",
+//             formatter: function (cell) {
+//                 let rowData = cell.getRow().getData();
+//                 return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
+//             },
+//         },
+//         {
+//             title: "Detail",
+//             field: "detail",
+//             width:"80%",
+//             formatter: function(cell, formatterParams) {
+//                 let data = cell.getValue();
+//                 let listUkuran = cell.getData().key_ukuran;
               
-                if (!data || data.length === 0) return "No Data";
+//                 if (!data || data.length === 0) return "No Data";
 
-                let tableHtml = `<table style="width:100%; border-collapse:collapse;">
-                    <thead>
-                        <tr style="background:#f2f2f2;">
-                            <th style="border:1px solid #ddd; padding:5px;">No.</th>
-                            <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
-                            listUkuran.forEach( row => {
-                                tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
-                            })
-                            tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+//                 let tableHtml = `<table style="width:100%; border-collapse:collapse;">
+//                     <thead>
+//                         <tr style="background:#f2f2f2;">
+//                             <th style="border:1px solid #ddd; padding:5px;">No.</th>
+//                             <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
+//                             listUkuran.forEach( row => {
+//                                 tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
+//                             })
+//                             tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>`;
 
-                data.forEach(row => {
-                    tableHtml += `<tr>
-                        <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
-                        <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
-                        listUkuran.forEach( x => {
-                            let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
-                            tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
-                        })
-                      tableHtml +=  `<td style="border:1px solid #ddd;">${(row.qty)}</td>
-                    </tr>`;
-                });
+//                 data.forEach(row => {
+//                     tableHtml += `<tr>
+//                         <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
+//                         <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
+//                         listUkuran.forEach( x => {
+//                             let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
+//                             tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
+//                         })
+//                       tableHtml +=  `<td style="border:1px solid #ddd;">${(row.qty)}</td>
+//                     </tr>`;
+//                 });
 
-                tableHtml += `</tbody></table>`;
+//                 tableHtml += `</tbody></table>`;
 
-                return tableHtml;
-            }
-        }
+//                 return tableHtml;
+//             }
+//         }
+//     ],
+    
+//     locale: 'id',    
+//     ajaxURL: "/trans/sales-order/list",
+//     ajaxConfig: "POST",
+//     sortMode: "remote",
+//     filterMode: "remote",
+//     placeholder: "Tidak ada data",
+//     selectableRows: true,
+//     ajaxRequesting: function (url, params) {
+//         params.start = params.size * (params.page - 1);
+//         params.length = params.size;
+//     },
+//     ajaxResponse: function (url, params, response) {
+//         let pageSize = dtListSample.getPageSize();
+//         let pageNo = dtListSample.getPage();
+//         let startRow = (pageSize * (pageNo - 1)) + 1;
+//         let endRow = response.data.length + startRow - 1;
+//         if (response.data.length === 0) {
+//             startRow = 0; endRow = 0;
+//         }
+//         let recordsFiltered = parseInt(response.recordsFiltered);
+//         let recordsTotal = parseInt(response.recordsTotal);
+
+//         $("#table-footer .tabulator-startrow").text(startRow);
+//         $("#table-footer .tabulator-endrow").text(endRow);
+//         $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+
+//         let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+//         elTotalFilteredRow.text("");
+//         if (recordsTotal > recordsFiltered) {
+//             elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+//                 + " entri keseluruhan)");
+//         }
+//         return response;
+//     },
+//     footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+//         + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+//         + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+//     pagination: true,
+//     paginationMode: "remote",
+//     paginationSize: 25,
+//     paginationButtonCount: 10,
+//     dataSendParams: {
+//         sorters: "order"
+//     },
+// });
+
+let dtListSO = new Tabulator("#dt-list-sample", {
+    columns: [
+        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
+        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        {title: "Style", field: "style", width: "20%"},
+        {title: "Deskripsi", field: "deskripsi", width: "20%"},
+        {title: "Buyer", field: "buyer", width: "20%"},
+        {title: "Colour", field: "color", width: "20%"},
+        {title: "Qty", field: "qty", width: "20%"},
+        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
+            decimal: ",",
+            thousand: ".",
+            symbol: "Rp",  // Simbol mata uang Rupiah
+            precision: 0,   // Tidak ada desimal
+        }},
     ],
     
     locale: 'id',    
-    ajaxURL: "/trans/sales-order/list",
+    ajaxURL: "/trans/item-transfer/list-so",
     ajaxConfig: "POST",
     sortMode: "remote",
     filterMode: "remote",
@@ -905,8 +1015,8 @@ let dtListSample = new Tabulator("#dt-list-sample", {
         params.length = params.size;
     },
     ajaxResponse: function (url, params, response) {
-        let pageSize = dtListSample.getPageSize();
-        let pageNo = dtListSample.getPage();
+        let pageSize = dtListSO.getPageSize();
+        let pageNo = dtListSO.getPage();
         let startRow = (pageSize * (pageNo - 1)) + 1;
         let endRow = response.data.length + startRow - 1;
         if (response.data.length === 0) {
@@ -939,10 +1049,73 @@ let dtListSample = new Tabulator("#dt-list-sample", {
     },
 });
 
-dtListSample.on("rowClick", function(e, row){
-    if(dtList.getData().some(x=>x.id == row.getData().id)){
+// dtListSample.on("rowClick", function(e, row){
+//     if(dtList.getData().some(x=>x.id == row.getData().id)){
+//         return Swal.fire({
+//             text: `SO ${row.getData().kode_sales_order} telah dipilih`,
+//             icon: 'error',
+//             showConfirmButton: false,
+//             timer: 2000
+//         });
+//     }
+//     dtList.addRow(row.getData())
+//     $("#modal-so").modal("hide");
+// })
+
+// function getDetail(kodeOrder) {
+//     $.ajax({
+//         url: `/trans/sales-order/view`,
+//         type: 'GET',
+//         data:{kodeOrder:kodeOrder},
+//         dataType: 'json', 
+//         success: function(data) {
+//             drawTableRefSO(data.ukuran,data.data)
+//         },
+//         error: function(xhr, status, error) {
+//             console.error('Error fetching data:', error);
+//         }
+//     });
+// }
+
+// function drawTableRefSO(ukuran,detail){
+//     let isColumn = [
+//         {headerSort: false,title:"No", field:"no",   width: "5%"},
+//         {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+//     ]
+
+//     for (const el of ukuran) {
+//         const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
+//         isColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
+//     }
+
+//     isColumn.push(
+//         {
+//             headerSort: false, cssClass: 'text-center', title:"Amount", field:"total_harga",formatter: "money", 
+//             formatterParams: {
+//                 decimal: ",",
+//                 thousand: ".",
+//                 symbol: "Rp",  // Simbol mata uang Rupiah
+//                 precision: 0,   // Tidak ada desimal
+//             },
+//             hozAlign:"right", cssClass: 'text-end', width:"15%"})
+
+//     new Tabulator(`#dt-list-sample`, {
+//         data: detail, 
+//         layout:"fitColumns",
+//         resizableColumnFit:true,
+//         pagination: true, 
+//         paginationSize: 10,
+//         paginationButtonCount: 5,
+//         columns: isColumn,
+//     });
+
+
+// }
+
+dtListSO.on("rowClick", function(e, row){
+    if(dtList.getData().some(x=>x.kode_sales_order == row.getData().kode_sales_order && x.color == row.getData().color)){
         return Swal.fire({
-            text: `SO ${row.getData().kode_sales_order} telah dipilih`,
+            text: `SO ${row.getData().kode_sales_order} dengan warna ${row.getData().color} telah dipilih`,
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
@@ -1001,7 +1174,6 @@ dtListSample.on("rowClick", function(e, row){
 
 
 // }
-
 
 
 function simpanData(status) {

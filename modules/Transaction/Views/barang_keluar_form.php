@@ -137,6 +137,31 @@
     </div>
   </div>
 </div>
+<div id="modal-so" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">List Data Sales Order / Sample</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="col-md-4" style="float: right; position: relative; right: 15px;">
+              <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
+                <input type="text" id="tb-search-so" class="form-control" placeholder="Pencarian . . .">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="dt-list-sample" class="table-responsive table-striped"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>
@@ -171,6 +196,7 @@
                     <div class="col-md-9">
                       <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
+                      <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
                       <input type="text" id="kode_transaksi" name="kode_transaksi" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->kode_transaksi) ? $resData->kode_transaksi : null ?>" readonly>
                     </div>
@@ -209,8 +235,8 @@
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">No. Transfer</label>
                     <div class="col-md-9">
                       <div class="input-group">
-                        <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="">
-                        <span class="input-group-text bg-white"><i class="ti-search"></i></span>
+                        <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="<?= !empty($resData) ? $resData->no_ref_trf : "" ?>">
+                        <span class="input-group-text bg-white" id="ic_ref_transfer"><i class="ti-search"></i></span>
                       </div>
                     </div>
                   </div>
@@ -263,48 +289,11 @@
           </div>
 
           <hr>
-
           <div class="row">
             <div class="col-sm-12">
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>No. SO</th>
-                      <th>Style</th>
-                      <th>Colour</th>
-                      <th>QTY</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>SOD250100005</td>
-                      <td>Gamis Zipper Stripe</td>
-                      <td>KOPI TUA</td>
-                      <td>100</td>
-                      <td>Rp 2.760.000</td>
-                    </tr>
-                    <tr>
-                      <td>SOD250100005</td>
-                      <td>Gamis Zipper Stripe</td>
-                      <td>HITAM</td>
-                      <td>100</td>
-                      <td>Rp 2.760.000</td>
-                    </tr>
-                    <tr>
-                      <td>SOD250100005</td>
-                      <td>Gamis Zipper Stripe</td>
-                      <td>M47</td>
-                      <td>100</td>
-                      <td>Rp 2.760.000</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <div id="dt-list-so" class="table-responsive table-striped"></div>
             </div>
           </div>
-
           <hr>
           <div class="col-sm-3 mb-2">
             <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>

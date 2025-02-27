@@ -32,7 +32,7 @@ class BarangKeluarModel extends \App\Models\PrModel
         $builder->join($this->tblGudang . " abx", "uk.id_gudang = abx.id", "left");
         $builder->join($this->tblKategori . " dbx", "uk.id_kategori = dbx.id", "inner");
         $builder->join($this->tblVendor . " ebx", "uk.id_vendor = ebx.id", "left");
-        $builder->select("uk.id, uk.id_buyer,uk.status, uk.id_kategori, uk.keterangan, abx.nama_gudang,  uk.tanggal, ebx.nama , uk.kode_transaksi, dbx.kategori, uk.id_gudang");
+        $builder->select("uk.no_ref_trf,uk.id, uk.id_buyer,uk.status, uk.id_kategori, uk.keterangan, abx.nama_gudang,  uk.tanggal, ebx.nama , uk.kode_transaksi, dbx.kategori, uk.id_gudang");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');

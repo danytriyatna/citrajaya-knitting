@@ -17,10 +17,13 @@ let selectGudang = $('#select_warehouse');
 let selectKategori = $('#select_kategori');
 let inpLotNo = $('#lot_no');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
+let dataSO = $("#data-so").val().replace(/&quot;/ig,'"');
 let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
 let btnApprove = $('#btn-approve');
 let btnSimpanDetail = $('#btn-simpan-det');
+let btnView = $('#ic_ref_transfer');
+let inpNoRefTrf = $('#no_ref_transfer');
 let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
@@ -265,6 +268,105 @@ dtListBarang.on("rowClick", function(e, row){
     $("#modal-barang").modal("hide");
 })
 
+let dtListSO = new Tabulator("#dt-list-sample", {
+    columns: [
+        {title: "ID", field: "id", width: "20%",visible:false},
+        {
+            title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
+            width: "15%", formatter : "html"
+        }, 
+            
+        {
+            title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
+            width: "15%"
+        }, 
+    
+        {
+            title: 'TRANSFER FORM', field: 'gudang_asal', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+            width: "20%", 
+        } ,
+        {
+            title: 'TRANSFER TO', field: 'gudang_tujuan', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+            width: "20%", 
+        } ,
+        {
+            title: 'CMT', field: 'nama_operator', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+            width: "20%", 
+        } ,
+        {
+            title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
+            width: "15%",hozAlign:"center",
+        },
+    ],
+    
+    locale: 'id',    
+    ajaxURL: "/trans/item-transfer/list",
+    ajaxConfig: "POST",
+    sortMode: "remote",
+    filterMode: "remote",
+    placeholder: "Tidak ada data",
+    selectableRows: true,
+    ajaxRequesting: function (url, params) {
+        params.start = params.size * (params.page - 1);
+        params.length = params.size;
+        params.isApprove = true;
+    },
+    ajaxResponse: function (url, params, response) {
+        let pageSize = dtListSO.getPageSize();
+        let pageNo = dtListSO.getPage();
+        let startRow = (pageSize * (pageNo - 1)) + 1;
+        let endRow = response.data.length + startRow - 1;
+        if (response.data.length === 0) {
+            startRow = 0; endRow = 0;
+        }
+        let recordsFiltered = parseInt(response.recordsFiltered);
+        let recordsTotal = parseInt(response.recordsTotal);
+
+        $("#table-footer .tabulator-startrow").text(startRow);
+        $("#table-footer .tabulator-endrow").text(endRow);
+        $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+
+        let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+        elTotalFilteredRow.text("");
+        if (recordsTotal > recordsFiltered) {
+            elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+                + " entri keseluruhan)");
+        }
+        return response;
+    },
+    footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+        + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+        + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+    pagination: true,
+    paginationMode: "remote",
+    paginationSize: 25,
+    paginationButtonCount: 10,
+    dataSendParams: {
+        sorters: "order"
+    },
+});
+
+dtListSO.on("rowClick", function(e, row){
+    inpNoRefTrf.val(row.getData().kode_transaksi)
+        $.ajax({
+            url: `/trans/item-transfer/data-so?noSO=${row.getData().kode_transaksi}`,
+            type: 'GET',
+            dataType: 'json', 
+            success: function(data) {
+                
+                if(data.status){
+                    dtList.setData(data.dataSO)
+                }
+               
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+
+    $("#modal-so").modal("hide");
+})
+
 
 let buttonRowAction = function(cell) {
     let fmBtnDelete = "";        
@@ -273,6 +375,18 @@ let buttonRowAction = function(cell) {
     if (inpStatus.val() == 0){
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
         fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
+    }
+   
+
+    return fmBtnEdit + " " + fmBtnDelete;
+};
+
+let buttonRowSOAction = function(cell) {
+    let fmBtnDelete = "";        
+    let fmBtnEdit = "";        
+
+    if (inpStatus.val() == 0){
+        fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
     }
    
 
@@ -349,6 +463,39 @@ if(detailData.length > 0){
 } 
 
 
+let dtList = new Tabulator("#dt-list-so", {
+    pagination: true, 
+    paginationSize: 10,
+    paginationButtonCount: 5,
+    columns: [
+        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
+        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        {title: "Style", field: "style", width: "20%"},
+        {title: "Deskripsi", field: "deskripsi", width: "20%"},
+        {title: "Buyer", field: "buyer", width: "20%"},
+        {title: "Colour", field: "color", width: "20%"},
+        {title: "Qty", field: "qty", width: "20%"},
+        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
+            decimal: ",",
+            thousand: ".",
+            symbol: "Rp",  // Simbol mata uang Rupiah
+            precision: 0,   // Tidak ada desimal
+        }},
+    ],
+    placeholder: "Tidak ada data",
+});
+
+
+if(dataSO.length > 0){
+    setTimeout(() => {
+        try {
+            let isdata = JSON.parse(dataSO);
+            dtList.setData(isdata)
+        } catch (e) {
+            console.error("Error parsing JSON:", e);
+        }
+    }, 1000);
+}
 
 inpLotNo.keyup(function (e){
     let lotNo = inpLotNo.val()
@@ -546,6 +693,15 @@ btnAdd.click(function(){
     openModalDetail()
 })
 
+btnView.click(function(){
+    setTimeout(() => {
+        dtListSO.redraw(true)
+    }, 500);
+    $("#modal-so").modal("show")
+    dtListSO.deselectRow();
+   
+})
+
 function checkLotNo(value){
     $.ajax({
         url: `/purchasing/receive-item/check-lot?id_barang=${inpIdBarang.val()}&lot_no=${value}`,
@@ -681,6 +837,7 @@ function simpanData(status) {
             id_kategori:selectKategori.val(),
             nama:inpKonsumen.val(),
             id_buyer:inpIdKonsumen.val(),
+            no_ref_trf:inpNoRefTrf.val(),
             data:dtListDetail.getData(),
             keterangan:inpKeterangan.val(),
             status:status

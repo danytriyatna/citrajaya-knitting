@@ -395,6 +395,7 @@ $(document).ready(function () {
     }
 
     $("#btn-add").on("click", function(){
+        let today = new Date().toISOString().split('T')[0];
         inpData.val("")
         linkFileSalesOrder.attr('src', "")
         inpNoSalesOrder.val("")
@@ -402,7 +403,7 @@ $(document).ready(function () {
         fileSalesOrder.val("")
         inpDeskripsi.val("")
         inpBuyer.val("").trigger("change")
-        inpTglTransaksi.val("")
+        inpTglTransaksi.val(formatterDate(today))
         inpTglDeadline.val("")
         inpKetSalesOrder.val("")
         inpStyle.val("")

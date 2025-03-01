@@ -129,6 +129,7 @@ $(document).ready(function () {
                 bottomCalc: "sum", bottomCalcFormatter: "money", 
 			},
         ],
+        groupBy:['nama_operator', 'proses'],
         layout: 'fitColumns',
         ajaxURL: "/sdm/borongan/list",
         placeholder: "Tidak ada data",

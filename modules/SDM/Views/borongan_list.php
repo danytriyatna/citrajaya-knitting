@@ -48,6 +48,7 @@
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="filter_proses">Proses</label>
                   <select id="filter_proses" name="filter_proses" class="form-control custom-select select2">
+                    <option value="0">- Semua -</option>
                     <?php foreach ($proses as $rowData) : ?>
                       <option value="<?= $rowData->id ?>"><?= $rowData->nama ?></option>
                     <?php endforeach ?>

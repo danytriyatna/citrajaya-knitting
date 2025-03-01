@@ -143,12 +143,13 @@ class ProductionModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataQuantityCurrent($id, $idUkuran)
+    function getDataQuantityCurrent($id, $idUkuran, $ref_detail_id)
     {
         $builder = $this->db->table("trans_walkorder_proses_ukuran abx");
         $builder->select("abx.qty_prod");
         $builder->where('abx.id_walkorder_proses', $id);
         $builder->where('abx.id_ukuran', $idUkuran);
+        $builder->where('abx.ref_detail_id', $ref_detail_id);
         $builder->orderBy("abx.id", "ASC");
         $this->_data = $builder->get()->getRow();
 
@@ -186,12 +187,12 @@ class ProductionModel extends \App\Models\PrModel
             
         $this->db->transStart();
         try {
-
+            // print_r(json_encode($data));exit;
             $proses_last = $this->getlast_proses($idWorkOrder);
             foreach ($data as $rowData) {
                 $dtProses = $this->getDataJenisProduksi($rowData['id_proses']);
                 $resData = $this->getDataNextProses($idWorkOrder, $rowData['id_proses'], $dtProses->seq);
-                $resQtyCurrent = $this->getDataQuantityCurrent($rowData['id_walkorder_proses_ukuran'], $rowData['id_ukuran']);
+                $resQtyCurrent = $this->getDataQuantityCurrent($rowData['id_walkorder_proses_ukuran'], $rowData['id_ukuran'], $rowData['ref_detail_id']);
                 
                 $arrDataUkuran = [
                     "id_produksi" => $idProduksi,
@@ -219,13 +220,14 @@ class ProductionModel extends \App\Models\PrModel
                 $arrUpdData = [
                     "qty_prod" => $qtyQr
                 ];
-
+                // print_r(json_encode($arrUpdData));exit;
                 // print_r(json_encode($arrUpdData));exit;
                 $arrParam =  [
                     "id_walkorder_proses" => $rowData['id_walkorder_proses_ukuran'],
                     "id_ukuran" => $rowData['id_ukuran'],
                     "ref_detail_id" => $rowData['ref_detail_id'],
                 ];
+                // print_r(json_encode($arrParam));exit;
                 $ups = $this->updateRecords("trans_walkorder_proses_ukuran", $arrUpdData, $arrParam);
                 // print_r( $resData->id);exit;
                 if(!empty($resData)){

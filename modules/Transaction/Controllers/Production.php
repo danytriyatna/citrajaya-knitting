@@ -259,7 +259,6 @@ class Production extends BaseController
       $parms['id_walkorder'] = $resData->id_walkorder;
       $dataLast = $this->mProduksi->getDataProsesProd($parms);
       $this->data['last_data'] = !empty($dataLast) ? $dataLast[0] : [];
-
       $qty_kirim = 0;
       if(!empty($id)){
         $param_dlv['id_produksi'] = $id;

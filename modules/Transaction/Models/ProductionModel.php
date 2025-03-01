@@ -110,8 +110,16 @@ class ProductionModel extends \App\Models\PrModel
         if(!empty($params['id_walkorder'])){
             $builder->where('abx.id_walkorder', $params['id_walkorder']);
         }
-        if(!empty($params['last_proses']) && !empty($params['id_walkorder'])){
-            $builder->where('abx.id_proses = (select max(tx.id_proses) from trans_walkorder_proses tx where tx.id_walkorder = '.$params['id_walkorder'].')');
+        if (!empty($params['last_proses']) && !empty($params['id_walkorder'])) {
+            $subQuery = $this->db->table('trans_walkorder_proses tx')
+            ->select('tx.id_proses')
+            ->join('_jenis_proses_produksi jp', 'jp.id = tx.id_proses', 'inner')
+            ->where('tx.id_walkorder', $params['id_walkorder'])
+            ->orderBy('jp.seq', 'desc')
+            ->limit(1)
+            ->getCompiledSelect();
+
+            $builder->where('abx.id_proses = (' . $subQuery . ')');
         }
         $builder->groupBy("bbx.nama, bbx.seq, bbx.id");
         $builder->orderBy("bbx.seq", "ASC");

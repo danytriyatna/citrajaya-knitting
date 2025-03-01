@@ -128,13 +128,15 @@ class ProductionModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataNextProses($idWorkOrder, $id)
+    function getDataNextProses($idWorkOrder, $id, $seq)
     {
         $builder = $this->db->table("trans_walkorder_proses abx");
         $builder->select("abx.id");
+        $builder->join("_jenis_proses_produksi bbx", "abx.id_proses = bbx.id", "inner");
         $builder->where('abx.id_walkorder', $idWorkOrder);
-        $builder->where('abx.id_proses >', $id);
-        $builder->orderBy("abx.id", "ASC");
+        // $builder->where('abx.id_proses >', $id);
+        $builder->where('bbx.seq >', $seq);
+        $builder->orderBy("bbx.seq", "ASC");
         $builder->limit(1);
         $this->_data = $builder->get()->getRow();
 
@@ -186,7 +188,8 @@ class ProductionModel extends \App\Models\PrModel
 
             $proses_last = $this->getlast_proses($idWorkOrder);
             foreach ($data as $rowData) {
-                $resData = $this->getDataNextProses($idWorkOrder, $rowData['id_proses']);
+                $dtProses = $this->getDataJenisProduksi($rowData['id_proses']);
+                $resData = $this->getDataNextProses($idWorkOrder, $rowData['id_proses'], $dtProses->seq);
                 $resQtyCurrent = $this->getDataQuantityCurrent($rowData['id_walkorder_proses_ukuran'], $rowData['id_ukuran']);
 
                 $arrDataUkuran = [
@@ -242,88 +245,88 @@ class ProductionModel extends \App\Models\PrModel
 
                     $params_b['nama_barang'] = $dtWo->keterangan_style;
                     $dtBarang = $this->mBarang->getData(null, 0, 1, null, null, $params_b);
-                    if(empty($dtBarang)){
-                        $arr_isi = [
-                            'nama_barang'     => $dtWo->keterangan_style,
-                            'id_jenis_barang' => 3,
-                            'id_satuan'       => $dtSatuan[0]->id,
-                            'harga_satuan'    => 0,
-                            'stok_minimum'    => 1,
-                            'keterangan'      => 'Generate dari produksi',
-                        ];
-                        $arr_isi['created_at'] = date("Y-m-d H:i:s");
-                        $arr_isi['created_by'] = 1;
-                        $arr_isi['kode_barang'] = $this->mBarang->generateKodeBarang();
-                        $id_barang = $this->insertRecordGetid($this->mBarang->table, $arr_isi);
-                    }else{
-                        $id_barang = $dtBarang[0]->id;
-                    }
+                    // if(empty($dtBarang)){
+                    //     $arr_isi = [
+                    //         'nama_barang'     => $dtWo->keterangan_style,
+                    //         'id_jenis_barang' => 3,
+                    //         'id_satuan'       => $dtSatuan[0]->id,
+                    //         'harga_satuan'    => 0,
+                    //         'stok_minimum'    => 1,
+                    //         'keterangan'      => 'Generate dari produksi',
+                    //     ];
+                    //     $arr_isi['created_at'] = date("Y-m-d H:i:s");
+                    //     $arr_isi['created_by'] = 1;
+                    //     $arr_isi['kode_barang'] = $this->mBarang->generateKodeBarang();
+                    //     $id_barang = $this->insertRecordGetid($this->mBarang->table, $arr_isi);
+                    // }else{
+                    //     $id_barang = $dtBarang[0]->id;
+                    // }
 
-                    $id_gudang = $dtWo->id_gudang;
-                    $qty = $rowData['qty'];
+                    // $id_gudang = $dtWo->id_gudang;
+                    // $qty = $rowData['qty'];
 
-                    // $dtLot['id_barang'] = $id_barang;
-                    // $dtLot['id_gudang'] = $id_gudang;
-                    // $dtLot['lot_no']    = $this->generateRandomNumber(10);
-                    // $dtLot['qty']       = $qty;
-                    // $id_lot = $this->insertRecordGetid($this->tblTrxLots, $dtLot);
-                    $noLot = $this->generateRandomNumber(10);
-                    $mBarangMasuk = new IncomingGoodsModel();
-                    $arrParam =  [
-                        "id_barang" => $id_barang,
-                        "id_gudang" => $id_gudang,
-                    ];
-                    $resLotNo = $mBarangMasuk->getLotNo($noLot, $id_barang);
-                    $dataLots = [
-                        "id_barang" => $id_barang,
-                        "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_no" => $noLot,
-                        "qty" => $qty,
-                        "active" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                    ];
-                    if (!empty($resLotNo)) {
-                        $idLots = $resLotNo->id;
-                        $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $qty), array("id" => $idLots));
-                    } else {
-                        $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
-                    }
+                    // // $dtLot['id_barang'] = $id_barang;
+                    // // $dtLot['id_gudang'] = $id_gudang;
+                    // // $dtLot['lot_no']    = $this->generateRandomNumber(10);
+                    // // $dtLot['qty']       = $qty;
+                    // // $id_lot = $this->insertRecordGetid($this->tblTrxLots, $dtLot);
+                    // $noLot = $this->generateRandomNumber(10);
+                    // $mBarangMasuk = new IncomingGoodsModel();
+                    // $arrParam =  [
+                    //     "id_barang" => $id_barang,
+                    //     "id_gudang" => $id_gudang,
+                    // ];
+                    // $resLotNo = $mBarangMasuk->getLotNo($noLot, $id_barang);
+                    // $dataLots = [
+                    //     "id_barang" => $id_barang,
+                    //     "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
+                    //     "tanggal" => date("Y-m-d H:i:s"),
+                    //     "lot_no" => $noLot,
+                    //     "qty" => $qty,
+                    //     "active" => 1,
+                    //     "created_at" =>  date("Y-m-d H:i:s"),
+                    // ];
+                    // if (!empty($resLotNo)) {
+                    //     $idLots = $resLotNo->id;
+                    //     $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $qty), array("id" => $idLots));
+                    // } else {
+                    //     $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
+                    // }
 
-                    $resData = $mBarangMasuk->getLastStokBarangBalances($id_barang, $id_gudang, $idLots);
+                    // $resData = $mBarangMasuk->getLastStokBarangBalances($id_barang, $id_gudang, $idLots);
 
                     // $stokAwal = !empty($resData) ? $resData->stok : 0;
-                    $dataBarang = [
-                        "id_barang" => $id_barang,
-                        "jenis_transaksi" => 1,
-                        "jumlah" =>  $qty,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "id_gudang_tujuan" =>  !empty($id_gudang) ? $id_gudang : null,
-                        "nama" => 'Produksi',
-                        "id_kategori" => 11,
-                        "keterangan" => "Barang Masuk Dari Produksi",
-                        "active" => 1,
-                        "tipe" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                        "lot_id" => $idLots,
-                        "kode_transaksi" => $mBarangMasuk->generateKodePersediaan(),
-                    ];
-                    $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
-                    $arrStockBalances = [
-                        "id_barang" => $id_barang,
-                        "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_id" => $idLots,
-                        "saldo_awal" => 0,
-                        "saldo_akhir" => $qty,
-                        "active" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                    ];
-                    if (!empty($resData)) {
-                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $qty), array("id" => $resData->id));
-                    } else {
-                        $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
-                    }
+                    // $dataBarang = [
+                    //     "id_barang" => $id_barang,
+                    //     "jenis_transaksi" => 1,
+                    //     "jumlah" =>  $qty,
+                    //     "tanggal" => date("Y-m-d H:i:s"),
+                    //     "id_gudang_tujuan" =>  !empty($id_gudang) ? $id_gudang : null,
+                    //     "nama" => 'Produksi',
+                    //     "id_kategori" => 11,
+                    //     "keterangan" => "Barang Masuk Dari Produksi",
+                    //     "active" => 1,
+                    //     "tipe" => 1,
+                    //     "created_at" =>  date("Y-m-d H:i:s"),
+                    //     "lot_id" => $idLots,
+                    //     "kode_transaksi" => $mBarangMasuk->generateKodePersediaan(),
+                    // ];
+                    // $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+                    // $arrStockBalances = [
+                    //     "id_barang" => $id_barang,
+                    //     "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
+                    //     "tanggal" => date("Y-m-d H:i:s"),
+                    //     "lot_id" => $idLots,
+                    //     "saldo_awal" => 0,
+                    //     "saldo_akhir" => $qty,
+                    //     "active" => 1,
+                    //     "created_at" =>  date("Y-m-d H:i:s"),
+                    // ];
+                    // if (!empty($resData)) {
+                    //     $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $qty), array("id" => $resData->id));
+                    // } else {
+                    //     $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                    // }
                 }
             }
             $this->db->transComplete();
@@ -337,6 +340,15 @@ class ProductionModel extends \App\Models\PrModel
             $this->db->transRollback();
             throw $e;
         }
+    }
+
+    function getDataJenisProduksi($id_proses){
+        $builder = $this->db->table("_jenis_proses_produksi abx");
+        $builder->select("abx.id, abx.nama, abx.seq");
+        $builder->where('abx.active', 1);
+        $builder->where('abx.id', $id_proses);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
     }
 
     function getProduksilast($params){

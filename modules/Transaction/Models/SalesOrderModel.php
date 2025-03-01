@@ -496,24 +496,44 @@ class SalesOrderModel extends \App\Models\PrModel
         return $kodejadi;
     }
 
-    function getDataDetailSalesOrderUkuranById($id)
+    function getDataDetailSalesOrderUkuranById($params)
     {
 
-        $builder = $this->db->table("trans_sales_order_ukuran abx");
-        $builder->select("w1.kode_warna as warna1,w2.kode_warna as warna2,w3.kode_warna as warna3,w4.kode_warna as warna4");
-        $builder->select("w5.kode_warna as warna5,w6.kode_warna as warna6,w7.kode_warna as warna7,w8.kode_warna as warna8");
-        $builder->select("abx.id_sales_order, abx.id_sales_order_det");
-        $builder->join("trans_sales_order_det bbx", "abx.id_sales_order_det=bbx.id", "inner");
-        $builder->join("ref_warna w1", "bbx.id_warna_1 = w1.id", "left");
-        $builder->join("ref_warna w2", "bbx.id_warna_2 = w2.id", "left");
-        $builder->join("ref_warna w3", "bbx.id_warna_3 = w3.id", "left");
-        $builder->join("ref_warna w4", "bbx.id_warna_4 = w4.id", "left");
-        $builder->join("ref_warna w5", "bbx.id_warna_5 = w5.id", "left");
-        $builder->join("ref_warna w6", "bbx.id_warna_6 = w6.id", "left");
-        $builder->join("ref_warna w7", "bbx.id_warna_7 = w7.id", "left");
-        $builder->join("ref_warna w8", "bbx.id_warna_8 = w8.id", "left");
-        $builder->where("abx.id", $id);
-        $this->_data = $builder->get()->getRow();
+        $builder = $this->db->table("trans_sales_order_ukuran tu");
+        $builder->select(" tu.id as id_ukuran_so, tu.id_ukuran,ru.kode_ukuran, ru.key_ukuran, 
+                           w1.kode_warna as warna_1, w2.kode_warna as warna_2, w3.kode_warna as warna_3,
+                           tod.kode_sales_order, tod.style, tod.deskripsi");
+
+        $builder->join("trans_sales_order_det td", "td.id = tu.id_sales_order_det", "inner");
+        $builder->join("trans_sales_order tod", "tod.id = td.id_sales_order", "inner");
+        $builder->join("ref_ukuran ru", "tu.id_ukuran = ru.id", "left");
+        $builder->join("ref_warna w1", "td.id_warna_1 = w1.id", "left");
+        $builder->join("ref_warna w2", "td.id_warna_2 = w2.id", "left");
+        $builder->join("ref_warna w3", "td.id_warna_3 = w3.id", "left");
+        $builder->join("ref_warna w4", "td.id_warna_4 = w4.id", "left");
+        $builder->join("ref_warna w5", "td.id_warna_5 = w5.id", "left");
+        $builder->join("ref_warna w6", "td.id_warna_6 = w6.id", "left");
+        $builder->join("ref_warna w7", "td.id_warna_7 = w7.id", "left");
+        $builder->join("ref_warna w8", "td.id_warna_8 = w8.id", "left");
+        // $builder->where("abx.id", $id);
+
+        if (!empty($params['id_ukuran_so'])) {
+            $builder->where("tu.id", $params['id_ukuran_so']);
+        }
+
+        if (!empty($params['kode_ukuran'])) {
+            $builder->where("ru.kode_ukuran", $params['kode_ukuran']);
+        }
+
+        if (!empty($params['key_ukuran'])) {
+            $builder->where("ru.key_ukuran", $params['key_ukuran']);
+        }
+
+        if (!empty($params['id_sales_order_det'])) {
+            $builder->where("tu.id_sales_order_det", $params['id_sales_order_det']);
+        }
+
+        $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
 }

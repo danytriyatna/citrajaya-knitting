@@ -137,7 +137,7 @@
       <tbody>
         <tr>
           <td style="width: 120px;">
-            <img src="https://i.ibb.co.com/twN7mWBk/logo-citraknitt-text-dark.png" alt="Logo Text CJK" width="270px" style="height: auto;">
+            <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:60px;">
             &nbsp;
           </td>
         </tr>

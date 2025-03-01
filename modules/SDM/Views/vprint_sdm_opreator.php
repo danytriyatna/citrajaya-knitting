@@ -137,7 +137,7 @@
       <tbody>
         <tr>
           <td style="width: 120px;">
-            <img src="https://i.ibb.co.com/twN7mWBk/logo-citraknitt-text-dark.png" alt="Logo Text CJK" width="270px" style="height: auto;">
+            <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:60px;">
             &nbsp;
           </td>
         </tr>
@@ -193,11 +193,22 @@
         $harga = 0;
         $qty = 0;
         $harga_total = 0;
+
+        $proses = '';
         foreach ($detail as $r) { 
         $harga = $harga + $r->harga;
         $qty = $qty + $r->qty;
         $harga_total =  $harga_total + $r->harga_total;
         ?> 
+        <?php if( $proses != $r->proses) { ?>
+          <tr>
+            <td style="border-bottom:1px solid #000;"><b><?= $r->proses ?></b></td>
+            <td style="border-bottom:1px solid #000;" class="text-right"></td>
+            <td style="border-bottom:1px solid #000;" class="text-right"></td>
+            <td style="border-bottom:1px solid #000;" class="text-right"></td>
+          </tr>
+        <?php $proses = $r->proses; } ?>
+
         <tr>
           <td><?= $r->keterangan_style ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>

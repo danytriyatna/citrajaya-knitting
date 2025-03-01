@@ -182,7 +182,8 @@ class ProductionModel extends \App\Models\PrModel
     }
 
     function trxInsertUpdateRecord($data, $idProduksi, $idWorkOrder)
-    {
+    {   
+            
         $this->db->transStart();
         try {
 
@@ -191,7 +192,7 @@ class ProductionModel extends \App\Models\PrModel
                 $dtProses = $this->getDataJenisProduksi($rowData['id_proses']);
                 $resData = $this->getDataNextProses($idWorkOrder, $rowData['id_proses'], $dtProses->seq);
                 $resQtyCurrent = $this->getDataQuantityCurrent($rowData['id_walkorder_proses_ukuran'], $rowData['id_ukuran']);
-
+                
                 $arrDataUkuran = [
                     "id_produksi" => $idProduksi,
                     "id_walkorder_proses_ukuran" => !empty($rowData['id_walkorder_proses_ukuran']) ? $rowData['id_walkorder_proses_ukuran'] : null,
@@ -210,20 +211,26 @@ class ProductionModel extends \App\Models\PrModel
                     "created_at" =>  date("Y-m-d H:i:s"),
 
                 ];
+                
                 $this->insertRecordGetid("trans_produksi_operator", $arrDataUkuran);
+
+                $qtyQr = !empty($resQtyCurrent) ? (float)$resQtyCurrent->qty_prod + (float)$rowData['qty'] : $rowData['qty'];
+
                 $arrUpdData = [
-                    "qty_prod" => !empty($resQtyCurrent) ? (float)$resQtyCurrent->qty_prod + (float)$rowData['qty'] : $rowData['qty']
+                    "qty_prod" => $qtyQr
                 ];
+
+                // print_r(json_encode($arrUpdData));exit;
                 $arrParam =  [
                     "id_walkorder_proses" => $rowData['id_walkorder_proses_ukuran'],
                     "id_ukuran" => $rowData['id_ukuran'],
                     "ref_detail_id" => $rowData['ref_detail_id'],
                 ];
                 $ups = $this->updateRecords("trans_walkorder_proses_ukuran", $arrUpdData, $arrParam);
-                // print_r($arrDataUkuran);exit;
+                // print_r( $resData->id);exit;
                 if(!empty($resData)){
                     $arrUpdData2 = [
-                        "qty" => !empty($resQtyCurrent) ?  (float)$resQtyCurrent->qty_prod + (float)$rowData['qty']  : $rowData['qty']
+                        "qty" => $qtyQr
                     ];
                     $arrParam2 =  [
                         "id_walkorder_proses" => $resData->id,

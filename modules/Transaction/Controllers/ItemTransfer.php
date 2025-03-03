@@ -144,9 +144,9 @@ class ItemTransfer extends BaseController
 
     $params = [];
 
-    $results = $this->mRef->getDataSO(null, $start, $limit, $order, $filters, $params);
-    $totalfiltered = $this->mRef->getDataSOCnt($filters, $params);
-    $totaldata = $this->mRef->getDataSOCnt(null, $params);
+    $results = $this->mRef->getUkuranTrans(null, $start, $limit, $order, $filters, $params);
+    $totalfiltered = $this->mRef->getDataSOUkuranCnt($filters, $params);
+    $totaldata = $this->mRef->getDataSOUkuranCnt(null, $params);
     $maxpage = ceil($totalfiltered / $limit);
 
     $build_array = array(
@@ -168,6 +168,7 @@ class ItemTransfer extends BaseController
           "color" => $row->color,
           "qty" => $row->qty,
           "amount" => $row->amount,
+          "kode_ukuran" => $row->kode_ukuran,
         )
       );
     }

@@ -176,7 +176,7 @@
 
     <br>
 
-    <table class="table-bordered w-100">
+    <!-- <table class="table-bordered w-100">
         <thead>
             <tr>
                 <th class="text-center" style="width: 40px;">No.</th>
@@ -201,7 +201,7 @@
             <?php endforeach ?>
 
         </tbody>
-    </table>
+    </table> -->
 
     <br>
 
@@ -209,10 +209,12 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 40px;">No.</th>
-                <th class="text-center" style="width: 30%;">Informasi</th>
-                <th class="text-center" style="width: 30%;">Colour</th>
-                <th class="text-center" style="width: 20%;">Qty</th>
-                <th class="text-center" style="width: 20%;">Amount</th>
+                <th class="text-center" style="width: 25%;">No SO</th>
+                <th class="text-center" style="width: 25%;">Style</th>
+                <th class="text-center" style="width: 25%;">Colour</th>
+                <th class="text-center" style="width: 15%;">Qty</th>
+                <th class="text-center" style="width: 10%;">Satuan</th>
+                <th class="text-center" style="width: 30%;">Keterangan</th>
 
             </tr>
         </thead>
@@ -222,14 +224,16 @@
                 <tr>
                     <td><?= $i++ ?></td>
                     <td>
-                        No SO: <?= $row->kode_sales_order ?></br>
-                        Style:<?= !empty($row->style) ? $row->style : $row->deskripsi ?></br>
-                        Buyer:<?= $row->buyer ?></br>
+                        <?= $row->kode_sales_order ?>
+                    </td>
+                    <td>
+                        <?= !empty($row->style) ? $row->style : $row->deskripsi ?>
                     </td>
                     <td class="text-left"><?= $row->color ?></td>
                     <td class="text-right"><?= $row->qty ?></td>
-                    <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td>
-                    </td>
+                    <!-- <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td> -->
+                    <td class="text-left"><?= $row->kode_ukuran ?></td>
+                    <td class="text-left"><?= $row->keterangan ?></td>
                 </tr>
             <?php endforeach ?>
 

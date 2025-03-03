@@ -215,7 +215,7 @@ dtListBarang.on("rowClick", function(e, row){
     inpBarang.val(`${namaBarang}`)
     inpKodeBarang.val(`${kodeBarang}`)
     inpUnit.val(namaSatuan)
-    // inpLotNo.val(lotNo)
+    inpLotNo.val(lotNo)
     inpQtyExist.val(qty)
     inpIdLot.val(idLot)
     $("#modal-barang").modal("hide");
@@ -362,15 +362,17 @@ let dtList = new Tabulator("#dt-list", {
         {title: "No.SO", field: "kode_sales_order", width: "20%"},
         {title: "Style", field: "style", width: "20%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
-        {title: "Buyer", field: "buyer", width: "20%"},
+        // {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "20%"},
         {title: "Qty", field: "qty", width: "20%",editor:"number"},
-        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
-            decimal: ",",
-            thousand: ".",
-            symbol: "Rp",  // Simbol mata uang Rupiah
-            precision: 0,   // Tidak ada desimal
-        }},
+        {title: "Ukuran", field: "kode_ukuran", width: "20%"},
+        {title: "Keterangan", field: "keterangan", width: "20%",editor:"input"},
+        // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
+        //     decimal: ",",
+        //     thousand: ".",
+        //     symbol: "Rp",  // Simbol mata uang Rupiah
+        //     precision: 0,   // Tidak ada desimal
+        // }},
     ],
     placeholder: "Tidak ada data",
 });
@@ -574,6 +576,7 @@ selectGudangTujuan.on("change",function(e){
 function checkCMT(nilai){
     if(dataGudang.length > 0){
         let resGudang = dataGudang.find(x => x.id == nilai);
+        
         if(resGudang.tipe == 1){
             divCMT.addClass("d-none")
             // inpCMT.val()
@@ -582,6 +585,7 @@ function checkCMT(nilai){
             divCMT.removeClass("d-none")
             // inpCMT.val(resGudang.nama_operator)
             // inpIdCMT.val(resGudang.id_cmt)
+            selectCMT.val(resGudang.id_cmt).trigger("change");
         } 
     } 
 }
@@ -992,15 +996,16 @@ let dtListSO = new Tabulator("#dt-list-sample", {
         {title: "No.SO", field: "kode_sales_order", width: "20%"},
         {title: "Style", field: "style", width: "20%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
-        {title: "Buyer", field: "buyer", width: "20%"},
+        // {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "20%"},
         {title: "Qty", field: "qty", width: "20%"},
-        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
-            decimal: ",",
-            thousand: ".",
-            symbol: "Rp",  // Simbol mata uang Rupiah
-            precision: 0,   // Tidak ada desimal
-        }},
+        {title: "Ukuran", field: "kode_ukuran", width: "20%"},
+        // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
+        //     decimal: ",",
+        //     thousand: ".",
+        //     symbol: "Rp",  // Simbol mata uang Rupiah
+        //     precision: 0,   // Tidak ada desimal
+        // }},
     ],
     
     locale: 'id',    
@@ -1113,9 +1118,9 @@ let dtListSO = new Tabulator("#dt-list-sample", {
 // }
 
 dtListSO.on("rowClick", function(e, row){
-    if(dtList.getData().some(x=>x.kode_sales_order == row.getData().kode_sales_order && x.color == row.getData().color)){
+    if(dtList.getData().some(x=>x.kode_sales_order == row.getData().kode_sales_order && x.color == row.getData().color && x.kode_ukuran == row.getData().kode_ukuran)){
         return Swal.fire({
-            text: `SO ${row.getData().kode_sales_order} dengan warna ${row.getData().color} telah dipilih`,
+            text: `SO ${row.getData().kode_sales_order} dengan warna ${row.getData().color} dan ukuran ${row.getData().kode_ukuran} telah dipilih`,
             icon: 'error',
             showConfirmButton: false,
             timer: 2000

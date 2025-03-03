@@ -109,7 +109,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
-        $builder->select("abx.qty,abx.kode_sales_order,abx.id_konsumen,abx.style,abx.kode_sales_order,abx.deskripsi,abx.color,abx.amount,cbx.nama as buyer");
+        $builder->select("abx.qty,abx.kode_sales_order,abx.id_konsumen,abx.style,abx.kode_sales_order,abx.deskripsi,abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan");
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
 
         $builder->where("abx.id_header", $idHeader);

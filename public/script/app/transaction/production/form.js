@@ -427,18 +427,18 @@ $(document).ready(function () {
             if (row) { 
                 const selectedProses = prosesMap[statusProses.val()];
                 
-                if (!(row.getData().qty <= $(selectedProses).val())) {
-                    cell.restoreOldValue();
-                    Swal.fire({
-                        text: "Quantity tidak boleh melebihi stok.",
-                        icon: 'error',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                }else{
+                // if (!(row.getData().qty <= $(selectedProses).val())) {
+                //     cell.restoreOldValue();
+                //     Swal.fire({
+                //         text: "Quantity tidak boleh melebihi stok.",
+                //         icon: 'error',
+                //         showConfirmButton: false,
+                //         timer: 2000
+                //     });
+                // }else{
                     let newTotal = calculateTotal(row.getData());
                     row.update({ harga_total: newTotal });
-                }
+                // }
                 
             } 
         }

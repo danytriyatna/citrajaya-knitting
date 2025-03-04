@@ -107,6 +107,14 @@ $(document).ready(function () {
     let dtList = new Tabulator("#dt-absensi", {
         columns: [
             {
+                title: " ", field: "print", headerSort: false, formatter: "html",
+                width: "7%"
+            },
+            {
+				title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
+				align:'center', width: "20%"
+			} ,
+            {
 				title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
 				align:'center',
 			} ,
@@ -129,7 +137,7 @@ $(document).ready(function () {
                 bottomCalc: "sum", bottomCalcFormatter: "money", 
 			},
         ],
-        groupBy:['nama_operator', 'proses'],
+        groupBy:['nama_operator'],
         layout: 'fitColumns',
         ajaxURL: "/sdm/borongan/list",
         placeholder: "Tidak ada data",
@@ -185,6 +193,28 @@ $(document).ready(function () {
 
     $("#btn-filter").on("click", function(){
         dtList.setData();
+    });
+
+    $(".btn-print-new").on("click", function() {
+        // Ambil data dari atribut tombol
+        alert("wewe");
+        var id_proses = $(this).data("id_proses");
+        var id_operator = $(this).data("id_operator");
+
+        // Ambil nilai input tanggal
+        var tanggal_awal = $("#filter_tgl_awal").val();
+        var tanggal_akhir = $("#filter_tgl_akhir").val();
+
+        // Cek apakah tanggal telah diisi
+        if (tanggal_awal === "" || tanggal_akhir === "") {
+            alert("Harap isi tanggal awal dan tanggal akhir!");
+            return;
+        }
+
+        const params = `id_operator=${id_operator}&id_proses=${id_proses}&tgl_awal=${formatLocaleDate(tanggal_awal)}&tgl_akhir=${formatLocaleDate(tanggal_akhir)}`;
+        window.open(`/sdm/borongan/generate_kar?${params}`, '_blank'); // Ganti '/page' dengan path yang diinginkan
+    
+        window.open(url.toString(), '_blank');
     });
 
     $("#btn-generate").on("click", function(){
@@ -319,3 +349,32 @@ $(document).ready(function () {
         }
     }
 });
+
+function printLaporan(button) {
+    // Ambil data dari tombol yang diklik
+    var id_proses = $(button).data("id_proses");
+    var id_operator = $(button).data("id_operator");
+    
+    // Ambil nilai input tanggal
+    let tanggal_awal = $("#filter_tgl_awal");
+    let tanggal_akhir = $("#filter_tgl_akhir");
+
+    // let inpTglAwal = $("#filter_tgl_awal");
+    // let inpTglAkhir = $("#filter_tgl_akhir");
+    
+    console.log(id_proses, id_operator, tanggal_awal, tanggal_akhir);
+    // Cek apakah tanggal telah diisi
+    if (tanggal_awal === "" || tanggal_akhir === "") {
+        alert("Harap isi tanggal awal dan tanggal akhir!");
+        return;
+    }
+    else if (tanggal_awal === undefined || tanggal_akhir === undefined) {
+        alert("Harap isi tanggal awal dan tanggal akhir!");
+        return;
+    }
+
+    const params = `id_operator=${id_operator}&id_proses=${id_proses}&tgl_awal=${tanggal_awal.val()}&tgl_akhir=${tanggal_akhir.val()}`;
+    window.open(`/sdm/borongan/generate_kar?${params}`, '_blank'); // Ganti '/page' dengan path yang diinginkan
+
+    // window.open(url.toString(), '_blank');
+}

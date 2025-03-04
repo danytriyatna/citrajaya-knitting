@@ -43,7 +43,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-sm-2">
+            <div class="col-sm-2" hidden>
               <div class="form-group m-b-0 d-flex align-items-center">
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="filter_proses">Proses</label>
@@ -56,7 +56,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-3" hidden>
               <div class="form-group m-b-0 d-flex align-items-center">
                 <div class="col-md-12">
                   <label class="control-label text-start text-md-end m-e-8" for="filter_operator">CMT</label>
@@ -69,7 +69,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-sm-2 align-self-end">
+            <div class="col-sm-2 align-self-end" hidden>
               <button id="btn-filter" class="btn btn-secondary" type="button"><i class="fa fa-filter"></i>&nbsp; Filter</button>
               <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button>
             </div>

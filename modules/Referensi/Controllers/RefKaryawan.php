@@ -2,13 +2,15 @@
 
 namespace Modules\Referensi\Controllers;
 
-use App\Controllers\BaseController;
 use App\Models\FileModel;
+use App\Controllers\BaseController;
 use Modules\Referensi\Models\KaryawanModel;
+use Modules\Referensi\Models\OperatorModel;
 
 class RefKaryawan extends BaseController
 {
     protected $mkaryawan;
+    protected $mOperator;
 
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/karyawan';
@@ -18,6 +20,7 @@ class RefKaryawan extends BaseController
         $this->MOD_ALIAS = "MOD_REFERENSI_KARYAWAN";
      
         $this->mkaryawan = new KaryawanModel();
+        $this->mOperator = new OperatorModel();
         $this->files  = new FileModel();
     }
 
@@ -26,8 +29,15 @@ class RefKaryawan extends BaseController
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
         }
-        
+        $sortCMT = [
+            [
+                'field' => 'nama_operator',
+                'dir' => 'ASC'
+            ]
+        ];
+        $dataCMT = $this->mOperator->getData(null, 0, 99999, $sortCMT);
         $this->data['titlehead'] = "Master Data Karyawan";
+        $this->data['cmt'] = $dataCMT;
 
         return view($this->views.'\karyawan\index', $this->data);
     }
@@ -94,6 +104,8 @@ class RefKaryawan extends BaseController
                     "upah_harian" => $row->upah_harian,
                     "upah_lembur_we" => $row->upah_lembur_we,
                     "upah_jam" => $row->upah_jam,
+                    "type" => $row->type,
+                    "id_operator" => $row->id_operator,
                 )
             );
         }
@@ -118,6 +130,8 @@ class RefKaryawan extends BaseController
         $upah_harian =  $this->request->getPost('upah_harian');
         $upah_lembur_we =  $this->request->getPost('upah_lembur_we');
         $upah_jam =  $this->request->getPost('upah_jam');
+        $type =  $this->request->getPost('type');
+        $id_operator =  $this->request->getPost('id_operator');
 
 
         $msg    = "Data gagal ditambahkan !";
@@ -140,7 +154,9 @@ class RefKaryawan extends BaseController
             'upah_lembur' => $upah_lembur,
             'upah_harian' => $upah_harian,
             'upah_lembur_we' => $upah_lembur_we,
-            'upah_jam' => $upah_jam
+            'upah_jam' => $upah_jam,
+            'type' => $type,
+            'id_operator' => $id_operator
         ];
 
         

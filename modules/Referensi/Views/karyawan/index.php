@@ -86,7 +86,29 @@
             </div>
           </div>
         </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tipe">Tipe</label>
+          <div class="col-md-9">
+            <select id="tipe" name="tipe" class="form-select select2" data-placeholder="-- Pilih Tipe --">
+              <option value="1">NON CMT</option>
+              <option value="2">CMT</option>
+            </select>
+          </div>
 
+        </div>
+        <div class="form-group row d-none" id="div-cmt">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="nama_jenis_barang">CMT<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <select id="id_cmt" name="id_cmt" class="form-control custom-select select2" data-placeholder="-- Pilih CMT --">
+              <?php foreach ($cmt as $rowData) : ?>
+                <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
+              <?php endforeach ?>
+            </select>
+            <div class="invalid-feedback">
+              CMT tidak valid
+            </div>
+          </div>
+        </div>
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_harian">Upah Harian<span class="text-danger">*</span></label>
           <div class="col-md-9">

@@ -15,7 +15,10 @@ $(document).ready(function () {
     let inpUpahHarian    = $('#upah_harian');
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
-    let inpUpahPerjam    = $('#upah_jam')
+    let inpUpahPerjam    = $('#upah_jam');
+    let selectTipe = $('#tipe');
+    let selectCMT = $('#id_cmt');
+    let divCMT = $('#div-cmt');
 
     let isModal       = $("#modal-form-add-po");
 
@@ -59,7 +62,14 @@ $(document).ready(function () {
                         inpPosisi.val(data_row.posisi)
                         inpTglBergabung.val(data_row.tgl_bergabung)
                         inpJenisKelamin.val(data_row.jenis_kelamin).trigger('change');
-                        
+                        selectTipe.val(data_row.type).trigger("change")
+                        if(data_row.type == 1){
+                            divCMT.addClass("d-none")
+                            selectCMT.val("").trigger("change")
+                        } else{
+                            divCMT.removeClass("d-none")
+                            selectCMT.val(data_row.id_operator).trigger("change")
+                        } 
 
 
 
@@ -220,6 +230,8 @@ $(document).ready(function () {
         console.log("masuk inpUpahLemburWe", inpUpahLemburWe.val())
         if(inpUpahPerjam.val().length == 0) validation = false
         console.log("masuk inpUpahPerjam", inpUpahPerjam.val())
+        if(selectTipe.val().length == 0) validation = false
+        console.log("masuk selectTipe", selectTipe.val())
 
         if(validation){
             $.ajax({
@@ -239,7 +251,9 @@ $(document).ready(function () {
                     upah_harian : inpUpahHarian.val(),
                     upah_lembur : inpUpahLembur.val(),
                     upah_lembur_we : inpUpahLemburWe.val(),
-                    upah_jam : inpUpahPerjam.val()
+                    upah_jam : inpUpahPerjam.val(),
+                    type : selectTipe.val(),
+                    id_operator : selectCMT.val()
                 },
                 dataType: "json",
                 beforeSend: function () {
@@ -295,4 +309,16 @@ $(document).ready(function () {
             });
         }
     }    
+
+    selectTipe.on("change",function(e){
+        var nilai = e.target.value;
+
+        selectCMT.val("").trigger("change")
+        if(nilai == 1){
+            divCMT.addClass("d-none")
+        } else{
+            divCMT.removeClass("d-none")
+        } 
+        
+    })
 });

@@ -132,7 +132,7 @@ class Borongan extends BaseController
     $params['tgl_awal'] = \fdate_ind_to_eng($tgl_awal);
     $params['tgl_akhir'] = \fdate_ind_to_eng($tgl_akhir);
     $params['id_operator'] = $id_operator;
-    $params['id_proses'] = $id_proses;    
+    // $params['id_proses'] = $id_proses;    
 
     $results = $this->mborongan->getData(null, 0, 99999, null, null, $params);
     $this->data['row'] = $stdData;

@@ -69,9 +69,9 @@
                 </div>
               </div>
             </div>
-            <div class="col-sm-2 align-self-end" hidden>
+            <div class="col-sm-2 align-self-end">
               <button id="btn-filter" class="btn btn-secondary" type="button"><i class="fa fa-filter"></i>&nbsp; Filter</button>
-              <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button>
+              <!-- <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button> -->
             </div>
           </div>
         </div>

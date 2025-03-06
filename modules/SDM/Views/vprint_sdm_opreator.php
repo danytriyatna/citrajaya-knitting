@@ -136,21 +136,19 @@
     <table class="w-100">
       <tbody>
         <tr>
-          <td style="width: 120px;">
+          <td style="width: 10%;">
             <img src="<?= base_url() ?>/assets/images/img_1.png" alt="Logo Text CJK" style="height: auto;width:60px;">
             &nbsp;
           </td>
-        </tr>
-        <tr>
-          <td class="text-left" style="width: 50%;">
+          <td class="text-left" style="width: 70%;">
             <p class="text-sm">
               CV CITRA KNITT<br>
               Jl. Terusan Panyileukan Kav. No. 4<br>
               Bandung
             </p>
           </td>
-          <td class="text-right" style="width: 50%;">
-            <h3><b><u>Slip Gaji Operator</u></b></h3>
+          <td class="text-right" style="width: 20%;">
+            <h3><b><u>Slip Gaji Karyawan</u></b></h3>
           </td>
         </tr>
       </tbody>
@@ -182,9 +180,10 @@
   <table class="w-100">
     <thead>
       <tr>
-        <th class="text-left" style="width: 20%;">Proses</th>
-        <th class="text-left" style="width: 20%;">Style</th>
-        <th class="text-right" style="width: 20%;">Harga</th>
+
+        <th class="text-left" style="width: 10%;">Tanggal</th>
+        <th class="text-left" style="width: 30%;">Proses</th>
+        <!-- <th class="text-right" style="width: 20%;">Harga</th> -->
         <th class="text-right" style="width: 20%;">Qty</th>
         <th class="text-right" style="width: 25%;">Harga Total</th>
       </tr>
@@ -202,18 +201,19 @@
         $harga_total =  $harga_total + $r->harga_total;
         ?> 
         <?php if( $proses != $r->proses) { ?>
-          <!-- <tr>
+          <tr>
+            <td style="border-bottom:1px solid #000;"><b></b></td>
             <td style="border-bottom:1px solid #000;"><b><?= $r->proses ?></b></td>
-            <td style="border-bottom:1px solid #000;" class="text-right"></td>
+            <!-- <td style="border-bottom:1px solid #000;" class="text-right"></td> -->
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
           </tr> -->
         <?php $proses = $r->proses; } ?>
 
         <tr>
-          <td><?= $r->proses ?></td>
+          <td><?= fdate_eng_to_ind($r->tgl_transaksi) ?></td>
           <td><?= $r->keterangan_style ?></td>
-          <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>
+          <!-- <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td> -->
           <td class="text-right"><?= ($r->qty) ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga_total, 2) ?></td>
         </tr>
@@ -221,7 +221,7 @@
     </tbody>
     <tfoot>
       <th class="text-left" colspan="2"  style="border-top:solid;">Total</th>
-      <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga, 2) ?></th>
+      <!-- <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga, 2) ?></th> -->
       <th class="text-right" style="border-top:solid;"><?= $qty ?></th>
       <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga_total, 2) ?></th>
     </tfoot>

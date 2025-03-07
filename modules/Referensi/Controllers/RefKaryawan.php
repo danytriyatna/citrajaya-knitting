@@ -132,7 +132,9 @@ class RefKaryawan extends BaseController
         $upah_jam =  $this->request->getPost('upah_jam');
         $type =  $this->request->getPost('type');
         $id_operator =  $this->request->getPost('id_operator');
-
+        if ($id_operator == "") {
+            $id_operator = null;
+        }
 
         $msg    = "Data gagal ditambahkan !";
         $status = false;

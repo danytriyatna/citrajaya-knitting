@@ -108,6 +108,7 @@ $(document).ready(function () {
 
     let inpTglA = $("#filter_tgl_from");
     let inpTglS = $("#filter_tgl_to");
+    let inpCmt = $("#filter_cmt");
 
     //Create custom filter
     let vprint = false;
@@ -203,7 +204,7 @@ $(document).ready(function () {
 			} ,
 
             {
-				title: 'Bonus', field: 'bonus', headerSort:false, sorter: 'string', align: "center",
+				title: 'Penambahan', field: 'bonus', headerSort:false, sorter: 'string', align: "center",
                 width: 220, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'
 			} ,
 
@@ -228,10 +229,11 @@ $(document).ready(function () {
         // dtList.setData();
         const tglA = inpTglA.val();
         const tglZ = inpTglS.val();
+        const cmt = inpCmt.val();
         $.ajax({
             url: 'sdm/penggajian/get_laporan', // point to server-side controller method
             dataType: 'json', // what to expect back from the server
-            data: {tgl_mulai : tglA, tgl_akhir : tglZ},
+            data: {tgl_mulai : tglA, tgl_akhir : tglZ, type : cmt},
             type : 'post',
             beforeSend: function () {
                 Swal.fire({

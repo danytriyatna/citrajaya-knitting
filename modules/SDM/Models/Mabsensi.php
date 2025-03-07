@@ -101,8 +101,36 @@ class Mabsensi extends \App\Models\PrModel
 
     function laporan_penggajian($params = null){
         $builder = $this->db->table($this->table . " sdm");
-    
-        $builder->select("rk.nip,
+
+        if (!empty($params['type']) && $params['type'] == 2) {
+            $builder->select([
+                'rk.nip',
+                'rk.full_name',
+                'rk.posisi',
+                'rk.id AS id_karyawan',
+                'COUNT(sdm.id) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir',
+                'COUNT(sdm.id) FILTER (WHERE sdm.status_kehadiran = 2) AS izin',
+                'COUNT(sdm.id) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit',
+                'COUNT(sdm.id) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha',
+                'rk.upah_harian',
+                '(COUNT(sdm.id) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) AS gaji_harian',
+                'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja',
+                'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam',
+                'rk.upah_lembur',
+                'rk.upah_lembur_we',
+                'rk.upah_jam',
+                'SUM(COALESCE(sdm.bonus, 0)) AS bonus',
+                'SUM(COALESCE(sdm.potongan, 0)) AS potongan',
+                'SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1) AS lembur',
+                'SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2) AS lembur_we',
+                '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) AS gaji_lembur',
+                '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) AS gaji_lembur_we',
+                'COALESCE(th.harga_total, 0) AS harga_total'
+            ]);
+        }
+
+        else {
+            $builder->select("rk.nip,
                           rk.full_name,
                           rk.posisi,
                           rk.id as id_karyawan,
@@ -124,9 +152,41 @@ class Mabsensi extends \App\Models\PrModel
                           SUM(COALESCE(sdm.jml_lembur , 0)) FILTER (WHERE sdm.status_lembur = 2) as lembur_we,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) as gaji_lembur,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) as gaji_lembur_we");
+        }
     
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
         $builder->where('sdm.active', 1);
+
+        if (!empty($params['type']) && $params['type'] == 2) {
+            if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
+                $startDate = $params['tgl_mulai'];
+                $endDate = $params['tgl_akhir'];
+                $builder->join(
+                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
+                      FROM trans_produksi_operator 
+                      WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
+                      GROUP BY id_operator) th",
+                    'rk.id_operator = th.id_operator',
+                    'left'
+                );
+            }
+            else {
+                $builder->join(
+                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
+                      FROM trans_produksi_operator 
+                      GROUP BY id_operator) th",
+                    'rk.id_operator = th.id_operator',
+                    'left'
+                );
+            }
+            
+            $builder->where("rk.type", $params['type']);
+            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total');
+        }
+        else {
+            $builder->where("rk.type", 1);
+            $builder->orWhere("rk.type", null);
+        }
     
         // Tambahkan kondisi WHERE untuk rentang tanggal jika parameter disediakan
         if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {

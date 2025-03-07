@@ -397,7 +397,7 @@ class Penggajian extends BaseController
   function getDataPenggajian(){
     $tgl_mulai = $this->request->getPost('tgl_mulai');
     $tgl_akhir = $this->request->getPost('tgl_akhir');
-
+    $type = $this->request->getPost('type');
     $status = false;
     $msg = "Laporan Penggajian tidak ditemukan !";
     $data = [];
@@ -405,10 +405,14 @@ class Penggajian extends BaseController
 
     $params['tgl_mulai'] = \fdate_ind_to_eng($tgl_mulai);
     $params['tgl_akhir'] = \fdate_ind_to_eng($tgl_akhir);
+    $params['type'] = $type;
     $data_laporan = $this->mabsen->laporan_penggajian($params);
     // print_r($data_laporan);exit;
     if(!empty($data_laporan)){
       for ($i=0; $i < count($data_laporan); $i++) { 
+        if ($type == 2) {
+          $data_laporan[$i]->gaji_jam = $data_laporan[$i]->harga_total;
+        }
         $data_laporan[$i]->uang_lembur = $data_laporan[$i]->gaji_lembur + $data_laporan[$i]->gaji_lembur_we;
 
         $data_laporan[$i]->jam_kerja = round($data_laporan[$i]->jam_kerja);

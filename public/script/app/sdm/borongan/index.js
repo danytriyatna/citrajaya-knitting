@@ -108,7 +108,7 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "print", headerSort: false, formatter: "html",
-                width: "7%"
+                width: "8%"
             },
             {
 				title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
@@ -119,11 +119,11 @@ $(document).ready(function () {
 				align:'center',
 			} ,
             
-			{
-				title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
-				formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right", 
-                bottomCalc: "sum", bottomCalcFormatter: "money", 
-			}, 
+			// {
+			// 	title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
+			// 	formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right", 
+            //     bottomCalc: "sum", bottomCalcFormatter: "money", 
+			// }, 
 				
 			{
 				title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',

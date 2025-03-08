@@ -207,6 +207,10 @@ $(document).ready(function () {
 				title: 'Penambahan', field: 'bonus', headerSort:false, sorter: 'string', align: "center",
                 width: 220, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'
 			} ,
+            {
+				title: 'Keterangan bonus', field: 'bonus_keterangan', headerSort:false, sorter: 'string',
+				visible: true, width: 220,
+			}, 
 
             {
 				title: 'Potongan', field: 'potongan', headerSort:false, sorter: 'string', align: "center",

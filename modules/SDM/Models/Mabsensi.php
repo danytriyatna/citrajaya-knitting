@@ -125,7 +125,8 @@ class Mabsensi extends \App\Models\PrModel
                 'SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2) AS lembur_we',
                 '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) AS gaji_lembur',
                 '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) AS gaji_lembur_we',
-                'COALESCE(th.harga_total, 0) AS harga_total'
+                'COALESCE(th.harga_total, 0) AS harga_total',
+                'latest_bonus.bonus_keterangan as bonus_keterangan'
             ]);
         }
 
@@ -151,10 +152,25 @@ class Mabsensi extends \App\Models\PrModel
                           SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1) as lembur,
                           SUM(COALESCE(sdm.jml_lembur , 0)) FILTER (WHERE sdm.status_lembur = 2) as lembur_we,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) as gaji_lembur,
+                          latest_bonus.bonus_keterangan as bonus_keterangan,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) as gaji_lembur_we");
         }
     
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
+        if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
+            $startDate = $params['tgl_mulai'];
+            $endDate = $params['tgl_akhir'];
+            $builder->join(
+                "(SELECT id_karyawan, bonus_keterangan 
+                  FROM sdm_absensi 
+                  WHERE tgl_absen BETWEEN '$startDate' AND '$endDate' AND bonus_keterangan IS NOT NULL 
+                  ORDER BY tgl_absen DESC, id DESC 
+                  LIMIT 1) latest_bonus",
+                'sdm.id_karyawan = latest_bonus.id_karyawan',
+                'left'
+            );
+        }
+        
         $builder->where('sdm.active', 1);
 
         if (!empty($params['type']) && $params['type'] == 2) {
@@ -181,7 +197,7 @@ class Mabsensi extends \App\Models\PrModel
             }
             
             $builder->where("rk.type", $params['type']);
-            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total');
+            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total, latest_bonus.bonus_keterangan');
         }
     
         // Tambahkan kondisi WHERE untuk rentang tanggal jika parameter disediakan
@@ -190,7 +206,7 @@ class Mabsensi extends \App\Models\PrModel
             $builder->where("sdm.tgl_absen <=", $params['tgl_akhir']);
         }
     
-        $builder->groupBy("rk.nip, rk.full_name, rk.posisi, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.id");
+        $builder->groupBy("rk.nip, rk.full_name, rk.posisi, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.id, latest_bonus.bonus_keterangan");
         $builder->orderBy("rk.nip ASC");
     
         $this->_data = $builder->get()->getResult();

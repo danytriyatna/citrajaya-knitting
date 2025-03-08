@@ -300,6 +300,7 @@ class Penggajian extends BaseController
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 
+              $dtIn["bonus_keterangan"] = $r["bonus_keterangan"]; 
               $dtIn["potongan"] = $r["potongan"]; 
               $dtIn['durasi_kerja'] = $r['jam_kerja'];
               
@@ -351,6 +352,7 @@ class Penggajian extends BaseController
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 
+              $dtIn["bonus_keterangan"] = $r["bonus_keterangan"]; 
               $dtIn["potongan"] = $r["potongan"]; 
               $dtIn['durasi_kerja'] = $r['jam_kerja'];
               

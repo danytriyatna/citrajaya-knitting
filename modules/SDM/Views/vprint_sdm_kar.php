@@ -192,6 +192,7 @@
       $gaji = !empty($detail) ? $detail[0]->gaji_harian : 0;
       $lembur = !empty($detail) ? $detail[0]->uang_lembur  : 0;
       $bonus = !empty($detail) ? $detail[0]->bonus  : 0;
+      $bonus_keterangan = !empty($detail) ? $detail[0]->bonus_keterangan  : null;
 
       $jml_pendapatan = $gaji + $lembur + $bonus;
       $potongan = !empty($detail) ? $detail[0]->potongan  : 0;
@@ -211,7 +212,7 @@
         <td>Rp 0,00</td>
       </tr>
       <tr>
-        <td>Penambahan dan lain-lain</td>
+        <td>Penambahan dan lain-lain - <?= $bonus_keterangan ?></td>
         <td>Rp <?= format_angka($bonus, 2) ?></td>
       </tr>
     </tbody>

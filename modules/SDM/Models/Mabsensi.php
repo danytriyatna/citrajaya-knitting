@@ -183,10 +183,6 @@ class Mabsensi extends \App\Models\PrModel
             $builder->where("rk.type", $params['type']);
             $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total');
         }
-        else {
-            $builder->where("rk.type", 1);
-            $builder->orWhere("rk.type", null);
-        }
     
         // Tambahkan kondisi WHERE untuk rentang tanggal jika parameter disediakan
         if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {

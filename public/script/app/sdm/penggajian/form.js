@@ -199,6 +199,11 @@ $(document).ready(function () {
 			},
 
             {
+				title: 'Premi Kehadiran', field: 'premi', headerSort:false, sorter: 'string', align: "center",
+                width: 220, editor:"number", formatter: "money"
+			} , 
+
+            {
 				title: 'Lembur', field: 'uang_lembur', headerSort:false, sorter: 'string', align: "center",
                 width: 220, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'
 			} ,
@@ -209,7 +214,7 @@ $(document).ready(function () {
 			} ,
             {
 				title: 'Keterangan bonus', field: 'bonus_keterangan', headerSort:false, sorter: 'string',
-				visible: true, width: 220,
+				visible: false,
 			}, 
 
             {

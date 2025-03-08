@@ -22,6 +22,11 @@ $(document).ready(function () {
 			}, 
 
             {
+				title: 'Tipe', field: 'type', headerSort:false, sorter: 'string',
+				width: 140
+			}, 
+
+            {
 				title: 'Keterangan', field: 'keterangan', headerSort:false, sorter: 'string',
 				formatter : "html"
 			},

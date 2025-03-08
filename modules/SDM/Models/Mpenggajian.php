@@ -19,7 +19,7 @@ class Mpenggajian extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " sdm");
 
-        $builder->select("sdm.id, sdm.periode_awal, sdm.periode_akhir, sdm.status, sdm.keterangan, sdm.kode_gaji");
+        $builder->select("sdm.id, sdm.periode_awal, sdm.periode_akhir, sdm.status, sdm.keterangan, sdm.kode_gaji, sdm.type");
 
         if ($id == null or $id == "") {
             $builder->where('sdm.active = 1');
@@ -93,7 +93,7 @@ class Mpenggajian extends \App\Models\PrModel
         $builder->select("sdd.id, sdd.id_sdm_gaji, sdd.id_karyawan, sdd.nip, sdd.posisi, sdd.hadir, sdd.izin, sdd.sakit, sdd.alpha, sdd.gaji_harian, sdd.lembur,
                           sdd.bonus, sdd.potongan, sdd.durasi_kerja as jam_kerja,
                           sdd.lembur_we, sdd.uang_lembur, sdd.gaji, 
-                          rk.full_name, rk.nip, rk.posisi, rk.no_hp, rk.alamat, sdd.bonus_keterangan");
+                          rk.full_name, rk.nip, rk.posisi, rk.no_hp, rk.alamat, sdd.bonus_keterangan, sdd.premi");
 
         $builder->join("ref_karyawan rk", "sdd.id_karyawan = rk.id");
 

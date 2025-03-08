@@ -99,6 +99,13 @@ class Penggajian extends BaseController
           }else{
             $status = "Draft";
           }
+
+          $type = '-';
+          if($row->type == 2){
+            $type = "CMT";
+          }else{
+            $type = "NON-CMT";
+          }
           // $total_pay = $this->mtrans_pay_det->get_total_bayar($row->sl_customer_receipt_id);
           array_push($build_array['data'], array(
               'aksi' => $btnAction,
@@ -107,6 +114,7 @@ class Penggajian extends BaseController
               'periode_akhir' => $periode_akhir,
               'keterangan' => $row->keterangan,
               'status' => $status,
+              'type' => $type,
           ));
 
       }
@@ -129,6 +137,7 @@ class Penggajian extends BaseController
       $stdData->periode_awal = date('d-m-Y');
       $stdData->periode_akhir = date('d-m-Y');
       $stdData->keterangan = '';
+      $stdData->type = null;
       $stdData->status = 1;
 
       $Ldetail = "";
@@ -140,6 +149,7 @@ class Penggajian extends BaseController
         $stdData = $this->mgaji->getData($id);  
         $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
         $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
+        $stdData->type  = $stdData->type;
         $this->data['row'] = $stdData;
 
         // set detail array
@@ -185,6 +195,7 @@ class Penggajian extends BaseController
             $stdData->periode_awal = trim($this->request->getPost('filter_tgl_from'));
             $stdData->periode_akhir = trim($this->request->getPost('filter_tgl_to'));
             $stdData->keterangan = trim($this->request->getPost('keterangan'));
+            $stdData->type = trim($this->request->getPost('filter_cmt'));
 
             $action  =  trim($this->request->getPost('actionf'));
             $Ldetail =  trim($this->request->getPost('detailData'));
@@ -297,6 +308,7 @@ class Penggajian extends BaseController
               $dtIn["gaji_harian"] = $r["gaji_jam"]; 
               $dtIn["lembur"] = $r["lembur"]; 
               $dtIn["lembur_we"] = $r["lembur_we"]; 
+              $dtIn["premi"] = $r["premi"]; 
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 
@@ -349,6 +361,7 @@ class Penggajian extends BaseController
               $dtIn["gaji_harian"] = $r["gaji_jam"]; 
               $dtIn["lembur"] = $r["lembur"]; 
               $dtIn["lembur_we"] = $r["lembur_we"]; 
+              $dtIn["premi"] = $r["premi"]; 
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 

@@ -155,6 +155,10 @@ $(document).ready(function () {
 				title: 'Keterangan Kehadiran', field: 'keterangan_kehadiran', headerSort:false, sorter: 'string', align: "center",
                 width: 220, editor:"input"
 			} ,
+            {
+				title: 'Terlambat', field: 'terlambat', headerSort:false, sorter: 'string', align: "center",
+                width: 160, editor:"number"
+			} , 
 
             {
 				title: 'Status Lembur', field: 'status_lembur', headerSort:false, sorter: 'string',

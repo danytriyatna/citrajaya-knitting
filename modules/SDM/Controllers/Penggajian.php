@@ -296,7 +296,6 @@ class Penggajian extends BaseController
         
         if(!empty($detail)){
           foreach ($detail as $r) {
-            // dd($r);
               $dtIn["id_sdm_gaji"] = $id; 
               $dtIn["id_karyawan"] = $r["id_karyawan"]; 
               $dtIn["nip"] = $r["nip"]; 
@@ -305,10 +304,13 @@ class Penggajian extends BaseController
               $dtIn["izin"] = $r["izin"]; 
               $dtIn["sakit"] = $r["sakit"]; 
               $dtIn["alpha"] = $r["alpha"]; 
+              $dtIn["terlambat"] = $r["terlambat"]; 
               $dtIn["gaji_harian"] = $r["gaji_jam"]; 
               $dtIn["lembur"] = $r["lembur"]; 
               $dtIn["lembur_we"] = $r["lembur_we"]; 
-              $dtIn["premi"] = $r["premi"]; 
+              if (isset($r["premi"])) {
+                $dtIn["premi"] = $r["premi"]; 
+              }
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 
@@ -358,10 +360,13 @@ class Penggajian extends BaseController
               $dtIn["izin"] = $r["izin"]; 
               $dtIn["sakit"] = $r["sakit"]; 
               $dtIn["alpha"] = $r["alpha"]; 
+              $dtIn["terlambat"] = $r["terlambat"]; 
               $dtIn["gaji_harian"] = $r["gaji_jam"]; 
               $dtIn["lembur"] = $r["lembur"]; 
               $dtIn["lembur_we"] = $r["lembur_we"]; 
-              $dtIn["premi"] = $r["premi"]; 
+              if (isset($r["premi"])) {
+                $dtIn["premi"] = $r["premi"]; 
+              }
               $dtIn["uang_lembur"] = $r["uang_lembur"]; 
               $dtIn["gaji"] = $r["total"]; 
               $dtIn["bonus"] = $r["bonus"]; 

@@ -73,14 +73,14 @@
               <div class="form-group row mb-3">
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="filter_cmt">&nbsp;</label>
-                  <select id="filter_cmt" name="filter_cmt" class="form-select select2" data-placeholder="-- Pilih Tipe --">
+                  <select <?= empty($id) ? '' : 'disabled' ?> id="filter_cmt" name="filter_cmt" class="form-select select2" data-placeholder="-- Pilih Tipe --">
                     <option value="1">NON CMT</option>
                     <option value="2">CMT</option>
                   </select>
                 </div>
               </div>
             </div>
-            <?php if(empty($id)) {?>
+            <?php if(empty($id) || $row->status != 2) {?>
               <div class="col-sm-3 align-self-end mb-3">
                 <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button>
               </div>

@@ -170,7 +170,6 @@ $(document).ready(function () {
 				title: 'Sakit', field: 'sakit', headerSort:false, sorter: 'string',
 				width: 100, cssClass:'text-center', bottomCalc: 'sum'
 			},
-
            
             {
 				title: 'Tanpa<br>Keterangan', field: 'alpha', headerSort:false, sorter: 'string',
@@ -182,7 +181,10 @@ $(document).ready(function () {
 				width: 100, cssClass:'text-center', bottomCalc: 'sum'
 			},
 
-
+            {
+				title: 'Terlambat', field: 'terlambat', headerSort:false, sorter: 'string',
+				width: 100, cssClass:'text-center', bottomCalc: 'sum'
+			},
             {
 				title: 'Gaji/Upah', field: 'gaji_jam', headerSort:false, sorter: 'string', align: "center",
                 width: 220, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'

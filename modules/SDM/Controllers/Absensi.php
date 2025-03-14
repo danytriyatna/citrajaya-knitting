@@ -139,6 +139,7 @@ class Absensi extends BaseController
                   "hari_hadir" => $row->hari_hadir,
                   "keterangan_kehadiran" => $row->keterangan_kehadiran,
                   "status_lembur" => $status_lembur,
+                  "terlambat" => $row->terlambat,
                   "jml_lembur" => $row->jml_lembur,
                   "keterangan_lembur" => $row->keterangan_lembur,
                   "id_shift" => $row->id_shift,
@@ -300,6 +301,12 @@ class Absensi extends BaseController
         $isi['hari_hadir'] = $hari_hadir;
         $isi['keterangan_kehadiran'] = $x['keterangan_kehadiran'];
         $isi['status_lembur'] = $status_lembur;
+        if (empty($x['terlambat'])) {
+          $isi['terlambat'] = null;
+        }
+        else {
+          $isi['terlambat'] = $x['terlambat'];
+        }
         $isi['jml_lembur'] = $x['jml_lembur'];
         $isi['keterangan_lembur'] = $x['keterangan_lembur'];
         $isi['durasi_kerja'] = $durasi_kerja;

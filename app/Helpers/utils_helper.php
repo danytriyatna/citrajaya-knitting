@@ -246,6 +246,31 @@ if (!function_exists('fdate_eng_to_ind_3')) {
     }
 }
 
+
+if (!function_exists('fdate_eng_to_ind_4')) {
+    // Konversi yyyy-mm-dd -> dd-mm-yyyy
+    function fdate_eng_to_ind_4($dt, $use_long_format = false, $strip_format = false)
+    {
+        $return_dt = '';
+        if (trim($dt) != '' && $dt != '0000-00-00') {
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $dt);
+            // $date = new DateTime($dt);
+
+            if ($date) {
+                $format = 'd-m-Y';
+                if ($use_long_format) $format = '%d %B %Y %H:%i';
+                if ($strip_format) $format = '%d/%m/%Y';
+
+                // $return_dt = strftime($format, $date->getTimestamp());
+                $timestamp = $date->getTimestamp();
+                $dateTime = (new DateTime())->setTimestamp($timestamp);
+                $return_dt = $dateTime->format($format);
+            }
+        }
+        return $return_dt;
+    }
+}
+
 if(!function_exists('formatTanggalIndonesia')){
     function formatTanggalIndonesia($tanggal) {
        // Pisahkan tanggal, bulan, dan tahun

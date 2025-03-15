@@ -166,13 +166,13 @@ class Trans_akun extends BaseController
         
         if($id) {
             $stdData = $this->mtrans_akun->getData($id);  
-            $stdData->trans_akun_date = !empty($stdData->trans_akun_date) ? \fdate_eng_to_ind_3($stdData->trans_akun_date) : "";  
+            $stdData->trans_akun_date = !empty($stdData->trans_akun_date) ? \fdate_eng_to_ind_4($stdData->trans_akun_date) : "";  
             $dtData = $this->mtrans_det->getData(null, 0, 9999, null, null, $id);  
             $builds = [];
             $i = 1;
             foreach ($dtData as $r) {
                 $isi = [];
-                $isi['coa_nama'] = $r->kode . " " . $r->nama;
+                $isi['coa_nama'] = $r->coa_kode . " " . $r->coa_nama;
                 $isi['keterangan'] = $r->keterangan;
                 $isi['jumlah'] = $r->jumlah;
                 $isi['seq'] = $i++;
@@ -263,7 +263,7 @@ class Trans_akun extends BaseController
             'id' => 'trans_akun_date',
             'name'  => 'trans_akun_date',
             'type' => 'text',
-            'class' => 'form-control',
+            'class' => 'form-control datepickerx',
             'placeholder' => 'Tanggal',
             'value' => set_value('trans_akun_date', $stdData->trans_akun_date)
         );

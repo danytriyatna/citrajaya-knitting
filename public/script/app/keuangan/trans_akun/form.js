@@ -4,13 +4,13 @@ $(document).ready(function () {
 
 	let fmDate = $("#trans_akun_date");
 
-    fmDate.datepicker({
-        format: 'dd-mm-yyyy',
-        clearBtn: true,
-        autoclose: true,
-        todayHighlight: true,
-        readonly: false
-    });
+    // fmDate.datepicker({
+    //     format: 'dd-mm-yyyy',
+    //     clearBtn: true,
+    //     autoclose: true,
+    //     todayHighlight: true,
+    //     readonly: false
+    // });
 
 	let fmRekening = $("#ref_rekening_id");
 	fmRekening.select2({
@@ -26,11 +26,10 @@ $(document).ready(function () {
 		return res;
 	};
 
-	let fmEditDetail = function(value, data, cell, row, options) {
-		let row_data = value._cell.row.data;
+	let fmEditDetail = function(value) {
+		// Removed unused variables: data, cell, row, options, row_data, fmBtnView
 		let fmBtnEdit = "<button class='btn btn-xs btn-warning' type='button' title='edit'><i class='fa fa-edit' title='edit'></i></button>";
 		let fmBtnDelete = "<button class='btn btn-xs btn-danger' type='button' title='delete'><i class='fa fa-trash' title='delete'></i></button>";
-		let fmBtnView = "<button class='btn btn-xs btn-info' type='button' title='view'><i class='fa fa-eye' title='view'></i></button>";
 		
 		return fmBtnEdit + "&nbsp;" + fmBtnDelete;
 	}; 
@@ -103,7 +102,7 @@ $(document).ready(function () {
 				width: 220
             },
             {
-                title: "Keterangan", field: "keterangan", formatter : "money",  sorter: "string", headerSort:false,
+                title: "Keterangan", field: "keterangan",  sorter: "string", headerSort:false,
                 
             },
             {
@@ -114,7 +113,6 @@ $(document).ready(function () {
 		layout: 'fitColumns',
 		locale: 'id',
 		placeholder: "Tidak ada data",
-		responsiveLayout:"collapse",
 		selectable: false
 	});
 
@@ -172,7 +170,9 @@ $(document).ready(function () {
 		let dt_det = inpLDetail.val().replace(/&quot;/ig,'"');
 		let dt_ldet = JSON.parse(dt_det);
 		if(dt_ldet.length > 0){
-			dtList_det.setData(dt_ldet);
+			setTimeout(() => {
+				dtList_det.replaceData(dt_ldet);
+			}, 500);
 		}
 	}
 

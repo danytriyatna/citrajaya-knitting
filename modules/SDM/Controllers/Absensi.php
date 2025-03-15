@@ -462,6 +462,7 @@ class Absensi extends BaseController
                   $isi['status_kehadiran'] = $status_kehadiran;
                   $isi['hari_hadir'] = 1;
                   $isi['keterangan_kehadiran'] = '-';
+                  $isi['terlambat'] = $terlambat;
                   $isi['status_lembur'] = $status_lembur;
                   $isi['jml_lembur'] = $jam_lembur;
                   $isi['keterangan_lembur'] = '-';

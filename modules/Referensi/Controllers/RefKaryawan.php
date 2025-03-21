@@ -104,6 +104,7 @@ class RefKaryawan extends BaseController
                     "upah_harian" => $row->upah_harian,
                     "upah_lembur_we" => $row->upah_lembur_we,
                     "upah_jam" => $row->upah_jam,
+                    "premi_kehadiran" => $row->premi_kehadiran,
                     "type" => $row->type,
                     "id_operator" => $row->id_operator,
                 )
@@ -130,6 +131,7 @@ class RefKaryawan extends BaseController
         $upah_harian =  $this->request->getPost('upah_harian');
         $upah_lembur_we =  $this->request->getPost('upah_lembur_we');
         $upah_jam =  $this->request->getPost('upah_jam');
+        $premi_kehadiran =  $this->request->getPost('premi_kehadiran');
         $type =  $this->request->getPost('type');
         $id_operator =  $this->request->getPost('id_operator');
         if ($id_operator == "") {
@@ -157,6 +159,7 @@ class RefKaryawan extends BaseController
             'upah_harian' => $upah_harian,
             'upah_lembur_we' => $upah_lembur_we,
             'upah_jam' => $upah_jam,
+            'premi_kehadiran' => $premi_kehadiran,
             'type' => $type,
             'id_operator' => $id_operator
         ];

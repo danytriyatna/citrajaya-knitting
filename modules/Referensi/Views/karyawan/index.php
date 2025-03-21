@@ -158,6 +158,18 @@
           </div>
         </div>
 
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="premi_kehadiran">Permi Kehadiran<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <input type="number" name="premi_kehadiran" value="" id="premi_kehadiran" min="0" step="1" pattern="[0-9]*" class="form-control" 
+                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
+                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
+            <div class="invalid-feedback">
+              Permi Kehadiran tidak valid
+            </div>
+          </div>
+        </div>
+
         
         
       </div>

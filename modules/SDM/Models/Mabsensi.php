@@ -127,7 +127,8 @@ class Mabsensi extends \App\Models\PrModel
                 '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) AS gaji_lembur_we',
                 'COALESCE(th.harga_total, 0) AS harga_total',
                 'latest_bonus.bonus_keterangan as bonus_keterangan',
-                'COUNT(sdm.terlambat) AS terlambat'
+                'COUNT(sdm.terlambat) FILTER (WHERE sdm.terlambat <> 0 AND sdm.terlambat is not null) AS terlambat',
+                'rk.premi_kehadiran as premi',
             ]);
         }
 
@@ -155,7 +156,8 @@ class Mabsensi extends \App\Models\PrModel
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) as gaji_lembur,
                           latest_bonus.bonus_keterangan as bonus_keterangan,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) as gaji_lembur_we,
-                          COUNT(sdm.terlambat) AS terlambat");
+                          COUNT(sdm.terlambat) FILTER (WHERE sdm.terlambat <> 0 AND sdm.terlambat is not null) AS terlambat,
+                          rk.premi_kehadiran as premi");
         }
     
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");

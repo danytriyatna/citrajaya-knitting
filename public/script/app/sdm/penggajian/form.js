@@ -202,7 +202,7 @@ $(document).ready(function () {
 
             {
 				title: 'Premi Kehadiran', field: 'premi', headerSort:false, sorter: 'string', align: "center",
-                width: 220, editor:"number", formatter: "money"
+                width: 220, cssClass:"text-end", formatter: "money"
 			} , 
 
             {

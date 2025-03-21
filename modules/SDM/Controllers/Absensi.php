@@ -391,6 +391,7 @@ class Absensi extends BaseController
                 $jadwal_masuk = "08:00";
                 $jadwal_pulang = "17:00";
                 $prms['nama_shift'] = $shift;
+                
                 $dt_shift = $this->mshift->getData(null, 0, 1, null, null, $prms);
                 if(!empty($dt_shift)){
                   $dt_shift = $dt_shift[0]; 
@@ -441,11 +442,16 @@ class Absensi extends BaseController
                   $isi['tgl_absen'] = ($tgl_absen);
 
                   $status_kehadiran = null;
-
-                  if(!empty($jamIn)){
+                  $isi['keterangan_kehadiran'] = '-';
+                  if (stripos($shift, "tidak hadir") !== false) {
+                    $status_kehadiran = 0;
+                    $isi['keterangan_kehadiran'] = 'Tanpa Keterangan';
+                  }
+                  else if(!empty($jamIn)){
                     $status_kehadiran = 1;
                   } else {
                     $status_kehadiran = 0;
+                    $isi['keterangan_kehadiran'] = 'Tanpa Keterangan';
                   }
 
                   $status_lembur = 0;
@@ -461,7 +467,7 @@ class Absensi extends BaseController
                   $isi['jam_keluar'] = $tgl_absen . ' ' . $jamOut;
                   $isi['status_kehadiran'] = $status_kehadiran;
                   $isi['hari_hadir'] = 1;
-                  $isi['keterangan_kehadiran'] = '-';
+                  
                   $isi['terlambat'] = $terlambat;
                   $isi['status_lembur'] = $status_lembur;
                   $isi['jml_lembur'] = $jam_lembur;

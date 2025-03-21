@@ -16,6 +16,7 @@ $(document).ready(function () {
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
     let inpUpahPerjam    = $('#upah_jam');
+    let inpPremiKehadiran    = $('#premi_kehadiran');
     let selectTipe = $('#tipe');
     let selectCMT = $('#id_cmt');
     let divCMT = $('#div-cmt');
@@ -78,6 +79,7 @@ $(document).ready(function () {
                             inpUpahLembur.val(data_row.upah_lembur).trigger('change');
                             inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
                             inpUpahPerjam.val(data_row.upah_jam).trigger('change');
+                            inpPremiKehadiran.val(data_row.premi_kehadiran).trigger('change');
 
                         }, 500);
                         isModal.modal("show");
@@ -198,6 +200,7 @@ $(document).ready(function () {
             inpUpahLembur.val("").trigger('change');
             inpUpahLemburWe.val("").trigger('change');
             inpUpahPerjam.val("").trigger('change');
+            inpPremiKehadiran.val("").trigger('change');
         }, 500);
     }
 
@@ -230,6 +233,8 @@ $(document).ready(function () {
         console.log("masuk inpUpahLemburWe", inpUpahLemburWe.val())
         if(inpUpahPerjam.val().length == 0) validation = false
         console.log("masuk inpUpahPerjam", inpUpahPerjam.val())
+        if(inpPremiKehadiran.val().length == 0) validation = false
+        console.log("masuk inpPremiKehadiran", inpPremiKehadiran.val())
         if(selectTipe.val().length == 0) validation = false
         console.log("masuk selectTipe", selectTipe.val())
 
@@ -252,6 +257,7 @@ $(document).ready(function () {
                     upah_lembur : inpUpahLembur.val(),
                     upah_lembur_we : inpUpahLemburWe.val(),
                     upah_jam : inpUpahPerjam.val(),
+                    premi_kehadiran : inpPremiKehadiran.val(),
                     type : selectTipe.val(),
                     id_operator : selectCMT.val()
                 },

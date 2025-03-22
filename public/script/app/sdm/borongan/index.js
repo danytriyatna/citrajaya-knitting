@@ -111,19 +111,26 @@ $(document).ready(function () {
                 width: "8%"
             },
             {
+				title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
+				align:'center', width: "10%"
+			} ,
+            {
+				title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
+				align:'center', width: "13%"
+			} ,
+            {
 				title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "20%"
+				align:'center', width: "17%"
 			} ,
             {
 				title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
-				align:'center',
+				align:'center', width: "18%"
 			} ,
             
-			// {
-			// 	title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
-			// 	formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right", 
-            //     bottomCalc: "sum", bottomCalcFormatter: "money", 
-			// }, 
+			{
+				title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
+				formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right",
+			}, 
 				
 			{
 				title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',

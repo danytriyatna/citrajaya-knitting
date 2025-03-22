@@ -181,11 +181,12 @@
     <thead>
       <tr>
 
-        <!-- <th class="text-left" style="width: 10%;">Tanggal</th> -->
-        <th class="text-left" style="width: 30%;">Proses</th>
-        <!-- <th class="text-right" style="width: 20%;">Harga</th> -->
-        <th class="text-right" style="width: 20%;">Qty</th>
-        <th class="text-right" style="width: 25%;">Harga Total</th>
+        <th class="text-left" style="width: 10%;">Tanggal</th>
+        <th class="text-left" style="width: 15%;">No. Produksi</th>
+        <th class="text-left" style="width: 25%;">Proses</th>
+        <th class="text-right" style="width: 15%;">Harga</th>
+        <th class="text-right" style="width: 5%;">Qty</th>
+        <th class="text-right" style="width: 20%;">Harga Total</th>
       </tr>
     </thead>
     <tbody>
@@ -202,77 +203,33 @@
         ?> 
         <?php if( $proses != $r->proses) { ?>
           <tr>
-            <!-- <td style="border-bottom:1px solid #000;"><b></b></td> -->
+            <td style="border-bottom:1px solid #000;"><b></b></td>
+            <td style="border-bottom:1px solid #000;"><b></b></td>
             <td style="border-bottom:1px solid #000;"><b><?= $r->proses ?></b></td>
-            <!-- <td style="border-bottom:1px solid #000;" class="text-right"></td> -->
+            <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
           </tr>
         <?php $proses = $r->proses; } ?>
 
         <tr>
+          <td><?= fdate_eng_to_ind($r->tgl_transaksi) ?></td>
+          <td><?= $r->kode_prod ?></td>
           <td><?= $r->keterangan_style ?></td>
-          <!-- <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td> -->
+          <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>
           <td class="text-right"><?= ($r->qty) ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga_total, 2) ?></td>
         </tr>
       <?php } ?>
     </tbody>
     <tfoot>
+      <th class="text-left"  style="border-top:solid;"></th>
+      <th class="text-left"  style="border-top:solid;"></th>
       <th class="text-left"  style="border-top:solid;">Total</th>
-      <!-- <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga, 2) ?></th> -->
+      <th class="text-right" style="border-top:solid;"></th>
       <th class="text-right" style="border-top:solid;"><?= $qty ?></th>
       <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga_total, 2) ?></th>
     </tfoot>
-  </table>
-  
-
-  <br>
-
-  <br>
-
-  <table class="w-100">
-    <tbody>
-      <tr>
-        <td class="text-center" style="width: 60%;">&nbsp;</td>
-        <td class="text-center" style="width: 40%;">&nbsp;</td>
-      </tr>
-      <tr>
-        <td class="text-center">
-          <p><b>Mengetahui</b></p><br>
-          <p>( HRD )</p>
-        </td>
-        <td class="text-left">
-          <p>
-            Pembayaran gaji telah dilakukan<br>
-            oleh perusahaan secara transfer<br>
-            ke rek. karyawan<br>
-            BNI (no. rek) (nama pemilik rek)
-          </p>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <br>
-
-  <table class="w-100">
-    <tbody>
-      <tr>
-        <td class="text-center" style="width: 60%;">&nbsp;</td>
-        <td class="text-center" style="width: 40%;">&nbsp;</td>
-      </tr>
-      <tr>
-        <td class="text-center">
-          <p><b>Karyawan</b></p><br>
-          <p>( <?= !empty($detail) ? $row->nama_operator : '.......................'?> )</p>
-        </td>
-        <td class="text-center">
-          <p><b>Owner</b></p><br>
-          <p>( ....................... )</p>
-        </td>
-      </tr>
-    </tbody>
   </table>
 
   <script>

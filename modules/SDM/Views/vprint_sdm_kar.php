@@ -195,7 +195,7 @@
       $bonus_keterangan = !empty($detail) ? $detail[0]->bonus_keterangan  : null;
       $premi = !empty($detail) ? $detail[0]->premi  : 0;
 
-      $jml_pendapatan = $gaji + $lembur + $bonus;
+      $jml_pendapatan = $gaji + $lembur + $bonus + $premi;
       $potongan = !empty($detail) ? $detail[0]->potongan  : 0;
       $total_pendapatan = $jml_pendapatan - $potongan;
     ?>

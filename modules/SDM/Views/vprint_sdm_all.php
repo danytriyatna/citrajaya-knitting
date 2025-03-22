@@ -202,11 +202,12 @@
                 $gaji = !empty($r) ? $r->gaji_harian : 0;
                 $lembur = !empty($r) ? $r->uang_lembur  : 0;
                 $bonus = !empty($r) ? $r->bonus  : 0;
+                
 
-                $jml_pendapatan = $gaji + $lembur + $bonus;
+                $jml_pendapatan = $gaji + $lembur + $bonus + $r->premi;
                 $potongan = !empty($r) ? $r->potongan  : 0;
                 $total_pendapatan = $jml_pendapatan - $potongan;
-
+                
 
                 $jam_kerja = $jam_kerja + $r->jam_kerja;
                 $gaji_harian = $gaji_harian + $r->gaji_harian;

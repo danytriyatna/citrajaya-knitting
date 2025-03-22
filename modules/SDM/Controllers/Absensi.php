@@ -442,16 +442,14 @@ class Absensi extends BaseController
                   $isi['tgl_absen'] = ($tgl_absen);
 
                   $status_kehadiran = null;
-                  $isi['keterangan_kehadiran'] = '-';
                   if (stripos($shift, "tidak hadir") !== false) {
-                    $status_kehadiran = 0;
-                    $isi['keterangan_kehadiran'] = 'Tanpa Keterangan';
+                    $status_kehadiran = 4;
+                    
                   }
                   else if(!empty($jamIn)){
                     $status_kehadiran = 1;
                   } else {
                     $status_kehadiran = 0;
-                    $isi['keterangan_kehadiran'] = 'Tanpa Keterangan';
                   }
 
                   $status_lembur = 0;
@@ -466,6 +464,7 @@ class Absensi extends BaseController
                   $isi['jam_masuk'] = $tgl_absen . ' ' . $jamIn;
                   $isi['jam_keluar'] = $tgl_absen . ' ' . $jamOut;
                   $isi['status_kehadiran'] = $status_kehadiran;
+                  $isi['keterangan_kehadiran'] = '-';
                   $isi['hari_hadir'] = 1;
                   
                   $isi['terlambat'] = $terlambat;

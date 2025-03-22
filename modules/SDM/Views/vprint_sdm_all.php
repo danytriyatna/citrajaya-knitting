@@ -171,12 +171,15 @@
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">HADIR</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">IZIN</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">SAKIT</th>
-            <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">ROLLING SHIFT</th>
+            <!-- <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">ROLLING SHIFT</th> -->
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">JAM KERJA</th>
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">GAJI/UPAH</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HK</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HL</th>
+            <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">PREMI KEHADIRAN</th>
+
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR</th>
+           
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">PENAMBAHAN</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">POTONGAN</th>
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">GAJI/UPAH</th>
@@ -193,6 +196,7 @@
             $bonus = 0;
             $potongan = 0;
             $total_pendapatan_total = 0;
+            $premi = 0;
             foreach ($detail as $r) { ?>
             <?php 
                 $gaji = !empty($r) ? $r->gaji_harian : 0;
@@ -212,6 +216,7 @@
                 $bonus = $bonus + $r->bonus;
                 $potongan = $potongan + $r->potongan;
                 $total_pendapatan_total = $total_pendapatan_total + $total_pendapatan;
+                $premi = $premi + $r->premi;
             ?>
             <tr>
                 <td style="border: 1px solid black; padding: 8px;"><?= $r->nip; ?></td>
@@ -220,11 +225,14 @@
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->hadir; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->izin; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->sakit; ?></td>
-                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->alpha; ?></td>
+
+                <!-- <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->alpha; ?></td> -->
+
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->jam_kerja; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->gaji_harian); ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur_we; ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->premi); ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->uang_lembur); ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->bonus); ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->potongan); ?></td>
@@ -234,7 +242,7 @@
     </tbody>
     <tfoot>
         <tr>
-          <td style="border: 1px solid black; padding: 8px;" colspan="7"> Total</td>
+          <td style="border: 1px solid black; padding: 8px;" colspan="6"> Total</td>
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
@@ -245,6 +253,7 @@
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($gaji_harian); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur; ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur_we; ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= $premi; ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($uang_lembur); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($bonus); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($potongan); ?></td>

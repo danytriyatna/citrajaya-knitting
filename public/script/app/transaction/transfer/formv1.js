@@ -423,14 +423,14 @@ function submitData(status,message){
         });
     }
 
-    if(dtListDetail.getData().length == 0){
-        return Swal.fire({
-            text: "Data detail tidak boleh kosong",
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
+    // if(dtListDetail.getData().length == 0){
+    //     return Swal.fire({
+    //         text: "Data detail tidak boleh kosong",
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
 
     Swal.fire({
         title: `Apakah anda ingin ${message} data Barang Keluar?`,

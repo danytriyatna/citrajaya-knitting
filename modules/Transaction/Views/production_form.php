@@ -251,10 +251,12 @@
                             <tr>
                               <td> 
                                   <h5 class="form-check-h1" for="proses_<?= $r->seq ?>"><?= $r->nama ?></h5>
-                                  <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty - $r->qty_prod ?>" />
+                                  <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty_prod ?>" />
+                                  <!-- <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty - $r->qty_prod ?>" /> -->
                               </td>
                               <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty - $r->qty_prod ?></label>
+                                <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_prod ?></label>
+                                <!-- <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty - $r->qty_prod ?></label> -->
                               </td>
                             </tr>
                           <?php } ?>
@@ -285,7 +287,7 @@
 
               <br>
 
-              <div class="row">
+              <div hidden class="row">
                 <div class="col-sm-2">
                   <div class="form-group m-b-0 d-flex align-items-center">
                     <label class="control-label text-start text-md-end m-e-8" for="filter_status">Status</label>
@@ -327,7 +329,7 @@
 
               </div>
 
-              <div class="row mt-1">
+              <div hidden class="row mt-1">
                 <!-- <div class="col-sm-2"> -->
                   <!-- <button type="button" class="btn btn-sm btn-info text-white mb-2" id="btn-add-detail"> Tambah <i class="fa fa-plus"></i></button> -->
 
@@ -354,7 +356,7 @@
                   <a href="trans/production" class="btn btn-default m-e-5">
                     <span class="fa fa-arrow-left"></span> Kembali
                   </a>
-                  <button type="button" class="m-s-5 btn btn-success" id="btn-save-ukuran"> <i class="fa fa-save"></i> Simpan</button>
+                  <button type="button" class="m-s-5 btn btn-success" hidden id="btn-save-ukuran"> <i class="fa fa-save"></i> Simpan</button>
                 </div>
               </div>
             </div>

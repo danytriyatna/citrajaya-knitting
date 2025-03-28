@@ -95,6 +95,7 @@ $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('/', 'ItemTransfer::index');
   $routes->get('form_static', 'ItemTransfer::form_static_v2');
   $routes->post('list', 'ItemTransfer::lists');
+  $routes->post('list-ref', 'ItemTransfer::lists_ref');
   $routes->post('list-so', 'ItemTransfer::listsSO');
   $routes->get('data-so', 'ItemTransfer::dataSO');
   $routes->get('print/(:any)', 'ItemTransfer::print/$1');

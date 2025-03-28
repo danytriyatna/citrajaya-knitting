@@ -393,7 +393,9 @@ class BarangKeluar extends BaseController
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
         }
-        $dompdf = new DompdfGenerator();
+        $dompdf = new \Dompdf\Dompdf();
+        // Set Dompdf options for portrait orientation
+        $dompdf->setPaper('A4', 'portrait');
 
         $this->data['data'] = [];
         if ($id != "") {
@@ -418,7 +420,9 @@ class BarangKeluar extends BaseController
         }
         $html = view($this->views . '\barang_keluar_print', $this->data);
 
-        $dompdf->generate($html, 'barang_keluar.pdf', true);
-        exit;
+        $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    exit;
     }
 }

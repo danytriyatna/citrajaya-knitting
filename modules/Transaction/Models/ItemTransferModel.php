@@ -35,10 +35,24 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->join($this->tblGudang . " bbx", "uk.id_gudang_tujuan = bbx.id", "left");
         $builder->join($this->tblOperator . " cbx", "uk.id_cmt = cbx.id", "left");
 
-        $builder->select("uk.id,uk.tanggal,uk.tipe,uk.id_cmt,uk.tipe,id_proses, cbx.nama_operator,  abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan, uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan");
+        $builder->join('_jenis_proses_produksi jp', 'jp.id = uk.id_proses', 'left');
+
+        $builder->select("uk.id,uk.tanggal,uk.tipe,uk.id_cmt,uk.tipe,id_proses, cbx.nama_operator,  abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan,
+                          uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan, uk.ref_produk,
+                          jp.seq as no_proses, jp.nama as proses");
+
         if (!empty($params['status'])) {
             $builder->where('uk.status = 1');
         }
+
+        if(!empty($params['ref_produksi'])){
+            if($params['ref_produksi'] == 1){
+                $builder->where('ref_produk', 1);
+            }else{
+                $builder->where('ref_produk', 0);
+            }
+        }
+
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -52,13 +66,14 @@ class ItemTransferModel extends \App\Models\PrModel
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
-                $builder->orderBy('id');
+                $builder->orderBy('id DESC');
             }
 
             if (empty($offset)) $offset = 0;
             if (empty($limit)) $limit = 10;
 
             $builder->limit($limit, $offset);
+            
 
             $this->_data = $builder->get()->getResult();
         } else {
@@ -80,6 +95,16 @@ class ItemTransferModel extends \App\Models\PrModel
         if (!empty($params['status'])) {
             $builder->where('uk.status = 1');
         }
+
+        if(!empty($params['ref_produksi'])){
+            if($params['ref_produksi'] == 1){
+                $builder->where('ref_produk', $params['ref_produksi']);
+            }else{
+                $builder->where('ref_produk', 0);
+            }
+        }
+
+
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
             $builder->Where('LOWER(uk.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -330,133 +355,134 @@ class ItemTransferModel extends \App\Models\PrModel
                     "id_konsumen" => $rowData['id_konsumen'],
                     "kode_sales_order" => $rowData['kode_sales_order'],
                     "kode_ukuran" => $rowData['kode_ukuran'],
-                    "keterangan" => $rowData['keterangan'],
-
+                    "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
                 ];
 
                 $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
             }
 
-            foreach ($detail as $rowData) {
-                if ($rowData['id_barang'] != "") {
-                    // $idBarang = decrypt($rowData['id_barang']);
-                    $idBarang = $rowData['id_barang'];
-                }
-
-                $dataDetail = [
-                    "id_barang" => $idBarang,
-                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
-                    "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
-                    "id_header" => $id,
-                    "qty" => $rowData['qty'],
-                    "price" => !empty($rowData['price']) ? $rowData['price'] : null,
-                ];
-
-                $this->insertRecordGetid($this->tblDet, $dataDetail);
-
-                if ($data['status'] == 1) {
-
-                    $mBarangMasuk = new IncomingGoodsModel();
-                    $arrParam =  [
+            if(!empty($detail)){
+                foreach ($detail as $rowData) {
+                    if ($rowData['id_barang'] != "") {
+                        // $idBarang = decrypt($rowData['id_barang']);
+                        $idBarang = $rowData['id_barang'];
+                    }
+    
+                    $dataDetail = [
                         "id_barang" => $idBarang,
-                        "id_gudang_tujuan" => $data['id_gudang_tujuan'],
-                    ];
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang_tujuan']);
-                    $dataLots = [
-                        "id_barang" => $idBarang,
-                        "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_no" => $rowData['lot_no'],
+                        "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
+                        "id_header" => $id,
                         "qty" => $rowData['qty'],
-                        "active" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                    ];
-
-
-                    if (!empty($resLotNo)) {
-                        $idLotsMasuk = $resLotNo->id;
-                        $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData['qty']), array("id" => $idLotsMasuk));
-                    } else {
-                        $idLotsMasuk = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
-                    }
-
-                    $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk);
-
-                    // $stokAwal = !empty($resData) ? $resData->stok : 0;
-                    $dataBarang = [
-                        "id_barang" => $idBarang,
-                        "jenis_transaksi" => 1,
-                        "jumlah" =>  $rowData['qty'],
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "id_gudang_tujuan" =>  !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                        "id_kategori" => 4,
-                        "keterangan" => "Barang Masuk Dari Transfer",
-                        "active" => 1,
-                        "tipe" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                        "lot_id" => $idLotsMasuk,
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
-                        "kode_transaksi" => $this->generateKodePersediaan(),
                     ];
-                    $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
-                    $arrStockBalances = [
-                        "id_barang" => $idBarang,
-                        "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_id" => $idLotsMasuk,
-                        "saldo_awal" => 0,
-                        "saldo_akhir" => $rowData['qty'],
-                        "active" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                    ];
-
-                    if (!empty($resData)) {
-                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $rowData['qty']), array("id" => $resData->id));
-                    } else {
-                        $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
-                    }
-
-                    $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
-
-                    if (!empty($resLotNo)) {
-                        $idLots = $resLotNo->id;
-                        $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));
-                    }
-
-                    $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots);
-
-                    // $stokAwal = !empty($resData) ? $resData->stok : 0;
-                    $dataBarangAsal = [
-                        "id_barang" => $idBarang,
-                        "jenis_transaksi" => 2,
-                        "jumlah" =>  $rowData['qty'],
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "id_gudang_asal" =>  !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
-                        "id_kategori" => 4,
-                        "keterangan" => "Barang Keluar Dari Transfer",
-                        "active" => 1,
-                        "tipe" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                        "lot_id" => $idLots,
-                        "price" => !empty($rowData['price']) ? $rowData['price'] : null,
-                        "kode_transaksi" => $this->generateKodePersediaan(),
-                    ];
-                    $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
-                    $arrStockBalances = [
-                        "id_barang" => $idBarang,
-                        "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
-                        "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_id" => $idLots,
-                        "saldo_awal" => 0,
-                        "saldo_akhir" => $rowData['qty'],
-                        "active" => 1,
-                        "created_at" =>  date("Y-m-d H:i:s"),
-                    ];
-                    if (!empty($resData)) {
-                        $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData['qty'] : 0;
-                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $stock), array("id" => $resData->id));
-                    } else {
-                        $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+    
+                    $this->insertRecordGetid($this->tblDet, $dataDetail);
+    
+                    if ($data['status'] == 1) {
+    
+                        $mBarangMasuk = new IncomingGoodsModel();
+                        $arrParam =  [
+                            "id_barang" => $idBarang,
+                            "id_gudang_tujuan" => $data['id_gudang_tujuan'],
+                        ];
+                        $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang_tujuan']);
+                        $dataLots = [
+                            "id_barang" => $idBarang,
+                            "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                            "tanggal" => date("Y-m-d H:i:s"),
+                            "lot_no" => $rowData['lot_no'],
+                            "qty" => $rowData['qty'],
+                            "active" => 1,
+                            "created_at" =>  date("Y-m-d H:i:s"),
+                        ];
+    
+    
+                        if (!empty($resLotNo)) {
+                            $idLotsMasuk = $resLotNo->id;
+                            $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData['qty']), array("id" => $idLotsMasuk));
+                        } else {
+                            $idLotsMasuk = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
+                        }
+    
+                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk);
+    
+                        // $stokAwal = !empty($resData) ? $resData->stok : 0;
+                        $dataBarang = [
+                            "id_barang" => $idBarang,
+                            "jenis_transaksi" => 1,
+                            "jumlah" =>  $rowData['qty'],
+                            "tanggal" => date("Y-m-d H:i:s"),
+                            "id_gudang_tujuan" =>  !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                            "id_kategori" => 4,
+                            "keterangan" => "Barang Masuk Dari Transfer",
+                            "active" => 1,
+                            "tipe" => 1,
+                            "created_at" =>  date("Y-m-d H:i:s"),
+                            "lot_id" => $idLotsMasuk,
+                            "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                            "kode_transaksi" => $this->generateKodePersediaan(),
+                        ];
+                        $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+                        $arrStockBalances = [
+                            "id_barang" => $idBarang,
+                            "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                            "tanggal" => date("Y-m-d H:i:s"),
+                            "lot_id" => $idLotsMasuk,
+                            "saldo_awal" => 0,
+                            "saldo_akhir" => $rowData['qty'],
+                            "active" => 1,
+                            "created_at" =>  date("Y-m-d H:i:s"),
+                        ];
+    
+                        if (!empty($resData)) {
+                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $rowData['qty']), array("id" => $resData->id));
+                        } else {
+                            $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                        }
+    
+                        $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
+    
+                        if (!empty($resLotNo)) {
+                            $idLots = $resLotNo->id;
+                            $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));
+                        }
+    
+                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots);
+    
+                        // $stokAwal = !empty($resData) ? $resData->stok : 0;
+                        $dataBarangAsal = [
+                            "id_barang" => $idBarang,
+                            "jenis_transaksi" => 2,
+                            "jumlah" =>  $rowData['qty'],
+                            "tanggal" => date("Y-m-d H:i:s"),
+                            "id_gudang_asal" =>  !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
+                            "id_kategori" => 4,
+                            "keterangan" => "Barang Keluar Dari Transfer",
+                            "active" => 1,
+                            "tipe" => 1,
+                            "created_at" =>  date("Y-m-d H:i:s"),
+                            "lot_id" => $idLots,
+                            "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                            "kode_transaksi" => $this->generateKodePersediaan(),
+                        ];
+                        $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
+                        $arrStockBalances = [
+                            "id_barang" => $idBarang,
+                            "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
+                            "tanggal" => date("Y-m-d H:i:s"),
+                            "lot_id" => $idLots,
+                            "saldo_awal" => 0,
+                            "saldo_akhir" => $rowData['qty'],
+                            "active" => 1,
+                            "created_at" =>  date("Y-m-d H:i:s"),
+                        ];
+                        if (!empty($resData)) {
+                            $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData['qty'] : 0;
+                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $stock), array("id" => $resData->id));
+                        } else {
+                            $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                        }
                     }
                 }
             }

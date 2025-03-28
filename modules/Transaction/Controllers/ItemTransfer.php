@@ -135,6 +135,100 @@ class ItemTransfer extends BaseController
     return $this->response->setJSON($build_array);
   }
 
+  public function lists_ref()
+  {
+    $start      = $this->request->getPost('start');
+    $limit      = $this->request->getPost('length');
+    $filters    = $this->request->getPost('filter');
+    $order      = $this->request->getPost('sort');
+    $isApprove      = $this->request->getPost('isApprove');
+    $kategori = $this->request->getPost('kategori');
+
+    $params = [];
+    if ($isApprove) {
+      $params['status'] = "2";
+    }
+
+    if(!empty($kategori)){
+      if($kategori == 12){
+        $params['ref_produksi'] = 1;
+      }else{
+        $params['ref_produksi'] = 2;
+      }
+    }else{
+      $params['ref_produksi'] = 2;
+    }
+    
+    $results = $this->mRef->getData(null, $start, $limit, $order, $filters, $params);
+    $totalfiltered = $this->mRef->getDataCnt($filters, $params);
+    $totaldata = $this->mRef->getDataCnt(null, $params);
+    $maxpage = ceil($totalfiltered / $limit);
+
+    $build_array = array(
+      "last_page" => $maxpage,
+      "recordsTotal" => $totaldata,
+      "recordsFiltered" => $totalfiltered,
+      "data" => array()
+    );
+
+    foreach ($results as $row) {
+      $id = encrypt($row->id);
+
+      $atr_edit = null;
+      $atr_del = null;
+      $atr_other = null;
+      $btnAction = null;
+      if ($this->_edit) {
+        $atr_edit['title'] = 'Edit';
+        $atr_edit['url'] = $this->urlv . '/edit/';
+        $atr_edit['class'] = '';
+      }
+      // if ($this->_delete) {
+      //     $atr_del['title'] = 'Hapus';
+      //     $atr_del['url'] = $this->urlv . '/delete/';
+      //     $atr_del['class'] = '';
+      //     $atr_del['onclick'] = "return confirm('Hapus Data ?')";
+      // }
+      if ($row->status != 0) {
+        $atr_other['title'] = 'Print';
+        $atr_other['target'] = "blank";
+        $atr_other['url'] = $this->urlv . '/print/';
+        $atr_other['class'] = '';
+        $atr_other['icon_class'] = 'fa-print';
+      }
+      if ($atr_edit || $atr_del)
+        $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
+
+      // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
+      //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
+      $status = "";
+      if ($row->status == 0) {
+        $status = "<span class='badge bg-secondary'>Draft</span>";
+      } else if ($row->status == 1) {
+        $status = "<span class='badge bg-success'>Approved</span>";
+      }
+      array_push(
+        $build_array["data"],
+        array(
+          "aksi" => $btnAction ? $btnAction : '',
+          "id"   => ($id),
+          "kode_transaksi" => $row->kode_transaksi,
+          "tanggal" => fdate_eng_to_ind($row->tanggal),
+          "gudang_asal" => $row->gudang_asal,
+          "gudang_tujuan" => $row->gudang_tujuan,
+          "nama_operator" => !empty($row->nama_operator) ? $row->nama_operator : "NON CMT",
+          "keterangan" => $row->keterangan,
+          "no_proses" => $row->no_proses,
+          "proses" => $row->proses,
+          "id_proses" => $row->id_proses,
+          "id_cmt" => $row->id_cmt,
+          "status" => $status
+        )
+      );
+    }
+    return $this->response->setJSON($build_array);
+  }
+
   public function listsSO()
   {
     $start      = $this->request->getPost('start');
@@ -307,6 +401,10 @@ class ItemTransfer extends BaseController
     $tipe = $this->request->getPost('tipe');
     $dataDetail = $this->request->getPost('data');
     $dataSO = $this->request->getPost('dataSO');
+
+    $refProduksi = $this->request->getPost('ref_produksi');
+
+
     if ($id != "") {
       $id = decrypt($id);
     }
@@ -320,7 +418,9 @@ class ItemTransfer extends BaseController
       "status" => $statusData,
       "keterangan" => $keterangan,
       "tipe" => $tipe,
+      "ref_produk" => $refProduksi
     ];
+
     if ($id) {
       $dataHeader['updated_at'] = date("Y-m-d H:i:s");
       $dataHeader['updated_by'] = $this->get_userid();
@@ -345,7 +445,9 @@ class ItemTransfer extends BaseController
     if (!$this->auth->loggedIn()) {
       return redirect()->to('/auth/login');
     }
-    $dompdf = new DompdfGenerator();
+    $dompdf = new \Dompdf\Dompdf();
+    // Set Dompdf options for portrait orientation
+    $dompdf->setPaper('A4', 'portrait');
 
     $this->data['data'] = [];
     if ($id != "") {
@@ -370,7 +472,9 @@ class ItemTransfer extends BaseController
     }
     $html = view($this->views . '\item_transfer_print', $this->data);
 
-    $dompdf->generate($html, 'rec_item.pdf', true);
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     exit;
   }
 }

@@ -221,6 +221,7 @@
                     </div>
                   </div>
                 </div>
+
                 <div class="col-sm-6 d-none" id="div-cmt">
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">CMT</label>
@@ -238,7 +239,17 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">Proses Produksi</label>
+                    <div class="col-md-8" style="padding-top:2%;">
+                        <input type="checkbox" name="ref_prduksi" id="ref_prduksi" <?= !empty($resData->ref_produk)? "checked" : ""; ?> />
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
             <div class="col-sm-5">
               <div class="form-group row">
@@ -261,16 +272,18 @@
           </div>
 
           <hr>
-          <div class="col-sm-3 mb-2">
-            <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+          <div id="div_details" >
+            <div class="col-sm-3 mb-2">
+              <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+            </div>
+            <div class="row">
+              <div id="dt-list-detail" class="table-responsive table-striped"></div>
+            </div>
+            <br>
           </div>
+         
           <div class="row">
             <div class="col-sm-12">
-              <div class="row">
-                <div id="dt-list-detail" class="table-responsive table-striped"></div>
-
-              </div>
-              <br>
 
               <div class="row">
                 <div class="col-sm-10">

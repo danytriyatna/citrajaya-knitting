@@ -352,7 +352,8 @@ class Production extends BaseController
     $tglTransaksi = $this->request->getPost('tglTransaksi');
     
     $tglTransaksi = !empty($tglTransaksi) ? \fdate_ind_to_eng($tglTransaksi) : '';
-    $detailProd = $this->mProduksi->getDataOperatorProd($id, $tglTransaksi, $id_proses);
+    // $detailProd = $this->mProduksi->getDataOperatorProd($id, $tglTransaksi, $id_proses);
+    $detailProd = $this->mProduksi->getDataOperatorProd($id);
     if (!empty($detailProd)) {
       $build_array['message'] = "data ditemukan";
       $build_array['status']  = true;

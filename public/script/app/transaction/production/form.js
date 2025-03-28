@@ -142,34 +142,35 @@ $(document).ready(function () {
             // {field:"id_ukuran", visible:false},
             // {field:"id_warna", visible:false},
             // {field:"flag", visible:false},
-            {
-                headerSort: false,  
-                title: '#', 
-                formatter: buttonRowAction,
-                width: '5%', align: "center", cssClass: "text-center",
-                cellClick: function(e, cell) {
-                    let row = cell.getRow();
-                    if (e.target.title === 'delete') {
-                        Swal.fire({
-                            title: "Apakah anda yakin ingin menghapus data?",
-                            icon: 'question',
-                            confirmButtonText: 'Hapus',
-                            confirmButtonColor: '#dc3545',
-                            showCancelButton: true,
-                            cancelButtonText: 'Batal',
-                            cancelButtonColor: '#6C757D'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                row.delete(); 
-                            }
-                        })
-                    }
-                }
-            },
-            {headerSort:false, title:"Date", field:"date", width:"8%"},
+            // {
+            //     headerSort: false,  
+            //     title: '#', 
+            //     formatter: buttonRowAction,
+            //     width: '5%', align: "center", cssClass: "text-center",
+            //     cellClick: function(e, cell) {
+            //         let row = cell.getRow();
+            //         if (e.target.title === 'delete') {
+            //             Swal.fire({
+            //                 title: "Apakah anda yakin ingin menghapus data?",
+            //                 icon: 'question',
+            //                 confirmButtonText: 'Hapus',
+            //                 confirmButtonColor: '#dc3545',
+            //                 showCancelButton: true,
+            //                 cancelButtonText: 'Batal',
+            //                 cancelButtonColor: '#6C757D'
+            //             }).then((result) => {
+            //                 if (result.isConfirmed) {
+            //                     row.delete(); 
+            //                 }
+            //             })
+            //         }
+            //     }
+            // },
+            // {headerSort:false, title:"Date", field:"date", width:"8%"},
+            {headerSort:false, title:"Kode Transaksi", field:"kode_transaksi", width:"8%"},
             {headerSort:false, title:"Colour", field:"kode_warna", hozAlign:"left",width:"15%"},
             {headerSort:false, title:"Process", field:"process", hozAlign:"left",width:"10%"},
-            {headerSort:false, title:"Operator", field:"operator", hozAlign:"left",width:"15%"},
+            {headerSort:false, title:"Operator", field:"operator", hozAlign:"left",width:"19%"},
             {headerSort:false, title:"Nomor Mesin", field:"nomor_mesin", hozAlign:"left",width:"15%"},
             {headerSort:false, title:"Size", field:"kode_ukuran", hozAlign:"left",width:"5%"},
             {headerSort:false, title:"QTY", field:"qty", hozAlign:"center",width:"5%", editor: "number", cellEdited: updateTotal},
@@ -210,6 +211,7 @@ $(document).ready(function () {
                 precision: 0,   // Tidak ada desimal
             }, hozAlign:"right"},
         ],
+        groupBy:"date",
         locale: 'id',    
         // layout: 'fitColumns',
         placeholder: "Tidak ada data",

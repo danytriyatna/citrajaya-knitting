@@ -35,6 +35,9 @@ let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
 let inpIdGudangAsal = $('#id_gudang_asal');
 
+const inpRefProduksi = $("#ref_prduksi");
+const divDetail = $("#div_detail");
+
 if(inpIdHeader.val().length == 0){
     selectGudangAsal.val("").trigger("change")
     selectGudangTujuan.val("").trigger("change")
@@ -150,6 +153,23 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     selectable: false,
 });
 
+setTimeout(() => {
+    inpRefProduksi.on("change", function() { 
+        const ch = $(this).is(':checked');
+    
+        if(ch){
+            divDetail.hide();
+        }else{
+            divDetail.show();
+            dtListBarang.redraw(true)
+        }
+    });
+
+    if(inpRefProduksi.is(':checked')){
+        divDetail.hide();
+    }
+}, 500);
+
 
 let searchThreadBarang = null;
 let elSearchBarang = $("#tb-search");
@@ -168,7 +188,7 @@ let elSearchSO = $("#tb-search-so");
             }
             clearTimeout(searchSO);
             searchSO = setTimeout(function () {
-                dtListSample.setFilter("", "like", elSearchSO.val());
+                dtListSO.setFilter("", "like", elSearchSO.val());
             }, 600);
         });
     }
@@ -577,16 +597,16 @@ function checkCMT(nilai){
     if(dataGudang.length > 0){
         let resGudang = dataGudang.find(x => x.id == nilai);
         
-        if(resGudang.tipe == 1){
-            divCMT.addClass("d-none")
-            // inpCMT.val()
-            // inpIdCMT.val("")
-        } else{
+        // if(resGudang.tipe == 1){
+        //     divCMT.addClass("d-none")
+        //     // inpCMT.val()
+        //     // inpIdCMT.val("")
+        // } else{
             divCMT.removeClass("d-none")
             // inpCMT.val(resGudang.nama_operator)
             // inpIdCMT.val(resGudang.id_cmt)
             selectCMT.val(resGudang.id_cmt).trigger("change");
-        } 
+        // } 
     } 
 }
 
@@ -700,14 +720,18 @@ function submitData(status,message){
         });
     }
 
-    if(dtListDetail.getData().length == 0){
-        return Swal.fire({
-            text: "Data detail tidak boleh kosong",
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
+
+    if(!inpRefProduksi.is(':checked')){
+        if(dtListDetail.getData().length == 0){
+            return Swal.fire({
+                text: "Data detail tidak boleh kosong",
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
     }
+    
 
     Swal.fire({
         title: `Apakah anda ingin ${message} data Barang Keluar?`,
@@ -1126,6 +1150,19 @@ dtListSO.on("rowClick", function(e, row){
             timer: 2000
         });
     }
+
+    if(inpRefProduksi.is(':checked') && dtList.getData().length > 0){
+        const list_data = dtList.getData().some(x=>x.kode_sales_order !== row.getData().kode_sales_order);
+        if (list_data) {
+            return Swal.fire({
+                text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+    }
+
     dtList.addRow(row.getData())
     $("#modal-so").modal("hide");
 })
@@ -1182,6 +1219,7 @@ dtListSO.on("rowClick", function(e, row){
 
 
 function simpanData(status) {
+    const valProduksi = inpRefProduksi.is(':checked') ? 1 : 0;
     $.ajax({
         type: 'POST',
         url: '/trans/item-transfer/save',
@@ -1196,7 +1234,8 @@ function simpanData(status) {
             data:dtListDetail.getData(),
             dataSO:dtList.getData(),
             keterangan:inpKeterangan.val(),
-            status:status
+            status:status,
+            ref_produksi: valProduksi,
         },
         dataType: "json",
         beforeSend: function () {

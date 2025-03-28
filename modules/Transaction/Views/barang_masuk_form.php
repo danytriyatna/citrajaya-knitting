@@ -287,26 +287,97 @@
 
             </div>
           </div>
-
           <hr>
-          <div class="row">
-            <div class="col-sm-12">
-              <div id="dt-list-so" class="table-responsive table-striped"></div>
-            </div>
-          </div>
 
-          <hr>
-          <div class="col-sm-3 mb-2">
-            <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
+          <div class="row div_produksi">
+            <div class="col-sm-7">
               <div class="row">
-                <div id="dt-list-detail" class="table-responsive table-striped"></div>
+                  <div class="col-sm-6">
+                      <div class="form-group row">
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_cmt">Proses</label>
+                        <div class="col-md-9">
+                          <input type="text" id="proses" name="proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->proses : '' ?>" readonly>
+                          <input type="hidden" id="id_proses" name="id_proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_proses : '' ?>" readonly>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="col-sm-6">
+                      <div class="form-group row">
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_cmt">CMT</label>
+                        <div class="col-md-9">
+                          <input type="text" id="nama_operator" name="nama_operator" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->nama_operator : '' ?>" readonly>
+                          <input type="hidden" id="id_cmt" name="id_cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_cmt : '' ?>" readonly>
+                        </div>
+                      </div>
+                  </div>
+
+                 
               </div>
+              <div class="row">
+                 <div class="col-sm-6">
+                      <div class="form-group row">
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_qc">Nilai QC</label>
+                        <div class="col-md-9">
+                          <input type="number" id="jml_qc" name="jml_qc" class="form-control" placeholder="Nilai QC" value="<?= !empty($resData)? $resData->jml_qc: 0 ?>" >
+                        </div>
+                      </div>
+                  </div>
+                  <div class="col-sm-6">
+                      <div class="form-group row">
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_lain">Nilai Lain-Lain</label>
+                        <div class="col-md-9">
+                          <input type="number" id="jml_lain" name="jml_lain" class="form-control" placeholder="Nilai Lain-Lain" value="<?= !empty($resData)? $resData->jml_lain: 0 ?>" >
+                        </div>
+                      </div>
+                  </div>
+              </div>
+            </div>
+            <div class="col-sm-5">
+                  <div class="col-sm-12">
+                      <div class="form-group row">
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_mesin">Nilai Mesin</label>
+                        <div class="col-md-9">
+                          <input type="number" id="jml_mesin" name="jml_mesin" class="form-control" placeholder="Nilai Mesin" value="<?= !empty($resData)? $resData->jml_mesin: 0 ?>" >
+                        </div>
+                      </div>
+                  </div>
+            </div>
 
-              <br>
+            <hr>
+          </div>
 
+         <div class="div_detail">
+          <div class="row">
+              <div class="col-sm-12">
+                <div id="dt-list-so" class="table-responsive table-striped"></div>
+              </div>
+            </div>
+
+            <hr>
+         </div>
+         
+          <div class="div_produksi">
+            <div class="row">
+              <div class="col-sm-12">
+                <div id="dt-list-so-produksi" class="table-responsive table-striped"></div>
+              </div>
+            </div>
+
+            <hr>
+          </div>
+
+          <div class="div_details">
+            <div class="col-sm-3 mb-2">
+              <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+            </div>
+            <div class="row">
+              <div id="dt-list-detail" class="table-responsive table-striped"></div>
+            </div>
+            <br>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              
               <div class="row">
                 <div class="col-sm-10">
                   <a href="trans/incoming-goods" class="btn btn-default m-e-5">

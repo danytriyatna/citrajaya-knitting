@@ -14,6 +14,8 @@ use Modules\Transaction\Models\BarangMasukDetailModel;
 use Modules\Transaction\Models\ItemTransferDetailModel;
 use Modules\Transaction\Models\ItemTransferModel;
 use Modules\Referensi\Models\GudangModel;
+use Modules\Referensi\Models\OperatorModel;
+
 
 class BarangMasuk extends BaseController
 {
@@ -26,6 +28,7 @@ class BarangMasuk extends BaseController
     protected $mTrf;
     protected $mTrfDet;
     protected $mGudang;
+    protected $mOperator;
 
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/incoming-goods';
@@ -43,6 +46,7 @@ class BarangMasuk extends BaseController
         $this->mTrf = new ItemTransferModel();
         $this->mTrfDet = new ItemTransferDetailModel();
         $this->files  = new FileModel();
+        $this->mOperator = new OperatorModel();
     }
 
     public function index()
@@ -176,11 +180,18 @@ class BarangMasuk extends BaseController
                 $rowData->id_barang = encrypt($rowData->id_barang);
             }
             $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
-            $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+            
 
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
-            $this->data['dataSO'] = json_encode($resDataDetSO);
+
+            if($resData->id_kategori == 12){
+                $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
+                $this->data['dataSO'] = json_encode($resDataDetSO);
+            }else{
+                $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+                $this->data['dataSO'] = json_encode($resDataDetSO);
+            }
         }
         $reDataKategori = $this->mBarangMasuk->getRefKategoriPersedian();
         $sortGudang = [
@@ -194,6 +205,15 @@ class BarangMasuk extends BaseController
         $this->data['gudang']    = $resDataGudang;
         // dd($this->data['resData']);
         $this->data['titlehead'] = "Form Barang Masuk";
+
+        $sortOperator = [
+        [
+            'field' => 'nama_operator',
+            'dir' => 'ASC'
+        ]
+        ];
+        $dataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
+        $this->data['operator']    = $dataOperator;
 
         return view($this->views . '\barang_masuk_form', $this->data);
     }
@@ -213,14 +233,24 @@ class BarangMasuk extends BaseController
         $keterangan = $this->request->getPost('keterangan');
         $dataDetail = $this->request->getPost('data');
         $no_ref_trf = $this->request->getPost('no_ref_trf');
+
+        $id_proses = $this->request->getPost("id_proses");
+        $id_cmt = $this->request->getPost("id_cmt");
+        $jml_qc = $this->request->getPost("jml_qc");
+        $jml_mesin = $this->request->getPost("jml_mesin");
+        $jml_lain = $this->request->getPost("jml_lain");
+
+        $dataProduksi = $this->request->getPost("dataProduksi");
+
         if ($id != "") {
             $id = decrypt($id);
         }
         if ($id_buyer != "") {
             $id_buyer = decrypt($id_buyer);
         }
+
         $dataHeader = [
-            "id_buyer" => !empty($id_buyer) ? $id_buyer : null,
+            // "id_buyer" => !empty($id_buyer) ? $id_buyer : null,
             "tanggal" => $tanggal,
             "status" => $statusData,
             "jenis_transaksi" => 1,
@@ -228,8 +258,26 @@ class BarangMasuk extends BaseController
             "id_kategori" => $id_kategori,
             "no_ref_trf" => $no_ref_trf,
             "keterangan" => $keterangan,
-            "nama" => $nama
+            "nama" => $nama,
+            // "id_proses" => $id_proses,
+            // "id_cmt" => $id_cmt,
+            // "jml_qc" => $jml_qc,
+            // "jml_mesin" => $jml_mesin,
+            // "jml_lain" => $jml_lain,
         ];
+
+        if(!empty($id_buyer)){
+            $dataHeader['id_buyer'] = $id_buyer;
+        }
+
+        if($id_kategori == 12){
+            $dataHeader['id_proses'] = $id_proses;
+            $dataHeader['id_cmt'] = $id_cmt;
+            $dataHeader['jml_qc'] = $jml_qc;
+            $dataHeader['jml_mesin'] = $jml_mesin;
+            $dataHeader['jml_lain'] = $jml_lain;
+        }
+
         if ($id) {
             $dataHeader['updated_at'] = date("Y-m-d H:i:s");
             $dataHeader['updated_by'] = $this->get_userid();
@@ -237,8 +285,8 @@ class BarangMasuk extends BaseController
             $dataHeader['created_at'] = date("Y-m-d H:i:s");
             $dataHeader['created_by'] = $this->get_userid();
         }
-        // print_r($data);exit;
-        $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, null);
+        // print_r(json_encode($dataHeader));exit;
+        $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataProduksi);
         if ($res) {
             $status = true;
             $msg = "Data berhasil disimpan!";
@@ -344,20 +392,20 @@ class BarangMasuk extends BaseController
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
         }
-        $dompdf = new DompdfGenerator();
+        $dompdf = new \Dompdf\Dompdf();
+        // Set Dompdf options for portrait orientation
+        $dompdf->setPaper('A4', 'portrait');
 
         $this->data['data'] = [];
         if ($id != "") {
             $id = decrypt($id);
-            // dd($id);
-            // die;
             $resData = $this->mRef->getData($id);
 
             $sort = [
-                [
-                    'field' => 'uk.id',
-                    'dir' => 'ASC'
-                ]
+            [
+                'field' => 'uk.id',
+                'dir' => 'ASC'
+            ]
             ];
 
             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
@@ -369,7 +417,9 @@ class BarangMasuk extends BaseController
         }
         $html = view($this->views . '\barang_masuk_print', $this->data);
 
-        $dompdf->generate($html, 'barang_masuk.pdf', true);
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+        $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
         exit;
     }
 }

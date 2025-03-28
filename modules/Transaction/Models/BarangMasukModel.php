@@ -334,19 +334,19 @@ class BarangMasukModel extends \App\Models\PrModel
         // $builder->select("id");
         // $builder->where("kode_sales_order", $kodeSalesOrder);
         $prms = '';
-        if($params['kode_sales_order']){
+        if(!empty($params['kode_sales_order'])){
             $prms .= " AND so.kode_sales_order = '" . $params['kode_sales_order'] . "'";
         }
 
-        if($params['kode_warna1']){
+        if(!empty($params['kode_warna1'])){
             $prms .= " AND rw1.kode_warna = '" . $params['kode_warna1'] . "'";
         }
 
-        if($params['kode_warna2']){
+        if(!empty($params['kode_warna2'])){
             $prms .= " AND rw2.kode_warna = '" . $params['kode_warna2'] . "'";
         }
 
-        if($params['kode_ukuran']){
+        if(!empty($params['kode_ukuran'])){
             $prms .= " AND rk.kode_ukuran = '" . $params['kode_ukuran'] . "'";
         }
 
@@ -374,15 +374,15 @@ class BarangMasukModel extends \App\Models\PrModel
     function getDataWP($params)
     {
         $prms = '';
-        if($params['id_proses']){
+        if(!empty($params['id_proses'])){
             $prms .= " AND tp.id_proses = " . $params['id_proses'];
         }
 
-        if($params['kode_ukuran']){
+        if(!empty($params['kode_ukuran'])){
             $prms .= " AND rk.kode_ukuran = '" . $params['kode_ukuran'] . "'";
         }
 
-        if($params['ref_id']){
+        if(!empty($params['ref_id'])){
             $prms .= " AND tw.ref_id = " . $params['ref_id'];
         }
 

@@ -469,6 +469,7 @@ class ItemTransfer extends BaseController
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
+
     }
     $html = view($this->views . '\item_transfer_print', $this->data);
 

@@ -354,6 +354,8 @@ $(document).ready(function () {
                             brcStyle.val(data.style)
                             inpp_buyer.html(data.nama)
 
+                            console.log("kolom print", data_row)
+
                             setTimeout(() => {
                                 inpp_trans.html(data.id);
                                 mdlPrint.modal("show");

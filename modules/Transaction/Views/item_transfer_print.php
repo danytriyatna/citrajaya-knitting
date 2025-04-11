@@ -239,6 +239,39 @@
 
         </tbody>
     </table>
+   <?php if(empty($data->nama_operator) ) { ?>
+
+    <br>
+    <table class="table-bordered w-100">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 40px;">No.</th>
+                <th class="text-center" style="width: 25%;">Item Code</th>
+                <th class="text-center" style="width: 30%;">Item Description</th>
+                <th class="text-center" style="width: 15%;">Qty</th>
+                <th class="text-center" style="width: 20%;">Unit</th>
+                <th class="text-center" style="width: 20%;">Lot No</th>
+                <th class="text-center" style="width: 30%;">Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php $i = 1;
+            foreach ($detail as $xrow) : ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td>  <?= $xrow->kode_barang  ?> </td>
+                    <td>  <?= $xrow->nama_barang   ?> </td>
+                    <td class="text-right"><?= $xrow->qty ?></td>
+                    <td class="text-left"><?= $xrow->nama_unit ?></td>
+                    <td class="text-left"><?= $xrow->lot_no ?></td>
+                    <td class="text-left"><?= $xrow->keterangan ?></td>
+                </tr>
+            <?php endforeach ?>
+        </tbody>
+    </table>
+
+   <?php } ?>
+
 
     <table class="w-100">
         <tbody>

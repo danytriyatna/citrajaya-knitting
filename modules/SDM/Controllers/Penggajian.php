@@ -482,7 +482,7 @@ class Penggajian extends BaseController
       $list[$i]->total = $list[$i]->gaji;
       $i++;
     }
-    
+    // dd($list);
     $this->data['detail'] = $list;
     return view($this->views.'\vprint_sdm_all', $this->data);
   }
@@ -519,6 +519,7 @@ class Penggajian extends BaseController
 
     $params_det['id_sdm_gaji'] = $id;
     $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+   
     return view($this->views.'\vprint_sdm_kar', $this->data);
   }
 

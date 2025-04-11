@@ -88,10 +88,14 @@ $(document).ready(function () {
                     } else if (e.target.title === 'edit') {
                         let rowData = cell.getRow().getData();
                         
-                        fmDCoa.val(rowData.coa_id).trigger("change");
+                        
                         fmDJumlah.val(rowData.jumlah);
                         fmDKeterangan.val(rowData.keterangan);
 						fmDSeq.val(rowData.seq);
+
+						setTimeout(() => {
+							fmDCoa.val(rowData.coa_id).trigger("change");
+						}, 500);
 
                         fmDModal.modal("show");
                     }

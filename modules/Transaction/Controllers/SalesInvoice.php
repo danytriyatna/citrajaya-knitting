@@ -852,7 +852,9 @@ class SalesInvoice extends BaseController
     if (!$this->auth->loggedIn()) {
       return redirect()->to('/auth/login');
     }
-    $dompdf = new DompdfGenerator();
+    $dompdf = new \Dompdf\Dompdf();
+    // Set Dompdf options for portrait orientation
+    $dompdf->setPaper('A4', 'portrait');
 
     $this->data['data'] = [];
     if ($id != "") {
@@ -965,7 +967,9 @@ class SalesInvoice extends BaseController
     $html = view($this->views . '\sales_invoice_print', $this->data);
 
 
-    $dompdf->generate($html, 'sales_invoice.pdf', true);
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     exit;
   }
 }

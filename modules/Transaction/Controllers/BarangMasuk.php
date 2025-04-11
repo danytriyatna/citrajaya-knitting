@@ -165,6 +165,7 @@ class BarangMasuk extends BaseController
         if ($id != "") {
             $id = decrypt($id);
             $resData = $this->mRef->getData($id);
+            
             $tanggal = date("d F Y", strtotime($resData->tanggal));
             $resData->tanggal = $tanggal;
             $resData->id_buyer = !empty($resData->id_buyer) ? encrypt($resData->id_buyer) : null;
@@ -236,9 +237,9 @@ class BarangMasuk extends BaseController
 
         $id_proses = $this->request->getPost("id_proses");
         $id_cmt = $this->request->getPost("id_cmt");
-        $jml_qc = $this->request->getPost("jml_qc");
-        $jml_mesin = $this->request->getPost("jml_mesin");
-        $jml_lain = $this->request->getPost("jml_lain");
+        $nomor_mesin = $this->request->getPost("nomor_mesin");
+        $jam_mesin = $this->request->getPost("jam_mesin");
+        $nilai_mesin = $this->request->getPost("nilai_mesin");
 
         $dataProduksi = $this->request->getPost("dataProduksi");
 
@@ -273,9 +274,9 @@ class BarangMasuk extends BaseController
         if($id_kategori == 12){
             $dataHeader['id_proses'] = $id_proses;
             $dataHeader['id_cmt'] = $id_cmt;
-            $dataHeader['jml_qc'] = $jml_qc;
-            $dataHeader['jml_mesin'] = $jml_mesin;
-            $dataHeader['jml_lain'] = $jml_lain;
+            $dataHeader['nomor_mesin'] = $nomor_mesin;
+            $dataHeader['jam_mesin'] = $jam_mesin;
+            $dataHeader['nilai_mesin'] = $nilai_mesin;
         }
 
         if ($id) {

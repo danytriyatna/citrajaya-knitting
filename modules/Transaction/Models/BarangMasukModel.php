@@ -35,7 +35,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->join('ref_operator rp', 'rp.id = uk.id_cmt', 'left');
 
         $builder->select("uk.no_ref_trf,uk.id, uk.id_buyer,uk.status, uk.id_kategori, uk.keterangan, abx.nama_gudang,  uk.tanggal, ebx.nama,
-                          uk.kode_transaksi, dbx.kategori, uk.id_gudang, uk.jml_mesin, uk.jml_qc, uk.jml_lain, uk.id_cmt, uk.id_proses,
+                          uk.kode_transaksi, dbx.kategori, uk.id_gudang, uk.nilai_mesin, uk.nomor_mesin, uk.jam_mesin, uk.id_cmt, uk.id_proses,
                           jp.nama as proses, rp.nama_operator");
 
         if ($id == null or $id == "") {
@@ -429,7 +429,8 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder = $this->db->table("trans_barang_masuk_produksi abx");
 
         $builder->select("abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim");
+                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
+                          (abx.qty - abx.qty_kirim) as qty_sisa");
 
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
 

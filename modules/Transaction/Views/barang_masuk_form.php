@@ -316,17 +316,17 @@
               <div class="row">
                  <div class="col-sm-6">
                       <div class="form-group row">
-                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_qc">Nilai QC</label>
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nomor_mesin">Nomor Mesin</label>
                         <div class="col-md-9">
-                          <input type="number" id="jml_qc" name="jml_qc" class="form-control" placeholder="Nilai QC" value="<?= !empty($resData)? $resData->jml_qc: 0 ?>" >
+                          <input type="text" id="nomor_mesin" name="nomor_mesin" class="form-control" placeholder="Nomor Mesin" value="<?= !empty($resData)? $resData->nomor_mesin: '' ?>" >
                         </div>
                       </div>
                   </div>
                   <div class="col-sm-6">
                       <div class="form-group row">
-                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_lain">Nilai Lain-Lain</label>
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nilai_mesin">Nilai Mesin</label>
                         <div class="col-md-9">
-                          <input type="number" id="jml_lain" name="jml_lain" class="form-control" placeholder="Nilai Lain-Lain" value="<?= !empty($resData)? $resData->jml_lain: 0 ?>" >
+                          <input type="number" id="nilai_mesin" name="nilai_mesin" class="form-control" placeholder="Nilai Lain-Lain" value="<?= !empty($resData)? $resData->nilai_mesin: 0 ?>" >
                         </div>
                       </div>
                   </div>
@@ -335,9 +335,9 @@
             <div class="col-sm-5">
                   <div class="col-sm-12">
                       <div class="form-group row">
-                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jml_mesin">Nilai Mesin</label>
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jam_mesin">Jam Mesin</label>
                         <div class="col-md-9">
-                          <input type="number" id="jml_mesin" name="jml_mesin" class="form-control" placeholder="Nilai Mesin" value="<?= !empty($resData)? $resData->jml_mesin: 0 ?>" >
+                          <input type="number" id="jam_mesin" name="jam_mesin" class="form-control" placeholder="Jam Mesin" value="<?= !empty($resData)? $resData->jam_mesin: 0 ?>" >
                         </div>
                       </div>
                   </div>

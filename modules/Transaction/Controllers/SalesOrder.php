@@ -746,7 +746,7 @@ class SalesOrder extends BaseController
       return $this->response->setStatusCode(400)->setBody("QR Code Failed Generated");
     }
     $data = json_decode((string)$data);
-    $resData = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($data->id);
+    $resData = []; //$this->mSalesOrder->getDataDetailSalesOrderUkuranById($data->id);
 
     try {
 
@@ -801,7 +801,10 @@ class SalesOrder extends BaseController
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
     $save_name  = $warna . '-' . $noSample . '.png';
-    $data_warna = $this->mSalesOrder->getDataDetailSalesOrder($trans);
+
+    // $pr_warna['key_ukuran'] = $ukuran;
+    $pr_warna['id_sales_order_det'] = $trans;
+    $data_warna = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($pr_warna);
     // dd($data);
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
@@ -831,9 +834,7 @@ class SalesOrder extends BaseController
     ];
 
     if (!empty($data_warna)) {
-      $wrn = explode(' - ', $data_warna[0]->colour);
-
-      $data['warna_2'] = !empty($wrn[1]) ? trim($wrn[1]) : '-';
+      $data['warna_2'] = !empty($data_warna[0]->warna_2) ? trim($data_warna[0]->warna_2) : '-';
     }
 
     /* QR Data  */
@@ -860,7 +861,9 @@ class SalesOrder extends BaseController
     if (!$this->auth->loggedIn()) {
       return redirect()->to('/auth/login');
     }
-    $dompdf = new DompdfGenerator();
+    $dompdf = new \Dompdf\Dompdf();
+    // Set Dompdf options for portrait orientation
+    $dompdf->setPaper('A4', 'portrait');
 
     $this->data['data'] = [];
     if ($id != "") {
@@ -886,7 +889,9 @@ class SalesOrder extends BaseController
     $html = view($this->views . '\sales_order_print', $this->data);
 
 
-    $dompdf->generate($html, 'sales_order.pdf', true);
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     exit;
   }
 }

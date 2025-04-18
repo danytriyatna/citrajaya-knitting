@@ -128,6 +128,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $this->db->transStart();
         try {
             $nama = $data['nama'];
+            $tgl_trans = $data['tanggal'];
             unset($data['nama']);
 
             if (!empty($id)) {
@@ -156,6 +157,7 @@ class BarangMasukModel extends \App\Models\PrModel
                     $dataDetail = [
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                         "id_header" => $id,
                         "qty" => $rowData['qty'],
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
@@ -282,7 +284,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "id_ukuran" => $dtProses->id_ukuran,
                                     "id_warna" => $dtSo->id_warna_1,
                                     "id_operator" => $id_cmt,
-                                    "tgl_transaksi" => date('Y-m-d'),
+                                    "tgl_transaksi" => $tgl_trans,//date('Y-m-d'),
                                     "qty" => $xrow['qty'],
                                     "harga" => 0,
                                     "harga_total" => $xrow['amount'],
@@ -323,7 +325,6 @@ class BarangMasukModel extends \App\Models\PrModel
             }
         } catch (\Exception $e) {
             $this->db->transRollback();
-            print_r($e);
             throw $e;
         }
     }

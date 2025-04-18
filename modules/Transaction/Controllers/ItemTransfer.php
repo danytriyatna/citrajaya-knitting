@@ -292,6 +292,8 @@ class ItemTransfer extends BaseController
       $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
       $resDataDetSO = $this->mRefDet->getDataDetSO($id);
 
+      // dd($resDataDetail);
+
       $this->data['resData'] = $resData;
       $this->data['detail'] = json_encode($resDataDetail);
       $this->data['dataSO'] = json_encode($resDataDetSO);
@@ -382,6 +384,11 @@ class ItemTransfer extends BaseController
 
     $data['status'] = true;
     $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
+    // if (!empty($resDataDetSO)) {
+    //   foreach ($resDataDetSO as &$rowData) {
+    //     $rowData->qty_sisa = encrypt($rowData->id_barang);
+    //   }
+    // }
     $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
     return $this->response->setJSON($data);
   }

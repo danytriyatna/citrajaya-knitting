@@ -731,6 +731,15 @@ function submitData(status,message){
             });
         }
     }
+
+    if(selectCMT.val() == "") {
+        return Swal.fire({
+            text: "CMT harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     
 
     Swal.fire({
@@ -1220,6 +1229,10 @@ dtListSO.on("rowClick", function(e, row){
 
 function simpanData(status) {
     const valProduksi = inpRefProduksi.is(':checked') ? 1 : 0;
+
+  
+
+
     $.ajax({
         type: 'POST',
         url: '/trans/item-transfer/save',

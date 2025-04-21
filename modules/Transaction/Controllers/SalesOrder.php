@@ -498,34 +498,43 @@ class SalesOrder extends BaseController
                         $xkuota = 0;
                         $xkuota_tambah = 0;
 
-                        if (!empty($data_detail[0]->gram)) {
-                          $xgram = $data_detail[0]->gram;
-                          $xgram_nd = $xgram * $qty_wodet;
-                          $xkg = $xgram_nd / 1000;
-                          $xloss = $data_detail[0]->loss;
-                          $xkg_loss = ($xkg * $xloss) / 100;
-                          $xtotal = $xkg +  $xkg_loss;
-
-                          $xkuota = $data_detail[0]->kuota;
-                          $xkuota_tambah = $xkuota - $xtotal;
+                        if(!empty($data_detail)) {
+                          if (!empty($data_detail[0]->gram)) {
+                            $xgram = $data_detail[0]->gram;
+                            $xgram_nd = $xgram * $qty_wodet;
+                            $xkg = $xgram_nd / 1000;
+                            $xloss = $data_detail[0]->loss;
+                            $xkg_loss = ($xkg * $xloss) / 100;
+                            $xtotal = $xkg +  $xkg_loss;
+  
+                            $xkuota = $data_detail[0]->kuota;
+                            $xkuota_tambah = $xkuota - $xtotal;
+                          }
+  
+                          $isi_warna = [
+                            'id_walkorder_detail' => $wo_det_id,
+                            'id_warna' => $xrow->$field_name,
+                            'persen'       => $data_detail[0]->persen,
+                            'gram'         => $xgram,
+                            'gram_nd'      => $xgram_nd,
+                            'kg'           => $xkg,
+                            'kg_loss'      => $xkg_loss,
+                            'total'        => $xtotal,
+                            'kuota'        => $xkuota,
+                            'kuota_tambah' => $xkuota_tambah,
+                            'loss'         => $xloss,
+                            'created_at' => date("Y-m-d H:i:s")
+                          ];
+  
+                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                        }else{
+                          $isi_warna = [
+                            'id_walkorder_detail' => $wo_det_id,
+                            'id_warna' => $xrow->$field_name,
+                            'created_at' => date("Y-m-d H:i:s")
+                          ];
+                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
                         }
-
-                        $isi_warna = [
-                          'id_walkorder_detail' => $wo_det_id,
-                          'id_warna' => $xrow->$field_name,
-                          'persen'       => $data_detail[0]->persen,
-                          'gram'         => $xgram,
-                          'gram_nd'      => $xgram_nd,
-                          'kg'           => $xkg,
-                          'kg_loss'      => $xkg_loss,
-                          'total'        => $xtotal,
-                          'kuota'        => $xkuota,
-                          'kuota_tambah' => $xkuota_tambah,
-                          'loss'         => $xloss,
-                          'created_at' => date("Y-m-d H:i:s")
-                        ];
-
-                        $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
                       }
                     }
                   } else {

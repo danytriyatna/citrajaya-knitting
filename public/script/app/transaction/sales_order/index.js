@@ -357,7 +357,7 @@ $(document).ready(function () {
                             console.log("kolom print", data_row)
 
                             setTimeout(() => {
-                                inpp_trans.html(data.id);
+                                inpp_trans.html(data_row.id);
                                 mdlPrint.modal("show");
                             }, 500);
                         } 

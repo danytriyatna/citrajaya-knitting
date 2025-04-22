@@ -805,7 +805,7 @@ class SalesOrder extends BaseController
     $trans = $this->request->getGet("trans");
     $style = $this->request->getGet("style");
 
-    $trans = decrypt($trans);
+    // $trans = decrypt($trans);
     /* Data */
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
@@ -814,7 +814,8 @@ class SalesOrder extends BaseController
     // $pr_warna['key_ukuran'] = $ukuran;
     $pr_warna['id_sales_order_det'] = $trans;
     $data_warna = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($pr_warna);
-    // dd($data);
+    // dd($trans);
+    // dd($data_warna);
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
     if (!file_exists($dir)) {
@@ -862,6 +863,7 @@ class SalesOrder extends BaseController
 
     $this->data["data"] = $data;
     $this->data["fileName"] = $save_name;
+    // dd($this->data);
     return view($this->views . '\vprint_qrcode', $this->data);
   }
 
@@ -895,6 +897,8 @@ class SalesOrder extends BaseController
       $this->data['ukuran'] = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }
+
+    
     $html = view($this->views . '\sales_order_print', $this->data);
 
 

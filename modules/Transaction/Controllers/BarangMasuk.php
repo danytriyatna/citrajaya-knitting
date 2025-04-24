@@ -215,7 +215,7 @@ class BarangMasuk extends BaseController
         ];
         $dataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
         $this->data['operator']    = $dataOperator;
-
+        // dd($this->data);
         return view($this->views . '\barang_masuk_form', $this->data);
     }
 

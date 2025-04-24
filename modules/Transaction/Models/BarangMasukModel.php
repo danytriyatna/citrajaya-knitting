@@ -236,12 +236,13 @@ class BarangMasukModel extends \App\Models\PrModel
                     $id_proses = $data['id_proses'];
                     $id_cmt = $data['id_cmt'];
                     $kode_transaksi = $hedr_data->kode_transaksi;
+                    $i = 0;
                     foreach ($dataProduksi as $xrow) {
                         
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
                         $xpr['kode_ukuran'] = $xrow['kode_ukuran'];
 
-                        $clr = explode('-', $xrow['color']);
+                        $clr = explode('~', $xrow['color']);
 
                         $xpr['kode_warna1'] = $clr[0];
                         if(!empty($clr[1])){
@@ -249,6 +250,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         }
 
                         $dtSo = $this->getDataSO($xpr);
+                        
                         $idSo = !empty($dtSo) ? $dtSo->id_sales_order : 0;
 
                         $dataDetail = [
@@ -272,7 +274,6 @@ class BarangMasukModel extends \App\Models\PrModel
                             $xp['kode_ukuran'] = $xrow['kode_ukuran'];
                             $xp['ref_id'] = $idSo;
                             $dtProses = $this->getDataWP($xp);
-
                             // if(!empty($dtProses)){
                                 $idProduksi = $this->getDataProduksiByIdWalkorder($dtProses->id_walkorder)->id;
                                 // insert data produksi
@@ -309,6 +310,8 @@ class BarangMasukModel extends \App\Models\PrModel
 
                                 $this->updateRecord('trans_walkorder_proses_ukuran', $upd, 'id', $id_wop);
                             // }
+
+                            $i++;
                         }
                     }
                 }

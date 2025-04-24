@@ -176,7 +176,7 @@ class ItemTransferModel extends \App\Models\PrModel
         
         $builder->select("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, tu.id_sales_order,
                             so.kode_sales_order,so.id_konsumen,so.deskripsi,so.style,SUM(tu.harga_satuan) AS amount, 
-                            SUM(tu.qty) AS qty, CASE WHEN ebx.kode_warna IS NOT NULL THEN CONCAT(dbx.kode_warna,'-',ebx.kode_warna) ELSE dbx.kode_warna END AS color,
+                            SUM(tu.qty) AS qty, CASE WHEN ebx.kode_warna IS NOT NULL THEN CONCAT(dbx.kode_warna,'~',ebx.kode_warna) ELSE dbx.kode_warna END AS color,
                             fbx.nama AS buyer");
         
         if ($id == null or $id == "") {

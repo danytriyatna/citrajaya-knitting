@@ -120,4 +120,20 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getDataDetail($idHeader = null)
+    {
+        $builder = $this->db->table($this->table . " abx");
+
+        $builder->select("abx.id as id_detail, abx.id_barang, abx.qty, abx.qty as qty_exist, abx.lot_id, abx.lot_no, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan as nama_unit, abx.price");
+        $builder->join("ref_barang cbx", "abx.id_barang = cbx.id", "inner");
+        $builder->join("ref_satuan sbx", "cbx.id_satuan = sbx.id", "inner");
+
+        $builder->where("abx.id_header", $idHeader);
+        $builder->orderBy('abx.id', "DESC");
+        $this->_data = $builder->get()->getResult();
+
+
+        return $this->_data;
+    }
 }

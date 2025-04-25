@@ -21,6 +21,7 @@ class BarangKeluar extends BaseController
     protected $mBarang;
     protected $mRef;
     protected $mRefDet;
+    protected $mRefDetSO;
     protected $mJenisBarang;
     protected $mSatuan;
     protected $mBarangMasuk;
@@ -39,6 +40,7 @@ class BarangKeluar extends BaseController
         $this->mSatuan = new SatuanModel();
         $this->mBarangMasuk = new IncomingGoodsModel();
         $this->mRefDet = new BarangKeluarDetailModel();
+        $this->mRefDetSO = new ItemTransferDetailModel();
         $this->mRef = new BarangKeluarModel();
         $this->mGudang = new GudangModel();
         $this->mTrf = new ItemTransferModel();

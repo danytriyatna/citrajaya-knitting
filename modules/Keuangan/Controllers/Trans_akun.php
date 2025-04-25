@@ -161,6 +161,7 @@ class Trans_akun extends BaseController
         $stdData->trans_akun_date = date("d-m-Y");
         $stdData->trans_akun_kode = '';
         $stdData->ref_rekening_id = '';
+        $stdData->ref_so_sp = '';
         $stdData->keterangan = '';
         $Ldetail = '';
         
@@ -187,6 +188,7 @@ class Trans_akun extends BaseController
 		{
             $stdData->trans_akun_date = trim($this->request->getPost('trans_akun_date'));
             $stdData->ref_rekening_id = trim($this->request->getPost('ref_rekening_id'));
+            $stdData->ref_so_sp = trim($this->request->getPost('ref_so_sp'));
             $stdData->keterangan = trim($this->request->getPost('keterangan'));
             $Ldetail = trim($this->request->getPost('Ldetail'));
 
@@ -194,6 +196,7 @@ class Trans_akun extends BaseController
             $this->validation->setRules([
                 'trans_akun_date' => ['label' => 'Tanggal', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 'ref_rekening_id' => ['label' => 'Kas/Bank', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
+                'ref_so_sp' => ['label' => 'Ref. SO/Sampel', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 'Ldetail' => ['label' => 'Detail', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 // 'no_hp' => ['label' => 'No. Telp.', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()]
             ]);
@@ -204,6 +207,7 @@ class Trans_akun extends BaseController
                 $dataIn['trans_akun_date'] = !empty($stdData->trans_akun_date)? fdate_ind_to_eng($stdData->trans_akun_date) : "";
                 // $dataIn['coa_parent_id'] = !empty($stdData->coa_parent_id) ? $stdData->coa_parent_id : null;
                 $dataIn['ref_rekening_id'] = $stdData->ref_rekening_id;
+                $dataIn['ref_so_sp'] = $stdData->ref_so_sp;
                 $dataIn['keterangan'] = $stdData->keterangan;
 
                 $dtDet = \json_decode($Ldetail);
@@ -237,9 +241,14 @@ class Trans_akun extends BaseController
         }
 
         $dt_rek = $this->mrekening->getData(null, 0, 999);
+        $dt_so_sp = $this->mtrans_akun->get_nomor_sample_dan_sales(null, 0, 999);
         $list_rekening[''] = 'Pilih Rekening';
         foreach ($dt_rek as $r) {
             $list_rekening[$r->id] = $r->rekening_no ." - ". $r->rekening_bank;
+        }
+        $list_so_sp[''] = 'Pilih Referensi';
+        foreach ($dt_so_sp as $r) {
+            $list_so_sp[$r->nomor] = $r->nomor;
         }
         $this->data['ref_rekening_id'] = array(
             'name' => 'ref_rekening_id',
@@ -272,10 +281,18 @@ class Trans_akun extends BaseController
             'id' => 'keterangan',
             'name'  => 'keterangan',
             'type' => 'text',
-            'rows' => '5',
+            'rows' => '3',
             'class' => 'form-control',
             'placeholder' => 'Keterangan',
             'value' => set_value('keterangan', $stdData->keterangan)
+        );
+
+        $this->data['ref_so_sp'] = array(
+            'name' => 'ref_so_sp',
+            'id' => 'ref_so_sp',
+            'value' => set_value('ref_so_sp', $stdData->ref_so_sp),
+            'options' => $list_so_sp,
+            'class' => 'form-control'
         );
 
         $this->data['Ldetail'] = array(

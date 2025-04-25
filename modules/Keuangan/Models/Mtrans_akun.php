@@ -18,7 +18,7 @@ class Mtrans_akun extends PrModel
     function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $builder = $this->db->table($this->table.' a');
-        $builder->select("a.id as trans_akun_id, a.trans_akun_date, a.trans_akun_kode, a.ref_rekening_id, a.keterangan,
+        $builder->select("a.id as trans_akun_id, a.trans_akun_date, a.trans_akun_kode, a.ref_rekening_id, a.keterangan, a.ref_so_sp,
                           b.rekening_no, b.rekening_bank, a.total");
 
         $builder->join('ref_rekening b', "a.ref_rekening_id = b.id", "left");
@@ -133,5 +133,23 @@ class Mtrans_akun extends PrModel
 
         $this->_data = $builder->get()->getResult();
         return $this->_data;
+    }
+
+    public function get_nomor_sample_dan_sales()
+    {
+        // Ambil kode_sample dari tabel sample
+        $builderSample = $this->db->table('trans_sample');
+        $builderSample->select('kode_sample AS nomor');
+        $querySample = $builderSample->getCompiledSelect();
+
+        // Ambil kode_sales_order dari tabel sales
+        $builderSales = $this->db->table('trans_sales_order');
+        $builderSales->select('kode_sales_order AS nomor');
+        $querySales = $builderSales->getCompiledSelect();
+
+        // Gabungkan dengan UNION
+        $queryGabungan = $this->db->query("$querySample UNION $querySales");
+
+        return $queryGabungan->getResult(); // Atau getResultArray() kalau mau array
     }
 }

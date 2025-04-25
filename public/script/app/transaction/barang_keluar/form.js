@@ -226,9 +226,8 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     selectable: false,
 });
 
-
 let searchThreadBarang = null;
-let elSearchBarang = $("#tb-search");
+let elSearchBarang = $("#tb-search3");
 if (elSearchBarang != null) {
     elSearchBarang.on("keyup", function (e) {
         if ($(this).val().length < 3 && e.keyCode > 13) {
@@ -441,6 +440,10 @@ let dtListSO = new Tabulator("#dt-list-sample", {
             title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
             width: "15%",hozAlign:"center",
         },
+        {
+            title: 'ID Gudang Tujuan', field: 'id_gudang_tujuan', formatter : "html", align: "center", headerSort:false,
+            width: "15%",hozAlign:"center", visible:false
+        },
     ],
     
     locale: 'id',    
@@ -490,16 +493,31 @@ let dtListSO = new Tabulator("#dt-list-sample", {
     },
 });
 
+let searchThreadSO = null;
+let elSearchSO = $("#tb-search-so");
+if (elSearchSO != null) {
+    elSearchSO.keyup(function (e) {
+        if ($(this).val().length < 3 && e.keyCode > 13) {
+            return;
+        }
+        clearTimeout(searchThreadSO);
+        searchThreadSO = setTimeout(function () {
+            dtListSO.setFilter("", "like", elSearchSO.val());
+        }, 600);
+    });
+}
+
 dtListSO.on("rowClick", function(e, row){
     inpNoRefTrf.val(row.getData().kode_transaksi)
         $.ajax({
             url: `/trans/item-transfer/data-so?noSO=${row.getData().kode_transaksi}`,
             type: 'GET',
             dataType: 'json', 
-            success: function(data) {
-                
+            success: function(data) {   
+                selectGudang.val(row.getData().id_gudang_tujuan).trigger("change");
                 if(data.status){
                     dtList.setData(data.dataSO)
+                    dtListDetail.setData(data.dataSODet)
                 }
                
             },
@@ -760,11 +778,16 @@ function openModalDetail(row = null){
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
-        inpPrice.val(formatRupiah(data.price.toString()))
+        if (data.price != null && data.price != undefined) {
+            inpPrice.val(formatRupiah(data.price.toString()))
+        } else {
+            inpPrice.val(formatRupiah("0"))
+        }
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
         inpIdLot.val(data.lot_id)
         inpQtyExist.val(data.qty_exist)
+        inpKodeBarang.val(data.kode_barang)
     } else{
         inpBarang.val("")
         inpIdBarang.val("")

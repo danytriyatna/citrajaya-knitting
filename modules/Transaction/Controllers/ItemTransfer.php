@@ -128,7 +128,8 @@ class ItemTransfer extends BaseController
           "gudang_tujuan" => $row->gudang_tujuan,
           "nama_operator" => !empty($row->nama_operator) ? $row->nama_operator : "NON CMT",
           "keterangan" => $row->keterangan,
-          "status" => $status
+          "status" => $status,
+          "id_gudang_tujuan" =>  $row->id_gudang_tujuan
         )
       );
     }
@@ -384,12 +385,14 @@ class ItemTransfer extends BaseController
 
     $data['status'] = true;
     $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
+    $resDataDetSODet = !empty($results) ? $this->mRefDet->getDataDetail($results->id) : null;
     // if (!empty($resDataDetSO)) {
     //   foreach ($resDataDetSO as &$rowData) {
     //     $rowData->qty_sisa = encrypt($rowData->id_barang);
     //   }
     // }
     $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
+    $data['dataSODet'] = !empty($resDataDetSODet) ? $resDataDetSODet : null;
     return $this->response->setJSON($data);
   }
 

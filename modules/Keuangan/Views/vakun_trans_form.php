@@ -78,7 +78,14 @@
                             <?= (isset($keterangan) && !empty($keterangan)) ? form_textarea($keterangan) : ""; ?>
                           </div>
                         </div>
+                        <div class="form-group row">
+                          <label class="control-label text-start text-md-end col-md-4" for="ref_so_sp">Ref. SO/Sampel</label>
+                          <div class="col-md-8">
+                            <?= (isset($ref_so_sp) && !empty($ref_so_sp)) ? form_dropdown($ref_so_sp) : ""; ?>
+                          </div>
+                        </div>
                       </div>
+                      
                     </div>
 
                     <div class="row">

@@ -628,14 +628,14 @@ dtListProduksiRef.on("rowClick", function(e, row){
 
     let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
 
-    if (list_verif.length > 0) {
-        return Swal.fire({
-            text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
+    // if (list_verif.length > 0) {
+    //     return Swal.fire({
+    //         text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
 
     dtListProduksi.addRow(data);
     modalRefpo.modal("hide");

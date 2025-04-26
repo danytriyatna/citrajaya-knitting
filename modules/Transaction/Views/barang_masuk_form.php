@@ -98,7 +98,7 @@
           <div class="col-md-12 mb-3">
             <div class="col-md-4" style="float: right; position: relative; right: 15px;">
               <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
-                <input type="text" id="tb-search3" class="form-control" placeholder="Pencarian . . .">
+                <input type="text" id="tb-search-barang" class="form-control" placeholder="Pencarian . . .">
               </div>
             </div>
           </div>

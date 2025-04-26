@@ -223,7 +223,7 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
 
 
 let searchThreadBarang = null;
-let elSearchBarang = $("#tb-search");
+let elSearchBarang = $("#tb-search-barang");
 if (elSearchBarang != null) {
     elSearchBarang.on("keyup", function (e) {
         if ($(this).val().length < 3 && e.keyCode > 13) {
@@ -666,7 +666,7 @@ inpLotNo.keyup(function (e){
         });
     } 
 
-    checkLotNo(e.target.value)
+    // checkLotNo(e.target.value)
 })
 
 

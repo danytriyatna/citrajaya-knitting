@@ -239,7 +239,7 @@ class BarangMasukModel extends \App\Models\PrModel
                     $kode_transaksi = $hedr_data->kode_transaksi;
                     $i = 0;
                     foreach ($dataProduksi as $xrow) {
-                        
+                        $xpr = [];
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
                         $xpr['kode_ukuran'] = $xrow['kode_ukuran'];
 

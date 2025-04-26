@@ -1025,8 +1025,8 @@ function openModalDetail(row = null){
 
 let dtListSO = new Tabulator("#dt-list-sample", {
     columns: [
-        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
-        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        
+        // {title: "No.SO", field: "kode_sales_order", width: "20%"},
         {title: "Style", field: "style", width: "20%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         // {title: "Buyer", field: "buyer", width: "20%"},
@@ -1040,7 +1040,7 @@ let dtListSO = new Tabulator("#dt-list-sample", {
         //     precision: 0,   // Tidak ada desimal
         // }},
     ],
-    
+    groupBy: ['kode_sales_order'],
     locale: 'id',    
     ajaxURL: "/trans/item-transfer/list-so",
     ajaxConfig: "POST",

@@ -161,6 +161,25 @@
     </div>
   </div>
 </div>
+
+
+<div id="modal-ref-po" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">List Purchase Order</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="row">
+          <div id="dt-list-refpo" class="table-responsive table-striped"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>
@@ -234,6 +253,7 @@
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">No. Transfer</label>
                     <div class="col-md-9">
                       <div class="input-group">
+                        <input type="hidden" name="id_ref_transfer" id="id_ref_transfer">
                         <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="<?= !empty($resData) ? $resData->no_ref_trf : "" ?>">
                         <span class="input-group-text bg-white" id="ic_ref_transfer"><i class="ti-search"></i></span>
                       </div>
@@ -313,7 +333,7 @@
 
                  
               </div>
-              <div class="row">
+              <div hidden class="row">
                  <div class="col-sm-6">
                       <div class="form-group row">
                         <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nomor_mesin">Nomor Mesin</label>
@@ -332,12 +352,22 @@
                   </div>
               </div>
             </div>
-            <div class="col-sm-5">
+            <div hidden class="col-sm-5">
                   <div class="col-sm-12">
                       <div class="form-group row">
                         <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jam_mesin">Jam Mesin</label>
                         <div class="col-md-9">
                           <input type="number" id="jam_mesin" name="jam_mesin" class="form-control" placeholder="Jam Mesin" value="<?= !empty($resData)? $resData->jam_mesin: 0 ?>" >
+                        </div>
+                      </div>
+                  </div>
+            </div>
+
+            <div class="col-sm-5">
+                  <div class="col-sm-12">
+                      <div class="form-group row">
+                        <div class="col-md-9">
+                          <button class="btn btn-primary btn-sm" type="button" id="btn-ref-po" >Tambah Detail Produksi <i class="fa fa-plus"></i></button>
                         </div>
                       </div>
                   </div>

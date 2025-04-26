@@ -147,6 +147,7 @@ class BarangMasukModel extends \App\Models\PrModel
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 
+            // print_r($dataProduksi);exit;
             if(!empty($detail)){
                 foreach ($detail as $rowData) {
                     if ($rowData['id_barang'] != "") {
@@ -265,6 +266,10 @@ class BarangMasukModel extends \App\Models\PrModel
                             "kode_sales_order" => $xrow['kode_sales_order'],
                             "kode_ukuran" => $xrow['kode_ukuran'],
                             "amount" => !empty($xrow['amount']) ? $xrow['amount'] : 0,
+                            "nomor_mesin" => !empty($xrow['nomor_mesin']) ? $xrow['nomor_mesin'] : '-',
+                            "tgl_transaksi" => !empty($xrow['tgl_transaksi']) ? $xrow['tgl_transaksi'] : null,
+                            "jam_mesin" => !empty($xrow['jam_mesin']) ? $xrow['jam_mesin'] : 0,
+                            "nilai_mesin" => !empty($xrow['nilai_mesin']) ? $xrow['nilai_mesin'] : 0,
                         ];
         
                         $this->insertRecordGetid('trans_barang_masuk_produksi', $dataDetail);
@@ -434,6 +439,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
         $builder->select("abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
                           abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
+                          abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin,
                           (abx.qty - abx.qty_kirim) as qty_sisa");
 
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");

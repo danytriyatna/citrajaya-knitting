@@ -255,8 +255,10 @@ class ItemTransfer extends BaseController
       array_push(
         $build_array["data"],
         array(
+          "tipe" => $row->tipe,
+          "tipe_text" => $row->tipe_text,
           "id_konsumen" => $row->id_konsumen,
-          "kode_sales_order" => $row->kode_sales_order,
+          "kode_sales_order" => $row->kode_transaksi,
           "style" => $row->style,
           "deskripsi" => $row->deskripsi,
           "buyer" => $row->buyer,

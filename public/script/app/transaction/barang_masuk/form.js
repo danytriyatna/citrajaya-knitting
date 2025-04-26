@@ -24,6 +24,7 @@ let btnApprove = $('#btn-approve');
 let btnSimpanDetail = $('#btn-simpan-det');
 let btnView = $('#ic_ref_transfer');
 let inpNoRefTrf = $('#no_ref_transfer');
+const inpIdRefTrf = $("#id_ref_transfer");
 let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
@@ -363,37 +364,60 @@ const inpOperator = $("#nama_operator");
 const inpIdCmt = $("#id_cmt");
 
 
-
+let refData = [];
 dtListSO.on("rowClick", function(e, row){
         const xdata = row.getData();
         
+        // console.log("data", xdata)
+
         inpNoRefTrf.val(xdata.kode_transaksi)
+        inpIdRefTrf.val(xdata.id)
         inpProses.val(xdata.proses);
         inpIdproses.val(xdata.id_proses);
 
         inpOperator.val(xdata.nama_operator);
         inpIdCmt.val(xdata.id_cmt);
 
-
-        $.ajax({
-            url: `/trans/item-transfer/data-so?noSO=${xdata.kode_transaksi}`,
-            type: 'GET',
-            dataType: 'json', 
-            success: function(data) {
-                
-                if(data.status){
-                    dtList.setData(data.dataSO);
-                    dtListProduksi.setData(data.dataSO);
-                }
-               
-            },
-            error: function(xhr, status, error) {
-                console.error('Error fetching data:', error);
-            }
-        });
+        setTimeout(() => {
+            loadDataSo();
+        }, 500);
+       
 
     $("#modal-so").modal("hide");
 })
+
+
+// load data som
+function loadDataSo() { 
+    const kode_transaksi = inpNoRefTrf.val();
+    $.ajax({
+        url: `/trans/item-transfer/data-so?noSO=${kode_transaksi}`,
+        type: 'GET',
+        dataType: 'json', 
+        success: function(data) {
+            
+            if(data.status){
+                if(selectKategori.val() != 12){
+                    refData = [];
+                    dtList.setData(data.dataSO);
+                    dtListProduksi.setData(data.dataSO);
+                }else{
+                    refData = data.dataSO
+                }
+            }
+           
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+}
+
+setTimeout(() => {
+    if(selectKategori.val() == 12){
+        loadDataSo();
+    }
+}, 500);
 
 
 let buttonRowAction = function(cell) {
@@ -531,9 +555,25 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "20%"},
-        {title: "Qty", field: "qty_kirim", width: "20%"},
-        {title: "Qty Terima", field: "qty", width: "20%", editor: "number"},
-        {title: "Ukuran", field: "kode_ukuran", width: "20%"},
+        {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
+                format:"dd-MM-yyyy",
+                alignEmptyValues:"top",
+            },
+            editor: "date"
+        },
+        {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
+        {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
+        {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
+            formatterParams: {
+                decimal: ",",
+                thousand: ".",
+                symbol: "Rp",  // Simbol mata uang Rupiah
+                precision: 0,   // Tidak ada desimal
+            }
+        },
+        {title: "Qty", field: "qty_kirim", width: "15%"},
+        {title: "Qty Terima", field: "qty", width: "10%", editor: "number"},
+        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
         {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
             decimal: ",",
             thousand: ".",
@@ -544,6 +584,62 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
     placeholder: "Tidak ada data",
 });
 
+
+
+const modalRefpo = $("#modal-ref-po");
+const btnRefPo = $("#btn-ref-po");
+const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
+    pagination: true, 
+    paginationSize: 10,
+    paginationButtonCount: 5,
+    columns: [
+        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
+        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        {title: "Style", field: "style", width: "20%"},
+        {title: "Deskripsi", field: "deskripsi", width: "20%"},
+        {title: "Buyer", field: "buyer", width: "20%"},
+        {title: "Colour", field: "color", width: "15%"},
+        {title: "Qty", field: "qty_kirim", width: "15%"},
+        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
+    ],
+    placeholder: "Tidak ada data",
+});
+
+
+btnRefPo.on("click", function(e) { 
+    e.preventDefault();
+
+    if(refData.length == 0) { 
+        return Swal.fire({
+            text: "Referensi transfer barang harus dipilih",
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    dtListProduksiRef.setData(refData);
+
+    modalRefpo.modal("show");
+})
+
+dtListProduksiRef.on("rowClick", function(e, row){
+    const data = row._row.data
+    let produksi_data = dtListProduksi.getData();
+
+    let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
+
+    if (list_verif.length > 0) {
+        return Swal.fire({
+            text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    dtListProduksi.addRow(data);
+    modalRefpo.modal("hide");
+})
 
 
 if(dataSO.length > 0){
@@ -666,7 +762,28 @@ spanBarang.click(function () {
 });
 divRefProduk.hide();
 selectKategori.on("change",function(e){
-    var nilai = e.target.value;
+    const nilai = e.target.value;
+
+    const dtProduksi = dtListProduksi.getData().length
+    if(dtProduksi > 0){
+        Swal.fire({
+            title: "Apakah Anda yakin ingin mengubah tipe transaksi?",
+            text: "Data produksi yang sudah ada akan dihapus.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, ubah",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6C757D"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dtListProduksi.setData([]);
+                dtList.setData([]);
+            } else {
+                return false;
+            }
+        });
+    }
 
     divNamaKonsumen.addClass("d-none")
     divDetail.show();

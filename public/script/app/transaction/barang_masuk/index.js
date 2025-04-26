@@ -25,6 +25,15 @@ $(document).ready(function () {
 				title: 'WAREHOUSE', field: 'nama_gudang', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
                 width: "20%", 
 			} ,
+            {
+				title: 'PROSES', field: 'proses', formatter : "html", align: "left", headerSort:false,
+                width: "8%",hozAlign:"left",
+			},
+
+            {
+				title: 'CMT', field: 'nama_operator', formatter : "html", align: "left", headerSort:false,
+                width: "15%",hozAlign:"left",
+			},
 
 
             {

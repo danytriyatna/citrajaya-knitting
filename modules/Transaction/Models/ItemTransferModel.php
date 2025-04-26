@@ -165,37 +165,29 @@ class ItemTransferModel extends \App\Models\PrModel
 
     function getUkuranTrans($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
-        $builder = $this->db->table('trans_sales_order_ukuran tu');
+        $builder = $this->db->table('v_all_transaksi tu');
         
-        $builder->join('trans_sales_order_det td', 'td.id = tu.id_sales_order_det', 'inner');
-        $builder->join("trans_sales_order" . " so", "td.id_sales_order = so.id", "inner");
-        $builder->join('ref_ukuran rk', 'tu.id_ukuran = rk.id', 'inner');
-        $builder->join("ref_warna" . " dbx", "td.id_warna_1 = dbx.id", "left");
-        $builder->join("ref_warna" . " ebx", "td.id_warna_2 = ebx.id", "left");
-        $builder->join("ref_konsumen" . " fbx", "fbx.id = so.id_konsumen", "left");
-        
-        $builder->select("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, tu.id_sales_order,
-                            so.kode_sales_order,so.id_konsumen,so.deskripsi,so.style,SUM(tu.harga_satuan) AS amount, 
-                            SUM(tu.qty) AS qty, CASE WHEN ebx.kode_warna IS NOT NULL THEN CONCAT(dbx.kode_warna,'~',ebx.kode_warna) ELSE dbx.kode_warna END AS color,
-                            fbx.nama AS buyer");
+        $builder->select("  tu.tipe, tu.tipe_text,
+                            tu.id_ukuran, tu.key_ukuran, tu.kode_ukuran, tu.id_header,
+                            tu.kode_transaksi,tu.id_konsumen,tu.deskripsi,tu.style,tu.amount, 
+                            tu.qty, tu.color,
+                            tu.buyer");
         
         if ($id == null or $id == "") {
-            $builder->where('so.active = 1');
-            $builder->where('so.status = 2');
+            
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
-                $builder->Where('LOWER(so.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(so.style) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(so.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(dbx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(ebx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->Where('LOWER(tu.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(tu.style) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(tu.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(tu.color) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
-            $builder->groupBy("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, tu.id_sales_order,so.style,so.id_konsumen,so.kode_sales_order,so.deskripsi,dbx.kode_warna,ebx.kode_warna,fbx.nama");
+            
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
-                $builder->orderBy('so.kode_sales_order')->orderBy('color')->orderBy('rk.kode_ukuran');
+                $builder->orderBy('tu.tgl_transaksi');
             }
 
             if (empty($offset)) $offset = 0;
@@ -242,32 +234,19 @@ class ItemTransferModel extends \App\Models\PrModel
 
     function getDataSOUkuranCnt($filters = null, $params = null)
     {
-        $builder = $this->db->table('trans_sales_order_ukuran tu');
+        $builder = $this->db->table('v_all_transaksi tu');
         
-        $builder->join('trans_sales_order_det td', 'td.id = tu.id_sales_order_det', 'inner');
-        $builder->join("trans_sales_order" . " so", "td.id_sales_order = so.id", "inner");
-        $builder->join('ref_ukuran rk', 'tu.id_ukuran = rk.id', 'inner');
-        $builder->join("ref_warna" . " dbx", "td.id_warna_1 = dbx.id", "left");
-        $builder->join("ref_warna" . " ebx", "td.id_warna_2 = ebx.id", "left");
-        $builder->join("ref_konsumen" . " fbx", "fbx.id = so.id_konsumen", "left");
-        $builder->where('so.active = 1');
-        $builder->where('so.status = 2');
-        $builder->select("count(tu.id_ukuran) as _cnt");
-
+        $builder->select("count(1) as _cnt");
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
-            $builder->Where('LOWER(so.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(so.style) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(so.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(dbx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(ebx.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->Where('LOWER(tu.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(tu.style) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(tu.deskripsi) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(tu.color) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }
-        $builder->groupBy("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, tu.id_sales_order,so.style,so.kode_sales_order,so.deskripsi,dbx.kode_warna,ebx.kode_warna,fbx.nama");
-        $query = $builder->get()->getResult();
-        $count = count($query);
-        // $this->_data = $builder->get()->getRow()->_cnt;
-        $this->_data = $count;
+
+        $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;
     }

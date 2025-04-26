@@ -146,6 +146,8 @@ class BarangMasuk extends BaseController
                     "kategori" => $row->kategori,
                     "nama_gudang" => $row->nama_gudang,
                     "keterangan" => $row->keterangan,
+                    "proses" => $row->proses,
+                    "nama_operator" => $row->nama_operator,
                     "status" => $status
                 )
             );
@@ -273,7 +275,7 @@ class BarangMasuk extends BaseController
 
         if($id_kategori == 12){
             $dataHeader['id_proses'] = $id_proses;
-            $dataHeader['id_cmt'] = $id_cmt;
+            $dataHeader['id_cmt'] = !empty($id_cmt) ? $id_cmt : -11 ;
             $dataHeader['nomor_mesin'] = $nomor_mesin;
             $dataHeader['jam_mesin'] = $jam_mesin;
             $dataHeader['nilai_mesin'] = $nilai_mesin;

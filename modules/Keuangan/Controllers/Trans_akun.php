@@ -196,7 +196,7 @@ class Trans_akun extends BaseController
             $this->validation->setRules([
                 'trans_akun_date' => ['label' => 'Tanggal', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 'ref_rekening_id' => ['label' => 'Kas/Bank', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
-                'ref_so_sp' => ['label' => 'Ref. SO/Sampel', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
+                // 'ref_so_sp' => ['label' => 'Ref. SO/Sampel', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 'Ldetail' => ['label' => 'Detail', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()],
                 // 'no_hp' => ['label' => 'No. Telp.', 'rules' => 'required', 'errors' =>  $this->validation_msg_error()]
             ]);

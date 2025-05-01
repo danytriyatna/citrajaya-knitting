@@ -90,4 +90,29 @@ class LaporanPersediaan extends BaseController
 
         return $this->response->setJSON($build_array);
     }
+
+    public function getUpdateDataLaporanPersediaan()
+    {
+
+        $build_array = [];
+        $build_array["code"] = 200;
+        $build_array["status"] = false;
+
+        $idJenisBarang = $this->request->getGet('filter_jenis_id');
+
+        $filter_gudang = $this->request->getGet('filter_gudang_id');
+
+        $tahun = $this->request->getGet('tahun');
+        $bulan = $this->request->getGet('bulan');
+
+        $resUpdate = $this->mLaporan->updateDataHistory($idJenisBarang, $filter_gudang, $tahun, $bulan);
+
+        $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);
+
+        $build_array["message"] = "Data ditemukan";
+        $build_array["data"] =  !empty($resData) ? $resData : [];
+        $build_array["status"] = true;
+
+        return $this->response->setJSON($build_array);
+    }
 }

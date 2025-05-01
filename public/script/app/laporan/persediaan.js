@@ -6,6 +6,7 @@ let dtList = new Tabulator("#dt-list", {
     columns:[
         {title:"LOT", field:"lot_no", width:"15%"},
         {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"15%"},
+        {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"15%"},
         {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"15%"},
         {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"15%"},
         {title:"Qty<br>Akhir", field:"saldo_akhir", hozAlign:"right",width:"15%"},
@@ -180,3 +181,55 @@ $("#btn-tampilkan").click(function () {
         }
     });
   }
+
+  $("#updateData").click(function () {
+    if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
+      Swal.fire({
+        title: 'Warning',
+        text: 'Tahun,Bulan & Gudang harus dipilih',
+        icon: 'warning',
+      })
+      return false    
+    }
+    getUpdateDataLaporan()
+  });
+
+  function getUpdateDataLaporan(){
+    $.ajax({
+        url: `/laporan/persediaan/update-list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`,
+        type: 'GET',
+        dataType: 'json', 
+        success: function(data) {
+            
+            dtList.setData(data.data)
+    
+            setTimeout(() => {
+                dtList.redraw(true)
+            }, 500);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectBulan = document.getElementById("filter_bulan");
+    const selectTahun = document.getElementById("filter_tahun");
+
+    const now = new Date();
+    const bulanSekarang = now.getMonth() + 1; // getMonth() = 0–11
+    const tahunSekarang = now.getFullYear();
+
+    // Set bulan jika opsi tersedia
+    if (selectBulan.querySelector(`option[value="${bulanSekarang}"]`)) {
+      selectBulan.value = bulanSekarang;
+      selectBulan.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Set tahun jika opsi tersedia
+    if (selectTahun.querySelector(`option[value="${tahunSekarang}"]`)) {
+      selectTahun.value = tahunSekarang;
+      selectTahun.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });

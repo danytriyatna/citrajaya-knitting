@@ -279,8 +279,22 @@ class BarangMasukModel extends \App\Models\PrModel
                             $xp['kode_ukuran'] = $xrow['kode_ukuran'];
                             $xp['ref_id'] = $idSo;
                             $dtProses = $this->getDataWP($xp);
-                            // if(!empty($dtProses)){
+                            if(!empty($dtProses)){
                                 $idProduksi = $this->getDataProduksiByIdWalkorder($dtProses->id_walkorder)->id;
+                                // print_r("============================================="); print_r("<br>");
+                                
+                                // print_r($xpr);
+                                // print_r("<br>");
+                                // print_r("------------------------------------------------");   print_r("<br>");
+                                // print_r($xrow);
+                                // print_r("<br>");
+                                // print_r("------------------------------------------------");   print_r("<br>");
+                                // print_r($dtProses);
+                                // print_r("<br>");
+                                // print_r("------------------------------------------------");   print_r("<br>");
+                                // print_r($idProduksi);
+                                // print_r("<br>");
+                              
                                 $harga = $xrow['amount'] / $xrow['qty'];
                                 $harga = round($harga, 0);
                                 // insert data produksi
@@ -316,11 +330,14 @@ class BarangMasukModel extends \App\Models\PrModel
                                 $upd['qty_prod'] = $qty_now;
 
                                 $this->updateRecord('trans_walkorder_proses_ukuran', $upd, 'id', $id_wop);
-                            // }
+                            }else{
+                                throw new \Exception("Ada salah satu data SO Belum sampai proses Produksi " . $xrow['kode_sales_order'] . ', pastikan data sudah sampai proses produksi');
+                            }
 
                             $i++;
                         }
                     }
+                    // exit;
                 }else{
                     throw new \Exception("Data Produksi tidak ada");
                 }
@@ -330,15 +347,21 @@ class BarangMasukModel extends \App\Models\PrModel
             $this->db->transComplete();
 
             if ($this->db->transStatus() === TRUE) {
-                return true;
+                return [
+                    'status' => true,
+                    'message' => 'Data berhasil disimpan',
+                ];
             } else {
 
                 throw new \Exception("Transaction failed");
             }
         } catch (\Exception $e) {
             $this->db->transRollback();
-            throw $e;
-            return false;
+            // throw $e;
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
         }
     }
 
@@ -400,6 +423,10 @@ class BarangMasukModel extends \App\Models\PrModel
             $prms .= " AND tw.ref_id = " . $params['ref_id'];
         }
 
+        if(!empty($params['kode_sales_order'])){
+            $prms .= " AND tw.ref_kode = " . $params['kode_sales_order'];
+        }
+
         $builder = $this->db->table('trans_walkorder_proses_ukuran tpx');
         $builder->select("
             tpx.id as key_kebenearan,
@@ -415,7 +442,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->join('trans_walkorder_proses tp', 'tp.id = tpx.id_walkorder_proses', 'inner');
         $builder->join('trans_walkorder tw', 'tw.id = tp.id_walkorder', 'inner');
         $builder->join('ref_ukuran rk', 'rk.id = tpx.id_ukuran', 'inner');
-        // $builder->where('tw.tipe_id = 2 '. $prms);
+        $builder->where('1 = 1 '. $prms);
         
         $builder->orderBy('tpx.id', 'desc');
 

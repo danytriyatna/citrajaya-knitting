@@ -226,6 +226,7 @@ class Absensi extends BaseController
           $id_shift = $dt_shift->id;
           $jadwal_masuk = $dt_shift->jam_masuk;
           $jadwal_pulang = $dt_shift->jam_pulang;
+          
           if(!empty($x['jam_masuk'])){
             // $jam_awal  = new DateTime($dt_shift->jam_masuk);
             // $jam_akhir = new DateTime($x['jam_keluar']);

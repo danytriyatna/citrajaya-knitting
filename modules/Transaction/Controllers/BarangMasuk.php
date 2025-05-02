@@ -290,9 +290,11 @@ class BarangMasuk extends BaseController
         }
         // print_r(json_encode($dataHeader));exit;
         $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataProduksi);
-        if ($res) {
+        if ($res['status']) {
             $status = true;
             $msg = "Data berhasil disimpan!";
+        }else{
+            $msg = $res['message'];
         }
 
         $build_array['message'] = $msg;

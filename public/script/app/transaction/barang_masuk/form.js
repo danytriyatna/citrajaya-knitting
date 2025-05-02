@@ -384,6 +384,29 @@ dtListSO.on("rowClick", function(e, row){
         
         // console.log("data", xdata)
 
+        if(inpNoRefTrf.val().length > 0){
+            if(xdata.kode_transaksi != inpNoRefTrf.val()){
+                Swal.fire({
+                    title: "Apakah Anda yakin ingin mengubah Referensi transaksi?",
+                    text: "Data produksi yang sudah ada akan dihapus.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, ubah",
+                    cancelButtonText: "Batal",
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6C757D"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        dtListProduksi.setData([]);
+                        dtList.setData([]);
+                    } else {
+                        return false;
+                    }
+                });
+            }
+
+        }
+
         inpNoRefTrf.val(xdata.kode_transaksi)
         inpIdRefTrf.val(xdata.id)
         inpProses.val(xdata.proses);
@@ -1132,7 +1155,7 @@ function simpanData(status) {
                     text: response.message,
                     icon: 'error',
                     showConfirmButton: false,
-                    timer: 2000
+                    // timer: 2000
                 });
             }
         },
@@ -1144,7 +1167,7 @@ function simpanData(status) {
                 text: msg,
                 icon: 'error',
                 showConfirmButton: false,
-                timer: 2000
+                // timer: 2000
             });
         },
     });

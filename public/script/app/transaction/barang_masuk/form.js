@@ -357,6 +357,20 @@ let dtListSO = new Tabulator("#dt-list-sample", {
     },
 });
 
+let searchThreadSO = null;
+let elSearchSO = $("#tb-search-so");
+if (elSearchSO != null) {
+    elSearchSO.on("keyup", function (e) {
+        if ($(this).val().length < 3 && e.keyCode > 13) {
+            return;
+        }
+        clearTimeout(searchThreadSO);
+        searchThreadSO = setTimeout(function () {
+            dtListSO.setFilter("", "like", elSearchSO.val());
+        }, 600);
+    });
+}
+
 const inpProses = $("#proses");
 const inpIdproses = $("#id_proses");
 

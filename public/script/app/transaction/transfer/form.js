@@ -175,7 +175,13 @@ let searchThreadBarang = null;
 let elSearchBarang = $("#tb-search");
 if (elSearchBarang != null) {
     elSearchBarang.on("keyup", function (e) {
-        
+        if ($(this).val().length < 3 && e.keyCode > 13) {
+            return;
+        }
+        clearTimeout(searchThreadBarang);
+        searchThreadBarang = setTimeout(function () {
+            dtListBarang.setFilter("", "like", elSearchBarang.val());
+        }, 600);
     });
 }
 

@@ -135,7 +135,7 @@
               <div class="form-group">
                 <div class="input-group mb-3">
                   <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                  <input type="text" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                  <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
                 </div>
               </div>
             </div>

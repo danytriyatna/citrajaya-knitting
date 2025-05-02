@@ -558,12 +558,48 @@ let dtList = new Tabulator("#dt-list-so", {
     placeholder: "Tidak ada data",
 });
 
+let buttonRowActionRef = function(cell) {
+    let fmBtnDelete = "";        
+    let fmBtnEdit = "";        
+
+    if (inpStatus.val() == 0){
+        fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
+    }
+   
+
+    return fmBtnEdit + " " + fmBtnDelete;
+};
+
 let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
     pagination: true, 
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
         {title: "ID", field: "id_konsumen", width: "20%",visible:false},
+        {
+            headerSort: false,  
+            title: '#', 
+            formatter: buttonRowActionRef,
+            width: '5%', align: "center", cssClass: "text-center",
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                if (e.target.title === 'delete') {
+                    Swal.fire({
+                        title: "Apakah anda yakin ingin menghapus data?",
+                        icon: 'question',
+                        confirmButtonText: 'Hapus',
+                        confirmButtonColor: '#dc3545',
+                        showCancelButton: true,
+                        cancelButtonText: 'Batal',
+                        cancelButtonColor: '#6C757D'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            row.delete(); 
+                        }
+                    })
+                } 
+            }
+        },
         {title: "No.SO", field: "kode_sales_order", width: "20%"},
         {title: "Style", field: "style", width: "20%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
@@ -602,6 +638,7 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
 
 const modalRefpo = $("#modal-ref-po");
 const btnRefPo = $("#btn-ref-po");
+
 const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
     pagination: true, 
     paginationSize: 10,
@@ -636,7 +673,12 @@ btnRefPo.on("click", function(e) {
     modalRefpo.modal("show");
 })
 
+let isRowClicked = false;
 dtListProduksiRef.on("rowClick", function(e, row){
+    if (isRowClicked) return; // cegah eksekusi dobel
+
+    isRowClicked = true;
+    
     const data = row._row.data
     let produksi_data = dtListProduksi.getData();
 
@@ -653,6 +695,10 @@ dtListProduksiRef.on("rowClick", function(e, row){
 
     dtListProduksi.addRow(data);
     modalRefpo.modal("hide");
+
+    setTimeout(() => {
+        isRowClicked = false;
+    }, 500); // 0.5 detik misalnya
 })
 
 

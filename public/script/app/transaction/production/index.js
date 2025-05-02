@@ -17,7 +17,12 @@ $(document).ready(function () {
 			}, 
 				
 			{
-				title: 'No. Referensi', field: 'ref_kode', headerSort:false, sorter: 'string',
+				title: 'No. Referensi', field: 'kode_walkorder_ref', headerSort:false, sorter: 'string',
+				width: 140, 
+			}, 
+
+            {
+				title: 'No. Referensi WO', field: 'ref_kode', headerSort:false, sorter: 'string',
 				width: 140, 
 			}, 
 

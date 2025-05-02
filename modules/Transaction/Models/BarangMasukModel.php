@@ -281,6 +281,8 @@ class BarangMasukModel extends \App\Models\PrModel
                             $dtProses = $this->getDataWP($xp);
                             // if(!empty($dtProses)){
                                 $idProduksi = $this->getDataProduksiByIdWalkorder($dtProses->id_walkorder)->id;
+                                $harga = $xrow['amount'] / $xrow['qty'];
+                                $harga = round($harga, 0);
                                 // insert data produksi
                                 $arrDataUkuran = [
                                     "kode_transaksi" => $kode_transaksi,
@@ -292,7 +294,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "id_operator" => $id_cmt,
                                     "tgl_transaksi" => $tgl_trans,//date('Y-m-d'),
                                     "qty" => $xrow['qty'],
-                                    "harga" => 0,
+                                    "harga" => $harga,
                                     "harga_total" => $xrow['amount'],
                                     "ref_detail_id" => $dtSo->id,
                                     "nomor_mesin" => '',
@@ -319,6 +321,8 @@ class BarangMasukModel extends \App\Models\PrModel
                             $i++;
                         }
                     }
+                }else{
+                    throw new \Exception("Data Produksi tidak ada");
                 }
             }
 
@@ -334,6 +338,7 @@ class BarangMasukModel extends \App\Models\PrModel
         } catch (\Exception $e) {
             $this->db->transRollback();
             throw $e;
+            return false;
         }
     }
 
@@ -410,7 +415,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->join('trans_walkorder_proses tp', 'tp.id = tpx.id_walkorder_proses', 'inner');
         $builder->join('trans_walkorder tw', 'tw.id = tp.id_walkorder', 'inner');
         $builder->join('ref_ukuran rk', 'rk.id = tpx.id_ukuran', 'inner');
-        $builder->where('tw.tipe_id = 2 '. $prms);
+        // $builder->where('tw.tipe_id = 2 '. $prms);
         
         $builder->orderBy('tpx.id', 'desc');
 

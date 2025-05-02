@@ -33,9 +33,10 @@ class ProductionModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.id_walkorder,  abx.kode_walkorder, abx.id_konsumen, abx.id_style, abx.qty, abx.file_id,
                         abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style, abx.keterangan,
-                        abx.tipe_id, cbx.file_name,abx.kode_prod");
+                        abx.tipe_id, cbx.file_name,abx.kode_prod,twx.ref_kode as kode_walkorder_ref");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->join("trans_walkorder twx", "abx.id_walkorder = twx.id", "inner");
         // $builder->join("trans_sample ts", "ts.id = abx.ref_id and abx.tipe_id = 1", "left");
         // $builder->join("trans_sales_order tso", "tso.id = abx.ref_id and abx.tipe_id = 2", "left");
         $builder->join("_files cbx", "abx.file_id = cbx.id", "left");
@@ -104,7 +105,10 @@ class ProductionModel extends \App\Models\PrModel
     function getDataProsesProd($params)
     {
         $builder = $this->db->table("trans_walkorder_proses abx");
-        $builder->select("bbx.seq,bbx.nama,bbx.id ,SUM(COALESCE(qty, 0)) AS qty, SUM(COALESCE(qty_prod, 0)) AS qty_prod");
+        $builder->select("bbx.seq,bbx.nama,bbx.id ,SUM(COALESCE(qty, 0)) AS qty, SUM(COALESCE(qty_prod, 0)) AS qty_prod,
+                           COALESCE((select sum(COALESCE(tpp.harga_total, 0)) 
+                                     from trans_produksi_operator tpp inner join trans_produksi tp on tp.id = tpp.id_produksi
+                                     where tp.id_walkorder = abx.id_walkorder and tpp.id_proses = abx.id_proses),0) as harga_proses");
         $builder->join("_jenis_proses_produksi bbx", "abx.id_proses = bbx.id", "inner");
         $builder->join("trans_walkorder_proses_ukuran cbx", "cbx.id_walkorder_proses = abx.id", "inner");
         if(!empty($params['id_walkorder'])){
@@ -121,7 +125,7 @@ class ProductionModel extends \App\Models\PrModel
 
             $builder->where('abx.id_proses = (' . $subQuery . ')');
         }
-        $builder->groupBy("bbx.nama, bbx.seq, bbx.id");
+        $builder->groupBy("bbx.nama, bbx.seq, bbx.id, abx.id_walkorder, abx.id_proses");
         $builder->orderBy("bbx.seq", "ASC");
         $this->_data = $builder->get()->getResult();
 

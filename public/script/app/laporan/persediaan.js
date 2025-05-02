@@ -4,12 +4,13 @@ let dtList = new Tabulator("#dt-list", {
     paginationButtonCount: 5,
     groupBy: ['nama_jenis_barang','barang'],
     columns:[
-        {title:"LOT", field:"lot_no", width:"15%"},
-        {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"15%"},
-        {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"15%"},
-        {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"15%"},
-        {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"15%"},
-        {title:"Qty<br>Akhir", field:"saldo_akhir", hozAlign:"right",width:"15%"},
+        {title:"LOT ID", field:"lot_id", width:"10%", visible:false},
+        {title:"LOT", field:"lot_no", width:"8%"},
+        {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"12%"},
+        {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"12%"},
+        {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"12%"},
+        {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"12%"},
+        {title:"Qty<br>Akhir", field:"saldo_akhir", hozAlign:"right",width:"12%"},
         {title:"Nilai", field:"price", hozAlign:"right",width:"15%",formatter : "money",
             formatterParams: {
                 decimal: ",",
@@ -22,6 +23,16 @@ let dtList = new Tabulator("#dt-list", {
     locale: 'id',    
     // layout: 'fitColumns',
     placeholder: "Tidak ada data",
+    // Saat halaman berubah, update info pagination
+    paginationDataReceived: function(data){
+        updatePageInfo();
+    },
+    paginationChanged: function(pagenum){
+        updatePageInfo();
+    },
+    dataLoaded: function(data){
+        updatePageInfo();
+    }
 });
 
 let dtListBarang = new Tabulator("#dt-list-barang", {

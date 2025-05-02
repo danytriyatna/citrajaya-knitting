@@ -4,6 +4,7 @@ namespace Modules\Transaction\Controllers;
 
 use CodeIgniter\Controller;
 use App\Controllers\BaseController;
+use App\Libraries\DompdfGenerator;
 use Modules\Transaction\Models\ProductionModel;
 use Modules\Transaction\Models\WalkorderModel;
 use Modules\Transaction\Models\SalesOrderModel;
@@ -114,6 +115,7 @@ class Production extends BaseController
           "id"                => ($id),
           "ref_kode"          => ($row->kode_walkorder),
           "konsumen_nama"     => $row->konsumen_nama,
+          "kode_walkorder_ref"     => $row->kode_walkorder_ref,
           "kode_prod"         => $row->kode_prod,
           "qty"               => $row->qty,
           "tipe"              => $tipe,
@@ -562,5 +564,33 @@ class Production extends BaseController
     $build_array["msg"] = $msg;
     $build_array["data"] = $data;
     return $this->response->setJSON($build_array); 
+  }
+
+  public function print($id = null)
+  {
+    if (!$this->auth->loggedIn()) {
+      return redirect()->to('/auth/login');
+    }
+    $dompdf = new \Dompdf\Dompdf();
+    // Set Dompdf options for portrait orientation
+    $dompdf->setPaper('A4', 'portrait');
+
+    $this->data['data'] = [];
+    if ($id != "") {
+      $id = decrypt($id);
+      // dd($id);
+      // die;
+      $resData = $this->mProduksi->getData($id);
+      $prms['id_walkorder'] = $resData->id_walkorder;
+      $dataProses = $this->mProduksi->getDataProsesProd($prms);
+      $this->data['proses']    = $dataProses;
+
+    }
+    $html = view($this->views . '\item_transfer_print', $this->data);
+
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    exit;
   }
 }

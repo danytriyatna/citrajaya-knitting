@@ -313,7 +313,25 @@ $sql .= "
         GROUP BY th.id_barang, th.id_gudang, th.lot_id
     ),
 
-    transaksi_dengan_rownum AS (
+    history_per_lot AS (
+    SELECT
+        lot_id,
+        month,
+        year,
+        jumlah AS saldo_awal
+    FROM trans_barang_history
+),
+normalized_trans_with_history AS (
+    SELECT
+        nt.*,
+        COALESCE(h.saldo_awal, 0) AS saldo_awal_history
+    FROM normalized_trans nt
+    LEFT JOIN history_per_lot h
+        ON nt.lot_id = h.lot_id
+        AND EXTRACT(MONTH FROM nt.tanggal) = h.month
+        AND EXTRACT(YEAR FROM nt.tanggal) = h.year
+),
+stock_base AS (
     SELECT
         nt.id,
         nt.tanggal,
@@ -330,43 +348,57 @@ $sql .= "
         nt.nama_satuan,
         nt.price,
         CONCAT(nt.kode_barang, ' ', nt.nama_barang) AS barang,
-        COALESCE(sh.jumlah, 0) AS saldo_awal_raw,
-        CAST(COALESCE(sh.jumlah, 0) AS DECIMAL(18,2)) AS saldo_awal,
+        CAST(CASE WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS masuk,
+        CAST(CASE WHEN nt.jenis_transaksi = 'keluar' THEN -nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS keluar,
+        
         CAST(
-            CASE WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah ELSE 0 END
-            AS DECIMAL(18,2)
-        ) AS masuk,
+            CASE 
+                WHEN ROW_NUMBER() OVER(PARTITION BY nt.lot_id ORDER BY nt.id ASC) = 1 
+                THEN nt.saldo_awal_history 
+                ELSE NULL 
+            END AS DECIMAL(18,2)
+        ) AS saldo_awal_awal,
+        
         CAST(
-            CASE WHEN nt.jenis_transaksi = 'keluar' THEN -nt.jumlah ELSE 0 END
+            SUM(
+                CASE 
+                    WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah 
+                    WHEN nt.jenis_transaksi = 'keluar' THEN nt.jumlah 
+                    ELSE 0 
+                END
+            ) OVER (
+                PARTITION BY nt.lot_id 
+                ORDER BY nt.id ASC 
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) + 
+            FIRST_VALUE(nt.saldo_awal_history) OVER (PARTITION BY nt.lot_id ORDER BY nt.id ASC)
             AS DECIMAL(18,2)
-        ) AS keluar,
-        ROW_NUMBER() OVER (PARTITION BY nt.id_barang, nt.id_gudang, nt.lot_id ORDER BY nt.id ASC, nt.kode_transaksi) AS rn
-    FROM
-        normalized_trans nt
-        LEFT JOIN trans_barang_history sh ON nt.id = sh.id_trans_barang
-    ),
+        ) AS saldo_akhir
+    FROM normalized_trans_with_history nt
+),
 
-    stock_card AS (
-        SELECT *,
-            CAST(
-                SUM(
-                    CASE WHEN rn = 1 THEN saldo_awal_raw ELSE 0 END + masuk - keluar
-                ) OVER (
-                    PARTITION BY id_barang, id_gudang, lot_id
-                    ORDER BY id ASC, kode_transaksi
-                ) AS DECIMAL(18,2)
-            ) AS saldo_akhir
-        FROM transaksi_dengan_rownum
-    )
+stock_card AS (
+    SELECT
+        sb.*,
+        CAST(
+            COALESCE(
+                sb.saldo_awal_awal,
+                LAG(sb.saldo_akhir) OVER (PARTITION BY sb.lot_id ORDER BY sb.id)
+            ) AS DECIMAL(18,2)
+        ) AS saldo_awal
+    FROM stock_base sb
+)
 
     SELECT *
     FROM stock_card
     ORDER BY
         nama_jenis_barang ASC,
         nama_barang ASC,
+        lot_id DESC,
         created_at ASC,
         id_gudang,
         tanggal,
+        id ASC,
         kode_transaksi
 ";
 
@@ -399,94 +431,100 @@ $query = $this->db->query($sql, $params);
         $dataOld =  $this->getLaporanPersediaan($idJenisBarang, $idGudang, $year, $month);
         
 
-        $prevMonth = 12;
-        $prevYear = $year;
-        if ($month == 1) {
-            $prevMonth = 12;
-            $prevYear = $year - 1;
+        $nextMonth = $month;
+        $nextYear = $year;
+        if ($month == 12) {
+            $nextMonth = 1;
+            $nextYear = $year + 1;
         }
         else {
-            $prevMonth = $month - 1;
+            $nextMonth = $month + 1;
         }
         
         
 
         $lot_id = [];
+        $lot_no = [];
+        $stok_awal = [];
 
         foreach ($dataOld as $key => $value) {
-
-            if (!in_array($value->lot_no, $lot_id)) {
-                $lot_id[] = $value->lot_no;
+            if (!in_array($value->lot_id, $lot_id)) {
+                $lot_id[] = $value->lot_id;
+                $stok_awal[] = $value->saldo_awal;
+                $lot_no[] = $value->lot_no;
             }
         }
+
         foreach ($lot_id as $key => $lot) {
             $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
             $builder = $this->db->table("trans_barang abx");
-            $builder->select("abx.id, abx.id_barang, abx.lot_id, abx.kode_transaksi, abx.id_kategori, abx.tanggal, abx.price, COALESCE(SUM(abx.jumlah), 0) as jumlah");
-            // $builder->where("abx.tanggal <", $cutoffDate);
-            $builder->where("EXTRACT(MONTH FROM abx.tanggal)", $prevMonth);
-            $builder->where("EXTRACT(YEAR FROM  abx.tanggal)", $prevYear);
-            $builder->where("abx.id_gudang_tujuan is not null");
+            $builder->select("
+                abx.id_barang,
+                abx.lot_id,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN abx.id_gudang_tujuan IS NOT NULL THEN abx.jumlah
+                        ELSE 0
+                    END
+                ), 0) as total_masuk,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN abx.id_gudang_asal IS NOT NULL THEN -abx.jumlah
+                        ELSE 0
+                    END
+                ), 0) as total_keluar,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN abx.id_gudang_tujuan IS NOT NULL THEN abx.jumlah
+                        WHEN abx.id_gudang_asal IS NOT NULL THEN -abx.jumlah
+                        ELSE 0
+                    END
+                ), 0) as total_jumlah
+            ");
+            $builder->where("EXTRACT(MONTH FROM abx.tanggal)", $month);
+            $builder->where("EXTRACT(YEAR FROM abx.tanggal)", $year);
             $builder->where("abx.lot_id", $lot);
-            $builder->groupBy("abx.id, abx.id_barang, abx.lot_id, abx.kode_transaksi, abx.id_kategori, abx.tanggal, abx.price");
-            $data = $builder->get()->getRow();
+            $builder->groupBy("abx.id_barang, abx.lot_id");
 
-            $builder_keluar = $this->db->table("trans_barang abx");
-            $builder_keluar->select("abx.id, abx.id_barang, abx.lot_id, abx.kode_transaksi, abx.id_kategori, abx.tanggal, abx.price, COALESCE(SUM(abx.jumlah), 0) as jumlah");
-            // $builder_keluar->where("abx.tanggal <", $cutoffDate);
-            $builder_keluar->where("EXTRACT(MONTH FROM abx.tanggal)", $prevMonth);
-            $builder_keluar->where("EXTRACT(YEAR FROM  abx.tanggal)", $prevYear);
-            $builder_keluar->where("abx.id_gudang_asal is not null");
-            $builder_keluar->where("abx.lot_id", $lot);
-            $builder_keluar->groupBy("abx.id, abx.id_barang, abx.lot_id, abx.kode_transaksi, abx.id_kategori, abx.tanggal, abx.price");
-            $data_keluar = $builder_keluar->get()->getRow();
+            
+            $data = $builder->get()->getRow();
+            
             $jumlah = 0;
             
             if (isset($data)) {
-                $jumlah += $data->jumlah;
-            }
-            if (isset($data_keluar)) {
-                $jumlah -= $data_keluar->jumlah;
-            }
-            foreach ($dataOld as $key => $value) {
+                $jumlah = $data->total_jumlah;
+                $isi['id_barang'] = $data->id_barang;
+                $isi['lot_id'] = $data->lot_id;
+                $isi['lot_no'] = $lot_no[$key];
+                $isi['stok_awal'] = $stok_awal[$key];
+                $isi['masuk'] = round($data->total_masuk, 2);
+                $isi['keluar'] = round($data->total_keluar, 2);
+                $isi['month'] = $nextMonth;
+                $isi['year'] = $nextYear;
+                $isi['jumlah'] = round($jumlah, 2);
+                $isi['tanggal'] = date('Y-m-d H:i:s');
+                
+                $builder_detail = $this->db->table("trans_barang_history abx");
+                $builder_detail->where('abx.month', $nextMonth);
+                $builder_detail->where('abx.year', $nextYear);
+                $builder_detail->where('abx.lot_id', $data->lot_id);
+                // $builder_detail->where('abx.id_trans_barang', $value->id);
+                $builder_detail->select("*");
 
-                if ($value->lot_id == $lot) {
-                    $isi['id_barang'] = $value->id_barang;
-                    $isi['id_trans_barang'] = $value->id;
-                    $isi['id_gudang'] = $value->id_gudang;
-                    $isi['lot_id'] = $value->lot_id;
-                    $isi['month'] = $month;
-                    $isi['year'] = $year;
-                    $isi['jumlah'] = $jumlah;
-                    
-                    if (isset($value->masuk) && $value->masuk > 0) {
-                        $jumlah += $value->masuk;
+                $detail = $builder_detail->get()->getRow();
+                if (empty($detail)) {
+                    $builder_detail_insert = $this->db->table("trans_barang_history");
+                    if ($builder_detail_insert->insert($isi) === false) {
+                        $error = $this->db->error();
+                        var_dump($error);
+                        die;
                     }
-                    if (isset($value->keluar) && $value->keluar > 0) {
-                        $jumlah -= $value->keluar;
-                    }
-                    $builder_detail = $this->db->table("trans_barang_history abx");
-                    $builder_detail->where('abx.month', $month);
-                    $builder_detail->where('abx.year', $year);
-                    $builder_detail->where('abx.id_trans_barang', $value->id);
-                    $builder_detail->select("*");
-
-                    $detail = $builder_detail->get()->getRow();
-                    if (empty($detail)) {
-                        $builder_detail_insert = $this->db->table("trans_barang_history");
-                        if ($builder_detail_insert->insert($isi) === false) {
-                            $error = $this->db->error();
-                            var_dump($error);
-                            die;
-                        }
-                    }
-                    else {
-                        $this->db->table("trans_barang_history")->update($isi, array("id_trans_barang" => $value->id, "month" => $month, "year" => $year));
-                    }
+                }
+                else {
+                    $this->db->table("trans_barang_history")->update($isi, array("month" => $nextMonth, "year" => $nextYear, "lot_id" => $data->lot_id));
                 }
             }
         }
-
         return true;
     }
 }

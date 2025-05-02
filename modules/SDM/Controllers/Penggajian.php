@@ -437,7 +437,7 @@ class Penggajian extends BaseController
 
         $data_laporan[$i]->jam_kerja = round($data_laporan[$i]->jam_kerja);
 
-        $data_laporan[$i]->total = ($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus) - $data_laporan[$i]->potongan;
+       
         
         if ($data_laporan[$i]->izin == "0" && $data_laporan[$i]->sakit == "0" && $data_laporan[$i]->alpha == "0" && $data_laporan[$i]->terlambat == "0") {
            $data_laporan[$i]->premi = $data_laporan[$i]->premi;
@@ -449,6 +449,8 @@ class Penggajian extends BaseController
         if ($data_laporan[$i]->premi == null) {
           $data_laporan[$i]->premi = 0;
         }
+
+        $data_laporan[$i]->total = ($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus + $data_laporan[$i]->premi) - $data_laporan[$i]->potongan;
       
       }
       $status = true;
@@ -493,8 +495,9 @@ class Penggajian extends BaseController
     $nip = $this->request->getGet('nip');
 
     $id = decrypt($id);
-
+    
     $stdData = $this->mgaji->getData($id);  
+    
     $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
     $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
     $this->data['row'] = $stdData;

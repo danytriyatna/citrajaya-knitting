@@ -294,9 +294,15 @@ class BarangMasukModel extends \App\Models\PrModel
                                 // print_r("------------------------------------------------");   print_r("<br>");
                                 // print_r($idProduksi);
                                 // print_r("<br>");
+
+                                $amount = $xrow['amount'] ? $xrow['amount'] : 0;
+                                $qty = $xrow['qty'] ? $xrow['qty'] : 0;
                               
-                                $harga = $xrow['amount'] / $xrow['qty'];
-                                $harga = round($harga, 0);
+                                $harga = 0;
+                                if($qty > 0){
+                                    $harga = $amount / $qty;
+                                    $harga = round($harga, 0);
+                                }
                                 // insert data produksi
                                 $arrDataUkuran = [
                                     "kode_transaksi" => $kode_transaksi,

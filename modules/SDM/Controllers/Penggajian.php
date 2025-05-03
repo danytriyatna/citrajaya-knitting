@@ -172,7 +172,8 @@ class Penggajian extends BaseController
             $i = 0;
             foreach  ($is_detail as $r) {
               $is_detail[$i]->gaji_jam = $r->gaji_harian;
-              $is_detail[$i]->total = $r->gaji;
+              // $is_detail[$i]->total = $r->gaji;
+              $is_detail[$i]->total = ($r->gaji_harian + $r->uang_lembur + $r->bonus + $r->premi) - $r->potongan;
               $i++;
             }
 

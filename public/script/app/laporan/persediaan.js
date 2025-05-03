@@ -4,7 +4,7 @@ let dtList = new Tabulator("#dt-list", {
     paginationButtonCount: 5,
     groupBy: ['nama_jenis_barang','barang'],
     columns:[
-        {title:"LOT ID", field:"lot_id", width:"10%", visible:false},
+        // {title:"LOT ID", field:"lot_id", width:"10%"},
         {title:"LOT", field:"lot_no", width:"8%"},
         {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"12%"},
         {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"12%"},

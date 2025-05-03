@@ -107,7 +107,7 @@
           <br>
 
           <div class="row">
-            <div class="col-sm-6 text-right">
+            <div class="col-sm-6 text-right" hidden>
               <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
               <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a>
               <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->

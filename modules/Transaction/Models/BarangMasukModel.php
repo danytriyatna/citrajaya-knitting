@@ -295,8 +295,8 @@ class BarangMasukModel extends \App\Models\PrModel
                                 // print_r($idProduksi);
                                 // print_r("<br>");
 
-                                $amount = $xrow['amount'] ? $xrow['amount'] : 0;
-                                $qty = $xrow['qty'] ? $xrow['qty'] : 0;
+                                $amount = !empty($xrow['amount']) ? $xrow['amount'] : 0;
+                                $qty = !empty($xrow['qty']) ? $xrow['qty'] : 0;
                               
                                 $harga = 0;
                                 if($qty > 0){

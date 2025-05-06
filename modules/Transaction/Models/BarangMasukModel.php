@@ -297,12 +297,13 @@ class BarangMasukModel extends \App\Models\PrModel
 
                                 $amount = !empty($xrow['amount']) ? $xrow['amount'] : 0;
                                 $qty = !empty($xrow['qty']) ? $xrow['qty'] : 0;
+                                $harga = !empty($xrow['harga']) ? $xrow['harga'] : 0;
                               
-                                $harga = 0;
-                                if($qty > 0){
-                                    $harga = $amount / $qty;
-                                    $harga = round($harga, 0);
-                                }
+                                // $harga = 0;
+                                // if($qty > 0){
+                                //     $harga = $amount / $qty;
+                                //     $harga = round($harga, 0);
+                                // }
                                 // insert data produksi
                                 $arrDataUkuran = [
                                     "kode_transaksi" => $kode_transaksi,
@@ -477,7 +478,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
         $builder->select("abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
                           abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
-                          abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin,
+                          abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin, abx.harga,
                           (abx.qty - abx.qty_kirim) as qty_sisa");
 
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");

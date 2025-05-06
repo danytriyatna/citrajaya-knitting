@@ -641,18 +641,34 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            }
-        },
-        {title: "Qty", field: "qty_kirim", width: "15%"},
-        {title: "Qty Terima", field: "qty", width: "10%", editor: "number"},
-        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
-        {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
-            decimal: ",",
-            thousand: ".",
-            symbol: "Rp",  // Simbol mata uang Rupiah
+                // Tidak ada desimal
+                            }
+                        },
+                        {title: "Qty", field: "qty_kirim", width: "15%"},
+                        {title: "Qty<br>Terima", field: "qty", width: "10%", editor: "number", cellEdited: function(cell) {
+                            const row = cell.getRow();
+                            const qty = parseFloat(cell.getValue()) || 0;
+                            const harga = parseFloat(row.getCell("harga").getValue()) || 0;
+                            row.update({ amount: qty * harga });
+                        }},
+                        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
+                        {title: "Harga", field: "harga", width: "20%", formatter: "money", formatterParams: {
+                            decimal: ",",
+                            thousand: ".",
+                            symbol: "Rp",  // Simbol mata uang Rupiah
+                            precision: 0,   // Tidak ada desimal
+                        }, editor: "number", cellEdited: function(cell) {
+                            const row = cell.getRow();
+                            const harga = parseFloat(cell.getValue()) || 0;
+                            const qty = parseFloat(row.getCell("qty").getValue()) || 0;
+                            row.update({ amount: qty * harga });
+                        }},
+                        {title: "Amount", field: "amount", width: "20%", formatter: "money", formatterParams: {
+                            decimal: ",",
+                            thousand: ".",
+                            symbol: "Rp",  // Simbol mata uang Rupiah
             precision: 0,   // Tidak ada desimal
-        }, editor: "number"},
+        }},
     ],
     placeholder: "Tidak ada data",
 });
@@ -847,26 +863,6 @@ divRefProduk.hide();
 selectKategori.on("change",function(e){
     const nilai = e.target.value;
 
-    const dtProduksi = dtListProduksi.getData().length
-    if(dtProduksi > 0){
-        Swal.fire({
-            title: "Apakah Anda yakin ingin mengubah tipe transaksi?",
-            text: "Data produksi yang sudah ada akan dihapus.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Ya, ubah",
-            cancelButtonText: "Batal",
-            confirmButtonColor: "#dc3545",
-            cancelButtonColor: "#6C757D"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                dtListProduksi.setData([]);
-                dtList.setData([]);
-            } else {
-                return false;
-            }
-        });
-    }
 
     divNamaKonsumen.addClass("d-none")
     divDetail.show();
@@ -969,11 +965,41 @@ btnAdd.click(function(){
 })
 
 btnView.click(function(){
-    setTimeout(() => {
-        dtListSO.redraw(true)
-    }, 500);
-    $("#modal-so").modal("show")
-    dtListSO.deselectRow();
+
+    const dtProduksi = dtListProduksi.getData().length
+    if(dtProduksi > 0){
+        Swal.fire({
+            title: "Apakah Anda yakin ingin mengubah Referensi transaksi Transfer?",
+            text: "Data produksi yang sudah ada akan dihapus.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, ubah",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6C757D"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dtListProduksi.setData([]);
+                dtList.setData([]);
+
+                setTimeout(() => {
+                    dtListSO.redraw(true)
+                }, 500);
+                $("#modal-so").modal("show")
+                dtListSO.deselectRow();
+            } else {
+                return false;
+            }
+        });
+    }else{
+        setTimeout(() => {
+            dtListSO.redraw(true)
+        }, 500);
+        $("#modal-so").modal("show")
+        dtListSO.deselectRow();
+    }
+
+   
    
 })
 

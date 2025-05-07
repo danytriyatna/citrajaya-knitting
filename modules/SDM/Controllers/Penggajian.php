@@ -46,11 +46,12 @@ class Penggajian extends BaseController
   {
       $start   = $this->request->getPost('start');
       $limit   = $this->request->getPost('length');
-      $filters = $this->request->getPost('filters');
+      $filters = $this->request->getPost('filter');
       $order   = $this->request->getPost('order');
       // $tahun   = $this->request->getPost('tahun');
 
       // $params['tahun'] = $tahun;
+      
       $params = [];
       $results = $this->mgaji->getData(null, $start, $limit, $order, $filters, $params);
       $totalfiltered = $this->mgaji->getDataCnt($filters, $params);

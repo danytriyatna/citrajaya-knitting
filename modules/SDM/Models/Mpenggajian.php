@@ -25,7 +25,8 @@ class Mpenggajian extends \App\Models\PrModel
             $builder->where('sdm.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
-                $builder->where('LOWER(sdm.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->where('LOWER(sdm.kode_gaji) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(sdm.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
             

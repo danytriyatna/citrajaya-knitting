@@ -102,6 +102,7 @@ $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('form', 'ItemTransfer::form_static');
   $routes->get('edit/(:any)', 'ItemTransfer::form_static/$1');
   $routes->post('save', 'ItemTransfer::save');
+  $routes->post('list-barang', 'ItemTransfer::lists_persediaan');
 });
 
 $routes->group('trans/receive-item', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

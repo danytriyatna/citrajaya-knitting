@@ -5,6 +5,7 @@ namespace Modules\Transaction\Controllers;
 use CodeIgniter\Controller;
 use App\Controllers\BaseController;
 use App\Libraries\DompdfGenerator;
+use Modules\Laporan\Models\LaporanPersediaanModel;
 use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Referensi\Models\SatuanModel;
@@ -30,6 +31,7 @@ class ItemTransfer extends BaseController
   protected $mGudang;
   protected $mSalesOrder;
   protected $mOperator;
+  protected $mRefPersediaan;
   function __construct()
   {
     $this->MOD_ALIAS = "MOD_TRANSAKSI_BARANG_MASUK";
@@ -42,6 +44,7 @@ class ItemTransfer extends BaseController
     $this->mGudang = new GudangModel();
     $this->mSalesOrder = new SalesOrderModel();
     $this->mOperator = new OperatorModel();
+    $this->mRefPersediaan = new LaporanPersediaanModel();
   }
 
   public function index()
@@ -490,4 +493,56 @@ class ItemTransfer extends BaseController
     $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     exit;
   }
+
+  public function lists_persediaan()
+    {
+        $start      = $this->request->getPost('start');
+        $limit      = $this->request->getPost('length');
+        $filters    = $this->request->getPost('filter');
+        $order      = $this->request->getPost('sort');
+
+        $idGudang      = $this->request->getPost('idGudang');
+
+        $params = [];
+        if ($idGudang != "") {
+
+            $params['id_gudang'] = $idGudang;
+        } else {
+            $build_array = array(
+                "data" => array()
+            );
+            return $this->response->setJSON($build_array);
+        }
+
+        $results = $this->mRefPersediaan->getDataPersediaanBarang(null, $start, $limit, $order, $filters, $params);
+        $totalfiltered = $this->mRefPersediaan->getDataPersediaanBarangCnt($filters, $params);
+        $totaldata = $this->mRefPersediaan->getDataPersediaanBarangCnt(null, $params);
+        $maxpage = ceil($totalfiltered / $limit);
+
+        $build_array = array(
+            "last_page" => $maxpage,
+            "recordsTotal" => $totaldata,
+            "recordsFiltered" => $totalfiltered,
+            "data" => array()
+        );
+
+        foreach ($results as $row) {
+            $id = encrypt($row->id_barang);
+            array_push(
+                $build_array["data"],
+                array(
+                    "id"   => $row->id_barang,
+                    "nama_barang" => $row->nama_barang,
+                    "kode_barang" => $row->kode_barang,
+                    "nama_satuan" => $row->nama_satuan,
+                    "qty" => $row->qty,
+                    "lot_no" => $row->lot_no,
+                    "lot_id" => $row->lot_id,
+                    "id_barang" => $row->id_barang,
+                    "month" => $row->month,
+                )
+            );
+        }
+        return $this->response->setJSON($build_array);
+    }
 }

@@ -613,4 +613,83 @@ $query = $this->db->query($sql, $params);
         }
         return true;
     }
+
+    function getDataPersediaanBarang($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+
+        $subQuery = $this->db->table('trans_barang_history')
+        ->select("id_barang, MAX(year * 100 + month) as max_period")
+        ->groupBy("id_barang");
+
+        $builder = $this->db->table("trans_barang_history a");
+        $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
+        $builder->join("ref_satuan c", "b.id_satuan = c.id", "inner");
+        $builder->join("ref_jenis_barang d", "b.id_jenis_barang = d.id", "inner");
+        $builder->join("({$subQuery->getCompiledSelect()}) e", 
+    'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
+    'inner');
+        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty");
+        if (!empty($params['id_gudang'])) {
+            $builder->where('a.id_gudang', $params['id_gudang']);
+        }
+        if ($id == null or $id == "") {
+            // $builder->where('a.active = 1');
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $builder->groupStart();
+                $builder->Where('LOWER(b.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(b.nama_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->groupEnd();
+            }
+
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy('a.id');
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("a.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+
+        return $this->_data;
+    }
+
+    function getDataPersediaanBarangCnt($filters = null, $params = null)
+    {
+        $subQuery = $this->db->table('trans_barang_history')
+        ->select("id_barang, MAX(year * 100 + month) as max_period")
+        ->groupBy("id_barang");
+        $builder = $this->db->table("trans_barang_history a");
+        $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
+        $builder->join("ref_satuan c", "b.id_satuan = c.id", "inner");
+        $builder->join("ref_jenis_barang d", "b.id_jenis_barang = d.id", "inner");
+        $builder->join("({$subQuery->getCompiledSelect()}) e", 
+    'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
+    'inner');
+        $builder->select("count(1) as _cnt");
+        // $builder->where('uk.active = 1');
+        if (!empty($params['id_gudang'])) {
+            $builder->where('a.id_gudang', $params['id_gudang']);
+        }
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $builder->groupStart();
+            $builder->Where('LOWER(b.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(b.nama_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->groupEnd();
+        }
+
+        $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
 }

@@ -3,13 +3,18 @@ let dtList = new Tabulator("#dt-list", {
     paginationSize: 10,
     paginationButtonCount: 5,
     columns:[
-        {title:"Tanggal", field:"tanggal", width:"15%"},
-        {title:"Transaksi", field:"transaksi", hozAlign:"left",width:"20%"},
-        {title:"No. Transaksi", field:"kode_transaksi", hozAlign:"left",width:"20%"},
+        {title:"Tanggal", field:"tanggal", width:"7%"},
+        {title:"Transaksi", field:"transaksi", hozAlign:"left",width:"13%"},
+        {title:"No. Transaksi", field:"kode_transaksi", hozAlign:"left",width:"12%"},
+        {title:"Unit", field:"nama_satuan", hozAlign:"left",width:"10%"},
         {title:"Lot", field:"lot_no", hozAlign:"left",width:"10%"},
-        {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"10%"},
-        {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"10%"},
-        {title:"Saldo", field:"saldo_akhir", hozAlign:"right",width:"15%"},
+        // {title:"Saldo Awal", field:"saldo_awal", hozAlign:"right",width:"10%", bottomCalc: 'sum'},
+        {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"10%", bottomCalc: 'sum', headerHozAlign: "center"},
+        {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"10%", bottomCalc: 'sum', headerHozAlign: "center"},
+        // {title:"Saldo Akhir", field:"saldo_akhir", hozAlign:"right",width:"10%", bottomCalc: 'sum'},
+        {title:"Nilai", field:"price", hozAlign:"right",width:"12%", formatter:"money", headerHozAlign: "center"},
+        {title:"Jumlah", field:"jumlah", hozAlign:"right",width:"15%", bottomCalc: 'sum', formatter:"money", bottomCalcFormatter: 'money', headerHozAlign: "center"},
+        // {title:"Saldo", field:"saldo_akhir", hozAlign:"right",width:"15%"},
     ],
     locale: 'id',    
     // layout: 'fitColumns',
@@ -114,7 +119,7 @@ if (elSearch != null) {
         }
         clearTimeout(searchThread);
         searchThread = setTimeout(function () {
-            dtList.setFilter("", "like", elSearch.val());
+            dtListBarang.setFilter("", "like", elSearch.val());
         }, 600);
     });
 }
@@ -162,9 +167,10 @@ $("#btn-tampilkan").click(function () {
         type: 'GET',
         dataType: 'json', 
         success: function(data) {
-            
+            $("#total_awal").val(data.total_awal);
+            $("#total_akhir").val(data.total_akhir);
             dtList.setData(data.data)
-    
+            
             setTimeout(() => {
                 dtList.redraw(true)
             }, 500);
@@ -174,3 +180,24 @@ $("#btn-tampilkan").click(function () {
         }
     });
   }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectBulan = document.getElementById("filter_bulan");
+    const selectTahun = document.getElementById("filter_tahun");
+
+    const now = new Date();
+    const bulanSekarang = now.getMonth() + 1; // getMonth() = 0–11
+    const tahunSekarang = now.getFullYear();
+
+    // Set bulan jika opsi tersedia
+    if (selectBulan.querySelector(`option[value="${bulanSekarang}"]`)) {
+      selectBulan.value = bulanSekarang;
+      selectBulan.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Set tahun jika opsi tersedia
+    if (selectTahun.querySelector(`option[value="${tahunSekarang}"]`)) {
+      selectTahun.value = tahunSekarang;
+      selectTahun.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });

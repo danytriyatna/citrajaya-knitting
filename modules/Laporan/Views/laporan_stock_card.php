@@ -102,11 +102,12 @@
           <br>
 
           <div class="row">
-            <div class="col-sm-12 text-right">
+            <div class="col-sm-3 text-right">
+              
               <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
-              <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a>
+              <!-- <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a> -->
               <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
-              <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a>
+              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
             </div>
           </div>
         </div>
@@ -117,6 +118,32 @@
   <div class="row">
     <div class="col-lg-12">
       <div class="card">
+        <div class="card-header">
+        <div class="row">
+            <div class="col-sm-2 text-right">
+              <div class="form-group m-b-0">
+                  <label class="control-label text-left text-md-right" for="total_awal">Total Awal</label>
+                  <input type="text" id="total_awal" name="total_awal" class="form-control" readonly value="<?= isset($total_awal) ? $total_awal : 0 ?>">
+              </div>
+              
+              <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
+              <!-- <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a> -->
+              <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
+              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
+            </div>
+            <div class="col-sm-2 text-right">
+              <div class="form-group m-b-0">
+                  <label class="control-label text-left text-md-right" for="total_akhir">Total akhir</label>
+                  <input type="text" id="total_akhir" name="total_akhir" class="form-control" readonly value="<?= isset($total_akhir) ? $total_akhir : 0 ?>">
+              </div>
+              
+              <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
+              <!-- <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a> -->
+              <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
+              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
+            </div>
+          </div>
+        </div>
         <div class="card-body">
 
           <div class="form-group row">

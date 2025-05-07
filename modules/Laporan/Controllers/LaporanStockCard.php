@@ -76,17 +76,37 @@ class LaporanStockCard extends BaseController
         $tahun = $this->request->getGet('tahun');
         $bulan = $this->request->getGet('bulan');
 
-        $resData = $this->mLaporan->getLaporanStockCard($idBarang, $filter_gudang, $tahun, $bulan);
+        // $resData = $this->mLaporan->getLaporanStockCard($idBarang, $filter_gudang, $tahun, $bulan);
+        $resData = $this->mLaporan->getLaporanPersediaan($idBarang, $filter_gudang, $tahun, $bulan);
+        
+        $total = $this->mLaporan->getDataGudang($idBarang, $filter_gudang, $tahun, $bulan);
+        // dd($total);
+        $total_awal = 0;
+        $total_akhir = 0;
+        if (isset($total)) {
+            $total_awal = $total->saldo_awal;
+            $total_akhir = $total->saldo_akhir;
+        }
 
-        // if(!empty($resData)){
-        //     for ($i=0; $i < count($resData); $i++) { 
-        //         $resData[$i]->tanggal = \fdate_eng_to_ind_3($resData[$i]->tanggal);
-        //     }
-        // }
+        if(!empty($resData)){
+            foreach ($resData as $key => $value) {
+                if (isset($value->masuk) && isset($value->price)){
+                    $value->jumlah = $value->masuk * $value->price;
+                }
+                elseif (isset($value->keluar) && isset($value->price)) {
+                    $value->jumlah = $value->keluar * $value->price;
+                }
+                else {
+                    $value->jumlah = 0;
+                }
+            }
+        }
 
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];
         $build_array["status"] = true;
+        $build_array["total_awal"] = $total_awal;
+        $build_array["total_akhir"] = $total_akhir;
 
         return $this->response->setJSON($build_array);
     }

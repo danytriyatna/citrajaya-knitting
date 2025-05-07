@@ -74,8 +74,8 @@
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="filter_cmt">&nbsp;</label>
                   <select <?= empty($id) ? '' : 'disabled' ?> id="filter_cmt" name="filter_cmt" class="form-select select2" data-placeholder="-- Pilih Tipe --">
-                    <option value="1">NON CMT</option>
-                    <option value="2">CMT</option>
+                    <option value="1" <?= !empty($row->type) && $row->type == 1? "selected" : '' ?>>NON CMT</option>
+                    <option value="2" <?= !empty($row->type) && $row->type == 2? "selected" : '' ?>>CMT</option>
                   </select>
                 </div>
               </div>

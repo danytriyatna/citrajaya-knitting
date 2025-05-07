@@ -210,6 +210,7 @@ class Penggajian extends BaseController
                
                 $dataIn["periode_awal"] = fdate_ind_to_eng($stdData->periode_awal);
                 $dataIn["periode_akhir"] = fdate_ind_to_eng($stdData->periode_akhir);
+                $dataIn["type"] = $stdData->type;
                 $dataIn["keterangan"] = $stdData->keterangan;
                 $dataIn["status"] = $stdData->status;
 
@@ -228,6 +229,7 @@ class Penggajian extends BaseController
                         $mtd = "Reject";
                     }
                     
+                    $this->mgaji->deleteRecordMultipleColumn($this->mgaji->table2, ["id_sdm_gaji" => $id]);
                     $inUp = $this->update($id, $dataIn, $dtDet);
                 }else{
 

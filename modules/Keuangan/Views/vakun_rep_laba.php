@@ -81,7 +81,7 @@
                     $total_pendapatan += $mlaba->getDataPendapatan(1, $tahun, $bulan);
                     $total_pendapatan += 0;//$mlaba->getDataPendapatan(2, $tahun, $bulan);
 
-                    $ttl_ = !empty($mlaba->getDataPengeluaran(1, 2, $tahun, $bulan)) ? $mlaba->getDataPengeluaran(1, 2, $tahun, $bulan) : 0;
+                    $ttl_ = !empty($mlaba->getDataPengeluaran(1, 2, $tahun, $bulan)) ? (int) $mlaba->getDataPengeluaran(1, 2, $tahun, $bulan) : 0;
                     $total_pengeluaran += $ttl_;
                     $total_pengeluaran += 0;//$mlaba->getDataPengeluaran(1, 1, $tahun, $bulan);
                     $total_pengeluaran += 0;//$mlaba->getDataPengeluaran(2, 2, $tahun, $bulan);
@@ -114,7 +114,7 @@
                       </tr>
                       <tr>
                         <td><b class="f-w-700"><?= $spasi; ?>4002 - Pengeluaran</b></td>
-                        <td style="text-align:right;"><?= format_angka($mlaba->getDataPengeluaran(1, 2, $tahun, $bulan)); ?></td>
+                        <td style="text-align:right;"><?= format_angka($ttl_); ?></td>
                         <td></td>
                       </tr>
                       

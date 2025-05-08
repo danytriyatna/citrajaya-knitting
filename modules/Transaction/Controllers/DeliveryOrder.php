@@ -229,7 +229,7 @@ class DeliveryOrder extends BaseController
       }
       $prm['ukuran'] = $ukuran;
       $dataProd = [];
-      $rsProd = $this->mProduksi->getProduksilast($prm);
+      $rsProd = $this->mProduksi->getProduksilastV1($prm);
 
       if (!empty($rsProd)) {
         foreach ($rsProd as $item) {
@@ -472,58 +472,60 @@ class DeliveryOrder extends BaseController
           $params_b['nama_barang'] = $dtWo->keterangan_style;
           $dtBarang = $this->mBarang->getData(null, 0, 1, null, null, $params_b);
           // dd($dtBarang);
-          $id_gudang = $dtWo->id_gudang;
-          $id_barang = $dtBarang[0]->id;
+          if(!empty($dtBarang)){
+            $id_gudang = $dtWo->id_gudang;
+            $id_barang = $dtBarang[0]->id;
 
-          $mBarangMasuk = new IncomingGoodsModel();
-          $arrParam =  [
-            "id_barang" => $id_barang,
-            "id_gudang" => $id_gudang,
-          ];
+            $mBarangMasuk = new IncomingGoodsModel();
+            $arrParam =  [
+              "id_barang" => $id_barang,
+              "id_gudang" => $id_gudang,
+            ];
 
-          $resLotNo = $mBarangMasuk->getLotNo(null, $id_barang, null, $id_gudang);
+            $resLotNo = $mBarangMasuk->getLotNo(null, $id_barang, null, $id_gudang);
 
-          if (!empty($resLotNo)) {
-            $idLots = $resLotNo->id;
-            $this->mBarangKeluar->updateRecords('trans_lots', array("qty" => $resLotNo->qty - $item['qty']), array("id" => $idLots));
-          } else {
-            $idLots = 0;
-          }
+            if (!empty($resLotNo)) {
+              $idLots = $resLotNo->id;
+              $this->mBarangKeluar->updateRecords('trans_lots', array("qty" => $resLotNo->qty - $item['qty']), array("id" => $idLots));
+            } else {
+              $idLots = 0;
+            }
 
-          $resData = $mBarangMasuk->getLastStokBarangBalances($id_barang, $id_gudang, $idLots);
+            $resData = $mBarangMasuk->getLastStokBarangBalances($id_barang, $id_gudang, $idLots);
 
-          // $stokAwal = !empty($resData) ? $resData->stok : 0;
-          $dataBarang = [
-            "id_barang" => $id_barang,
-            "jenis_transaksi" => 2,
-            "jumlah" =>  $item['qty'],
-            "tanggal" => date("Y-m-d H:i:s"),
-            "id_gudang_asal" =>  !empty($id_gudang) ? $id_gudang : null,
-            "nama" => 'Delivery',
-            "id_kategori" => 11,
-            "keterangan" => "Barang Keluar Produksi lewat delivery",
-            "active" => 1,
-            "tipe" => 1,
-            "created_at" =>  date("Y-m-d H:i:s"),
-            "lot_id" => $idLots,
-            "kode_transaksi" => $this->mBarangKeluar->generateKodePersediaan(),
-          ];
-          $this->mBarangKeluar->insertRecordGetid('trans_barang', $dataBarang);
-          $arrStockBalances = [
-            "id_barang" => $id_barang,
-            "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
-            "tanggal" => date("Y-m-d H:i:s"),
-            "lot_id" => $idLots,
-            "saldo_awal" => 0,
-            "saldo_akhir" => $item['qty'],
-            "active" => 1,
-            "created_at" =>  date("Y-m-d H:i:s"),
-          ];
-          if (!empty($resData)) {
-            $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData->qty : 0;
-            $this->mBarangKeluar->updateRecords('trans_barang_balances', array("saldo_akhir" => $stock), array("id" => $resData->id));
-          } else {
-            $this->mBarangKeluar->insertRecordGetid('trans_barang_balances', $arrStockBalances);
+            // $stokAwal = !empty($resData) ? $resData->stok : 0;
+            $dataBarang = [
+              "id_barang" => $id_barang,
+              "jenis_transaksi" => 2,
+              "jumlah" =>  $item['qty'],
+              "tanggal" => date("Y-m-d H:i:s"),
+              "id_gudang_asal" =>  !empty($id_gudang) ? $id_gudang : null,
+              "nama" => 'Delivery',
+              "id_kategori" => 11,
+              "keterangan" => "Barang Keluar Produksi lewat delivery",
+              "active" => 1,
+              "tipe" => 1,
+              "created_at" =>  date("Y-m-d H:i:s"),
+              "lot_id" => $idLots,
+              "kode_transaksi" => $this->mBarangKeluar->generateKodePersediaan(),
+            ];
+            $this->mBarangKeluar->insertRecordGetid('trans_barang', $dataBarang);
+            $arrStockBalances = [
+              "id_barang" => $id_barang,
+              "id_gudang" => !empty($id_gudang) ? $id_gudang : null,
+              "tanggal" => date("Y-m-d H:i:s"),
+              "lot_id" => $idLots,
+              "saldo_awal" => 0,
+              "saldo_akhir" => $item['qty'],
+              "active" => 1,
+              "created_at" =>  date("Y-m-d H:i:s"),
+            ];
+            if (!empty($resData)) {
+              $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData->qty : 0;
+              $this->mBarangKeluar->updateRecords('trans_barang_balances', array("saldo_akhir" => $stock), array("id" => $resData->id));
+            } else {
+              $this->mBarangKeluar->insertRecordGetid('trans_barang_balances', $arrStockBalances);
+            }
           }
         }
       }
@@ -671,7 +673,7 @@ class DeliveryOrder extends BaseController
       $prm['ukuran'] = $ukuran;
       // print_r($prm);exit;
       $dataProd = [];
-      $rsProd = $this->mProduksi->getProduksilast($prm);
+      $rsProd = $this->mProduksi->getProduksilastV1($prm);
 
       if (!empty($rsProd)) {
         foreach ($rsProd as $item) {

@@ -93,12 +93,14 @@ $(document).ready(function () {
     };
 
 
-    const inpStatus = $("#status").val()
+    const inpStatus = ($("#status").val())
+    // console.log('inpStatus', inpStatus)
+    // console.log('inpStatus', !(inpStatus == 2))
     let dtListProduksi = new Tabulator("#dt-list-detail", {
         columns: [
             {
                 title: '', headerSort:false, formatter: buttonRowAction, sorter: 'string',
-                width: '10%', visible: !inpStatus == 2, 
+                width: '10%', visible: !(inpStatus == 2), 
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let data_row = row.getData();
@@ -303,8 +305,8 @@ $(document).ready(function () {
                             title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
                         },];
         const dt_Ukuran = ukuran;
-        console.log(dt_Ukuran)
-        console.log(data)
+        // console.log(dt_Ukuran)
+        // console.log(data)
         for (const el of dt_Ukuran) {
             const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
             newColum.push(
@@ -426,8 +428,8 @@ $(document).ready(function () {
 		let dataOrder = dtListDetail.getData();
 		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.id_warna == (data.id_warna));
 		let ix_order  = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
-        console.log(dataOrder);
-        console.log(data);
+        // console.log(dataOrder);
+        // console.log(data);
 		// let ktQty     = isQty.findIndex(obj => obj.kategori_id == (data.kategori_id));
 		// let ktQtyO    = isQtyO.findIndex(obj => parseInt(obj.sl_order_det_id) === parseInt(isSlc.val()));
 		
@@ -440,9 +442,10 @@ $(document).ready(function () {
 		}
 
 		data.seq = dataTable.length + 1;
-		if(data.qty > dataOrder[ix_order].qty_prod){
+		// if(data.qty > dataOrder[ix_order].qty_prod){
             if(dataTable[objIndex] == undefined){
-                // console.log(ix_order);
+                // console.log('ix_order', ix_order);
+                // console.log('dataOrder', dataOrder);
                 // data.sl_order_det_id = isSlc.val();//get_sl_orderID(dataTable, dataOrder, ix_order, data.kategori_id);
                 if(dataOrder.length > 0){
                     let qty_order  = dataOrder[ix_order].qty;
@@ -463,12 +466,25 @@ $(document).ready(function () {
                 
             }else{
                 // alert("Warna ukuran sudah ada di list !");
-                dataTable[objIndex].qty = dataTable[objIndex].qty + 1; 
-                addkuota(data.ref_detail_id, false);
+                // dataTable[objIndex].qty = dataTable[objIndex].qty + 1; 
+                // addkuota(data.ref_detail_id, false);
+
+                if(dataOrder.length > 0){
+                    let qty_order  = dataOrder[ix_order].qty;
+                    let qty_orderO = dataOrder[ix_order].qty_prod;
+                    data.qty = data.qty_prod + 1; 
+                    if(qty_orderO < qty_order){
+                        dataTable[objIndex].qty = dataTable[objIndex].qty + 1; 
+                        addkuota(data.ref_detail_id, false);
+                        // $("#modal-list-item").modal("hide");
+                    }else{
+                        alert("Jumlah Order item tersebut sudah terpenuhi !");
+                    }
+                }
             }
-        }else{
-            alert("Jumlah Order item tersebut sudah terpenuhi !");
-        }
+        // }else{
+        //     alert("Jumlah Order item tersebut sudah terpenuhi !");
+        // }
 		
 		dtListProduksi.replaceData(dataTable);
 		$( "#text_barcode" ).val("");

@@ -81,7 +81,8 @@
                     $total_pendapatan += $mlaba->getDataPendapatan(1, $tahun, $bulan);
                     $total_pendapatan += 0;//$mlaba->getDataPendapatan(2, $tahun, $bulan);
 
-                    $total_pengeluaran += $mlaba->getDataPengeluaran(1, 2, $tahun, $bulan);
+                    $ttl_ = !empty($mlaba->getDataPengeluaran(1, 2, $tahun, $bulan)) ? $mlaba->getDataPengeluaran(1, 2, $tahun, $bulan) : 0;
+                    $total_pengeluaran += $ttl_;
                     $total_pengeluaran += 0;//$mlaba->getDataPengeluaran(1, 1, $tahun, $bulan);
                     $total_pengeluaran += 0;//$mlaba->getDataPengeluaran(2, 2, $tahun, $bulan);
                     $spasi = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";

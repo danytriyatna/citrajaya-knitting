@@ -250,7 +250,8 @@ class BarangMasukModel extends \App\Models\PrModel
                             $xpr['kode_warna2'] = $clr[1];
                         }
 
-                        $dtSo = $this->getDataSO($xpr);
+                        $tipe = substr($xpr['kode_sales_order'], 0, 3) === 'SPL' ? 1 : (substr($xpr['kode_sales_order'], 0, 3) === 'SOD' ? 2 : null);
+                        $dtSo = $this->getDataSO($xpr, $tipe);
                         
                         $idSo = !empty($dtSo) ? $dtSo->id_sales_order : 0;
 
@@ -372,7 +373,7 @@ class BarangMasukModel extends \App\Models\PrModel
         }
     }
 
-    function getDataSO($params)
+    function getDataSO($params, $tipe)
     {
         // $builder = $this->db->table('trans_sales_order');
         // $builder->select("id");
@@ -394,8 +395,26 @@ class BarangMasukModel extends \App\Models\PrModel
             $prms .= " AND rk.kode_ukuran = '" . $params['kode_ukuran'] . "'";
         }
 
-        $builder = $this->db->table('trans_sales_order_ukuran ou');
-        $builder->select("
+        if ($tipe == 1) {
+            $builder = $this->db->table('trans_sample_ukuran ou');
+            $builder->select("
+            ou.id,
+            ou.id_sample as id_sales_order,
+            ou.id_sample_det as id_sales_order_det,
+            sod.id_warna_1,
+            sod.id_warna_2,
+            rw1.keterangan as color1,
+            rw2.keterangan as color2
+            ");
+            $builder->join('trans_sample_det sod', 'sod.id = ou.id_sample_det', 'inner');
+            $builder->join('trans_sample so', 'so.id = sod.id_sample', 'inner');
+            $builder->join('ref_warna rw1', 'rw1.id = sod.id_warna_1', 'inner');
+            $builder->join('ref_warna rw2', 'rw2.id = sod.id_warna_2', 'left');
+            $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
+            $builder->where('1 = 1' . $prms);
+        } elseif ($tipe == 2) {
+            $builder = $this->db->table('trans_sales_order_ukuran ou');
+            $builder->select("
             ou.id,
             ou.id_sales_order,
             ou.id_sales_order_det,
@@ -403,13 +422,14 @@ class BarangMasukModel extends \App\Models\PrModel
             sod.id_warna_2,
             rw1.keterangan as color1,
             rw2.keterangan as color2
-        ");
-        $builder->join('trans_sales_order_det sod', 'sod.id = ou.id_sales_order_det', 'inner');
-        $builder->join('trans_sales_order so', 'so.id = sod.id_sales_order', 'inner');
-        $builder->join('ref_warna rw1', 'rw1.id = sod.id_warna_1', 'inner');
-        $builder->join('ref_warna rw2', 'rw2.id = sod.id_warna_2', 'left');
-        $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
-        $builder->where('1 = 1' . $prms);
+            ");
+            $builder->join('trans_sales_order_det sod', 'sod.id = ou.id_sales_order_det', 'inner');
+            $builder->join('trans_sales_order so', 'so.id = sod.id_sales_order', 'inner');
+            $builder->join('ref_warna rw1', 'rw1.id = sod.id_warna_1', 'inner');
+            $builder->join('ref_warna rw2', 'rw2.id = sod.id_warna_2', 'left');
+            $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
+            $builder->where('1 = 1' . $prms);
+        }
 
         $this->_data = $builder->get()->getRow();
         return $this->_data;

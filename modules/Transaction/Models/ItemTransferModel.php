@@ -354,11 +354,11 @@ class ItemTransferModel extends \App\Models\PrModel
                         "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
                         "id_header" => $id,
                         "qty" => $rowData['qty'],
-                        "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                        "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
                     ];
-    
+                    // print_r($this->tblDet);exit;
                     $this->insertRecordGetid($this->tblDet, $dataDetail);
-    
+                    
                     if ($data['status'] == 1) {
     
                         $mBarangMasuk = new IncomingGoodsModel();
@@ -400,7 +400,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLotsMasuk,
-                            "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                            "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
                             "kode_transaksi" => $this->generateKodePersediaan(),
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
@@ -443,7 +443,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
-                            "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                            "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
                             "kode_transaksi" => $this->generateKodePersediaan(),
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);

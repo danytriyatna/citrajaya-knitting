@@ -443,7 +443,7 @@ class ItemTransfer extends BaseController
       $dataHeader['created_at'] = date("Y-m-d H:i:s");
       $dataHeader['created_by'] = $this->get_userid();
     }
-    // print_r($data);exit;
+    // print_r($dataDetail);exit;
     $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO);
     if ($res) {
       $status = true;
@@ -486,6 +486,8 @@ class ItemTransfer extends BaseController
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
 
     }
+
+    // dd($this->data);
     $html = view($this->views . '\item_transfer_print', $this->data);
 
     $dompdf->loadHtml($html);
@@ -535,6 +537,7 @@ class ItemTransfer extends BaseController
                     "nama_barang" => $row->nama_barang,
                     "kode_barang" => $row->kode_barang,
                     "nama_satuan" => $row->nama_satuan,
+                    "harga_satuan" => $row->harga_satuan,
                     "qty" => $row->qty,
                     "lot_no" => $row->lot_no,
                     "lot_id" => $row->lot_id,

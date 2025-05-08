@@ -588,17 +588,17 @@ $query = $this->db->query($sql, $params);
     {
 
         $subQuery = $this->db->table('trans_barang_history')
-        ->select("id_barang, MAX(year * 100 + month) as max_period")
-        ->groupBy("id_barang");
+                            ->select("id_barang, MAX(year * 100 + month) as max_period")
+                            ->groupBy("id_barang");
 
         $builder = $this->db->table("trans_barang_history a");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
         $builder->join("ref_satuan c", "b.id_satuan = c.id", "inner");
         $builder->join("ref_jenis_barang d", "b.id_jenis_barang = d.id", "inner");
         $builder->join("({$subQuery->getCompiledSelect()}) e", 
-    'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
-    'inner');
-        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty");
+                        'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
+                        'inner');
+        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty, b.harga_satuan");
         if (!empty($params['id_gudang'])) {
             $builder->where('a.id_gudang', $params['id_gudang']);
         }

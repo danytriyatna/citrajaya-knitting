@@ -96,8 +96,11 @@
 
         .table-bordered>thead>tr>th,
         .table-bordered>tbody>tr>th,
+        .table-bordered>tfoot>tr>th,
         .table-bordered>thead>tr>td,
-        .table-bordered>tbody>tr>td {
+        .table-bordered>tbody>tr>td,
+        .table-bordered>tfoot>tr>td,
+         {
             border: 1px solid #333;
             padding: 1px 6px;
             font-size: 12px;
@@ -173,6 +176,7 @@
 
     <h1 class="uppercase text-lg mb-6 mt-0">TRANSFER ITEM</h1>
     <p class="uppercase text-md my-0"><span class="d-inline-block" style="width: 152px;">No. TRANS</span> : <?= $data->kode_transaksi ?></p>
+    <p class="uppercase text-md my-0"><span class="d-inline-block" style="width: 152px;">Proses</span> : <?= $data->proses ?></p>
 
     <br>
 
@@ -220,7 +224,9 @@
         </thead>
         <tbody>
             <?php $i = 1;
-            foreach ($dataSO as $row) : ?>
+            $xqty1 = 0;
+            foreach ($dataSO as $row) {
+                $xqty1 = $xqty1 + (int) $row->qty; ?>
                 <tr>
                     <td><?= $i++ ?></td>
                     <td>
@@ -235,9 +241,16 @@
                     <td class="text-left"><?= $row->kode_ukuran ?></td>
                     <td class="text-left"><?= $row->keterangan ?></td>
                 </tr>
-            <?php endforeach ?>
+            <?php } ?>
 
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-right"><b>Jumlah</b></td>
+                <td class="text-right"><b><?= !empty($xqty1) ? $xqty1 : 0 ?></b></td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
     </table>
    <?php if(empty($data->nama_operator) ) { ?>
 
@@ -247,27 +260,37 @@
             <tr>
                 <th class="text-center" style="width: 40px;">No.</th>
                 <th class="text-center" style="width: 25%;">Item Code</th>
-                <th class="text-center" style="width: 30%;">Item Description</th>
+                <th class="text-center" style="width: 25%;">Item Description</th>
+                <th class="text-center" style="width: 25%;">Lot No</th>
                 <th class="text-center" style="width: 15%;">Qty</th>
-                <th class="text-center" style="width: 20%;">Unit</th>
-                <th class="text-center" style="width: 20%;">Lot No</th>
+                <th class="text-center" style="width: 10%;">Unit</th>
                 <th class="text-center" style="width: 30%;">Keterangan</th>
             </tr>
         </thead>
         <tbody>
         <?php $i = 1;
-            foreach ($detail as $xrow) : ?>
+        $xqty2 = 0;
+            foreach ($detail as $xrow) { 
+                $xqty2 = $xqty2 + (float) $xrow->qty; ?>
+                ?>
                 <tr>
                     <td><?= $i++ ?></td>
                     <td>  <?= $xrow->kode_barang  ?> </td>
                     <td>  <?= $xrow->nama_barang   ?> </td>
+                    <td class="text-left"><?= $xrow->lot_no ?></td>
                     <td class="text-right"><?= $xrow->qty ?></td>
                     <td class="text-left"><?= $xrow->nama_unit ?></td>
-                    <td class="text-left"><?= $xrow->lot_no ?></td>
                     <td class="text-left"><?= $xrow->keterangan ?></td>
                 </tr>
-            <?php endforeach ?>
+            <?php } ?>
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-right"><b>Jumlah</b></td>
+                <td class="text-right"><b><?= !empty($xqty2) ? $xqty2 : 0 ?></b></td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
     </table>
 
    <?php } ?>

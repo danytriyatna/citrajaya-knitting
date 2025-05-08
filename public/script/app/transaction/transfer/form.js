@@ -222,14 +222,14 @@ dtListBarang.on("rowClick", function(e, row){
     }
 
 
-    var kodeBarang = row._row.data.kode_barang.replace(/<[^>]*>/g, '');
-    var idBarang = row._row.data.id;
-    var idLot = row._row.data.lot_id;
-    var qty = row._row.data.qty;
-    var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
-    var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
-    var lotNo = row._row.data.lot_no.replace(/<[^>]*>/g, '');
-    
+    const kodeBarang = row._row.data.kode_barang.replace(/<[^>]*>/g, '');
+    const idBarang = row._row.data.id;
+    const idLot = row._row.data.lot_id;
+    const qty = row._row.data.qty;
+    const namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
+    const namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
+    const lotNo = row._row.data.lot_no.replace(/<[^>]*>/g, '');
+    const hargasatuan = row._row.data.harga_satuan;
     if(dtListDetail.getData().some(x=>x.id_barang == idBarang && x.lot_id == idLot)){
         return Swal.fire({
             text: `Barang ${namaBarang} dengan lot ${lotNo} telah dipilih`,
@@ -245,6 +245,8 @@ dtListBarang.on("rowClick", function(e, row){
     inpLotNo.val(lotNo)
     inpQtyExist.val(qty)
     inpIdLot.val(idLot)
+    inpPrice.val(hargasatuan)
+    console.log(hargasatuan)
     $("#modal-barang").modal("hide");
 })
 
@@ -821,7 +823,7 @@ function openModalDetail(row = null){
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
-        // inpPrice.val(formatRupiah(data.price.toString()))
+        inpPrice.val(formatRupiah(data.price.toString()))
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
         inpIdLot.val(data.lot_id)
@@ -904,7 +906,7 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQtyItem.val(),
-                price                         : null,
+                price                         : inpPrice.val(),
                 qty_exist                         : inpQtyExist.val(),
                 lot_no                   : inpLotNo.val(),
                 lot_id                   : inpIdLot.val(),
@@ -918,7 +920,7 @@ function openModalDetail(row = null){
                 nama_barang                 : inpBarang.val(),
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
-                price                         : null,
+                price                         : inpPrice.val(),
                 qty                         : inpQtyItem.val(),
                 qty_exist                         : inpQtyExist.val(),
                 lot_no                   : inpLotNo.val(),
@@ -927,6 +929,20 @@ function openModalDetail(row = null){
                 keterangan:inpKeteranganDet.val()
             });
         }
+
+        // console.log("detail", {
+        //     id:null,
+        //     nama_barang                 : inpBarang.val(),
+        //     kode_barang                 : inpKodeBarang.val(),
+        //     id_barang                   : inpIdBarang.val(),
+        //     price                         : inpPrice.val(),
+        //     qty                         : inpQtyItem.val(),
+        //     qty_exist                         : inpQtyExist.val(),
+        //     lot_no                   : inpLotNo.val(),
+        //     lot_id                   : inpIdLot.val(),
+        //     nama_unit                   : inpUnit.val(),
+        //     keterangan:inpKeteranganDet.val()
+        // })
         modalDet.modal("hide")
         
     })

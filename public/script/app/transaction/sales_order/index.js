@@ -368,8 +368,23 @@ $(document).ready(function () {
 
             for (const el of data.key_ukuran) {
                 const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
-                isColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
-            }
+                isColumn.push({ 
+                    headerSort: false,  
+                    title: el.kode_ukuran, 
+                    field: isKey, 
+                    cssClass: "text-center", 
+                    hozAlign: "center", 
+                    width: "7%", 
+                    bottomCalc: "sum", // Menambahkan kalkulasi sum di bagian bawah kolom
+                    bottomCalcFormatter: "money", // Format hasil kalkulasi sebagai uang
+                    bottomCalcFormatterParams: {
+                        decimal: ",",
+                        thousand: ".",
+                        symbol: "", // Simbol mata uang Rupiah
+                        precision: 0 // Tidak ada desimal
+                    }
+                });
+             }
 
             isColumn.push(
                 {
@@ -380,15 +395,23 @@ $(document).ready(function () {
                         symbol: "Rp",  // Simbol mata uang Rupiah
                         precision: 0,   // Tidak ada desimal
                     },
+                    bottomCalc: "sum", // Menambahkan kalkulasi sum di bagian bawah kolom
+                    bottomCalcFormatter: "money", // Format hasil kalkulasi sebagai uang
+                    bottomCalcFormatterParams: {
+                        decimal: ",",
+                        thousand: ".",
+                        symbol: "Rp", // Simbol mata uang Rupiah
+                        precision: 0 // Tidak ada desimal
+                    },
                     hozAlign:"right", cssClass: 'text-end', width:"15%"})
 
             new Tabulator(`#dt-list-detail-${data.id}`, {
                 data: data.detail, 
                 layout:"fitColumns",
                 resizableColumnFit:true,
-                pagination: true, 
-                paginationSize: 10,
-                paginationButtonCount: 5,
+                // pagination: true, 
+                // paginationSize: 10,
+                // paginationButtonCount: 5,
                 columns: isColumn,
             });
         });

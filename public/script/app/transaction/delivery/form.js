@@ -134,7 +134,37 @@ $(document).ready(function () {
     
             {
                 title: 'QTY', field: 'qty', headerSort:false, formatter: "html", sorter: 'string',
-                width: '30%', hozAlign: 'right', cssClass: 'text-end'
+                width: '30%', hozAlign: 'right', cssClass: 'text-end',
+                editor: "input",
+                editorParams: {
+                    min: 1
+                },
+                cellEdited: function(cell) {
+                    let newQty = parseInt(cell.getValue());
+                    let rowData = cell.getRow().getData();
+                    // console.log(rowData)
+                    let refDetailId = rowData.ref_detail_id;
+
+                    let tblDetail = dtListDetail.getData();
+                    
+                    let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === parseInt(refDetailId));
+                    // console.log("tblDetail",objIndex)
+                    // console.log("tblDetail",tblDetail[objIndex])
+                    if (objIndex >= 0) {
+                        let originalQty = tblDetail[objIndex].qty;
+                        let currentDoQty = tblDetail[objIndex].qty_prod;
+
+                        if (newQty <= (originalQty)) {
+                            tblDetail[objIndex].qty_prod = newQty;
+                            tblDetail[objIndex].qty_remain = originalQty - newQty;
+                        } else {
+                            alert("Jumlah DO Qty melebihi jumlah yang tersedia!");
+                            cell.setValue(currentDoQty); // Revert to the original value
+                        }
+                    }
+
+                    dtListDetail.replaceData(tblDetail);
+                }
             }, 
         ],
         layout: 'fitColumns',
@@ -245,7 +275,7 @@ $(document).ready(function () {
     dtListProds.on("rowClick", function(e, row){
         let data =  row.getData()
 
-        console.log(data);
+        // console.log(data);
         $.ajax({
             type: 'POST',
             url: '/trans/delivery-order/det_produksi',

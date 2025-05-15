@@ -348,4 +348,77 @@ $(document).ready(function () {
         });
     }
     // end table PO
+
+    $('#filter_lap_bulan, #filter_lap_tahun').on('change', fetchData);
+
+    const bulanSekarang = new Date().getMonth() + 1;
+    const tahunSekarang = new Date().getFullYear();
+
+    $('#filter_lap_bulan').val(bulanSekarang);
+    $('#filter_lap_tahun').val(tahunSekarang);
+
+    fetchData(); // Panggil fungsi fetchData saat halaman dimuat
+
+    function fetchData() {
+        const val1 = $('#filter_lap_bulan').val();
+        const val2 = $('#filter_lap_tahun').val();
+
+        if (!val1 || !val2) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Oops!',
+                text: 'Kedua dropdown harus dipilih terlebih dahulu.'
+            });
+            return;
+        }
+        
+        // Hanya panggil jika keduanya terisi (atau sesuai logikamu)
+        if (val1 && val2) {
+            
+          $.ajax({
+            url: '/dashboard/list_laba',
+            method: 'GET',
+            data: {
+              month: val1,
+              year: val2
+            },
+            success: function (data) {
+                const penjualan = data.penjualan;
+                const pemakaian = data.pemakaian;
+                const laba_kotor = data.laba_kotor;
+                const total_biaya = data.total_biaya;
+                const laba_bersih = data.laba_bersih;
+                const nama_biaya = data.nama_biaya;
+                const harga_per_biaya = data.harga_per_biaya;
+
+                const targetRow = $("#total_operasional").closest('tr');
+
+                $(".biaya-operasional-row").remove();
+        
+                $('#penjualan').text(penjualan);     
+                $('#total_penjualan').text(penjualan); 
+                $('#pemakaian').text(pemakaian);      
+                $('#total_pemakaian').text(pemakaian); 
+                $('#laba_kotor').text(laba_kotor); 
+                $('#total_operasional').text(total_biaya); 
+                $('#laba_bersih').text(laba_bersih); 
+
+                // Pastikan kedua array punya panjang sama
+                for (let i = 0; i < nama_biaya.length; i++) {
+                    const rowHtml = `
+                        <tr class="biaya-operasional-row">
+                        <td class="p-s-24">- ${nama_biaya[i]}</td>
+                        <td>${harga_per_biaya[i]}</td>
+                        <td></td>
+                        </tr>
+                    `;
+                    targetRow.before(rowHtml);
+                }
+            },
+            error: function () {
+              $('#result').html('Gagal memuat data.');
+            }
+          });
+        }
+      }
 });

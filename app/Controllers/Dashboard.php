@@ -240,5 +240,76 @@ class Dashboard extends BaseController
       
       return $this->response->setJSON($build_array);
   }
+
+  public function lists_laba()
+  {
+    $month = $this->request->getGet('month');       // sama seperti $_GET['kategori']
+        $year = $this->request->getGet('year');
+
+      // $params['tahun'] = $tahun;
+      $laba_kotor = 0;
+      $format_laba_kotor = '0,00';
+      $penjualan = $this->mdashboard->getDataPenjualan($month, $year);
+        if (is_null($penjualan) || $penjualan == 0) {
+            $format_penjualan = '0,00';  // Atau bisa gunakan format lain
+        } else {
+            $format_penjualan = '' . number_format($penjualan, 2, ',', '.');
+            $laba_kotor += $penjualan;
+        }
+
+      $Pemakaian = $this->mdashboard->getDataPemakaian($month, $year);
+        if (is_null($Pemakaian) || $Pemakaian == 0) {
+            $format_pemakaian = '0,00';  // Atau bisa gunakan format lain
+        } else {
+            $format_pemakaian = '' . number_format($Pemakaian, 2, ',', '.');
+            $laba_kotor -= $Pemakaian;
+        }
+
+        if ($laba_kotor != 0) {
+            $format_laba_kotor = '' . number_format($laba_kotor, 2, ',', '.');
+        }
+
+    $biaya = $this->mdashboard->getDataBiaya($month, $year);
+
+    $code = [];
+    $nama_biaya = [];
+    $harga_per_biaya = [];
+    $total_biaya = 0;
+    $format_total_biaya = '0,00';
+    foreach ($biaya as $key => $value) {
+        if (!in_array($value->kode, $code)) {
+            $code[] = $value->kode;
+            $nama_biaya[] = $value->nama;
+            if (isset($value->bln1)) {
+                # code...
+                $harga_per_biaya[] = '' . number_format($value->bln1, 2, ',', '.');
+                $total_biaya += $value->bln1;
+            }
+            else {
+                $harga_per_biaya[] = '0,00'; 
+            }
+        } 
+    }
+    if ($total_biaya != 0) {
+        $format_total_biaya = '' . number_format($total_biaya, 2, ',', '.');
+    }
+
+    $laba_bersih = $laba_kotor - $total_biaya;
+    $format_laba_bersih = '' . number_format($laba_bersih, 2, ',', '.');
+
+      $build_array = array(
+          "penjualan" => $format_penjualan,
+          "pemakaian" => $format_pemakaian,
+          "laba_kotor" => $format_laba_kotor,
+          "biaya" => $biaya,
+          "code" => $code,
+          "nama_biaya" => $nama_biaya,
+          "harga_per_biaya" => $harga_per_biaya,
+          "total_biaya" => $format_total_biaya,
+          "laba_bersih" => $format_laba_bersih,
+      );
+      
+      return $this->response->setJSON($build_array);
+  }
     
 }

@@ -250,7 +250,10 @@
                   <div class="col-md-12">
                     <label class="control-label text-start col-form-label" for="filter_lap_tahun">Tahun</label>
                     <select id="filter_lap_tahun" name="filter_lap_tahun" class="form-select">
-                      <option value="2024" selected>2024</option>
+                      <option value="2027">2027</option>
+                      <option value="2026">2026</option>
+                      <option value="2025">2025</option>
+                      <option value="2024">2024</option>
                       <option value="2023">2023</option>
                       <option value="2022">2022</option>
                       <option value="2021">2021</option>
@@ -273,13 +276,13 @@
                   </tr>
                   <tr>
                     <td class="p-s-24">- Penjualan</td>
-                    <td>20.000.000,00</td>
+                    <td id="penjualan">20.000.000,00</td>
                     <td></td>
                   </tr>
                   <tr>
                     <th><b>Total Penjualan</b></th>
                     <th></th>
-                    <th><b>20.000.000,00</b></th>
+                    <th><b id="total_penjualan">20.000.000,00</b></th>
                   </tr>
                   <tr>
                     <td></td>
@@ -292,24 +295,19 @@
                     <th></th>
                   </tr>
                   <tr>
-                    <td class="p-s-24">- Pembelian</td>
-                    <td>7.500.000,00</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td class="p-s-24">- Gaji/Upah Borongan</td>
-                    <td>5.000.000,00</td>
+                    <td class="p-s-24">- Pemakaian Barang/Bahan</td>
+                    <td id="pemakaian">7.500.000,00</td>
                     <td></td>
                   </tr>
                   <tr>
                     <th><b>Total Biaya Produksi</b></th>
                     <th></th>
-                    <th><b>12.500.000,00</b></th>
+                    <th><b id="total_pemakaian">12.500.000,00</b></th>
                   </tr>
                   <tr>
                     <th class="bg-info"><b>Laba Kotor</b></th>
                     <th class="bg-info"></th>
-                    <th class="bg-info"><b>7.500.000,00</b></th>
+                    <th class="bg-info"><b id="laba_kotor">7.500.000,00</b></th>
                   </tr>
                   <tr>
                     <td></td>
@@ -317,34 +315,20 @@
                     <td></td>
                   </tr>
                   <tr>
-                    <th><b>Biaya Operasional</b></th>
+                    <th><b>Biaya - Biaya</b></th>
                     <th></th>
                     <th></th>
                   </tr>
-                  <tr>
-                    <td class="p-s-24">- Gaji/Upah Harian</td>
-                    <td>2.000.000,00</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td class="p-s-24">- Lemburan</td>
-                    <td>250.000,00</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td class="p-s-24">- Biaya Operasional</td>
-                    <td>3.000.000,00</td>
-                    <td></td>
-                  </tr>
+                  
                   <tr>
                     <th><b>Total Biaya Operasional</b></th>
                     <th></th>
-                    <th><b>5.250.000.00</b></th>
+                    <th><b id="total_operasional">5.250.000.00</b></th>
                   </tr>
                   <tr>
                     <th class="bg-info"><b>Laba Bersih</b></th>
                     <th class="bg-info"></th>
-                    <th class="bg-info"><b>2.250.000,00</b></th>
+                    <th class="bg-info"><b id="laba_bersih">2.250.000,00</b></th>
                   </tr>
                 </tbody>
               </table>

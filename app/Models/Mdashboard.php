@@ -210,4 +210,63 @@ class Mdashboard extends Model
 
         return $this->_data;
     }
+
+    function getDataPenjualan($month = null, $year = null)
+    {
+        $builder = $this->db->table("trans_invoice abx");
+        
+        $builder->select("sum(abx.grand_total) as grand_total");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->where('abx.active = 1');
+
+        $builder->where("EXTRACT(MONTH FROM abx.tgl_transaksi) = $month");
+        $builder->where("EXTRACT(YEAR FROM abx.tgl_transaksi) = $year");    
+
+        $this->_data = $builder->get()->getRow()->grand_total;
+
+        return $this->_data;
+    }
+
+    function getDataPemakaian($month = null, $year = null)
+    {
+        $builder = $this->db->table("trans_barang_detail abx");
+        
+        $builder->select("SUM(COALESCE(abx.price, 0) * COALESCE(abx.qty, 0)) AS grand_total");
+        $builder->join("trans_barang_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
+        $builder->where('bbx.active = 1');
+        $builder->where('bbx.jenis_transaksi', 2);
+
+        $builder->where("EXTRACT(MONTH FROM bbx.tanggal) = $month");
+        $builder->where("EXTRACT(YEAR FROM bbx.tanggal) = $year");    
+
+        $this->_data = $builder->get()->getRow()->grand_total;
+
+        return $this->_data;
+    }
+
+    function getDataBiaya($month = null, $year = null)
+    {
+        $builder = $this->db->table('m_coa ax');
+        
+        $builder->select("  ax.id,
+                            ax.parent_id,
+                            ax.kode,
+                            ax.nama,
+                            ax.level,
+                            (CASE WHEN ax.parent_id IS NULL
+                                  THEN get_jml_month_parent(ax.id, $month, {$year}) 
+                                  ELSE get_jml_month(ax.id, $month, {$year}) 
+                            END) as bln1
+                            ");
+
+        $builder->where("ax.active = 1");
+        $builder->where("(
+    CAST(ax.kode AS INTEGER) >= 5000 
+    AND MOD(CAST(ax.kode AS INTEGER), 1000) != 0
+  )");
+
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
 }

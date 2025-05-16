@@ -108,6 +108,34 @@ class Production extends BaseController
 
       $qty = $row->qty;
       $qty_prod = $this->mWalkorder->getCnt_produksi($row->id_walkorder);
+      if (empty($qty_prod)) {
+        $qty_prod = 0;
+        # code...
+      }
+
+      $parms['last_proses'] = 1;
+      $parms['id_walkorder'] = $row->id_walkorder;
+      $dataLast = $this->mProduksi->getDataProsesProd($parms);
+      $last_data = !empty($dataLast) ? $dataLast[0] : [];
+
+      
+
+      $qty_kirim = 0;
+      if(!empty($row->id)){
+        $param_dlv['id_produksi'] = $row->id;
+        $data_pengirimasn = $this->mdelivery->getData(null, 0, 9999, null, null, $param_dlv);
+
+        if(!empty($data_pengirimasn)){
+            foreach ($data_pengirimasn as $rd) {
+              $qty_kirim += $rd->qty_delv;
+            }
+        }
+      }
+
+      $qty_hasil = null;
+      if (!empty($last_data)) {
+        $qty_hasil = $last_data->qty_prod - $qty_kirim;
+      }
 
       array_push(
         $build_array["data"],
@@ -120,6 +148,7 @@ class Production extends BaseController
           "qty"               => $row->qty,
           "tipe"              => $tipe,
           "qty_prod"          => $qty_prod,
+          "qty_hasil"          => $qty_hasil,
           "qty_remain"        => $qty - $qty_prod,
           "tgl_deadline"      => fdate_eng_to_ind($row->tgl_deadline),
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),

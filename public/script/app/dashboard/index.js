@@ -3,17 +3,6 @@ $(document).ready(function () {
     // table tracking order 
     let dtListTracking = new Tabulator("#tbl-tracking", {
         columns: [
-            {
-                title: "NO. TRANSAKSI", field: "btnOrder", headerSort: false, formatter: "html",
-                width: 130, hozAlign: 'center', cssClass: 'text-center'
-            },
-
-            {
-                title: "TIPE", field: "tipe", headerSort: false, formatter: "html",
-                width: 120, 
-            },
-
-            
 			{
 				title: 'TGL TRANSAKSI', field: 'tgl_transaksi', headerSort:false, sorter: 'string',
 				width: 130, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
@@ -45,7 +34,17 @@ $(document).ready(function () {
             },
 
             {
-				title: 'QTY<br>PRODUKSI', field: 'qty_prod', headerSort:false, sorter: 'string',
+				title: 'PROSES<br>PRODUKSI', field: 'qty_prod', headerSort:false, sorter: 'string',
+				width: 100, hozAlign: 'right', cssClass: 'text-end'
+			}, 
+
+            {
+				title: 'HASIL<br>PRODUKSI', field: 'qty_hasil', headerSort:false, sorter: 'string',
+				width: 100, hozAlign: 'right', cssClass: 'text-end'
+			}, 
+
+            {
+				title: 'SISA<br>PRODUKSI', field: 'qty_sisa', headerSort:false, sorter: 'string',
 				width: 100, hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
@@ -53,11 +52,6 @@ $(document).ready(function () {
                 title: "NO. PENGIRIMAN", field: "btnDev", headerSort: false, formatter: "html",
                 width: 150, hozAlign: 'center', cssClass: 'text-center'
             },
-
-            {
-				title: 'QTY BELUM<br>PRODUKSI', field: 'qty_sisa', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end'
-			}, 
 
             {
 				title: 'QTY<br>PENGIRIMAN', field: 'qty_kirim', headerSort:false, sorter: 'string',
@@ -68,6 +62,15 @@ $(document).ready(function () {
 				title: 'QTY BELUM<br>DIKIRIM ', field: 'qty_sisa_kirim', headerSort:false, sorter: 'string',
 				width: 100, hozAlign: 'right', cssClass: 'text-end'
 			}, 
+            {
+                title: "NO. TRANSAKSI", field: "btnOrder", headerSort: false, formatter: "html",
+                width: 130, hozAlign: 'center', cssClass: 'text-center'
+            },
+
+            {
+                title: "TIPE", field: "tipe", headerSort: false, formatter: "html",
+                width: 120, 
+            },
 
             
         ],

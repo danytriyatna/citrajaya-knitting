@@ -215,10 +215,19 @@ $(document).ready(function () {
         } 
     }
 
-    
     let searchThread = null;
     let elSearch = $("#tb-search");
+
     if (elSearch != null) {
+        // Ambil dari URL dan isi input jika ada
+        const urlParams = new URLSearchParams(window.location.search);
+        const presetSearch = urlParams.get("search");
+
+        if (presetSearch) {
+            elSearch.val(presetSearch);
+            dtList.setFilter("", "like", presetSearch);
+        }
+
         elSearch.on("keyup", function (e) {
             if ($(this).val().length < 3 && e.keyCode > 13) {
                 return;
@@ -363,11 +372,15 @@ $(document).ready(function () {
                         } 
                     }
                 },
-                {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+                // {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+                {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colour"}
             ]
 
+            let total = 0;
             for (const el of data.key_ukuran) {
                 const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
+                // total += isKey;
+                console.log(isKey + " || " + el.kode_ukuran);
                 isColumn.push({ 
                     headerSort: false,  
                     title: el.kode_ukuran, 
@@ -375,16 +388,46 @@ $(document).ready(function () {
                     cssClass: "text-center", 
                     hozAlign: "center", 
                     width: "7%", 
-                    bottomCalc: "sum", // Menambahkan kalkulasi sum di bagian bawah kolom
-                    bottomCalcFormatter: "money", // Format hasil kalkulasi sebagai uang
-                    bottomCalcFormatterParams: {
-                        decimal: ",",
-                        thousand: ".",
-                        symbol: "", // Simbol mata uang Rupiah
-                        precision: 0 // Tidak ada desimal
-                    }
+                    // bottomCalc: "sum", // Menambahkan kalkulasi sum di bagian bawah kolom
+                    // bottomCalcFormatter: "money", // Format hasil kalkulasi sebagai uang
+                    // bottomCalcFormatterParams: {
+                    //     decimal: ",",
+                    //     thousand: ".",
+                    //     symbol: "", // Simbol mata uang Rupiah
+                    //     precision: 0 // Tidak ada desimal
+                    // }
                 });
              }
+
+             // Simpan list key_ukuran global
+            let ukuranKeys = data.key_ukuran; // global
+
+            isColumn.push({
+                headerSort: false,
+                cssClass: "text-center", 
+                title: "Total",
+                field: "total",
+                hozAlign: "center",
+                 width: "7%", 
+                mutator: function(value, data, type, params, component){
+                    let total = 0;
+                    for (const el of ukuranKeys) {
+                        const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran;
+                        total += parseFloat(data[isKey] || 0);
+                    }
+                    return total;
+                },
+                bottomCalc: function(values, data, calcParams){
+                    return values.reduce((sum, val) => sum + parseFloat(val || 0), 0);
+                },
+                bottomCalcFormatter: "money",
+                bottomCalcFormatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "",
+                    precision: 0
+                }
+            });
 
             isColumn.push(
                 {

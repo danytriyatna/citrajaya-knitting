@@ -3,14 +3,20 @@
 namespace App\Controllers;
 
 use App\Models\Mdashboard;
+use Modules\Transaction\Models\DeliveryModel;
+use Modules\Transaction\Models\ProductionModel;
 
 class Dashboard extends BaseController
 {
     protected $mdashboard;
+    protected $mProduksi;
+    protected $mdelivery;
 
     function __construct()
     {
         $this->mdashboard = new Mdashboard();
+        $this->mProduksi = new ProductionModel();
+        $this->mdelivery = new DeliveryModel();
     }
 
 	public function index()
@@ -55,12 +61,12 @@ class Dashboard extends BaseController
           $tipe = "-";
           
           if($row->tipe == 1){
-            $link_order = base_url() . "/trans/sample";
+            $link_order = base_url() . "/trans/sample?search=$row->trans_kode";
             $btnOrder = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_order." > ".$row->trans_kode." </a>";
 
             $tipe = "Sample";
           }else{
-            $link_order = base_url() . "/trans/sales-order";
+            $link_order = base_url() . "/trans/sales-order?search=$row->trans_kode";
             $btnOrder = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_order." > ".$row->trans_kode." </a>";
 
             $tipe = "Sales Order";
@@ -90,8 +96,31 @@ class Dashboard extends BaseController
               $tgl_transaksi = fdate_eng_to_ind($row->tgl_transaksi);
           }
 
+        $parms['last_proses'] = 1;
+        $parms['id_walkorder'] = $row->id_walkorder;
+        $dataLast = $this->mProduksi->getDataProsesProd($parms);
+        $last_data = !empty($dataLast) ? $dataLast[0] : [];
+
+        $qty_kirim = 0;
+        if(!empty($row->id_prod)){
+            $param_dlv['id_produksi'] = $row->id_prod;
+            $data_pengirimasn = $this->mdelivery->getData(null, 0, 9999, null, null, $param_dlv);
+
+            if(!empty($data_pengirimasn)){
+                foreach ($data_pengirimasn as $rd) {
+                $qty_kirim += $rd->qty_delv;
+                }
+            }
+        }
+
+        $qty_hasil = null;
+        if (!empty($last_data)) {
+            $qty_hasil = $last_data->qty_prod - $qty_kirim;
+        }
+
           $qty_sisa = (int) $row->qty - (int) $row->qty_prod;
-          $qty_sisa_kirim = (int) $row->qty_prod - (int) $row->qty_kirim;
+        //   $qty_sisa_kirim = (int) $row->qty_prod - (int) $row->qty_kirim;
+          $qty_sisa_kirim = (int) $row->qty - (int) $row->qty_kirim;
 
           
           
@@ -108,6 +137,7 @@ class Dashboard extends BaseController
               'qty_prod' => $row->qty_prod,
               'qty_kirim' => $row->qty_kirim,
               'qty_sisa' => $qty_sisa,
+              'qty_hasil' => $qty_hasil,
               'qty_sisa_kirim' => $qty_sisa_kirim,
           ));
 

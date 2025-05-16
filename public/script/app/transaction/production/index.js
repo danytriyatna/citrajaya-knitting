@@ -15,16 +15,6 @@ $(document).ready(function () {
 				title: 'Tgl Production', field: 'tgl_transaksi', headerSort:false, sorter: 'string',
 				width: 140
 			}, 
-				
-			{
-				title: 'No. Referensi', field: 'kode_walkorder_ref', headerSort:false, sorter: 'string',
-				width: 140, 
-			}, 
-
-            {
-				title: 'No. Referensi WO', field: 'ref_kode', headerSort:false, sorter: 'string',
-				width: 140, 
-			}, 
 
             {
 				title: 'Tipe', field: 'tipe', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
@@ -38,7 +28,7 @@ $(document).ready(function () {
 
             {
 				title: 'Buyer', field: 'konsumen_nama', headerSort:false, sorter: 'string',
-				width: 250, formatter : "html"
+				width: 200, formatter : "html"
 			},
 
             {
@@ -52,20 +42,34 @@ $(document).ready(function () {
 			},
 
             {
-				title: 'Prod Result', field: 'qty_prod', formatter : "html", headerSort:false, sorter: 'string',
+				title: 'Proses Prod', field: 'qty_prod', formatter : "html", headerSort:false, sorter: 'string',
 				width: 120
 			} ,
 
+            {
+				title: 'Hasil Prod', field: 'qty_hasil', formatter : "html", headerSort:false, sorter: 'string',
+				width: 120
+			} ,
             
             {
-				title: 'Remain Qty', field: 'qty_remain', headerSort:false, sorter: 'string', align: "center",
+				title: 'Sisa Prod', field: 'qty_remain', headerSort:false, sorter: 'string', align: "center",
                 width: 120
 			} ,
 
             {
 				title: 'Prod Status', field: 'status', formatter : "html", headerSort:false, sorter: 'string',
-				width: 125
+				width: 125, visible: false
 			} ,
+
+            {
+				title: 'No. Referensi', field: 'kode_walkorder_ref', headerSort:false, sorter: 'string',
+				width: 140, 
+			}, 
+
+            {
+				title: 'No. Referensi WO', field: 'ref_kode', headerSort:false, sorter: 'string',
+				width: 140, 
+			}, 
 				
         ],
         // layout: 'fitColumns',

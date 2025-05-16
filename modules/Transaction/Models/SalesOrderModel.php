@@ -19,7 +19,8 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " abx");
 
         $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.status, 
-                          abx.gambar_id,cbx.file_name, abx.id_sample, abx.uang_dp, abx.style");
+                          abx.gambar_id,cbx.file_name, abx.id_sample, abx.uang_dp, abx.style as stylex , abx.style_cnt,
+                          concat(abx.style,' - ', abx.style_cnt) as style");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("_files cbx", "abx.gambar_id = cbx.id", "left");
         if ($id == null or $id == "") {
@@ -65,6 +66,14 @@ class SalesOrderModel extends \App\Models\PrModel
             $builder->where('LOWER(abx.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+        }
+
+        if(!empty($params['style'])){
+            $builder->where("abx.style", $params['style']);
+        }
+
+        if(!empty($params['id_konsumen'])){
+            $builder->where("abx.id_konsumen", $params['id_konsumen']);
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

@@ -15,6 +15,7 @@ use Modules\Transaction\Models\ItemTransferDetailModel;
 use Modules\Transaction\Models\ItemTransferModel;
 use Modules\Referensi\Models\GudangModel;
 use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\KonsumenModel;
 
 
 class BarangMasuk extends BaseController
@@ -29,6 +30,7 @@ class BarangMasuk extends BaseController
     protected $mTrfDet;
     protected $mGudang;
     protected $mOperator;
+    protected $mkonsumen;
 
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/incoming-goods';
@@ -47,6 +49,7 @@ class BarangMasuk extends BaseController
         $this->mTrfDet = new ItemTransferDetailModel();
         $this->files  = new FileModel();
         $this->mOperator = new OperatorModel();
+        $this->mkonsumen = new KonsumenModel();
     }
 
     public function index()
@@ -125,6 +128,15 @@ class BarangMasuk extends BaseController
                 $atr_other['class'] = '';
                 $atr_other['icon_class'] = 'fa-print';
             }
+
+            if ($row->status != 0 && $row->id_kategori == 12) {
+                $atr_other['title'] = 'Print Faktur';
+                $atr_other['target'] = "blank";
+                $atr_other['url'] = $this->urlv . '/print-faktur/';
+                $atr_other['class'] = '';
+                $atr_other['icon_class'] = 'fa-print';
+            }
+
             if ($atr_edit || $atr_other)
                 $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
 
@@ -421,6 +433,53 @@ class BarangMasuk extends BaseController
             $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
         }
         $html = view($this->views . '\barang_masuk_print', $this->data);
+
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+        $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+        exit;
+    }
+
+
+    public function print_faktur($id = null)
+    {
+        if (!$this->auth->loggedIn()) {
+            return redirect()->to('/auth/login');
+        }
+        $dompdf = new \Dompdf\Dompdf();
+        // Set Dompdf options for portrait orientation
+        $dompdf->setPaper('A4', 'portrait');
+
+        $this->data['data'] = [];
+        if ($id != "") {
+            $id = decrypt($id);
+            $resData = $this->mRef->getData($id);
+
+            $sort = [
+            [
+                'field' => 'uk.id',
+                'dir' => 'ASC'
+            ]
+            ];
+
+            $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+            
+            $dtKonsumen = [];
+            $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
+            if(!empty($resDataDetSO)){
+                $id_konsumen = $resDataDetSO[0]->id_konsumen;
+                $dtKonsumen = $this->mkonsumen->getData($id_konsumen);
+            }
+            $this->data['dataSO'] = ($resDataDetSO);
+            
+            $this->data['dtKonsumen'] = !empty($dtKonsumen) ? $dtKonsumen : [];
+            $this->data['data'] = !empty($resData) ? $resData : [];
+            // $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
+            $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
+            
+        }
+        $html = view($this->views . '\barang_masuk_faktur_print', $this->data);
 
         $dompdf->loadHtml($html);
         $dompdf->render();

@@ -19,7 +19,7 @@ class SampleModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " abx");
 
         $builder->select("abx.id, abx.kode_sample,abx.status, abx.deskripsi, bbx.nama, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.status, 
-                          abx.gambar_id,cbx.file_name, abx.uang_dp, abx.style, abx.qty");
+                          abx.gambar_id,cbx.file_name, abx.uang_dp, abx.style, abx.qty, abx.style_cnt");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("_files cbx", "abx.gambar_id = cbx.id", "left");
         if ($id == null or $id == "") {

@@ -8,6 +8,7 @@ $(document).ready(function () {
     const inpNoSalesOrder   = $('#no_sales_order');
     const inpDeskripsi      = $('#desc_style');
     const inpStyle          = $('#style');
+    const inprepeat         = $('#repeat_inp');
     const inpBuyer          = $('#select_buyer');
     const inpTglTransaksi   = $('#tgl_sales_order');
     const inpTglDeadline    = $('#tgl_deadline');
@@ -252,6 +253,7 @@ $(document).ready(function () {
 
     function cardFormatter(cell, formatterParams, onRendered){
         let data = cell.getRow().getData(); // Ambil data row
+
         let status = '';
         let aksi = '';
         if(data.status == 'Draft'){
@@ -363,7 +365,7 @@ $(document).ready(function () {
                             brcStyle.val(data.style)
                             inpp_buyer.html(data.nama)
 
-                            console.log("kolom print", data_row)
+                            // console.log("kolom print", data_row)
 
                             setTimeout(() => {
                                 inpp_trans.html(data_row.id);
@@ -475,6 +477,7 @@ $(document).ready(function () {
         inpTglDeadline.val("")
         inpKetSalesOrder.val("")
         inpStyle.val("")
+        inprepeat.val(0)
         inpSample.val("").trigger("change")
         setTimeout(() => {
             inpUangDP.val("0").trigger("change");
@@ -562,7 +565,7 @@ $(document).ready(function () {
                 });
             },
             success: function(data) {
-                
+                console.log("userz", data)
                 idSalesOrder = id
                 rowDet.show()
                 inpData.val(data.id)
@@ -570,8 +573,8 @@ $(document).ready(function () {
                 inpNoSalesOrder.val(data.kode_sales_order)
                 fileSalesOrderOld.val(data.gambar_id)
                 inpKetSalesOrder.val(data.keterangan)
-                inpStyle.val(data.style)
-                
+                inpStyle.val(data.stylex)
+                inprepeat.val(data.style_cnt_order).trigger("change");
                 
                 setTimeout(() => {
                     inpBuyer.val(data.id_konsumen).trigger('change')
@@ -792,6 +795,7 @@ $(document).ready(function () {
             formData.append("samples", inpSample.val())
             formData.append("uang_dp", inpUangDP.val());
             formData.append("style", inpStyle.val());
+            formData.append("repeat", inprepeat.val());
             formData.append("submit_data", send);
             
             $.ajax({
@@ -940,6 +944,7 @@ $(document).ready(function () {
     
     var isSampleData = [];
     let inpSample = $("#select_samples")
+
     function getSample(){
         $.ajax({
             url: '/trans/sales-order/getSample', // point to server-side controller method
@@ -1016,6 +1021,7 @@ $(document).ready(function () {
                     let tglDead = tglD['2'] + '-' + tglD['1']+ '-' + tglD['0']
                     // inpTglDeadline.datepicker('setDate', tglDead); //.val(changeTgl(isin[0].tgl_transaksi))
                     inpStyle.val(isin[0].style)
+                    inprepeat.val(isin[0].style_cnt_order);
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
                         inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))

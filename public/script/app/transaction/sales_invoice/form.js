@@ -1,6 +1,7 @@
 
 $(document).ready(function () {
-    let ppn = 11;
+    // let ppn = 11;
+    let ppn = 0;
 
     // conf function 
     let cellMoney = function(cell, formatterParams){

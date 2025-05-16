@@ -63,10 +63,17 @@
 
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="style">Style<span class="text-danger">*</span></label>
-          <div class="col-md-9">
+          <div class="col-md-4">
             <input type="text" id="style" name="style" class="form-control" placeholder="Ketikkan Sales Order Style" value="" required>
             <div class="invalid-feedback">
               Sales Order Style tidak valid
+            </div>
+          </div>
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="repeat_inp">Repeat</label>
+          <div class="col-md-3">
+            <input readonky type="text" id="repeat_inp" name="repeat_inp" class="form-control" value="0" placeholder="Ketikkan Repeat">
+            <div class="invalid-feedback">
+              Repeat tidak valid
             </div>
           </div>
         </div>

@@ -131,7 +131,9 @@ class SalesOrder extends BaseController
           "kode_sales_order" => $row->kode_sales_order,
           "tgl_deadline" => $row->tgl_deadline,
           "deskripsi" => $row->deskripsi,
+          "stylex" => $row->stylex,
           "style" => $row->style,
+          "style_cnt_order" => $row->style_cnt,
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,
           "status"  => $status,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
@@ -187,6 +189,8 @@ class SalesOrder extends BaseController
     $build_array =  array(
       "id"   => encrypt($results->id),
       "style" => $results->style,
+      "stylex" => $results->stylex,
+      "style_cnt_order" => $results->style_cnt,
       "keterangan" => $results->keterangan,
       "id_konsumen" => $results->id_konsumen,
       "tgl_transaksi" => $results->tgl_transaksi,
@@ -239,6 +243,7 @@ class SalesOrder extends BaseController
     $submit_data = $this->request->getPost('submit_data');
     $uang_dp = $this->request->getPost('uang_dp');
     $style = $this->request->getPost('style');
+    $repeat = $this->request->getPost('repeat');
 
 
     $this->validation->setRules([
@@ -294,6 +299,7 @@ class SalesOrder extends BaseController
       'tgl_deadline' => $tglDeadline,
       'uang_dp' => $uang_dp,
       'style' => $style,
+      'style_cnt' => $repeat,
       // 'kode_sales_order' => $noSalesOrder,
       'active' => 1,
       // 'status' => 1,
@@ -728,6 +734,7 @@ class SalesOrder extends BaseController
     $msg = "Gagal mengambil data sample !";
     $status = false;
     $data = [];
+    $cnt = 0;
 
     if (!empty($buyerId)) {
       $params = [
@@ -737,13 +744,25 @@ class SalesOrder extends BaseController
       if (!empty($data_sample)) {
         $msg = "Berhasil mengambil data sample !";
         $status = true;
+
+        for ($i=0; $i < count($data_sample) ; $i++) { 
+          $r = $data_sample[$i];
+          $prx['style'] = $r->style;
+          $prx['id_konsumen'] = $buyerId;
+          $cntx = $this->mSalesOrder->getDataCnt(null, $prx);
+          $data_sample[$i]->style_cnt_order = !empty($cntx) ? ($cntx + 1) : 1;
+        }
+
         $data = $data_sample;
+
+        
       }
     }
 
     $build_array['message'] = $msg;
     $build_array['status']  = $status;
     $build_array['data']    = $data;
+    $build_array['cnt']    = $cnt;
     return $this->response->setJSON($build_array);
   }
 

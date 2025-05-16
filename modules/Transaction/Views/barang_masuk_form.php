@@ -333,7 +333,7 @@
 
                  
               </div>
-              <div hidden class="row">
+              <div class="row">
                  <div class="col-sm-6">
                       <div class="form-group row">
                         <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nomor_mesin">Nomor Mesin</label>
@@ -352,7 +352,7 @@
                   </div>
               </div>
             </div>
-            <div hidden class="col-sm-5">
+            <div class="col-sm-5">
                   <div class="col-sm-12">
                       <div class="form-group row">
                         <label class="control-label text-start text-md-end col-md-3 col-form-label" for="jam_mesin">Jam Mesin</label>
@@ -361,9 +361,6 @@
                         </div>
                       </div>
                   </div>
-            </div>
-
-            <div class="col-sm-5">
                   <div class="col-sm-12">
                       <div class="form-group row">
                         <div class="col-md-9">

@@ -628,22 +628,22 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "20%"},
-        {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
-                format:"dd-MM-yyyy",
-                alignEmptyValues:"top",
-            },
-            editor: "date"
-        },
-        {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
-        {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
-        {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
-            formatterParams: {
-                decimal: ",",
-                thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                // Tidak ada desimal
-                            }
-                        },
+        // {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
+        //         format:"dd-MM-yyyy",
+        //         alignEmptyValues:"top",
+        //     },
+        //     editor: "date"
+        // },
+        // {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
+        // {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
+        // {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
+        //     formatterParams: {
+        //         decimal: ",",
+        //         thousand: ".",
+        //         symbol: "Rp",  // Simbol mata uang Rupiah
+        //         // Tidak ada desimal
+        //     }
+        // },
                         {title: "Qty", field: "qty_kirim", width: "15%"},
                         {title: "Qty<br>Terima", field: "qty", width: "10%", editor: "number", cellEdited: function(cell) {
                             const row = cell.getRow();
@@ -1127,9 +1127,9 @@ function openModalDetail(row = null){
 }
 
 
-const inpJmlMesin = $("#jml_mesin");
-const inpJmlQc = $("#jml_qc");
-const inpJmlLain = $("#jml_lain");
+const inpJamMesin = $("#jam_mesin");
+const inpNomorMesin = $("#nomor_mesin");
+const inpNilaiMesin = $("#nilai_mesin");
 
 function simpanData(status) {
     $.ajax({
@@ -1149,9 +1149,9 @@ function simpanData(status) {
             status:status,
             id_proses: inpIdproses.val(),
             id_cmt: inpIdCmt.val(),
-            jml_qc: inpJmlQc.val(),
-            jml_mesin: inpJmlMesin.val(),
-            jml_lain: inpJmlLain.val(),
+            nomor_mesin: inpNomorMesin.val(),
+            jam_mesin: inpJamMesin.val(),
+            nilai_mesin: inpNilaiMesin.val(),
         },
         dataType: "json",
         beforeSend: function () {

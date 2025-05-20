@@ -628,12 +628,12 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "20%"},
-        // {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
-        //         format:"dd-MM-yyyy",
-        //         alignEmptyValues:"top",
-        //     },
-        //     editor: "date"
-        // },
+        {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
+                format:"dd-MM-yyyy",
+                alignEmptyValues:"top",
+            },
+            editor: "date"
+        },
         // {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
         // {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
         // {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
@@ -722,6 +722,13 @@ dtListProduksiRef.on("rowClick", function(e, row){
     let produksi_data = dtListProduksi.getData();
 
     let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
+
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
 
     // if (list_verif.length > 0) {
     //     return Swal.fire({

@@ -288,9 +288,15 @@ class BarangMasuk extends BaseController
         if($id_kategori == 12){
             $dataHeader['id_proses'] = $id_proses;
             $dataHeader['id_cmt'] = !empty($id_cmt) ? $id_cmt : -11 ;
-            $dataHeader['nomor_mesin'] = $nomor_mesin;
-            $dataHeader['jam_mesin'] = $jam_mesin;
-            $dataHeader['nilai_mesin'] = $nilai_mesin;
+            if (!empty($nomor_mesin)) {
+                $dataHeader['nomor_mesin'] = $nomor_mesin;
+            }
+            if (!empty($jam_mesin)) {
+                $dataHeader['jam_mesin'] = $jam_mesin;
+            }
+            if (!empty($nilai_mesin)) {
+                $dataHeader['nilai_mesin'] = $nilai_mesin;
+            }
         }
 
         if ($id) {

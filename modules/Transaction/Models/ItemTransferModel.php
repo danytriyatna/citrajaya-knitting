@@ -463,9 +463,33 @@ class ItemTransferModel extends \App\Models\PrModel
                         } else {
                             $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
                         }
+
+
+
                     }
                 }
             }
+
+             if ($data['status'] == 1 && !empty($id) ) {
+
+                $trfData =  $this->getData($id);
+
+                $brngMasukModel = new BarangMasukModel();
+
+                $dtBarang['tanggal'] = $data['tanggal'];
+                $dtBarang['status'] = 0;
+                $dtBarang['jenis_transaksi'] = 1;
+                $dtBarang['id_proses'] = $data['id_proses'];
+                $dtBarang['id_cmt'] = $data['id_cmt'];
+                $dtBarang['keterangan'] = $data['keterangan'];
+                $dtBarang['id_kategori'] = $data['ref_produk'] ? 12 : 0; 
+                $dtBarang['created_at'] = $data['updated_at'];
+                $dtBarang['created_by'] = $data['updated_by'];
+                $dtBarang['id_gudang'] = $data['id_gudang_tujuan'];
+                $dtBarang['no_ref_trf'] = $trfData->kode_transaksi;
+                $dtBarang['kode_transaksi'] = $brngMasukModel->generateKodePersediaan();
+                $this->insertRecordGetid($brngMasukModel->table, $dtBarang);
+             }
             $this->db->transComplete();
 
             if ($this->db->transStatus() === TRUE) {

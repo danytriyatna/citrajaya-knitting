@@ -1183,20 +1183,44 @@ dtListSO.on("rowClick", function(e, row){
         });
     }
 
-    if(inpRefProduksi.is(':checked') && dtList.getData().length > 0){
-        const list_data = dtList.getData().some(x=>x.kode_sales_order !== row.getData().kode_sales_order);
-        if (list_data) {
-            return Swal.fire({
-                text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
+    if(selectProses.val() == 1){
+        if(inpRefProduksi.is(':checked') && dtList.getData().length > 0){
+            const list_data = dtList.getData().some(x=>x.kode_sales_order !== row.getData().kode_sales_order);
+            if (list_data) {
+                return Swal.fire({
+                    text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
         }
     }
 
     dtList.addRow(row.getData())
     $("#modal-so").modal("hide");
+})
+
+
+selectProses.on("change", function() { 
+    if (dtList.getData().length > 0) {
+        Swal.fire({
+            title: "Mengganti proses akan menghapus data SO yang sudah dipilih. Lanjutkan?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, lanjutkan",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6C757D"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dtList.clearData();
+            } else {
+                // Kembalikan ke nilai sebelumnya jika dibatalkan
+                this.value = this.defaultValue || "";
+            }
+        });
+    }
 })
 
 // function getDetail(kodeOrder) {

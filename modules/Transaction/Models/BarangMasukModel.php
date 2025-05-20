@@ -239,6 +239,7 @@ class BarangMasukModel extends \App\Models\PrModel
                     $kode_transaksi = $hedr_data->kode_transaksi;
                     $i = 0;
                     foreach ($dataProduksi as $xrow) {
+                        // print_r($xrow);exit;
                         $xpr = [];
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
                         $xpr['kode_ukuran'] = $xrow['kode_ukuran'];
@@ -251,9 +252,12 @@ class BarangMasukModel extends \App\Models\PrModel
                         }
 
                         $tipe = substr($xpr['kode_sales_order'], 0, 3) === 'SPL' ? 1 : (substr($xpr['kode_sales_order'], 0, 3) === 'SOD' ? 2 : null);
+                        // print_r($tipe);exit;
                         $dtSo = $this->getDataSO($xpr, $tipe);
                         
                         $idSo = !empty($dtSo) ? $dtSo->id_sales_order : 0;
+
+                        $rtgl = !empty($xrow['tgl_transaksi']) ? $xrow['tgl_transaksi'] : null;
 
                         $dataDetail = [
                             "id_ref" => !empty($idSo) ? $idSo : null,
@@ -270,7 +274,8 @@ class BarangMasukModel extends \App\Models\PrModel
                             "harga" => !empty($xrow['harga']) ? $xrow['harga'] : 0,
 
                             "nomor_mesin" => !empty($data['nomor_mesin']) ? $data['nomor_mesin'] : '-',
-                            "tgl_transaksi" => !empty($data['tanggal']) ? $data['tanggal'] : null,
+                            "tgl_transaksi" => $rtgl,
+                            // "tgl_transaksi" => !empty($data['tanggal']) ? $data['tanggal'] : null,
                             "jam_mesin" => !empty($data['jam_mesin']) ? $data['jam_mesin'] : 0,
                             "nilai_mesin" => !empty($data['nilai_mesin']) ? $data['nilai_mesin'] : 0,
                         ];
@@ -316,7 +321,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "id_ukuran" => $dtProses->id_ukuran,
                                     "id_warna" => $dtSo->id_warna_1,
                                     "id_operator" => $id_cmt,
-                                    "tgl_transaksi" => $tgl_trans,//date('Y-m-d'),
+                                    "tgl_transaksi" => $rtgl,//date('Y-m-d'),
                                     "qty" =>  $qty,
                                     "harga" => $harga,
                                     "harga_total" => $amount,
@@ -381,10 +386,7 @@ class BarangMasukModel extends \App\Models\PrModel
         // $builder->select("id");
         // $builder->where("kode_sales_order", $kodeSalesOrder);
         $prms = '';
-        if(!empty($params['kode_sales_order'])){
-            $prms .= " AND so.kode_sales_order = '" . $params['kode_sales_order'] . "'";
-        }
-
+       
         if(!empty($params['kode_warna1'])){
             $prms .= " AND rw1.kode_warna = '" . $params['kode_warna1'] . "'";
         }
@@ -398,6 +400,12 @@ class BarangMasukModel extends \App\Models\PrModel
         }
 
         if ($tipe == 1) {
+
+               if(!empty($params['kode_sales_order'])){
+                    $prms .= " AND so.kode_sample = '" . $params['kode_sales_order'] . "'";
+                }
+
+
             $builder = $this->db->table('trans_sample_ukuran ou');
             $builder->select("
             ou.id,
@@ -415,6 +423,11 @@ class BarangMasukModel extends \App\Models\PrModel
             $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
             $builder->where('1 = 1' . $prms);
         } elseif ($tipe == 2) {
+            if(!empty($params['kode_sales_order'])){
+                $prms .= " AND so.kode_sales_order = '" . $params['kode_sales_order'] . "'";
+            }
+
+
             $builder = $this->db->table('trans_sales_order_ukuran ou');
             $builder->select("
             ou.id,

@@ -483,8 +483,8 @@ class ItemTransferModel extends \App\Models\PrModel
                 $dtBarang['id_cmt'] = $data['id_cmt'];
                 $dtBarang['keterangan'] = $data['keterangan'];
                 $dtBarang['id_kategori'] = $data['ref_produk'] ? 12 : 0; 
-                $dtBarang['created_at'] = $data['updated_at'];
-                $dtBarang['created_by'] = $data['updated_by'];
+                $dtBarang['created_at'] = !empty($data['updated_at']) ? $data['updated_at'] : $data['created_at'];
+                $dtBarang['created_by'] = !empty($data['updated_by']) ? $data['updated_by'] : $data['created_by'];
                 $dtBarang['id_gudang'] = $data['id_gudang_tujuan'];
                 $dtBarang['no_ref_trf'] = $trfData->kode_transaksi;
                 $dtBarang['kode_transaksi'] = $brngMasukModel->generateKodePersediaan();

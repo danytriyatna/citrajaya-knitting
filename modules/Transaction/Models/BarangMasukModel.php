@@ -272,9 +272,10 @@ class BarangMasukModel extends \App\Models\PrModel
                             "kode_ukuran" => $xrow['kode_ukuran'],
                             "amount" => !empty($xrow['amount']) ? $xrow['amount'] : 0,
                             "harga" => !empty($xrow['harga']) ? $xrow['harga'] : 0,
+                             "tgl_transaksi" => $rtgl,
 
                             "nomor_mesin" => !empty($data['nomor_mesin']) ? $data['nomor_mesin'] : '-',
-                            "tgl_transaksi" => $rtgl,
+                           
                             // "tgl_transaksi" => !empty($data['tanggal']) ? $data['tanggal'] : null,
                             "jam_mesin" => !empty($data['jam_mesin']) ? $data['jam_mesin'] : 0,
                             "nilai_mesin" => !empty($data['nilai_mesin']) ? $data['nilai_mesin'] : 0,
@@ -326,7 +327,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "harga" => $harga,
                                     "harga_total" => $amount,
                                     "ref_detail_id" => $dtSo->id,
-                                    "nomor_mesin" => $data['nomor_mesin'],
+                                    "nomor_mesin" => !empty($data['nomor_mesin']) ? $data['nomor_mesin'] : '-',
                                     "active" => 1,
                                     "flag" => 1,
                                     "created_at" =>  date("Y-m-d H:i:s"),

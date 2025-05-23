@@ -89,6 +89,23 @@
           </div>
 
           <hr>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="table-responsive">
+                <div class="table-striped" id="dt-list-warna">
+                 
+                </div>
+              </div>
+              
+              <br>
+
+              
+            </div>
+          </div>
+
+          <hr>
+
           <div class="row">
             <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_gudang">Gudang Produksi<span class="text-danger">*</span></label>
             <div class="col-md-5">
@@ -131,31 +148,19 @@
             </div>
           <!-- </div> -->
 
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="table-responsive">
-                <div class="table-striped" id="dt-list-warna">
-                 
-                </div>
-              </div>
-              
-              <br>
-
-              <div class="row">
-                <div class="col-sm-10">
-                  <a href="trans/work-order" class="btn btn-default m-e-5">
-                    <span class="fa fa-arrow-left"></span> Kembali
-                  </a>
-                  <?php if($status == 1) { ?>
-                    <button type="button" id="btn-save" class='btn btn-success'>
-                      <span class="fa fa-save"></span> Simpan
-                    </button>
-                    <button type="button" id="btn-send" class='btn btn-info'>
-                      <span class="fa fa-paper-plane"></span> Approval
-                    </button>
-                  <?php } ?>
-                </div>
-              </div>
+          <div class="row" style="margin-top:3%;">
+            <div class="col-sm-10">
+              <a href="trans/work-order" class="btn btn-default m-e-5">
+                <span class="fa fa-arrow-left"></span> Kembali
+              </a>
+              <?php if($status == 1) { ?>
+                <button type="button" id="btn-save" class='btn btn-success'>
+                  <span class="fa fa-save"></span> Simpan
+                </button>
+                <button type="button" id="btn-send" class='btn btn-info'>
+                  <span class="fa fa-paper-plane"></span> Approval
+                </button>
+              <?php } ?>
             </div>
           </div>
         </div>

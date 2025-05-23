@@ -548,4 +548,128 @@ class ItemTransfer extends BaseController
         }
         return $this->response->setJSON($build_array);
     }
+
+
+    function getDataProduksiItem(){
+      $kata_kunci = $this->request->getPost('kata_kunci');
+      
+      $status = false;
+      $msg = "Data barang tidak ditemukan !";
+      $data  = [];
+
+      try {
+
+        $kt_exp = explode(";",$kata_kunci);
+    
+        $params['kata_kunci'] = $kata_kunci;
+        $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
+        // print_r($results);exit;
+        foreach ($results as $r) {
+
+          $isi = [];
+          $isi = [
+            "tipe"             => $r->tipe,
+            "tipe_text"        => $r->tipe_text,
+            "id_konsumen"      => $r->id_konsumen,
+            "kode_sales_order" => $r->kode_transaksi,
+            "style"            => $r->style,
+            "deskripsi"        => $r->deskripsi,
+            "color"            => $r->color,
+            "buyer"            => $r->buyer,
+            "qty"              => $r->qty,
+            "amount"           => $r->amount,
+            "kode_ukuran"      => $r->kode_ukuran,
+            "kata_kunci"       => $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran,
+          ];
+          $data[] = $isi;
+
+          $isi_slc = [];
+          $isi_slc["id"]    = $r->id_konsumen;
+          $isi_slc["idx"]   = $r->color;
+          $isi_slc["label"] = $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran;
+          $isi_slc["value"] = $r->id_konsumen;
+          $isi_slc["data"]  = $isi;
+          $slc[] = $isi_slc;
+        }
+
+        $status = true;
+        $msg = "Berhasil pengambilan data !";
+
+      } catch (\Throwable $th) {
+        //throw $th;
+        print_r($th);exit;
+      }
+
+
+      $build_array["status"] = $status;
+      $build_array["msg"] = $msg;
+      $build_array["data"] = $data;
+      $build_array["slc"] = $slc;
+      return $this->response->setJSON($build_array); 
+    }
+
+    function getCariProduk(){
+      $kata_kunci = $this->request->getPost('kata_kunci');
+      
+      $status = false;
+      $msg = "Data barang tidak ditemukan !";
+      $data  = [];
+      $slc  = [];
+
+      try {
+
+        $kt_exp = explode(";",$kata_kunci);
+        
+        // $kunci_jadi = $kt_exp[1] . ' ' . $kt_exp[2]; 
+
+        // $qty = $kt_exp[3]; 
+        $params = [];
+        if (!empty($kt_exp[0])) {
+            $params['kode_transaksi'] = $kt_exp[0];
+        }
+        if (!empty($kt_exp[1])) {
+            $params['kode_ukuran'] = $kt_exp[1];
+        }
+        if (!empty($kt_exp[2])) {
+            $params['color'] = $kt_exp[2];
+        }
+        $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
+
+        foreach ($results as $r) {
+
+          $isi = [];
+          $isi = [
+            "tipe"             => $r->tipe,
+            "tipe_text"        => $r->tipe_text,
+            "id_konsumen"      => $r->id_konsumen,
+            "kode_sales_order" => $r->kode_transaksi,
+            "style"            => $r->style,
+            "deskripsi"        => $r->deskripsi,
+            "color"            => $r->color,
+            "buyer"            => $r->buyer,
+            "qty"              => $r->qty,
+            "amount"           => $r->amount,
+            "kode_ukuran"      => $r->kode_ukuran,
+            "kata_kunci"       => $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran,
+          ];
+
+          
+
+          $data[] = $isi;
+        }
+
+        $status = true;
+        $msg = "Berhasil pengambilan data !";
+
+      } catch (\Throwable $th) {
+        //throw $th;
+        print_r($th);exit;
+      }
+
+
+      $build_array["status"] = $status;
+      $build_array["msg"] = $msg;
+      $build_array["data"] = $data;
+      return $this->response->setJSON($build_array); 
+    }
 }

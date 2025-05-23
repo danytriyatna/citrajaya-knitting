@@ -262,8 +262,13 @@
           </div>
 
           <hr>
-          <div class="col-sm-3 mb-2">
-            <button type="button" class="btn btn-sm btn-primary" id="btn-view"> <i class="fa fa-plus"></i></button>
+          <div class="col-sm-12 mb-2">
+            <!-- <button type="button" class="btn btn-sm btn-primary" id="btn-view"> <i class="fa fa-plus"></i></button> -->
+             <div class="input-group my-2">
+                <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
+                <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
+                <button type="button" class="btn btn-info text-white" id="btn-view"><i class="fa fa-plus"></i></button> 
+              </div>
           </div>
           <div class="row">
             <div class="col-sm-12">

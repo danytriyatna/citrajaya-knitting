@@ -1345,3 +1345,98 @@ function simpanData(status) {
 }
 
 
+ // fungsi barcode dan autocomplete 
+     $("#text_barcode").autocomplete({
+        source: function( request, response ) {
+        //   if(operator.val().length != 0){
+            $.ajax({
+                url: "/trans/item-transfer/cari_produk",
+                dataType: "json",
+                data: {
+                  kata_kunci   : request.term,
+                },
+                type : 'post',
+                success: function( data ) {
+                  if(data.status){
+                      response(data.slc);
+                  }else{
+                      console.log(data.msg);
+                  }
+                }
+              });
+        //   }else{
+        //     alert("Pilih CMT terlebih dahulu !");
+        //   }
+        },
+        minLength: 2,
+        select: function( event, ui ) {
+            addItem(ui.item.data);
+        },
+        open: function() {
+          $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+        },
+        close: function() {
+          $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+          $( "#text_barcode" ).val("");
+        }
+    });
+
+
+
+    function addItem(data){
+        
+        if(dtList.getData().some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)){
+            return Swal.fire({
+                text: `SO ${data.kode_sales_order} dengan warna ${data.color} dan ukuran ${data.kode_ukuran} telah dipilih`,
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+
+        if(selectProses.val() == 1){
+            if(inpRefProduksi.is(':checked') && dtList.getData().length > 0){
+                const list_data = dtList.getData().some(x=>x.kode_sales_order !== data.kode_sales_order);
+                if (list_data) {
+                    return Swal.fire({
+                        text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            }
+        }
+
+        dtList.addRow(data)
+
+        $( "#text_barcode" ).val("");
+    }
+
+
+    $( "#text_barcode" ).on("keypress", function(e){
+		let key = e.which;
+		if(key == 13){
+			$.ajax({
+				url: "trans/item-transfer/src_produk",
+				dataType: "json",
+				data: {
+				  kata_kunci   : $( "#text_barcode" ).val(),
+				},
+				type : 'post',
+				success: function( es ) {
+                    // console.log(es)
+				  if(es.status){
+					// response(data.slc);
+					if(es.data.length > 0){
+						addItem(es.data[0]);
+					}else{
+						alert("Produk tidak ditemukan !");
+					}
+				  }else{
+					  console.log(es.msg);
+				  }
+				}
+			  });
+		}
+	});

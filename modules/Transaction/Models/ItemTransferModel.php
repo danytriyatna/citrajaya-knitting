@@ -183,6 +183,33 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(tu.color) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
+
+            if(!empty($params['kata_kunci'])){
+                $builder->groupStart();
+                $builder->where('LOWER(tu.kode_transaksi) LIKE', strtolower("%{$params['kata_kunci']}%"));
+                $builder->orWhere('LOWER(tu.kode_ukuran) LIKE', strtolower("%{$params['kata_kunci']}%"));
+                $builder->orWhere('LOWER(tu.deskripsi) LIKE', strtolower("%{$params['kata_kunci']}%"));
+                $builder->orWhere('LOWER(tu.style) LIKE', strtolower("%{$params['kata_kunci']}%"));
+                $builder->orWhere('LOWER(tu.color) LIKE', strtolower("%{$params['kata_kunci']}%"));
+                $builder->groupEnd();
+            }
+
+            // Filter per item
+            if (!empty($params['kode_transaksi'])) {
+                $builder->where('tu.kode_transaksi', $params['kode_transaksi']);
+            }
+            if (!empty($params['kode_ukuran'])) {
+                $builder->where('tu.kode_ukuran', $params['kode_ukuran']);
+            }
+            if (!empty($params['deskripsi'])) {
+                $builder->where('tu.deskripsi', $params['deskripsi']);
+            }
+            if (!empty($params['style'])) {
+                $builder->where('tu.style', $params['style']);
+            }
+            if (!empty($params['color'])) {
+                $builder->where('tu.color', $params['color']);
+            }
             
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
@@ -485,7 +512,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $dtBarang['id_kategori'] = $data['ref_produk'] ? 12 : 0; 
                 $dtBarang['created_at'] = !empty($data['updated_at']) ? $data['updated_at'] : $data['created_at'];
                 $dtBarang['created_by'] = !empty($data['updated_by']) ? $data['updated_by'] : $data['created_by'];
-                $dtBarang['id_gudang'] = $data['id_gudang_tujuan'];
+                $dtBarang['id_gudang'] = $data['id_gudang_asal'];
                 $dtBarang['no_ref_trf'] = $trfData->kode_transaksi;
                 $dtBarang['kode_transaksi'] = $brngMasukModel->generateKodePersediaan();
                 $this->insertRecordGetid($brngMasukModel->table, $dtBarang);

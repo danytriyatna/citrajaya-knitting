@@ -361,13 +361,13 @@
                         </div>
                       </div>
                   </div>
-                  <div class="col-sm-12">
+                  <!-- <div class="col-sm-12">
                       <div class="form-group row">
                         <div class="col-md-9">
                           <button class="btn btn-primary btn-sm" type="button" id="btn-ref-po" >Tambah Detail Produksi <i class="fa fa-plus"></i></button>
                         </div>
                       </div>
-                  </div>
+                  </div> -->
             </div>
 
             <hr>
@@ -384,6 +384,15 @@
          </div>
          
           <div class="div_produksi">
+
+            <div class="col-md-12 mb-2">
+              <div class="input-group my-2">
+                <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
+                <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
+                <button type="button" class="btn btn-info text-white" id="btn-ref-po"><i class="fa fa-plus"></i></button> 
+              </div>
+            </div>
+
             <div class="row">
               <div class="col-sm-12">
                 <div id="dt-list-so-produksi" class="table-responsive table-striped"></div>

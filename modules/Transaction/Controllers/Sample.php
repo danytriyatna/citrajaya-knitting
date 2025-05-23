@@ -139,6 +139,31 @@ class Sample extends BaseController
     $prg['id_sample_det'] = $results->id;
     $dtGram = $this->mSample->getData_gram(null, 0, 9999, null, null, $prg);
 
+    if(!empty($dtGram)){
+      for ($i=0; $i < count($dtGram) ; $i++) { 
+        $kodeWarna = "Warna ";
+        if($i == 0) { 
+          $kodeWarna = $kodeWarna . 'A';
+        } else if($i == 1) { 
+          $kodeWarna = $kodeWarna . 'B';
+        } else if($i == 2) { 
+          $kodeWarna = $kodeWarna . 'C';
+        } else if($i == 3) { 
+          $kodeWarna = $kodeWarna . 'D';
+        } else if($i == 4) { 
+          $kodeWarna = $kodeWarna . 'E';
+        } else if($i == 5) { 
+          $kodeWarna = $kodeWarna . 'F';
+        } else if($i == 6) { 
+          $kodeWarna = $kodeWarna . 'G';
+        } else if($i == 7) { 
+          $kodeWarna = $kodeWarna . 'H';
+        }
+
+        $dtGram[$i]->kode_warna = $kodeWarna . ' - ' . $dtGram[$i]->kode_warna;
+      }
+    }
+
     $build_array =  array(
       "id"   => encrypt($results->id),
       "keterangan" => $results->keterangan,
@@ -169,6 +194,31 @@ class Sample extends BaseController
 
     $prg['id_sample_det'] = $idSampleDet;
     $dtGram = $this->mSample->getData_gram(null, 0, 9999, null, null, $prg);
+
+    if(!empty($dtGram)){
+      for ($i=0; $i < count($dtGram) ; $i++) { 
+        $kodeWarna = "Warna ";
+        if($i == 0) { 
+          $kodeWarna = $kodeWarna . 'A';
+        } else if($i == 1) { 
+          $kodeWarna = $kodeWarna . 'B';
+        } else if($i == 2) { 
+          $kodeWarna = $kodeWarna . 'C';
+        } else if($i == 3) { 
+          $kodeWarna = $kodeWarna . 'D';
+        } else if($i == 4) { 
+          $kodeWarna = $kodeWarna . 'E';
+        } else if($i == 5) { 
+          $kodeWarna = $kodeWarna . 'F';
+        } else if($i == 6) { 
+          $kodeWarna = $kodeWarna . 'G';
+        } else if($i == 7) { 
+          $kodeWarna = $kodeWarna . 'H';
+        }
+
+        $dtGram[$i]->kode_warna = $kodeWarna . ' - ' . $dtGram[$i]->kode_warna;
+      }
+    }
     // print_r($prg);exit;
     $build_array =  array(
       "id"   => encrypt($results->id),

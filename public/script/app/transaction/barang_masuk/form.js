@@ -1207,4 +1207,157 @@ function simpanData(status) {
 
 }
 
+// fungsi barcode dan autocomplete 
+     $("#text_barcode").autocomplete({
+        source: function( request, response ) {
 
+            // dtListProduksiRef.setData(refData);
+            
+            if(refData.length > 0) { 
+                const kataKunci = request.term
+
+                const data = refData;
+                const results = [];
+                const lowerKataKunci = kataKunci.toLowerCase();
+
+                data.forEach(item => {
+                    // console.log(item)
+                    const labelx = item.kode_sales_order + " - (" + item.color + ") " + item.kode_ukuran;
+                    for (const key in item) {
+                        if (
+                            item.hasOwnProperty(key) &&
+                            item[key] != null &&
+                            item[key].toString().toLowerCase().includes(lowerKataKunci)
+                        ) {
+                            results.push({
+                                label: labelx,//item[key].toString(),
+                                value: item[key].toString(),
+                                data: item
+                            });
+                            break; // stop after first match in this item
+                        }
+                    }
+                });
+
+                // console.log("results barcode", results)
+                response(results);
+            }else{
+                Swal.fire({
+                    text: "Harap pilih No Transfer Referensi terlebih dahulu.",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+            
+        },
+        minLength: 2,
+        select: function( event, ui ) {
+            addItem(ui.item.data);
+        },
+        open: function() {
+          $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+        },
+        close: function() {
+          $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+          $( "#text_barcode" ).val("");
+        }
+    });
+
+
+    function addItem(data){
+        
+        // const data = row._row.data
+        let produksi_data = dtListProduksi.getData();
+
+        let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
+
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
+
+        // if (list_verif.length > 0) {
+        //     return Swal.fire({
+        //         text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
+        //         icon: 'error',
+        //         showConfirmButton: false,
+        //         timer: 2000
+        //     });
+        // }
+
+        dtListProduksi.addRow(data);
+
+        $( "#text_barcode" ).val("");
+    }
+
+
+     $( "#text_barcode" ).on("keypress", function(e){
+		let key = e.which;
+		if(key == 13){
+			// $.ajax({
+			// 	url: "trans/item-transfer/src_produk",
+			// 	dataType: "json",
+			// 	data: {
+			// 	  kata_kunci   : $( "#text_barcode" ).val(),
+			// 	},
+			// 	type : 'post',
+			// 	success: function( es ) {
+            //         // console.log(es)
+			// 	  if(es.status){
+			// 		// response(data.slc);
+			// 		if(es.data.length > 0){
+			// 			addItem(es.data[0]);
+			// 		}else{
+			// 			alert("Produk tidak ditemukan !");
+			// 		}
+			// 	  }else{
+			// 		  console.log(es.msg);
+			// 	  }
+			// 	}
+			//   });
+
+
+            const kataKunci = $( "#text_barcode" ).val()
+            const arrKunvi = kataKunci.split(";");	
+
+            if (refData.length > 0) {
+                const arrKunci = kataKunci.split(";");
+                let hasil = refData;
+                //  console.log('hasil', hasil)
+                if (arrKunci[0]!= undefined && arrKunci[0] != '') {
+                    hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
+                }
+                //  console.log('hasil1', hasil)
+                if (arrKunci[1]!= undefined && arrKunci[1] != '') {
+                    hasil = hasil.filter(item => item.kode_ukuran && item.kode_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
+                }
+                //  console.log('hasil2', hasil)
+                if (arrKunci[2]!= undefined && arrKunci[2] != '') {
+                    hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase() == arrKunci[2].toLowerCase());
+                }
+                // console.log('hasil3', hasil)
+                // console.log('arrKunci', arrKunci)
+               
+
+                if (hasil.length > 0) {
+                    addItem(hasil[0]);
+                } else {
+                    Swal.fire({
+                        text: "Produk tidak ditemukan!",
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            } else {
+                Swal.fire({
+                    text: "Harap pilih No Transfer Referensi terlebih dahulu.",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            } }
+	});

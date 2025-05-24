@@ -95,17 +95,17 @@
     for ($i = 0; $i < $data['qtyp']; $i++) { 
     ?>
       <div class="item">
-        <h1 class="mt-0 mb-0"><?= $data['style'] ?: '-' ?></h1>
-        <h3 class="mt-0 mb-0"><?= $data['deskripsi'] ?: '-' ?></h3>
+        <h3 class="mt-0 mb-0"><?= $data['style'] ?: '-' ?></h3>
+        <h4 class="mt-0 mb-0"><?= $data['deskripsi'] ?: '-' ?></h4>
         <table>
           <tbody>
             <tr>
               <td class="text-left" style="width: 50%;">
-                <p class="mt-0 mb-0"><?= $data['warna'] ?: '-' ?></p>
-                <p class="mt-0 mb-0"><?= $data['warna_2'] ?: '-' ?></p>
+                <p class="mt-0 mb-0"><h3><?= $data['warna'] ?: '-' ?></h3></p>
+                <p class="mt-0 mb-0"><h3><?= $data['warna_2'] ?: '-' ?></h3></p>
               </td>
               <td class="text-right" style="width: 50%;">
-                <h2 class="mt-0 mb-0"><?= strtoupper($data['ukuran']) ?: '-' ?></h2>
+                <h4 class="mt-0 mb-0"><?= strtoupper($data['ukuran']) ?: '-' ?>;<?= $data['qty']; ?></h4>
               </td>
             </tr>
           </tbody>

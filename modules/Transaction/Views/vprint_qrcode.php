@@ -101,8 +101,10 @@
           <tbody>
             <tr>
               <td class="text-left" style="width: 70%;">
-                <p class="mt-0 mb-0"><h4><?= $data['warna'] ?: '-' ?></h4></p>
-                <p class="mt-0 mb-0"><h4><?= $data['warna_2'] ?: '-' ?></h4></p>
+                <div style="font-size:15px;">
+                  <?= $data['warna'] ?: '-' ?></br>
+                  <?= $data['warna_2'] ?: '-' ?>
+                </div>
               </td>
               <td class="text-right" style="width: 30%;">
                 <h4 class="mt-0 mb-0"><?= strtoupper($data['ukuran']) ?: '-' ?>;<?= $data['qty']; ?></h4>

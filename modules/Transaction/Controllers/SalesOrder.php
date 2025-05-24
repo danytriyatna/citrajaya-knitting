@@ -828,7 +828,7 @@ class SalesOrder extends BaseController
     /* Data */
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
-    $save_name  = $warna . '-' . $noSample . '.png';
+    $save_name  = $warna . '-' . $noSample .'-'. time() . '.png';
 
     // $pr_warna['key_ukuran'] = $ukuran;
     $pr_warna['id_sales_order_det'] = $trans;
@@ -875,9 +875,6 @@ class SalesOrder extends BaseController
     $oks = $this->ciqrcode->generate($params);
 
     /* Return Data */
-
-
-    // dd($oks);
     $url = base_url() . "/uploads/media/qrcode/" . $save_name;
 
     $this->data["data"] = $data;

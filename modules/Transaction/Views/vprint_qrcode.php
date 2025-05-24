@@ -100,11 +100,11 @@
         <table>
           <tbody>
             <tr>
-              <td class="text-left" style="width: 50%;">
+              <td class="text-left" style="width: 70%;">
                 <p class="mt-0 mb-0"><h3><?= $data['warna'] ?: '-' ?></h3></p>
                 <p class="mt-0 mb-0"><h3><?= $data['warna_2'] ?: '-' ?></h3></p>
               </td>
-              <td class="text-right" style="width: 50%;">
+              <td class="text-right" style="width: 30%;">
                 <h4 class="mt-0 mb-0"><?= strtoupper($data['ukuran']) ?: '-' ?>;<?= $data['qty']; ?></h4>
               </td>
             </tr>

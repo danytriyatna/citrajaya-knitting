@@ -556,6 +556,7 @@ class ItemTransfer extends BaseController
       $status = false;
       $msg = "Data barang tidak ditemukan !";
       $data  = [];
+      $slc  = [];
 
       try {
 
@@ -619,7 +620,7 @@ class ItemTransfer extends BaseController
       try {
 
         $kt_exp = explode(";",$kata_kunci);
-        
+        // print_r($kt_exp);exit;
         // $kunci_jadi = $kt_exp[1] . ' ' . $kt_exp[2]; 
 
         // $qty = $kt_exp[3]; 
@@ -628,13 +629,13 @@ class ItemTransfer extends BaseController
             $params['kode_transaksi'] = $kt_exp[0];
         }
         if (!empty($kt_exp[1])) {
-            $params['kode_ukuran'] = $kt_exp[1];
+            $params['kode_ukuran'] = ($kt_exp[1]);
         }
         if (!empty($kt_exp[2])) {
             $params['color'] = $kt_exp[2];
         }
         $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
-
+// print_r($results);exit;
         foreach ($results as $r) {
 
           $isi = [];

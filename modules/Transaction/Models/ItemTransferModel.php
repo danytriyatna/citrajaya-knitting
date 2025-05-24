@@ -199,16 +199,16 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.kode_transaksi', $params['kode_transaksi']);
             }
             if (!empty($params['kode_ukuran'])) {
-                $builder->where('tu.kode_ukuran', $params['kode_ukuran']);
+                $builder->where('lower(tu.kode_ukuran)', strtolower($params['kode_ukuran']));
             }
             if (!empty($params['deskripsi'])) {
                 $builder->where('tu.deskripsi', $params['deskripsi']);
             }
             if (!empty($params['style'])) {
-                $builder->where('tu.style', $params['style']);
+                $builder->where('tu.style', strtolower($params['style']));
             }
             if (!empty($params['color'])) {
-                $builder->where('tu.color', $params['color']);
+                $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
             }
             
             if (!empty($order)) {

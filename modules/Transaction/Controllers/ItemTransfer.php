@@ -623,7 +623,7 @@ class ItemTransfer extends BaseController
         // print_r($kt_exp);exit;
         // $kunci_jadi = $kt_exp[1] . ' ' . $kt_exp[2]; 
 
-        // $qty = $kt_exp[3]; 
+        $qty = $kt_exp[3]; 
         $params = [];
         if (!empty($kt_exp[0])) {
             $params['kode_transaksi'] = $kt_exp[0];
@@ -648,7 +648,7 @@ class ItemTransfer extends BaseController
             "deskripsi"        => $r->deskripsi,
             "color"            => $r->color,
             "buyer"            => $r->buyer,
-            "qty"              => $r->qty,
+            "qty"              => $qty,//$r->qty,
             "amount"           => $r->amount,
             "kode_ukuran"      => $r->kode_ukuran,
             "kata_kunci"       => $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran,

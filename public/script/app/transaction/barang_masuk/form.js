@@ -1336,7 +1336,7 @@ function simpanData(status) {
                 }
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
-                    hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase() == arrKunci[2].toLowerCase());
+                    hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase().includes(arrKunci[2].toLowerCase()));
                 }
                 // console.log('hasil3', hasil)
                 // console.log('arrKunci', arrKunci)

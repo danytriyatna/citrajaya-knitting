@@ -199,7 +199,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.kode_transaksi', $params['kode_transaksi']);
             }
             if (!empty($params['kode_ukuran'])) {
-                $builder->where('lower(tu.kode_ukuran)', strtolower($params['kode_ukuran']));
+                $builder->where('lower(tu.key_ukuran)', strtolower($params['kode_ukuran']));
             }
             if (!empty($params['deskripsi'])) {
                 $builder->where('tu.deskripsi', $params['deskripsi']);

@@ -1332,7 +1332,7 @@ function simpanData(status) {
                 }
                 //  console.log('hasil1', hasil)
                 if (arrKunci[1]!= undefined && arrKunci[1] != '') {
-                    hasil = hasil.filter(item => item.kode_ukuran && item.kode_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
+                    hasil = hasil.filter(item => item.key_ukuran && item.kode_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
                 }
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {

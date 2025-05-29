@@ -174,14 +174,14 @@
     <!-- <h1 class="uppercase text-lg mb-6 mt-0">BARANG MASUK</h1> -->
     <table class="mb-6" style="width:100%;">
         <tr>
-            <td style="width: 152px; text-align: left; vertical-align: top;">Nama Pembeli</td>
+            <td style="width: 152px; text-align: left; vertical-align: top;">Nama CMT</td>
             <td style="width: 8px; text-align: center; vertical-align: top;">:</td>
-            <td style="vertical-align: top;"><?= $dtKonsumen->nama ?></td>
+            <td style="vertical-align: top;"><?= $data->nama_operator ?></td>
         </tr>
         <tr>
             <td style="text-align: left; vertical-align: top;">Alamat</td>
             <td style="text-align: center; vertical-align: top;">:</td>
-            <td style="vertical-align: top;"><?= $dtKonsumen->alamat ?></td>
+            <td style="vertical-align: top;"><?= $data->alamat_cmt ?></td>
         </tr>
     </table>
 

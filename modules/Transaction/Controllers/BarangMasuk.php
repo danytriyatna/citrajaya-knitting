@@ -483,7 +483,7 @@ class BarangMasuk extends BaseController
             $this->data['data'] = !empty($resData) ? $resData : [];
             // $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
             $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
-            
+            // dd($this->data);
         }
         $html = view($this->views . '\barang_masuk_faktur_print', $this->data);
 

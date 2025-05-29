@@ -36,7 +36,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
         $builder->select("uk.no_ref_trf,uk.id, uk.id_buyer,uk.status, uk.id_kategori, uk.keterangan, abx.nama_gudang,  uk.tanggal, ebx.nama,
                           uk.kode_transaksi, dbx.kategori, uk.id_gudang, uk.nilai_mesin, uk.nomor_mesin, uk.jam_mesin, uk.id_cmt, uk.id_proses,
-                          jp.nama as proses, rp.nama_operator");
+                          jp.nama as proses, rp.nama_operator, rp.alamat as alamat_cmt");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');

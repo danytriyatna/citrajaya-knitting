@@ -738,7 +738,8 @@ class SalesOrder extends BaseController
 
     if (!empty($buyerId)) {
       $params = [
-        'id_konsumen' => $buyerId
+        'id_konsumen' => $buyerId,
+        'activedt' => 1
       ];
       $data_sample = $this->mSample->getData(0, 0, 99999, null, null, $params);
       if (!empty($data_sample)) {

@@ -23,7 +23,9 @@ class SampleModel extends \App\Models\PrModel
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("_files cbx", "abx.gambar_id = cbx.id", "left");
         if ($id == null or $id == "") {
-            $builder->where('abx.active = 1');
+            if(empty($params['activedt'])){
+                $builder->where('abx.active = 1');
+            }
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_sample) LIKE', strtolower("%{$filters[0]['value']}%"));

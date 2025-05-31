@@ -36,7 +36,47 @@ $(document).ready(function () {
         return s.join(dec);
     }
 
+    const print_btn = () => {
+        let btn = `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modalz" title="print-warna"> <i class="fa fa-print" title="print-warna"></i></button>`;
+        return btn
+    }
+
     let setColumn = [
+        {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                let data_row = row.getData();
+                if (e.target.title === 'print-warna') {
+                    console.log("data_row", data_row)
+                    const inpp_slcUkuran = $("#print_slc_ukuran");
+                    const inpp_qty       = $("#print_qty");
+                    const inpp_qtyp      = $("#print_qtyp");
+                    const noSP = $("#noSamplePrint");
+                    // console.log("dataRow", dataRow)
+                    // inpp_slcUkuran
+                    inpp_qty.val(1)
+                    inpp_qtyp.val(1)
+
+                    inpp_foto.attr('src', dataRow.file_gambar);
+                    inpp_noSo.html(dataRow.ref_kode)
+                    noSP.html(dataRow.ref_kode)
+                    inpp_deskripsi.html(dataRow.keterangan);
+                    inpp_warna.html(data_row.colordasar);
+                    inpp_tglSample.html(formatterDate(dataRow.tgl_transaksi))
+                    inpp_tglDeadline.html(formatterDate(dataRow.tgl_deadline))
+
+                    brcStyle.val(dataRow.keterangan_style)
+                    inpp_buyer.html(dataRow.konsumen_nama)
+
+                    // // console.log("kolom print", data_row)
+
+                    setTimeout(() => {
+                        inpp_trans.html(data_row.id);
+                        mdlPrint.modal("show");
+                    }, 500);
+                } 
+            }
+        },
         {
             title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
         },
@@ -618,4 +658,63 @@ $(document).ready(function () {
 
     $("#select_gudang").val($("#select_gudang").attr('value')).trigger('change');
 
+
+
+
+    // setting print 
+         // declarre untuk variable print qr
+     const mdlPrint = $("#modal-print-barcode");
+     const inpp_foto = $("#fotoPrint");
+     const inpp_noSo = $("#noSamplePrint");
+     const inpp_deskripsi = $("#deskripsiPrint");
+     const inpp_tglSample = $("#tglSamplePrint");
+     const inpp_tglDeadline = $("#tglDeadlinePrint");
+     const inpp_buyer = $("#buyerPrint");    
+     const inpp_warna = $("#warnaPrint");
+     const inpp_trans = $("#warnaTrans");
+    const brcStyle            = $("#style_input");
+
+    $("#btn-cetak-print").on('click', function (e) {
+        e.preventDefault()
+
+        //   const inpp_slcWarna = $("#print_slc_warna");
+        const inpp_slcUkuran = $("#print_slc_ukuran");
+        const inpp_qty       = $("#print_qty");
+        const inpp_qtyp      = $("#print_qtyp");
+
+        // mdlPrint
+        const dt_noSample = inpp_noSo.html()
+        const dt_deskripsi = inpp_deskripsi.html()
+        const dt_buyer = inpp_buyer.html()
+        const dt_warna = inpp_warna.html()
+        const dt_trans = inpp_trans.html()
+
+        const dt_style = brcStyle.val()
+        // inpp_trans
+
+        // Query parameters
+        let params = {
+            ukuran : inpp_slcUkuran.val(),
+            qty : inpp_qty.val(),
+            qtyp : inpp_qtyp.val(),
+            noSample : dt_noSample,
+            deskripsi : dt_deskripsi,
+            buyer : '',
+            warna : dt_warna,
+            trans : dt_trans,
+            style : dt_style
+          };
+  
+          // Buat query string
+          let queryString = $.param(params); // Convert objek ke query string
+          let fullUrl = `trans/sales-order/generate?${queryString}`;
+  
+          // Buka link di tab baru
+          window.open(fullUrl, '_blank');
+        //   setTimeout(() => {
+        //     // inpp_trans.html(data.id);
+        //     mdlPrint.modal("hide");
+        // }, 500);
+
+    });
 });

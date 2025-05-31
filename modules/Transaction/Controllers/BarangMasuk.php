@@ -153,6 +153,7 @@ class BarangMasuk extends BaseController
                 array(
                     "aksi" => $btnAction ? $btnAction : '',
                     "id"   => ($id),
+                    "no_ref_trf" => $row->no_ref_trf,
                     "kode_transaksi" => $row->kode_transaksi,
                     "tanggal" => fdate_eng_to_ind($row->tanggal),
                     "kategori" => $row->kategori,

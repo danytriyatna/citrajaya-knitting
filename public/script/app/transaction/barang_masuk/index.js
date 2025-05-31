@@ -3,46 +3,42 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "aksi", headerSort: false, formatter: "html",
-                width: "15%"
+                width: "8%"
             },
-            
-			{
-				title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
-				width: "15%", formatter : "html"
-			}, 
-				
-			{
-				title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
-				width: "15%"
-			}, 
-				
-			{
-				title: 'CATEGORY', field: 'kategori', headerSort:false, sorter: 'string',
-				width: "20%", 
-			}, 
-
             {
-				title: 'WAREHOUSE', field: 'nama_gudang', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
-                width: "20%", 
-			} ,
+                title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
+                width: "12%", formatter : "html"
+            }, 
             {
-				title: 'PROSES', field: 'proses', formatter : "html", align: "left", headerSort:false,
-                width: "8%",hozAlign:"left",
-			},
-
+                title: 'TRANSFER NO.', field: 'no_ref_trf', headerSort:false, sorter: 'string',
+                width: "12%", formatter : "html"
+            }, 
             {
-				title: 'CMT', field: 'nama_operator', formatter : "html", align: "left", headerSort:false,
-                width: "15%",hozAlign:"left",
-			},
-
-
+                title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
+                width: "10%"
+            }, 
             {
-				title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
-                width: "15%",hozAlign:"center",
-			},
-				
+                title: 'CATEGORY', field: 'kategori', headerSort:false, sorter: 'string',
+                width: "14%", 
+            }, 
+            {
+                title: 'WAREHOUSE', field: 'nama_gudang', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "14%", 
+            },
+            {
+                title: 'PROSES', field: 'proses', formatter : "html", align: "left", headerSort:false,
+                width: "8%", hozAlign:"left",
+            },
+            {
+                title: 'CMT', field: 'nama_operator', formatter : "html", align: "left", headerSort:false,
+                width: "10%", hozAlign:"left",
+            },
+            {
+                title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
+                width: "12%", hozAlign:"center",
+            },
         ],
-        // layout: 'fitColumns',
+        layout: 'fitColumns', // Make columns fill the table width proportionally
         ajaxURL: "/trans/incoming-goods/list",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",

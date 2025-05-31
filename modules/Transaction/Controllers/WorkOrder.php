@@ -213,6 +213,8 @@ class WorkOrder extends BaseController
     $this->data['proses'] = $proces_data;
     $this->data['proses_saved'] = json_encode($proces_saved);
     $this->data['status'] = $status;
+    $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
+    $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
 
     return view($this->views . '/work_order_form', $this->data);
   }

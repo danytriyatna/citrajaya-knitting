@@ -3,38 +3,34 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "aksi", headerSort: false, formatter: "html",
-                width: "15%"
+                width: "8%"
             },
-            
-			{
-				title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
-				width: "15%", formatter : "html"
-			}, 
-				
-			{
-				title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
-				width: "15%"
-			}, 
-		
             {
-				title: 'TRANSFER FORM', field: 'gudang_asal', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
-                width: "20%", 
-			} ,
+                title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
+                width: "14%", formatter : "html"
+            }, 
             {
-				title: 'TRANSFER TO', field: 'gudang_tujuan', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
-                width: "20%", 
-			} ,
+                title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
+                width: "13%"
+            }, 
             {
-				title: 'CMT', field: 'nama_operator', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
-                width: "20%", 
-			} ,
+                title: 'TRANSFER FORM', field: 'gudang_asal', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "17%", 
+            },
             {
-				title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
-                width: "15%",hozAlign:"center",
-			},
-				
+                title: 'TRANSFER TO', field: 'gudang_tujuan', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "17%", 
+            },
+            {
+                title: 'CMT', field: 'nama_operator', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "17%", 
+            },
+            {
+                title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
+                width: "14%",hozAlign:"center",
+            },
         ],
-        // layout: 'fitColumns',
+        layout: 'fitColumns', // set agar 100% lebar tabel
         ajaxURL: "/trans/item-transfer/list",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",

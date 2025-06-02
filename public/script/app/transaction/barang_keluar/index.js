@@ -3,37 +3,30 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "aksi", headerSort: false, formatter: "html",
-                width: "15%"
+                width: "10%"
             },
-            
-			{
-				title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
-				width: "15%", formatter : "html"
-			}, 
-				
-			{
-				title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
-				width: "15%"
-			}, 
-				
-			{
-				title: 'CATEGORY', field: 'kategori', headerSort:false, sorter: 'string',
-				width: "20%", 
-			}, 
-
             {
-				title: 'WAREHOUSE', field: 'nama_gudang', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                title: 'TRANSACTION NO.', field: 'kode_transaksi', headerSort:false, sorter: 'string',
+                width: "15%", formatter : "html"
+            }, 
+            {
+                title: 'DATE', field: 'tanggal', headerSort:false, sorter: 'string',
+                width: "15%"
+            }, 
+            {
+                title: 'CATEGORY', field: 'kategori', headerSort:false, sorter: 'string',
                 width: "20%", 
-			} ,
-
-
+            }, 
             {
-				title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
-                width: "15%",hozAlign:"center",
-			},
-				
+                title: 'WAREHOUSE', field: 'nama_gudang', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+                width: "20%", 
+            },
+            {
+                title: 'STATUS', field: 'status', formatter : "html", align: "center", headerSort:false,
+                width: "20%", hozAlign:"center",
+            },
         ],
-        // layout: 'fitColumns',
+        layout: 'fitColumns',
         ajaxURL: "/trans/outgoing-goods/list",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",

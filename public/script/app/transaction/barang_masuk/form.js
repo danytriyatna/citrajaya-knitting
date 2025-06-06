@@ -623,12 +623,12 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                 } 
             }
         },
-        {title: "No.SO", field: "kode_sales_order", width: "20%"},
-        {title: "Style", field: "style", width: "20%"},
-        {title: "Deskripsi", field: "deskripsi", width: "20%"},
-        {title: "Buyer", field: "buyer", width: "20%"},
-        {title: "Colour", field: "color", width: "20%"},
-        {title: "Tgl Transaksi", field: "tgl_transaksi", width: "15%", sorter:"date", sorterParams:{
+        {title: "No.SO", field: "kode_sales_order", width: "10%"},
+        {title: "Style", field: "style", width: "12%"},
+        {title: "Deskripsi", field: "deskripsi", width: "18%"},
+        {title: "Buyer", field: "buyer", width: "15%"},
+        {title: "Colour", field: "color", width: "10%"},
+        {title: "Tgl<br>Transaksi", field: "tgl_transaksi", width: "10%", sorter:"date", sorterParams:{
                 format:"dd-MM-yyyy",
                 alignEmptyValues:"top",
             },
@@ -644,29 +644,29 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         //         // Tidak ada desimal
         //     }
         // },
-                        {title: "Qty", field: "qty_kirim", width: "15%"},
-                        {title: "Qty<br>Terima", field: "qty", width: "10%", editor: "number", cellEdited: function(cell) {
-                            const row = cell.getRow();
-                            const qty = parseFloat(cell.getValue()) || 0;
-                            const harga = parseFloat(row.getCell("harga").getValue()) || 0;
-                            row.update({ amount: qty * harga });
-                        }},
-                        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
-                        {title: "Harga", field: "harga", width: "20%", formatter: "money", formatterParams: {
-                            decimal: ",",
-                            thousand: ".",
-                            symbol: "Rp",  // Simbol mata uang Rupiah
-                            precision: 0,   // Tidak ada desimal
-                        }, editor: "number", cellEdited: function(cell) {
-                            const row = cell.getRow();
-                            const harga = parseFloat(cell.getValue()) || 0;
-                            const qty = parseFloat(row.getCell("qty").getValue()) || 0;
-                            row.update({ amount: qty * harga });
-                        }},
-                        {title: "Amount", field: "amount", width: "20%", formatter: "money", formatterParams: {
-                            decimal: ",",
-                            thousand: ".",
-                            symbol: "Rp",  // Simbol mata uang Rupiah
+        {title: "Qty", field: "qty_kirim", width: "8%"},
+        {title: "Qty<br>Terima", field: "qty", width: "8%", editor: "number", cellEdited: function(cell) {
+            const row = cell.getRow();
+            const qty = parseFloat(cell.getValue()) || 0;
+            const harga = parseFloat(row.getCell("harga").getValue()) || 0;
+            row.update({ amount: qty * harga });
+        }},
+        {title: "Ukuran", field: "kode_ukuran", width: "8%"},
+        {title: "Harga", field: "harga", width: "10%", formatter: "money", formatterParams: {
+            decimal: ",",
+            thousand: ".",
+            symbol: "Rp",  // Simbol mata uang Rupiah
+            precision: 0,   // Tidak ada desimal
+        }, editor: "number", cellEdited: function(cell) {
+            const row = cell.getRow();
+            const harga = parseFloat(cell.getValue()) || 0;
+            const qty = parseFloat(row.getCell("qty").getValue()) || 0;
+            row.update({ amount: qty * harga });
+        }},
+        {title: "Amount", field: "amount", width: "10%", formatter: "money", formatterParams: {
+            decimal: ",",
+            thousand: ".",
+            symbol: "Rp",  // Simbol mata uang Rupiah
             precision: 0,   // Tidak ada desimal
         }},
     ],
@@ -683,8 +683,7 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
-        {title: "No.SO", field: "kode_sales_order", width: "20%"},
+        {title: "No.SO", field: "kode_sales_order", width: "10%"},
         {title: "Style", field: "style", width: "20%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         {title: "Buyer", field: "buyer", width: "20%"},

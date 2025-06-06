@@ -17,6 +17,31 @@
     </div>
 
     <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0 f-w-600">TRACKING PRODUKSI</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-4 offset-md-8">
+                <div class="form-group">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
+                    <input type="text"id="inp-tracking" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <div class="table-striped"  id="tbl-tracking"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
       <div class="col-lg-6">
         <div class="card">
           <div class="card-header">
@@ -88,31 +113,6 @@
                 <tbody>
                 </tbody>
               </table> -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="card">
-          <div class="card-header">
-            <h6 class="mb-0 f-w-600">TRACKING PRODUKSI</h6>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-sm-4 offset-md-8">
-                <div class="form-group">
-                  <div class="input-group mb-3">
-                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text"id="inp-tracking" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <div class="table-striped"  id="tbl-tracking"></div>
             </div>
           </div>
         </div>

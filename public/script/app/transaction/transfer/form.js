@@ -362,12 +362,11 @@ let dtList = new Tabulator("#dt-list", {
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        {title: "ID", field: "id_konsumen", width: "20%",visible:false},
         {
             headerSort: false,  
             title: '#', 
             formatter: buttonRowSOAction,
-            width: '10%', align: "center", cssClass: "text-center",
+            width: '5%', align: "center", cssClass: "text-center",
             cellClick: function(e, cell) {
                 let row = cell.getRow();
                 if (e.target.title === 'delete') {
@@ -388,13 +387,13 @@ let dtList = new Tabulator("#dt-list", {
             
             }
         },
-        {title: "No.SO", field: "kode_sales_order", width: "20%"},
-        {title: "Style", field: "style", width: "20%"},
+        {title: "No.SO", field: "kode_sales_order", width: "15%"},
+        {title: "Style", field: "style", width: "10%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         // {title: "Buyer", field: "buyer", width: "20%"},
-        {title: "Colour", field: "color", width: "20%"},
-        {title: "Qty", field: "qty", width: "20%",editor:"number"},
-        {title: "Ukuran", field: "kode_ukuran", width: "20%"},
+        {title: "Colour", field: "color", width: "10%"},
+        {title: "Qty", field: "qty", width: "8%",editor:"number"},
+        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
         {title: "Keterangan", field: "keterangan", width: "20%",editor:"input"},
         // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
         //     decimal: ",",
@@ -1385,13 +1384,16 @@ function simpanData(status) {
 
     function addItem(data){
         
+        let index = -1;
         if(dtList.getData().some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)){
-            return Swal.fire({
-                text: `SO ${data.kode_sales_order} dengan warna ${data.color} dan ukuran ${data.kode_ukuran} telah dipilih`,
-                icon: 'error',
-                showConfirmButton: false,
-                timer: 2000
-            });
+            // return Swal.fire({
+            //     text: `SO ${data.kode_sales_order} dengan warna ${data.color} dan ukuran ${data.kode_ukuran} telah dipilih`,
+            //     icon: 'error',
+            //     showConfirmButton: false,
+            //     timer: 2000
+            // });
+
+            index = dtList.getData().findIndex(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran);
         }
 
         if(selectProses.val() == 1){
@@ -1408,7 +1410,13 @@ function simpanData(status) {
             }
         }
 
-        dtList.addRow(data)
+        if(index > -1){
+            const row = dtList.getData();
+            row[index].qty = parseFloat(row[index].qty) + parseFloat(data.qty);
+            dtList.setData(row)
+        }else{
+            dtList.addRow(data)
+        }
 
         $( "#text_barcode" ).val("");
     }

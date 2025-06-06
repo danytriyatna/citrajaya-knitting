@@ -140,7 +140,7 @@ class WorkOrder extends BaseController
           }
         }
 
-        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sample/"  . $detail->file_name : "";
+        $file_gambar = !empty($ref_data->file_name) ? base_url() . "uploads/sample/"  . $ref_data->file_name : "";
       }else{
         $ref_data = $this->mSalesOrder->getData($row->ref_id);
         $pru['use'] = 1; // ambil ukuran yang digunnakan order 
@@ -155,7 +155,7 @@ class WorkOrder extends BaseController
           }
         }
 
-        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sales_order/"  . $detail->file_name : "";
+        $file_gambar = !empty($ref_data->file_name) ? base_url() . "uploads/sales_order/"  . $ref_data->file_name : "";
       }
 
       array_push(

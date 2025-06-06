@@ -119,6 +119,8 @@ class Production extends BaseController
       $last_data = !empty($dataLast) ? $dataLast[0] : [];
 
       
+      $url_edit   = $this->urlv . '/form/' . $id;
+      $url_delete = $this->urlv . '/delete/' . $id;
 
       $qty_kirim = 0;
       if(!empty($row->id)){
@@ -137,24 +139,64 @@ class Production extends BaseController
         $qty_hasil = $last_data->qty_prod - $qty_kirim;
       }
 
+
+      if($row->tipe_id == 1){
+        $ref_data = $this->mSample->getData($row->id_walkorder_ref);
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sample'] = $row->id_walkorder_ref;
+        $dtUkuran = $this->mSample->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($row->id_walkorder_ref) : [];
+        if (!empty($detail)) {
+          for ($i = 0; $i < count($detail); $i++) {
+            $drow = $detail[$i];
+            $allQty = $this->mSample->getTotal_qty($drow->id, 2);
+            $detail[$i]->qty      = $allQty;
+          }
+        }
+
+        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sample/"  . $detail->file_name : "";
+      }else{
+        $ref_data = $this->mSalesOrder->getData($row->id_walkorder_ref);
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sales_order'] = $row->id_walkorder_ref;
+        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id_walkorder_ref) : [];
+        if (!empty($detail)) {
+          for ($i = 0; $i < count($detail); $i++) {
+            $drow = $detail[$i];
+            $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
+            $detail[$i]->qty      = $allQty;
+          }
+        }
+
+        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sales_order/"  . $detail->file_name : "";
+      }
+
       array_push(
         $build_array["data"],
         array(
-          "id"                => ($id),
-          "ref_kode"          => ($row->kode_walkorder),
-          "konsumen_nama"     => $row->konsumen_nama,
-          "kode_walkorder_ref"     => $row->kode_walkorder_ref,
+          "id"                 => ($id),
+          "ref_kode"           => ($row->kode_walkorder),
+          "konsumen_nama"      => $row->konsumen_nama,
+          "kode_walkorder_ref" => $row->kode_walkorder_ref,
+          "ref_id"            => $row->id_walkorder_ref,
           "kode_prod"         => $row->kode_prod,
-          "qty"               => $row->qty,
-          "tipe"              => $tipe,
-          "qty_prod"          => $qty_prod,
+          "qty"                => $row->qty,
+          "tipe"               => $tipe,
+          "qty_prod"           => $qty_prod,
           "qty_hasil"          => $qty_hasil,
           "qty_remain"        => $qty - $qty_prod,
           "tgl_deadline"      => fdate_eng_to_ind($row->tgl_deadline),
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),
           "keterangan_style"  => $row->keterangan_style,
           "status"            => $status,
-          "aksi"              => $btnAction
+          "aksi"              => $btnAction,
+          "file_name" => $file_gambar,
+          "detail" => $detail,
+          "key_ukuran" => $dtUkuran,
+          "url_edit" => $url_edit,
+          "url_delete" => $url_delete,
+          "ref_data" => $ref_data
         )
       );
     }

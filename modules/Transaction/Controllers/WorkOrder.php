@@ -126,12 +126,12 @@ class WorkOrder extends BaseController
       $qty_prod = $this->mWalkorder->getCnt_produksi($row->id);
 
 
-      if($row->status == 1){
+      if($row->tipe_id == 1){
         $ref_data = $this->mSample->getData($row->ref_id);
         $pru['use'] = 1; // ambil ukuran yang digunnakan order 
         $pru['id_sample'] = $row->ref_id;
         $dtUkuran = $this->mSample->getUkuranTrans($pru);
-        $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSalesOrder_crostab($row->ref_id) : [];
+        $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($row->ref_id) : [];
         if (!empty($detail)) {
           for ($i = 0; $i < count($detail); $i++) {
             $drow = $detail[$i];
@@ -139,6 +139,8 @@ class WorkOrder extends BaseController
             $detail[$i]->qty      = $allQty;
           }
         }
+
+        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sample/"  . $detail->file_name : "";
       }else{
         $ref_data = $this->mSalesOrder->getData($row->ref_id);
         $pru['use'] = 1; // ambil ukuran yang digunnakan order 
@@ -152,6 +154,8 @@ class WorkOrder extends BaseController
             $detail[$i]->qty      = $allQty;
           }
         }
+
+        $file_gambar = !empty($detail->file_name) ? base_url() . "uploads/sales_order/"  . $detail->file_name : "";
       }
 
       array_push(
@@ -165,7 +169,7 @@ class WorkOrder extends BaseController
           "qty"               => $row->qty,
           "tipe"              => $tipe,
           "qty_prod"          => $qty_prod,
-          "file_name"          => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
+          "file_name"          => $file_gambar,
           "qty_remain"        => $qty - $qty_prod,
           "tgl_deadline"      => fdate_eng_to_ind($row->tgl_deadline),
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),

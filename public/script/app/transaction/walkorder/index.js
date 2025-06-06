@@ -24,15 +24,13 @@ $(document).ready(function () {
          status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
                     <span class="f-w-700 text-muted">`+data.status+`</span>`
 
-         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>
-                 <button type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>`;
+         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
         }else{
          status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
                     <span class="f-w-700 text-success">`+data.status+`</span>`
 
 
-        aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>
-                <button hidden type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>`;
+        aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
         }
         
         // HTML Card Layout
@@ -95,11 +93,11 @@ $(document).ready(function () {
             // document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', ()=>{
             //     window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
             // });
-            document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
-                if (confirm("Anda yakin akan menghapus data?")) {
-                    window.location.replace(baseUrl + "/" + data.url_delete);
-                }
-            });
+            // document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
+            //     if (confirm("Anda yakin akan menghapus data?")) {
+            //         window.location.replace(baseUrl + "/" + data.url_delete);
+            //     }
+            // });
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},

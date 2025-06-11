@@ -111,8 +111,9 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
         $builder->select("abx.qty, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan");
+                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran");
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
+        $builder->join("ref_ukuran rk", "abx.kode_ukuran = rk.kode_ukuran", "left");
 
         $builder->where("abx.id_header", $idHeader);
         $this->_data = $builder->get()->getResult();

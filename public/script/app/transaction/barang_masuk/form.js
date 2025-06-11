@@ -1325,20 +1325,20 @@ function simpanData(status) {
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
                 let hasil = refData;
-                //  console.log('hasil', hasil)
+                 console.log('hasil', hasil)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
                     hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
                 }
-                //  console.log('hasil1', hasil)
+                 console.log('hasil1', hasil)
                 if (arrKunci[1]!= undefined && arrKunci[1] != '') {
                     hasil = hasil.filter(item => item.key_ukuran && item.kode_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
                 }
-                //  console.log('hasil2', hasil)
+                 console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
                     hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase().includes(arrKunci[2].toLowerCase()));
                 }
-                // console.log('hasil3', hasil)
-                // console.log('arrKunci', arrKunci)
+                console.log('hasil3', hasil)
+                console.log('arrKunci', arrKunci)
                
 
                 if (hasil.length > 0) {

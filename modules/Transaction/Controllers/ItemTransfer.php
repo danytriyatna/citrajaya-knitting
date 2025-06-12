@@ -635,7 +635,7 @@ class ItemTransfer extends BaseController
             $params['color'] = $kt_exp[2];
         }
         $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
-// print_r($results);exit;
+// print_r($params);exit;
         foreach ($results as $r) {
 
           $isi = [];

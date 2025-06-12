@@ -208,7 +208,9 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.style', strtolower($params['style']));
             }
             if (!empty($params['color'])) {
-                $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
+                $prm_color = strtolower("{$params['color']}");
+                $builder->where("lower(tu.color)  ~ '^" . $prm_color . "' ");
+                // $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
             }
             
             if (!empty($order)) {

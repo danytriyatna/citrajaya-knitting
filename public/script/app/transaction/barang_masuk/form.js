@@ -379,6 +379,7 @@ const inpIdCmt = $("#id_cmt");
 
 
 let refData = [];
+let xrefData = [];
 dtListSO.on("rowClick", function(e, row){
         const xdata = row.getData();
         
@@ -436,10 +437,12 @@ function loadDataSo() {
             if(data.status){
                 if(selectKategori.val() != 12){
                     refData = [];
+                    xrefData = [];
                     dtList.setData(data.dataSO);
                     dtListProduksi.setData(data.dataSO);
                 }else{
                     refData = data.dataSO
+                    xrefData = data.dataSO;
                 }
             }
            
@@ -1268,26 +1271,34 @@ function simpanData(status) {
         
         // const data = row._row.data
         let produksi_data = dtListProduksi.getData();
+        let index = -1;
+        if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
+            index = produksi_data.findIndex(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran);
+        }
 
-        let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
 
+       if(index !== -1){
+           const row = produksi_data;
+            row[index].qty = parseFloat(row[index].qty) + parseFloat(data.qty);
+            dtListProduksi.setData(row);
+       }else{
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
 
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
+            // if (list_verif.length > 0) {
+            //     return Swal.fire({
+            //         text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
+            //         icon: 'error',
+            //         showConfirmButton: false,
+            //         timer: 2000
+            //     });
+            // }
 
-        // if (list_verif.length > 0) {
-        //     return Swal.fire({
-        //         text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
-        //         icon: 'error',
-        //         showConfirmButton: false,
-        //         timer: 2000
-        //     });
-        // }
-
-        dtListProduksi.addRow(data);
+            dtListProduksi.addRow(data);
+       }
 
         $( "#text_barcode" ).val("");
     }
@@ -1325,24 +1336,33 @@ function simpanData(status) {
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
                 let hasil = refData;
-                 console.log('hasil', hasil)
+                //  console.log('hasil', hasil)
+                //  console.log('arrKunci', arrKunci)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
                     hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
                 }
-                 console.log('hasil1', hasil)
+                //  console.log('hasil1', hasil)
                 if (arrKunci[1]!= undefined && arrKunci[1] != '') {
-                    hasil = hasil.filter(item => item.key_ukuran && item.kode_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
+                    hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
                 }
-                 console.log('hasil2', hasil)
+                //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
                     hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase().includes(arrKunci[2].toLowerCase()));
                 }
-                console.log('hasil3', hasil)
-                console.log('arrKunci', arrKunci)
+                // console.log('hasil3', hasil)
+                // console.log('arrKunci', arrKunci)
+
+
+                hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                
 
                 if (hasil.length > 0) {
                     addItem(hasil[0]);
+
+                    setTimeout(() => {
+                        $( "#text_barcode" ).val("");
+                        refData = xrefData;
+                    }, 500);
                 } else {
                     Swal.fire({
                         text: "Produk tidak ditemukan!",

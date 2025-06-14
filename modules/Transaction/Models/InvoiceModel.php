@@ -216,14 +216,19 @@ class InvoiceModel extends \App\Models\PrModel
                     tso.id_konsumen,
                     tso.style as keterangan_style,
                     tso.tgl_transaksi,
-                    coalesce(tso.qty, 0) as qty,
-                    coalesce(tso.total_harga, 0) as  total_harga,
+                    sum(coalesce(tsou.qty, 0)) as qty,
+                    sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id ),0) as qty_dlv,
                     tw.id as id_walkorder
                 FROM
-                    trans_sales_order tso
+                    trans_sales_order_ukuran tsou
+                    inner join trans_sales_order tso on tso.id = tsou.id_sales_order
                     left join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                    group by 
+                        tso.id, tso.kode_sales_order,
+                        tso.id_konsumen, tso.style,  tso.tgl_transaksi,
+                        tso.uang_dp, tw.id 
                 union all 
                 select 
                     1 as tipe_id,
@@ -232,14 +237,22 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.id_konsumen, 
                     ts.style as keterangan_style,
                     ts.tgl_transaksi,
-                    coalesce(ts.qty, 0) as qty,
-                    coalesce(ts.total_harga, 0) as total_harga,
+                    sum(coalesce(tsu.qty, 0)) as qty,
+                    sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id ),0) as qty_dlv,
                     tw.id as id_walkorder
                 from 
-                    trans_sample ts
+                    trans_sample_ukuran tsu
+                inner join trans_sample ts on ts.id = tsu.id_sample
                 left join trans_walkorder tw on tw.ref_id = ts.id and tw.tipe_id = 1
+                group by 
+                   ts.id,
+                    ts.kode_sample,
+                    ts.id_konsumen, 
+                    ts.style,
+                    ts.tgl_transaksi,
+                    ts.uang_dp, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
             where xtb.id_konsumen = {$params['id_konsumen']} 

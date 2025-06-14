@@ -43,7 +43,7 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <input type="text" id="price" name="price" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+            <input type="text" id="price" name="price" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" >
           </div>
         </div>
         <div class="form-group row">

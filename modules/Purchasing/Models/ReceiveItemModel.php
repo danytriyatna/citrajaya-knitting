@@ -209,6 +209,8 @@ class ReceiveItemModel extends \App\Models\PrModel
                 $this->insertRecordGetid($this->tblDet, $dataDetail);
 
                 if ($data['status'] == 1) {
+
+                    
                     $arrParam =  [
                         "id_barang" => $idBarang,
                         "id_header" => $data['id_po'],
@@ -216,7 +218,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                     $lastStokDet = $this->getLastStokPODetail($data['id_po'], $idBarang);
                     $stokAkhirDet = !empty($lastStokDet) ? $lastStokDet->stok : 0;
 
-                    $this->updateRecords($this->tblPoDetail, array("qty_receive" => $stokAkhirDet + $rowData['qty']), $arrParam);
+                    $this->updateRecords($this->tblPoDetail, array("qty_receive" => $stokAkhirDet + $rowData['qty'], "price" => $rowData['price']), $arrParam);
                     $mBarangMasuk = new IncomingGoodsModel();
                     $arrParam =  [
                         "id_barang" => $idBarang,

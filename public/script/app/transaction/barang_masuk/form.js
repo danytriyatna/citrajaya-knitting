@@ -1335,7 +1335,7 @@ function simpanData(status) {
 
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
-                let hasil = refData;
+                let hasil = refData.map(item => ({ ...item }));
                 //  console.log('hasil', hasil)
                 //  console.log('arrKunci', arrKunci)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
@@ -1347,10 +1347,13 @@ function simpanData(status) {
                 }
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
+                    const inputColor = arrKunci[2].toString().toLowerCase().trim();
                     hasil = hasil.filter(item => {
                         if (item.color) {
                             const firstColor = item.color.toString().split('~')[0].toLowerCase();
-                            return firstColor === arrKunci[2].toLowerCase();
+                            const pertamaWarna = firstColor.toString().trim()
+                            
+                            return pertamaWarna == inputColor;
                         }
                         return false;
                     });

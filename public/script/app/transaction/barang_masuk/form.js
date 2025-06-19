@@ -1273,7 +1273,11 @@ function simpanData(status) {
         let produksi_data = dtListProduksi.getData();
         let index = -1;
         if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
-            index = produksi_data.findIndex(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran);
+            index = produksi_data.findIndex(x => 
+                x.kode_sales_order == data.kode_sales_order &&
+                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '') &&
+                x.kode_ukuran == data.kode_ukuran
+            );
         }
 
 

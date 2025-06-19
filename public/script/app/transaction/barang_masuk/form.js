@@ -1347,7 +1347,13 @@ function simpanData(status) {
                 }
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
-                    hasil = hasil.filter(item => item.color && item.color.toString().toLowerCase().includes(arrKunci[2].toLowerCase()));
+                    hasil = hasil.filter(item => {
+                        if (item.color) {
+                            const firstColor = item.color.toString().split('~')[0].toLowerCase();
+                            return firstColor === arrKunci[2].toLowerCase();
+                        }
+                        return false;
+                    });
                 }
                 // console.log('hasil3', hasil)
                 // console.log('arrKunci', arrKunci)

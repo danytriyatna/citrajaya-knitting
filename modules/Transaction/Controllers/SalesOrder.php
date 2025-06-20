@@ -865,10 +865,12 @@ class SalesOrder extends BaseController
 
     if (!empty($data_warna)) {
       $data['warna_2'] = !empty($data_warna[0]->warna_2) ? trim($data_warna[0]->warna_2) : '-';
+      $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty . ';' . $data['warna_2']; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
+    }else{
+      $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
     }
 
     /* QR Data  */
-    $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
     $params['level']    = 'L';
     $params['size']     = 10;
     $params['savename'] = FCPATH . $config['imagedir'] . $save_name;

@@ -212,7 +212,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 // Hilangkan spasi setelah value, misal "dan " jadi "dan"
                 $prm_color = rtrim($prm_color);
                 // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
-                $builder->where(" split_part(tu.color, '~', 1)", $params['color']);
+                $builder->where(" trim(split_part(tu.color, '~', 1))", $params['color']);
                 // $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
             }
 
@@ -220,7 +220,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $prm_color2 = strtolower($params['color2']);
                 $prm_color2 = rtrim($prm_color2);
                 // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
-                $builder->where(" split_part(tu.color, '~', 2)", $params['color2']);
+                $builder->where(" trim(split_part(tu.color, '~', 2))", $params['color2']);
             }
             
             if (!empty($order)) {

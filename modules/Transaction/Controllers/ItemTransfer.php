@@ -637,7 +637,7 @@ class ItemTransfer extends BaseController
 
 
         if (!empty($kt_exp[4])) {
-          if($kt_exp[4] != '~'){
+          if($kt_exp[4] != '-'){
             $params['color2'] = trim($kt_exp[4]);
           }
         }

@@ -19,7 +19,7 @@ class Mborongan extends \App\Models\PrModel
         $builder = $this->db->table("trans_produksi_operator pd");
 
         $builder->select("tp.keterangan_style, tp.keterangan, rp.nama_operator, pd.id_proses, pd.id_operator, jp.nama as proses, 
-                          sum(pd.harga) as harga, sum(pd.qty) as qty, sum(pd.harga_total) as harga_total, pd.kode_transaksi");
+                          sum(pd.harga) as harga, sum(pd.qty) as qty, sum(pd.harga_total) as harga_total, pd.kode_transaksi, pd.tgl_transaksi");
                         //   tp.kode_prod, pd.tgl_transaksi,
 
         $builder->join("trans_produksi tp", "tp.id = pd.id_produksi", "inner");
@@ -58,7 +58,7 @@ class Mborongan extends \App\Models\PrModel
             if (empty($offset)) $offset = 0;
             if (empty($limit)) $limit = 10;
 
-            $builder->groupBy("tp.keterangan_style, rp.nama_operator, pd.id_proses, pd.id_operator, jp.nama, tp.keterangan, pd.kode_transaksi");
+            $builder->groupBy("tp.keterangan_style, rp.nama_operator, pd.id_proses, pd.id_operator, jp.nama, tp.keterangan, pd.kode_transaksi, pd.tgl_transaksi");
 
             $builder->limit($limit, $offset);
            

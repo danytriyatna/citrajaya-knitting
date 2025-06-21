@@ -181,7 +181,7 @@
     <thead>
       <tr>
 
-        <!-- <th class="text-left" style="width: 10%;">Tanggal</th> -->
+        <th class="text-left" style="width: 10%;">Tanggal</th>
         <th class="text-left" style="width: 15%;">Kode Transaksi</th>
         <th class="text-left" style="width: 25%;">Proses</th>
         <th class="text-right" style="width: 15%;">Harga</th>
@@ -214,6 +214,7 @@
 
         <tr>
 
+          <td><?= fdate_eng_to_ind_3($r->tgl_transaksi) ?></td>
           <td><?= $r->kode_transaksi ?></td>
           <td><?= $r->keterangan_style ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>

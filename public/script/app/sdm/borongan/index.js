@@ -110,10 +110,10 @@ $(document).ready(function () {
                 title: " ", field: "print", headerSort: false, formatter: "html",
                 width: "8%"
             },
-            // {
-			// 	title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
-			// 	align:'center', width: "10%"
-			// } ,
+            {
+				title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
+				align:'center', width: "10%"
+			} ,
             // {
 			// 	title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
 			// 	align:'center', width: "13%"

@@ -104,6 +104,9 @@ class Borongan extends BaseController
             $keterangan_style .= ' '. $row->keterangan;
           }
           // $tgl_transaksi = \fdate_eng_to_ind($row->tgl_transaksi);
+
+          $harga = $row->harga_total / $row->qty;
+
           array_push(
               $build_array["data"],
               array(
@@ -112,7 +115,7 @@ class Borongan extends BaseController
                   "nama_operator" => $row->nama_operator,
                   "id_proses" => $row->id_proses,
                   "proses" => $row->proses,
-                  "harga" => $row->harga,
+                  "harga" => $harga,
                   "qty" => $row->qty,
                   "harga_total" => $row->harga_total,
                   // "kode_prod" => $row->kode_prod,

@@ -208,9 +208,19 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.style', strtolower($params['style']));
             }
             if (!empty($params['color'])) {
-                $prm_color = strtolower("{$params['color']}");
-                $builder->where("lower(tu.color)  ~ '^" . $prm_color . "' ");
+                $prm_color = strtolower($params['color']);
+                // Hilangkan spasi setelah value, misal "dan " jadi "dan"
+                $prm_color = rtrim($prm_color);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" split_part(tu.color, '~', 1)", $params['color']);
                 // $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
+            }
+
+            if (!empty($params['color2'])) {
+                $prm_color2 = strtolower($params['color2']);
+                $prm_color2 = rtrim($prm_color2);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" split_part(tu.color, '~', 2)", $params['color2']);
             }
             
             if (!empty($order)) {

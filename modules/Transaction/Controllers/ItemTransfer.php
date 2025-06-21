@@ -626,16 +626,23 @@ class ItemTransfer extends BaseController
         $qty = $kt_exp[3]; 
         $params = [];
         if (!empty($kt_exp[0])) {
-            $params['kode_transaksi'] = $kt_exp[0];
+            $params['kode_transaksi'] = trim($kt_exp[0]);
         }
         if (!empty($kt_exp[1])) {
-            $params['kode_ukuran'] = ($kt_exp[1]);
+            $params['kode_ukuran'] = trim($kt_exp[1]);
         }
         if (!empty($kt_exp[2])) {
-            $params['color'] = $kt_exp[2];
+            $params['color'] = trim($kt_exp[2]);
         }
+
+
+        if (!empty($kt_exp[4])) {
+            $params['color2'] = trim($kt_exp[4]);
+        }
+
+        // print_r($params);exit;
         $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
-// print_r($params);exit;
+ 
         foreach ($results as $r) {
 
           $isi = [];

@@ -228,10 +228,11 @@
               <a href="trans/work-order" class="btn btn-default m-e-5">
                 <span class="fa fa-arrow-left"></span> Kembali
               </a>
-              <?php if($status == 1) { ?>
-                <button type="button" id="btn-save" class='btn btn-success'>
+              <button type="button" id="btn-save" class='btn btn-success'>
                   <span class="fa fa-save"></span> Simpan
                 </button>
+              <?php if($status == 1) { ?>
+                
                 <button type="button" id="btn-send" class='btn btn-info'>
                   <span class="fa fa-paper-plane"></span> Approval
                 </button>

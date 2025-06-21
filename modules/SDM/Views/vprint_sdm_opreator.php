@@ -181,8 +181,8 @@
     <thead>
       <tr>
 
-        <th class="text-left" style="width: 10%;">Tanggal</th>
-        <th class="text-left" style="width: 15%;">No. Produksi</th>
+        <!-- <th class="text-left" style="width: 10%;">Tanggal</th> -->
+        <th class="text-left" style="width: 15%;">Kode Transaksi</th>
         <th class="text-left" style="width: 25%;">Proses</th>
         <th class="text-right" style="width: 15%;">Harga</th>
         <th class="text-right" style="width: 5%;">Qty</th>
@@ -204,7 +204,7 @@
         <?php if( $proses != $r->proses) { ?>
           <tr>
             <td style="border-bottom:1px solid #000;"><b></b></td>
-            <td style="border-bottom:1px solid #000;"><b></b></td>
+            <!-- <td style="border-bottom:1px solid #000;"><b></b></td> -->
             <td style="border-bottom:1px solid #000;"><b><?= $r->proses ?></b></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
@@ -213,8 +213,8 @@
         <?php $proses = $r->proses; } ?>
 
         <tr>
-          <td><?= fdate_eng_to_ind($r->tgl_transaksi) ?></td>
-          <td><?= $r->kode_prod ?></td>
+
+          <td><?= $r->kode_transaksi ?></td>
           <td><?= $r->keterangan_style ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>
           <td class="text-right"><?= ($r->qty) ?></td>

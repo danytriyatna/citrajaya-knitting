@@ -1352,12 +1352,16 @@ function simpanData(status) {
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
                     const inputColor = arrKunci[2].toString().toLowerCase().trim();
+                    const inputColor2 = arrKunci[4].toString().toLowerCase().trim();
                     hasil = hasil.filter(item => {
                         if (item.color) {
                             const firstColor = item.color.toString().split('~')[0].toLowerCase();
                             const pertamaWarna = firstColor.toString().trim()
+
+                            const secondColor = item.color.toString().split('~')[1].toLowerCase();
+                            const kode_ukuranWarna = secondColor.toString().trim()
                             
-                            return pertamaWarna == inputColor;
+                            return pertamaWarna == inputColor && kode_ukuranWarna == inputColor2;
                         }
                         return false;
                     });

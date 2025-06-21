@@ -110,13 +110,17 @@ $(document).ready(function () {
                 title: " ", field: "print", headerSort: false, formatter: "html",
                 width: "8%"
             },
+            // {
+			// 	title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
+			// 	align:'center', width: "10%"
+			// } ,
+            // {
+			// 	title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
+			// 	align:'center', width: "13%"
+			// } ,
             {
-				title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
+				title: 'Kode Barang Masuk', field: 'kode_transaksi', headerSort:false, sorter: 'string', frozen: true,
 				align:'center', width: "10%"
-			} ,
-            {
-				title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "13%"
 			} ,
             {
 				title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
@@ -124,7 +128,7 @@ $(document).ready(function () {
 			} ,
             {
 				title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "18%"
+				align:'center'
 			} ,
             
 			{

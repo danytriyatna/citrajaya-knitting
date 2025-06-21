@@ -743,11 +743,11 @@ let dtListDetailPO = new Tabulator("#dt-list-po", {
             
             }
         },
-        {title:"ITEM CODE", field:"kode_barang",hozAlign:"left", width:"15%"},
-        {title:"ITEM DESCRIPTION", field:"nama_barang", hozAlign:"left",width:"20%"},
+        {title:"Kode Barang", field:"kode_barang",hozAlign:"left", width:"15%"},
+        {title:"Nama Barang", field:"nama_barang", hozAlign:"left",width:"20%"},
         {title:"KODE", field:"kode", hozAlign:"left",width:"20%"},
         {title:"QTY", field:"qty", hozAlign:"center",width:"10%"},
-        {title:"UNIT PRICE", field:"price", hozAlign:"right",width:"15%",formatter: "money",formatterParams: {
+        {title:"Harga Per Unit", field:"price", hozAlign:"right",width:"15%",formatter: "money",formatterParams: {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
@@ -755,8 +755,8 @@ let dtListDetailPO = new Tabulator("#dt-list-po", {
             }, hozAlign:"right",
         },
         {title:"DISC (%)", field:"disc", hozAlign:"center",width:"10%",visible:false},
-        {title:"TAX (%)", field:"tax", hozAlign:"center",width:"10%"},
-        {title:"AMOUNT", width:"15%", field:"grand_price",formatter: "money", formatterParams: {
+        {title:"Pajak (%)", field:"tax", hozAlign:"center",width:"10%"},
+        {title:"Total", width:"15%", field:"grand_price",formatter: "money", formatterParams: {
             decimal: ",",
             thousand: ".",
             symbol: "Rp",  // Simbol mata uang Rupiah

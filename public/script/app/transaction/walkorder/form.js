@@ -568,13 +568,21 @@ $(document).ready(function () {
         let dataJenis = $('input[name="jenis_proses"]');
         let dataid = $("#dataid").val();
         let listJenis = [];
+        
         for (const inpel of dataJenis) {
             let inp = $("#" + inpel.id)
             if(inp.is(":checked")){
-                listJenis.push(inp.val());
+                let pros_id = inp.val();
+                let prod_harga = $("#harga-proses-" + pros_id).val();
+                let pros_isi = {
+                    'proses' : pros_id,
+                    'harga' : prod_harga,
+                };
+                
+                listJenis.push(pros_isi);
             }
         }
-
+        // console.log(listJenis);
         let ukuran_data = dtListDetail.getData();
         let ukuran_calc = dtListDetail.getCalcResults();
 

@@ -204,6 +204,7 @@
                     <thead>
                       <tr>
                         <th>PRODUCTION PROCESS</th>
+                        <th>HARGA PROCESS</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -214,6 +215,9 @@
                                 <input class="form-check-input m-e-4" type="checkbox" name="jenis_proses" id="proses_<?= $r->id ?>" value="<?= $r->id ?>">
                                 <label class="form-check-label mb-0" for="proses_<?= $r->id ?>"><?= $r->nama ?></label>
                               </div>
+                            </td>
+                            <td>
+                              <input type="number" class="form-control" name="harga-proses" id="harga-proses-<?= $r->id ?>" value="<?= $r->harga ?>">
                             </td>
                           </tr>
                           <?php } ?>

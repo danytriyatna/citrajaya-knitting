@@ -248,7 +248,18 @@ class WorkOrder extends BaseController
     $proces_data = $this->mPproduksi->getData(null, 0, 999);
     $params_wo['id_walkorder'] = $id;
     $proces_saved = $this->mWalkorder->getData_proses(0, 0, 9999, null, null, $params_wo);
-
+      
+    for ($i=0; $i < count($proces_data); $i++) { 
+      // Select proces_saved by key value from id_proses
+      $proces_data[$i]->harga = 0;
+      foreach ($proces_saved as $saved) {
+        if ($saved->id_proses == $proces_data[$i]->id) {
+          $proces_data[$i]->harga = !empty($saved->harga) ? $saved->harga : 0;
+          break;
+        }
+      }
+    }
+    // dd($proces_data);
     $sortGudang = [
         [
             'field' => 'nama_gudang',
@@ -451,22 +462,25 @@ class WorkOrder extends BaseController
     $list_proses = json_decode($list_proses, true);
     $proses_arr = [];
     foreach ($list_proses as $item) {
+      // print_r($item);exit;
       $isiProses = [
         'id_walkorder' => $dataid,
-        'id_proses' => $item,
+        'id_proses' => $item['proses'],
+        'harga' => !empty($item['harga']) ? $item['harga'] : 0,
         'created_at' => date('Y-m-d H:i:s')
       ];
-
+      
       if(!empty($status_data) || $data->status == 2){
         $isiProses['approved_int'] = 1;
 
         $prm_proses['id_walkorder'] = $dataid;
-        $prm_proses['id_proses'] = $item;
+        $prm_proses['id_proses'] = $item['proses'];
         $data_proses = $this->mWalkorder->getData_proses(null, 0, 1, null, null, $prm_proses);
         
         if(!empty($data_proses)){
           $proses_id = $data_proses[0]->id;
-          // $this->mWalkorder->updateRecord($this->mWalkorder->table3, $isiProses, 'id', $proses_id);
+          $updates = $this->mWalkorder->updateRecord($this->mWalkorder->table3, $isiProses, 'id', $proses_id);
+          
           $proses_arr[] = $proses_id; 
         }else{
           $proses_id = $this->mWalkorder->insertRecordGetid($this->mWalkorder->table3, $isiProses);  

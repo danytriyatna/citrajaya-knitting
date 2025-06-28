@@ -224,7 +224,7 @@ class WalkorderModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table3 . " abx");
 
         $builder->select(" abx.id, abx.id_walkorder, abx.id_proses, abx.keterangan,
-                           pp.seq, pp.nama as proses, abx.approved_int
+                           pp.seq, pp.nama as proses, abx.approved_int, abx.harga
                         ");
 
         $builder->join("_jenis_proses_produksi pp", "pp.id = abx.id_proses", "inner");

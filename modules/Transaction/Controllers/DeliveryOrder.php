@@ -618,6 +618,7 @@ class DeliveryOrder extends BaseController
           "id_walkorder"      => ($row->id_walkorder),
           "ref_kode"          => ($row->kode_walkorder),
           "konsumen_nama"     => $row->konsumen_nama,
+          "kode_walkorder_ref"         => $row->kode_walkorder_ref,
           "kode_prod"         => $row->kode_prod,
           "qty"               => $row->qty,
           "tipe"              => $tipe,

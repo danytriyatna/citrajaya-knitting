@@ -199,6 +199,28 @@ if (!function_exists('fdate_eng_to_ind')) {
     }
 }
 
+if (!function_exists('fdate_eng_to_ind_slas')) {
+    // Konversi yyyy-mm-dd -> dd-mm-yyyy
+    function fdate_eng_to_ind_slas($dt, $use_long_format = false)
+    {
+        $return_dt = '';
+        if (trim($dt) != '' && $dt != '0000-00-00') {
+            $date = DateTime::createFromFormat('Y-m-d', $dt);
+
+            if ($date) {
+                $format = 'd/m/Y';
+                if ($use_long_format) $format = '%d %B %Y';
+
+                // $return_dt = strftime($format, $date->getTimestamp());
+                $timestamp = $date->getTimestamp();
+                $dateTime = (new DateTime())->setTimestamp($timestamp);
+                $return_dt = $dateTime->format($format);
+            }
+        }
+        return $return_dt;
+    }
+}
+
 if (!function_exists('fdate_eng_to_ind_2')) {
     // Konversi yyyy-mm-dd -> dd-mm-yyyy
     function fdate_eng_to_ind_2($dt, $use_long_format = false)

@@ -204,6 +204,17 @@ class InvoiceModel extends \App\Models\PrModel
                         )";
         }
 
+
+        $whereExist_deliv = "";
+
+        if(!empty($params['id_walkorder'])){
+            $whereExist_deliv = "and EXISTS (
+                            SELECT 1
+                            FROM trans_delivery tdd
+                            WHERE tdd.id_walkorder = xtb.id_walkorder and tdd.active = 1
+                        )";
+        }
+
         $sql = "
             select 
                 xtb.*,
@@ -224,7 +235,7 @@ class InvoiceModel extends \App\Models\PrModel
                 FROM
                     trans_sales_order_ukuran tsou
                     inner join trans_sales_order tso on tso.id = tsou.id_sales_order
-                    left join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                    inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
                     group by 
                         tso.id, tso.kode_sales_order,
                         tso.id_konsumen, tso.style,  tso.tgl_transaksi,
@@ -245,7 +256,7 @@ class InvoiceModel extends \App\Models\PrModel
                 from 
                     trans_sample_ukuran tsu
                 inner join trans_sample ts on ts.id = tsu.id_sample
-                left join trans_walkorder tw on tw.ref_id = ts.id and tw.tipe_id = 1
+                inner join trans_walkorder tw on tw.ref_id = ts.id and tw.tipe_id = 1
                 group by 
                    ts.id,
                     ts.kode_sample,
@@ -256,7 +267,7 @@ class InvoiceModel extends \App\Models\PrModel
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
             where xtb.id_konsumen = {$params['id_konsumen']} 
-            {$whereExist}
+            {$whereExist} {$whereExist_deliv}
             order by xtb.tgl_transaksi desc
         ";
 

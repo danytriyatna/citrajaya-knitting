@@ -103,7 +103,9 @@ class Borongan extends BaseController
           if(!empty($row->keterangan)){
             $keterangan_style .= ' '. $row->keterangan;
           }
-          $tgl_transaksi = \fdate_eng_to_ind($row->tgl_transaksi);
+          $tgl_transaksi = \fdate_eng_to_ind_slas($row->tgl_transaksi);
+
+
 
           $harga = $row->harga_total / $row->qty;
 

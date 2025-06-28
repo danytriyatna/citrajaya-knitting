@@ -188,6 +188,11 @@ $(document).ready(function () {
 				width: 140, 
 			}, 
 
+            {
+				title: 'No. Ref', field: 'kode_walkorder_ref', headerSort:false, sorter: 'string',
+				width: 140, 
+			}, 
+
 			{
 				title: 'Tgl Produksi', field: 'tgl_transaksi', headerSort:false, sorter: 'string',
 				width: 140

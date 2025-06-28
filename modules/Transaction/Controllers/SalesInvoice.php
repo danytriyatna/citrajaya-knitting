@@ -614,6 +614,7 @@ class SalesInvoice extends BaseController
     $data = [];
 
     $params['id_konsumen'] = $konsumen_id;
+    $params['id_walkorder'] = 1;
     // $dt = $this->mInvoice->get_walkorder_konsumen($params);
     $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
     if (!empty($dt)) {

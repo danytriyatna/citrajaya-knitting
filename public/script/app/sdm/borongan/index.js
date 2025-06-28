@@ -117,36 +117,71 @@ $(document).ready(function () {
             // {
 			// 	title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
 			// 	align:'center', width: "13%"
-			// } ,
+            // } ,
             {
-				title: 'Kode Barang Masuk', field: 'kode_transaksi', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "10%"
-			} ,
+                title: 'Kode Barang Masuk', field: 'kode_transaksi', headerSort:false, sorter: 'string', frozen: true,
+                align:'center', width: "10%"
+            } ,
             {
-				title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "17%"
-			} ,
+                title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
+                align:'center', width: "17%"
+            } ,
             {
-				title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
-				align:'center'
-			} ,
+                title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
+                align:'center'
+            } ,
             
-			{
-				title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
-				formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right",
-			}, 
-				
-			{
-				title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',
-				formatter : "money",width: 180, cssClass: "text-right", hozAlign: "right",
-                bottomCalc: "sum", bottomCalcFormatter: "money", 
-			}, 
+            {
+                title: 'Harga', field: 'harga', headerSort:false, sorter: 'string',
+                formatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                },
+                width: 180, cssClass: "text-right", hozAlign: "right",
+            }, 
+                
+            {
+                title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',
+                formatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                },
+                width: 180, cssClass: "text-right", hozAlign: "right",
+                bottomCalc: "sum", 
+                bottomCalcFormatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                }
+            }, 
 
             {
-				title: 'Harga Total', field: 'harga_total', headerSort:false, sorter: 'string',
-				formatter : "money", width: 180, cssClass: "text-right", hozAlign: "right",
-                bottomCalc: "sum", bottomCalcFormatter: "money", 
-			},
+                title: 'Harga Total', field: 'harga_total', headerSort:false, sorter: 'string',
+                formatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                },
+                width: 180, cssClass: "text-right", hozAlign: "right",
+                bottomCalc: "sum", 
+                bottomCalcFormatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                }
+            },
         ],
         groupBy:['nama_operator'],
         layout: 'fitColumns',

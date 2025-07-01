@@ -384,20 +384,60 @@ class ItemTransfer extends BaseController
   function dataSO()
   {
     $noSO = $this->request->getGet("noSO");
+    $id_proses = $this->request->getGet("id_proses");
+    $id_cmt = $this->request->getGet("id_cmt");
+    if (isset($noSO)) {
+      $results = $this->mRef->getDataByNoTrf($noSO);
+    }
+    else {
+      $results = $this->mRef->getDataByProsesAndOperator($id_proses, $id_cmt);
+    }
     $data = [];
-    $results = $this->mRef->getDataByNoTrf($noSO);
+    
 
 
     $data['status'] = true;
-    $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
-    $resDataDetSODet = !empty($results) ? $this->mRefDet->getDataDetail($results->id) : null;
+    if (isset($noSO)) {
+      $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
+      $resDataDetSODet = !empty($results) ? $this->mRefDet->getDataDetail($results->id) : null;
+      $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
+      $data['dataSODet'] = !empty($resDataDetSODet) ? $resDataDetSODet : null;
+    }
+    else {
+      $resDataDetSO = [];
+      $resDataDetSODet = [];
+
+      if (!empty($results)) {
+          foreach ($results as $value) {
+              $dataDetSO = $this->mRefDet->getDataDetSO($value->id);
+              $dataDetSODet = $this->mRefDet->getDataDetail($value->id);
+
+              if (!empty($dataDetSO)) {
+                  if (is_array($dataDetSO)) {
+                      $resDataDetSO = array_merge($resDataDetSO, $dataDetSO);
+                  } else {
+                      $resDataDetSO[] = $dataDetSO;
+                  }
+              }
+
+              if (!empty($dataDetSODet)) {
+                  if (is_array($dataDetSODet)) {
+                      $resDataDetSODet = array_merge($resDataDetSODet, $dataDetSODet);
+                  } else {
+                      $resDataDetSODet[] = $dataDetSODet;
+                  }
+              }
+          }
+      }
+      $data['dataSO'] = count($resDataDetSO) > 0 ? $resDataDetSO : null;
+      $data['dataSODet'] = count($resDataDetSODet) > 0 ? $resDataDetSODet : null;
+    }
     // if (!empty($resDataDetSO)) {
     //   foreach ($resDataDetSO as &$rowData) {
     //     $rowData->qty_sisa = encrypt($rowData->id_barang);
     //   }
     // }
-    $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
-    $data['dataSODet'] = !empty($resDataDetSODet) ? $resDataDetSODet : null;
+    
     return $this->response->setJSON($data);
   }
 

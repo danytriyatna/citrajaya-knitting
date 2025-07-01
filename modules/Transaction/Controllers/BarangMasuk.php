@@ -2,20 +2,21 @@
 
 namespace Modules\Transaction\Controllers;
 
-use App\Controllers\BaseController;
-use App\Libraries\DompdfGenerator;
 use App\Models\FileModel;
+use App\Libraries\DompdfGenerator;
+use App\Controllers\BaseController;
 use Modules\Referensi\Models\BarangModel;
-use Modules\Referensi\Models\JenisBarangModel;
+use Modules\Referensi\Models\GudangModel;
 use Modules\Referensi\Models\SatuanModel;
-use Modules\Transaction\Models\IncomingGoodsModel;
+use Modules\Referensi\Models\KonsumenModel;
+use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Transaction\Models\BarangMasukModel;
+use Modules\Referensi\Models\ProsesProduksiModel;
+use Modules\Transaction\Models\ItemTransferModel;
+use Modules\Transaction\Models\IncomingGoodsModel;
 use Modules\Transaction\Models\BarangMasukDetailModel;
 use Modules\Transaction\Models\ItemTransferDetailModel;
-use Modules\Transaction\Models\ItemTransferModel;
-use Modules\Referensi\Models\GudangModel;
-use Modules\Referensi\Models\OperatorModel;
-use Modules\Referensi\Models\KonsumenModel;
 
 
 class BarangMasuk extends BaseController
@@ -31,6 +32,7 @@ class BarangMasuk extends BaseController
     protected $mGudang;
     protected $mOperator;
     protected $mkonsumen;
+    protected $mProses;
 
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/incoming-goods';
@@ -50,6 +52,7 @@ class BarangMasuk extends BaseController
         $this->files  = new FileModel();
         $this->mOperator = new OperatorModel();
         $this->mkonsumen = new KonsumenModel();
+        $this->mProses = new ProsesProduksiModel();
     }
 
     public function index()
@@ -195,14 +198,26 @@ class BarangMasuk extends BaseController
             foreach ($resDataDetail as &$rowData) {
                 $rowData->id_barang = encrypt($rowData->id_barang);
             }
-            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
-            
+            if (!empty($resData->no_ref_trf)) {
+                # code...
+                $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+            }
+            else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
+                $results = $this->mTrf->getDataByProsesAndOperator($resData->id_proses, $resData->id_cmt);
+            }
 
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
 
             if($resData->id_kategori == 12){
-                $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
+                if (isset($resData->no_ref_trf)) {
+                # code...
+                    $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
+                }
+                else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
+                    $resDataDetSO = count($results) > 0 ? $this->mRef->getDataDetSO($id) : null;
+                }
+                
                 $this->data['dataSO'] = json_encode($resDataDetSO);
             }else{
                 $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
@@ -217,8 +232,26 @@ class BarangMasuk extends BaseController
             ]
         ];
         $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
+        
+        $sortProses = [
+            [
+                'field' => 'nama',
+                'dir' => 'ASC'
+                ]
+            ];
+        $resDataProses = $this->mProses->getData(null, 0, 99999, $sortProses);
+
+        $sortOperator = [
+            [
+                'field' => 'nama_operator',
+                'dir' => 'ASC'
+                ]
+            ];
+        $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
         $this->data['kategori']    = $reDataKategori;
         $this->data['gudang']    = $resDataGudang;
+        $this->data['proses']    = $resDataProses;
+        $this->data['data_cmt']    = $resDataOperator;
         // dd($this->data['resData']);
         $this->data['titlehead'] = "Form Barang Masuk";
 

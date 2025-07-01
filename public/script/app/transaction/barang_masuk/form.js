@@ -15,6 +15,8 @@ let inpEdit = $('#edit');
 let spanBarang = $('#spanBarang');
 let selectGudang = $('#select_warehouse');
 let selectKategori = $('#select_kategori');
+let selectProses = $('#select_proses');
+let selectOperator = $('#select_operator');
 let inpLotNo = $('#lot_no');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig,'"');
@@ -37,6 +39,8 @@ if(inpIdHeader.val().length == 0){
     selectGudang.val("").trigger("change")
     selectKategori.val("").trigger("change")
 }
+
+
 
 setTimeout(() => {
     if(selectKategori.val() == 3){
@@ -410,11 +414,13 @@ dtListSO.on("rowClick", function(e, row){
 
         inpNoRefTrf.val(xdata.kode_transaksi)
         inpIdRefTrf.val(xdata.id)
-        inpProses.val(xdata.proses);
-        inpIdproses.val(xdata.id_proses);
+        // inpProses.val(xdata.proses);
+        // inpIdproses.val(xdata.id_proses);
 
-        inpOperator.val(xdata.nama_operator);
-        inpIdCmt.val(xdata.id_cmt);
+        // inpOperator.val(xdata.nama_operator);
+        // inpIdCmt.val(xdata.id_cmt);
+        selectProses.val(xdata.id_proses).trigger('change');
+        selectOperator.val(xdata.id_cmt).trigger('change');
 
         setTimeout(() => {
             loadDataSo();
@@ -428,34 +434,61 @@ dtListSO.on("rowClick", function(e, row){
 // load data som
 function loadDataSo() { 
     const kode_transaksi = inpNoRefTrf.val();
-    $.ajax({
-        url: `/trans/item-transfer/data-so?noSO=${kode_transaksi}`,
-        type: 'GET',
-        dataType: 'json', 
-        success: function(data) {
-            
-            if(data.status){
-                if(selectKategori.val() != 12){
-                    refData = [];
-                    xrefData = [];
-                    dtList.setData(data.dataSO);
-                    dtListProduksi.setData(data.dataSO);
-                }else{
-                    refData = data.dataSO
-                    xrefData = data.dataSO;
+    let url_dis = null;
+    if (kode_transaksi != null && kode_transaksi != undefined && kode_transaksi != "") {
+       url_dis = `/trans/item-transfer/data-so?noSO=${kode_transaksi}`;
+       
+    }
+    else if (selectProses.val() != null && selectOperator.val() != null) {
+        const params = new URLSearchParams({
+            id_proses: selectProses.val(),
+            id_cmt: selectOperator.val()
+        });
+        url_dis = `/trans/item-transfer/data-so?${params.toString()}`;
+    }
+
+    if (url_dis != null) {
+        $.ajax({
+            url: url_dis,
+            type: 'GET',
+            dataType: 'json', 
+            success: function(data) {
+                
+                if(data.status){
+                    if(selectKategori.val() != 12){
+                        refData = [];
+                        xrefData = [];
+                        dtList.setData(data.dataSO);
+                        dtListProduksi.setData(data.dataSO);
+                    }else{
+                        refData = data.dataSO
+                        xrefData = data.dataSO;
+                    }
                 }
+            
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching data:', error);
             }
-           
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching data:', error);
-        }
-    });
+        });
+    }
 }
+
+selectProses.on('change', function () {
+    loadDataSo();
+});
+
+selectOperator.on('change', function () {
+    loadDataSo();
+});
 
 setTimeout(() => {
     if(selectKategori.val() == 12){
         loadDataSo();
+    }
+    else {
+        selectProses.val(null).trigger('change');
+        selectOperator.val(null).trigger('change');
     }
 }, 500);
 
@@ -701,9 +734,9 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
 btnRefPo.on("click", function(e) { 
     e.preventDefault();
 
-    if(refData.length == 0) { 
+    if(refData.length == 0 && (selectProses.val() == null || selectOperator.val() == null)) { 
         return Swal.fire({
-            text: "Referensi transfer barang harus dipilih",
+            text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
             icon: 'warning',
             showConfirmButton: false,
             timer: 2000
@@ -1156,8 +1189,10 @@ function simpanData(status) {
             dataProduksi:dtListProduksi.getData(),
             keterangan:inpKeterangan.val(),
             status:status,
-            id_proses: inpIdproses.val(),
-            id_cmt: inpIdCmt.val(),
+            // id_proses: inpIdproses.val(),
+            // id_cmt: inpIdCmt.val(),
+            id_proses: selectProses.val(),
+            id_cmt: selectOperator.val(),
             nomor_mesin: inpNomorMesin.val(),
             jam_mesin: inpJamMesin.val(),
             nilai_mesin: inpNilaiMesin.val(),

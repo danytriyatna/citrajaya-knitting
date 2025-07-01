@@ -314,19 +314,39 @@
               <div class="row">
                   <div class="col-sm-6">
                       <div class="form-group row">
-                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_cmt">Proses</label>
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_proses">Proses</label>
                         <div class="col-md-9">
-                          <input type="text" id="proses" name="proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->proses : '' ?>" readonly>
-                          <input type="hidden" id="id_proses" name="id_proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_proses : '' ?>" readonly>
+                          <!-- <input type="text" id="proses" name="proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->proses : '' ?>" readonly> -->
+                          <!-- <input type="hidden" id="id_proses" name="id_proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_proses : '' ?>" readonly> -->
+                          <select id="select_proses" name="id_proses" class="form-select select2" value="" data-placeholder="-- Pilih Proses --">
+
+                            <?php foreach ($proses as $item) : ?>
+                              <?php if (!empty($resData->id_proses) && $resData->id_proses == $item->id) { ?>
+                                <option selected value="<?= $item->id ?>"><?= $item->nama ?></option>
+                              <?php } else { ?>
+                                <option value="<?= $item->id ?>"><?= $item->nama ?></option>
+                              <?php } ?>
+                            <?php endforeach; ?>
+                          </select>
                         </div>
                       </div>
                   </div>
                   <div class="col-sm-6">
                       <div class="form-group row">
-                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_cmt">CMT</label>
+                        <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_operator">CMT</label>
                         <div class="col-md-9">
-                          <input type="text" id="nama_operator" name="nama_operator" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->nama_operator : '' ?>" readonly>
-                          <input type="hidden" id="id_cmt" name="id_cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_cmt : '' ?>" readonly>
+                          <!-- <input type="text" id="nama_operator" name="nama_operator" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->nama_operator : '' ?>" readonly> -->
+                          <!-- <input type="hidden" id="id_cmt" name="id_cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_cmt : '' ?>" readonly> -->
+                          <select id="select_operator" name="id_cmt" class="form-select select2" value="" data-placeholder="-- Pilih CMT --">
+
+                            <?php foreach ($data_cmt as $item) : ?>
+                              <?php if (!empty($resData->id_cmt) && $resData->id_cmt == $item->id) { ?>
+                                <option selected value="<?= $item->id ?>"><?= $item->nama_operator ?></option>
+                              <?php } else { ?>
+                                <option value="<?= $item->id ?>"><?= $item->nama_operator ?></option>
+                              <?php } ?>
+                            <?php endforeach; ?>
+                          </select>
                         </div>
                       </div>
                   </div>

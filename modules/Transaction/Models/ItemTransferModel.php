@@ -310,6 +310,17 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataByProsesAndOperator($idProses = null, $idOperator = null)
+    {
+        $builder = $this->db->table("trans_barang_trf_header abx");
+        $builder->select("abx.id");
+        $builder->where("id_proses", $idProses);
+        $builder->where("id_cmt", $idOperator);
+        $this->_data = $builder->get()->getResult();
+        
+        return $this->_data;
+    }
+
 
     function generateKodePersediaan()
     {
@@ -509,26 +520,26 @@ class ItemTransferModel extends \App\Models\PrModel
                 }
             }
 
-             if ($data['status'] == 1 && !empty($id) ) {
+            //  if ($data['status'] == 1 && !empty($id) ) {
 
-                $trfData =  $this->getData($id);
+            //     $trfData =  $this->getData($id);
 
-                $brngMasukModel = new BarangMasukModel();
+            //     $brngMasukModel = new BarangMasukModel();
 
-                $dtBarang['tanggal'] = $data['tanggal'];
-                $dtBarang['status'] = 0;
-                $dtBarang['jenis_transaksi'] = 1;
-                $dtBarang['id_proses'] = $data['id_proses'];
-                $dtBarang['id_cmt'] = $data['id_cmt'];
-                $dtBarang['keterangan'] = $data['keterangan'];
-                $dtBarang['id_kategori'] = $data['ref_produk'] ? 12 : 0; 
-                $dtBarang['created_at'] = !empty($data['updated_at']) ? $data['updated_at'] : $data['created_at'];
-                $dtBarang['created_by'] = !empty($data['updated_by']) ? $data['updated_by'] : $data['created_by'];
-                $dtBarang['id_gudang'] = $data['id_gudang_asal'];
-                $dtBarang['no_ref_trf'] = $trfData->kode_transaksi;
-                $dtBarang['kode_transaksi'] = $brngMasukModel->generateKodePersediaan();
-                $this->insertRecordGetid($brngMasukModel->table, $dtBarang);
-             }
+            //     $dtBarang['tanggal'] = $data['tanggal'];
+            //     $dtBarang['status'] = 0;
+            //     $dtBarang['jenis_transaksi'] = 1;
+            //     $dtBarang['id_proses'] = $data['id_proses'];
+            //     $dtBarang['id_cmt'] = $data['id_cmt'];
+            //     $dtBarang['keterangan'] = $data['keterangan'];
+            //     $dtBarang['id_kategori'] = $data['ref_produk'] ? 12 : 0; 
+            //     $dtBarang['created_at'] = !empty($data['updated_at']) ? $data['updated_at'] : $data['created_at'];
+            //     $dtBarang['created_by'] = !empty($data['updated_by']) ? $data['updated_by'] : $data['created_by'];
+            //     $dtBarang['id_gudang'] = $data['id_gudang_asal'];
+            //     $dtBarang['no_ref_trf'] = $trfData->kode_transaksi;
+            //     $dtBarang['kode_transaksi'] = $brngMasukModel->generateKodePersediaan();
+            //     $this->insertRecordGetid($brngMasukModel->table, $dtBarang);
+            //  }
             $this->db->transComplete();
 
             if ($this->db->transStatus() === TRUE) {

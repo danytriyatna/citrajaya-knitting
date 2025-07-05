@@ -48,7 +48,7 @@ class Mborongan extends \App\Models\PrModel
                 $builder->where('pd.id_proses', $params['id_proses']);
             }
 
-            $builder->where('(pd.active = 1 and tp.active = 1)');
+            // $builder->where('(pd.active = 1 and tp.active = 1)');
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {

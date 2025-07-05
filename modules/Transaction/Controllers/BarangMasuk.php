@@ -503,7 +503,7 @@ class BarangMasuk extends BaseController
             ];
 
             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
-            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+            $results = $this->mTrf->getDataByProsesAndOperator($resData->id_proses, $resData->id_cmt);
             
             $dtKonsumen = [];
             $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;

@@ -14,7 +14,7 @@ class Mdashboard extends Model
 
         $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.tipe, 
                           tbl.kode_prod, tbl.id_prod, tbl.qty_prod, 
-                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder");
+                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 

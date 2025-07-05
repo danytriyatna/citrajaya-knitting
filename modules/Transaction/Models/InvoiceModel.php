@@ -270,7 +270,6 @@ class InvoiceModel extends \App\Models\PrModel
             {$whereExist} {$whereExist_deliv}
             order by xtb.tgl_transaksi desc
         ";
-
         $query = $this->db->query($sql);
 
         $this->_data = $query->getResult();
@@ -286,8 +285,9 @@ class InvoiceModel extends \App\Models\PrModel
          $col3 = "";
          $ukuranArr = explode(",", $params['ukuran']);
          foreach ($ukuranArr as $item) {
-             $col1 .= ($col1 == "") ? "coalesce(tbl.$item,0) as $item" : ",coalesce(tbl.$item,0) as $item";
-             $col2 .= ($col2 == "") ? "$item Int" : ",$item Int";
+             $preg = preg_match('/^[a-zA-Z_]+$/', $item) ? $item : "\"$item\"";
+             $col1 .= ($col1 == "") ? "coalesce(tbl.$preg,0) as $preg" : ",coalesce(tbl.$preg,0) as $preg";
+             $col2 .= ($col2 == "") ? "$preg Int" : ",$preg Int";
          }
 
          $whr = "";

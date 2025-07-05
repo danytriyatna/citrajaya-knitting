@@ -57,17 +57,26 @@ class Dashboard extends BaseController
           $btnOrder = "";
           $btnProd = "";
           $btnDev = "";
+          $btnGambar = "";
 
           $tipe = "-";
           
           if($row->tipe == 1){
             $link_order = base_url() . "/trans/sample?search=$row->trans_kode";
             $btnOrder = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_order." > ".$row->trans_kode." </a>";
-
+            if (isset($row->file_name)) {
+                $link_gambar = base_url() . "uploads/sample/"  . $row->file_name;
+                $btnGambar = "<a class='btn btn-sm btn-secondary' target='_blank' href=".$link_gambar." > Foto Sample </a>";
+            }
+            
             $tipe = "Sample";
           }else{
             $link_order = base_url() . "/trans/sales-order?search=$row->trans_kode";
             $btnOrder = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_order." > ".$row->trans_kode." </a>";
+            if (isset($row->file_name)) {
+                $link_gambar = base_url() . "uploads/sales_order/"  . $row->file_name;
+                $btnGambar = "<a class='btn btn-sm btn-secondary' target='_blank' href=".$link_gambar." > Foto SO </a>";
+            }
 
             $tipe = "Sales Order";
           }
@@ -125,6 +134,7 @@ class Dashboard extends BaseController
           
           
           array_push($build_array['data'], array(
+              'btnGambar' => $btnGambar,
               'btnOrder' => $btnOrder,
               'btnProd' => $btnProd,
               'btnDev' => $btnDev,

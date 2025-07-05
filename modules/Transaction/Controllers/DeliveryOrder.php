@@ -161,6 +161,7 @@ class DeliveryOrder extends BaseController
     $stdData->id_produksi = '';
     $stdData->id_walkorder = '';
     $stdData->kode_produksi = '';
+    $stdData->kode_so = '';
     $stdData->tgl_do = date('d-m-Y');
     $stdData->keterangan_style = '';
     $stdData->select_buyer = '';
@@ -176,6 +177,7 @@ class DeliveryOrder extends BaseController
       $stdData->id_produksi = $stdData->id_produksi;
       $stdData->id_walkorder = $stdData->id_walkorder;
       $stdData->kode_produksi = $stdData->produksi_kode;
+      $stdData->kode_so = $stdData->kode_so;
       $stdData->tgl_do = $stdData->tgl_transaksi;
       $stdData->keterangan_style = $stdData->keterangan_style;
       $stdData->select_buyer =  $stdData->id_konsumen;

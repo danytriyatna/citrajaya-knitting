@@ -74,7 +74,8 @@
                     <div class="form-group row">
                       <label class="control-label text-start text-md-end col-md-3 col-form-label" for="so_no">Ref No.</label>
                       <div class="col-md-8">
-                        <input type="text" readonly name="kode_produksi" id="kode_produksi" class="form-control" value="<?= !empty($row) ? $row->kode_produksi : '' ;?>" > 
+                        <input type="hidden" readonly name="kode_produksi" id="kode_produksi" class="form-control" value="<?= !empty($row) ? $row->kode_produksi : '' ;?>" > 
+                        <input type="text" readonly name="kode_so" id="kode_so" class="form-control" value="<?= !empty($row) ? $row->kode_so : '' ;?>" > 
                       </div>
                       <div <?=  (!empty($id)) ? 'hidden' : ''; ?> class="col-md-1">
                         <button type="button" id="list_prod" class="btn btn-sm btn-primary"><i class="fa fa-search"></i></button>

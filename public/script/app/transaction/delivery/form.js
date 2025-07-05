@@ -9,6 +9,7 @@ $(document).ready(function () {
     let inpDoTgl    = $("#tgl_do");
     let inpStyle    = $("#keterangan_style");
     let inpRefNi    = $("#kode_produksi");
+    let inpRefSO    = $("#kode_so");
     let inpProduksi = $("#id_produksi");
     let inpWo = $("#id_walkorder");
 
@@ -307,6 +308,7 @@ $(document).ready(function () {
                     let data = response.data;
 
                     inpRefNi.val(isProd.kode_prod);
+                    inpRefSO.val(isProd.kode_walkorder_ref);
                     inpStyle.val(isProd.keterangan_style);
                     inpProduksi.val(isProd.id).trigger("change");
                     inpWo.val(isProd.id_walkorder).trigger("change");

@@ -23,10 +23,11 @@ class DeliveryModel extends \App\Models\PrModel
         $builder->select("abx.id, abx.tgl_transaksi,  abx.delivery_kode, abx.id_produksi, abx.produksi_kode, abx.id_konsumen, abx.alamat,
                             abx.status, abx.qty as qty_delv, abx.tipe_id,  abx.id_walkorder,
                             bbx.nama as konsumen_nama, tp.keterangan_style,
-                            tp.qty");
+                            tp.qty, twx.ref_kode as kode_so");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inn er");
         $builder->join("trans_produksi tp", "tp.id = abx.id_produksi", "inner");
+        $builder->join("trans_walkorder twx", "tp.id_walkorder = twx.id", "inner");
 
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');

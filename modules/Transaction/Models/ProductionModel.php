@@ -548,18 +548,24 @@ class ProductionModel extends \App\Models\PrModel
          $ukuranArr = explode(",", $params['ukuran']);
          foreach ($ukuranArr as $item) {
              $item = trim($item); 
+             $preg = preg_match('/^[a-zA-Z_]+$/', $item) ? $item : "\"$item\"";
              $hrg = $item . '_hrg';
-             $col11 .= ($col11 == "") ? "coalesce(tbl.$item,0) as $item" : ",coalesce(tbl.$item,0) as $item";
+             if (preg_match('/^[a-zA-Z_]+$/', $hrg)) {
+                $hrg = $hrg;
+             }
+             else {
+                $hrg = "\"$hrg\"";
+             }
+             $col11 .= ($col11 == "") ? "coalesce(tbl.$preg,0) as $preg" : ",coalesce(tbl.$preg,0) as $preg";
              $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg" : ",coalesce(tbl.$hrg,0) as $hrg";
 
-             $col21 .= ($col21 == "") ? "$item Int" : ",$item Int";
+             $col21 .= ($col21 == "") ? "$preg Int" : ",$preg Int";
              $col22 .= ($col22 == "") ? "$hrg Float" : ",$hrg Float";
 
-             $ord  .= $ord == "" ? $item  : "," . $item ;
+             $ord  .= $ord == "" ? $preg  : "," . $preg ;
              $ordx .= $ordx == "" ? $hrg : "," . $hrg;
          }
          $all_order = $ord . ',' . $ordx;
-
         $sql = "
                 SELECT 
                     tbl.ref_detail_id,

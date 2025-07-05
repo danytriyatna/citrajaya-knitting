@@ -104,6 +104,17 @@ $(document).ready(function () {
     let inpTglAkhir = $("#filter_tgl_akhir");
     let inpProses = $("#filter_proses");
     let inpOperator = $("#filter_operator");
+    function formatRibuan(num) {
+        // Jika tidak ada koma desimal → tampilkan 3 digit
+        if (Number.isInteger(num)) {
+            return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+        // Jika ada koma → tampilkan maksimal 3, hapus nol di akhir
+        return num.toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '');
+    }
     let dtList = new Tabulator("#dt-absensi", {
         columns: [
             {
@@ -138,7 +149,7 @@ $(document).ready(function () {
                     if (val == null || val === "") return "";
                     let num = Number(val);
                     if (isNaN(num)) return val;
-                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                    return formatRibuan(num);
                 },
                 width: 180, cssClass: "text-right", hozAlign: "right",
             }, 
@@ -150,7 +161,7 @@ $(document).ready(function () {
                     if (val == null || val === "") return "";
                     let num = Number(val);
                     if (isNaN(num)) return val;
-                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                    return formatRibuan(num);
                 },
                 width: 180, cssClass: "text-right", hozAlign: "right",
                 bottomCalc: "sum", 
@@ -159,7 +170,7 @@ $(document).ready(function () {
                     if (val == null || val === "") return "";
                     let num = Number(val);
                     if (isNaN(num)) return val;
-                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                    return formatRibuan(num);
                 }
             }, 
 
@@ -170,7 +181,7 @@ $(document).ready(function () {
                     if (val == null || val === "") return "";
                     let num = Number(val);
                     if (isNaN(num)) return val;
-                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                    return formatRibuan(num);
                 },
                 width: 180, cssClass: "text-right", hozAlign: "right",
                 bottomCalc: "sum", 
@@ -179,7 +190,7 @@ $(document).ready(function () {
                     if (val == null || val === "") return "";
                     let num = Number(val);
                     if (isNaN(num)) return val;
-                    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+                    return formatRibuan(num);
                 }
             },
         ],

@@ -278,6 +278,15 @@ $(document).ready(function () {
     let searchThread = null;
     let elSearch = $("#tb-search");
     if (elSearch != null) {
+        // Ambil dari URL dan isi input jika ada
+        const urlParams = new URLSearchParams(window.location.search);
+        const presetSearch = urlParams.get("search");
+
+        if (presetSearch) {
+            elSearch.val(presetSearch);
+            dtList.setFilter("", "like", presetSearch);
+        }
+
         elSearch.on("keyup", function (e) {
             if ($(this).val().length < 3 && e.keyCode > 13) {
                 return;

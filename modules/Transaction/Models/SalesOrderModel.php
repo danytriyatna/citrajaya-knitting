@@ -259,15 +259,24 @@ class SalesOrderModel extends \App\Models\PrModel
             $key = $item->key_ukuran;
             if ($key == 'all') $key = 'all_';
             $hrg = $key . '_hrg';
-            $col11 .= ($col11 == "") ? "coalesce(tbl.$key,  0) as $key" : ",coalesce(tbl.$key, 0) as $key";
+
+            $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
+
+            $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql,  0) as $keySql" : ",coalesce(tbl.$keySql, 0) as $keySql";
             //  $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg" : ",coalesce(tbl.$hrg,0) as $hrg";
+            
+            $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
 
-            $col21 .= ($col21 == "") ? "$key INT" : ",$key INT";
-
-            $col3 .= ($col3 == "") ? $key : "," . $key;
+            $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
             //  $col22 .= ($col22 == "") ? "$hrg Float" : ",$hrg Float";
         }
-
+        // if ($id == 521) {
+        //     echo "col11: " . $col11 . "<br><br>";
+        //     echo "col21: " . $col21 . "<br><br>";
+        //     echo "col3: " . $col3 . "<br>";
+        //     dd($col11);
+            
+        // }
         // crostab query 
         $sql = "
                     SELECT 
@@ -321,9 +330,9 @@ class SalesOrderModel extends \App\Models\PrModel
 
             ";
 
-        $query = $this->db->query($sql);
-        $this->_data = $query->getResult();
-
+            
+            $query = $this->db->query($sql);
+            $this->_data = $query->getResult();
         return $this->_data;
     }
 

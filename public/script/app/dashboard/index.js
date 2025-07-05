@@ -3,6 +3,10 @@ $(document).ready(function () {
     // table tracking order 
     let dtListTracking = new Tabulator("#tbl-tracking", {
         columns: [
+            {
+                title: "FOTO", field: "btnGambar", headerSort: false, formatter: "html",
+                width: 120, hozAlign: 'center', cssClass: 'text-center'
+            },
 			{
 				title: 'TGL TRANSAKSI', field: 'tgl_transaksi', headerSort:false, sorter: 'string',
 				width: 130, formatter : "html", hozAlign: 'center', cssClass: 'text-center'

@@ -77,7 +77,7 @@ class SalesOrder extends BaseController
     $totalfiltered = $this->mSalesOrder->getDataCnt($filters, $params);
     $totaldata = $this->mSalesOrder->getDataCnt(null, $params);
     $maxpage = ceil($totalfiltered / $limit);
-
+    
     $build_array = array(
       "last_page" => $maxpage,
       "recordsTotal" => $totaldata,
@@ -85,7 +85,8 @@ class SalesOrder extends BaseController
       "data" => array()
     );
 
-    foreach ($results as $row) {
+    foreach ($results as $key => $row) {
+      
       $id = encrypt($row->id);
 
       $atr_edit = null;
@@ -107,12 +108,13 @@ class SalesOrder extends BaseController
 
       // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
       //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
-
+        
       $status = $row->status == 1 ? "Draft" : "Approved";
 
       $pru['use'] = 1; // ambil ukuran yang digunnakan order 
       $pru['id_sales_order'] = $row->id;
       $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+      
       $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id) : [];
       if (!empty($detail)) {
         for ($i = 0; $i < count($detail); $i++) {
@@ -121,6 +123,7 @@ class SalesOrder extends BaseController
           $detail[$i]->qty      = $allQty;
         }
       }
+        
       array_push(
         $build_array["data"],
         array(
@@ -143,6 +146,7 @@ class SalesOrder extends BaseController
         )
       );
     }
+    
     return $this->response->setJSON($build_array);
   }
 

@@ -1468,12 +1468,13 @@ function simpanData(status) {
                     });
                 }
                 // console.log('hasil3', hasil)
-                // console.log('arrKunci', arrKunci)
+                // console.log('arrKunci', arrKunci
 
-                hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+                
                
 
                 if (hasil.length > 0) {
+                    hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                     addItem(hasil[0]);
 
                     setTimeout(() => {

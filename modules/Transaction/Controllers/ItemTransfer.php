@@ -651,7 +651,6 @@ class ItemTransfer extends BaseController
 
     function getCariProduk(){
       $kata_kunci = $this->request->getPost('kata_kunci');
-      
       $status = false;
       $msg = "Data barang tidak ditemukan !";
       $data  = [];
@@ -660,6 +659,7 @@ class ItemTransfer extends BaseController
       try {
 
         $kt_exp = explode(";",$kata_kunci);
+        // dd(trim($kt_exp[0]), trim($kt_exp[1]), trim($kt_exp[2]), trim($kt_exp[3]), trim($kt_exp[4]));
         // print_r($kt_exp);exit;
         // $kunci_jadi = $kt_exp[1] . ' ' . $kt_exp[2]; 
 

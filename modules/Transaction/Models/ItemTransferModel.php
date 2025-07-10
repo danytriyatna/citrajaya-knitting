@@ -208,19 +208,21 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.style', strtolower($params['style']));
             }
             if (!empty($params['color'])) {
-                $prm_color = strtolower($params['color']);
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color']);
+                $prm_color = strtoupper($ascii);
                 // Hilangkan spasi setelah value, misal "dan " jadi "dan"
                 $prm_color = rtrim($prm_color);
                 // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
-                $builder->where(" trim(split_part(tu.color, '~', 1))", $params['color']);
+                $builder->where(" trim(split_part(tu.color, '~', 1))", $prm_color);
                 // $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
             }
 
             if (!empty($params['color2'])) {
-                $prm_color2 = strtolower($params['color2']);
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color2']);
+                $prm_color2 = strtoupper($ascii);
                 $prm_color2 = rtrim($prm_color2);
                 // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
-                $builder->where(" trim(split_part(tu.color, '~', 2))", $params['color2']);
+                $builder->where(" trim(split_part(tu.color, '~', 2))", $prm_color2);
             }
             
             if (!empty($order)) {
@@ -233,7 +235,6 @@ class ItemTransferModel extends \App\Models\PrModel
             if (empty($limit)) $limit = 10;
 
             $builder->limit($limit, $offset);
-
             $this->_data = $builder->get()->getResult();
         } else {
             $builder->where("tu.id", $id);

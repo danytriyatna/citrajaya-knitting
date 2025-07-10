@@ -150,6 +150,10 @@ $(document).ready(function () {
                 width: 220, editor:"number"
 			} ,
 
+            { title:"Tambahan Durasi", field:"tanggal_merah", hozAlign:"center", editor:true, formatter:"tickCross", mutator: function(value) {
+                return value == 1; // convert to boolean
+            }},
+
             
             {
 				title: 'Keterangan Kehadiran', field: 'keterangan_kehadiran', headerSort:false, sorter: 'string', align: "center",

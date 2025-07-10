@@ -111,9 +111,17 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
         $builder->select("abx.qty, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran");
+                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran, trfhead.id_proses");
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
         $builder->join("ref_ukuran rk", "abx.kode_ukuran = rk.kode_ukuran", "left");
+        $builder->join("trans_barang_trf_header trfhead", "abx.id_header = trfhead.id", "left");
+
+        $subQuery = '(SELECT wop.harga FROM trans_walkorder_proses wop 
+                        left join trans_walkorder wo on wop.id_walkorder = wo.id 
+                        WHERE wop.id_proses = trfhead.id_proses 
+                        AND wo.ref_kode = abx.kode_sales_order) limit 1';
+
+        $builder->select("($subQuery) AS harga");
 
         $builder->where("abx.id_header", $idHeader);
         $this->_data = $builder->get()->getResult();

@@ -375,6 +375,43 @@ if (elSearchSO != null) {
     });
 }
 
+let searchThreadPO = null;
+let elSearchPO = $("#tb-search-po");
+
+if (elSearchPO.length > 0) {
+    elSearchPO.on("keyup", function (e) {
+        let keyword = $(this).val().trim().toLowerCase();
+
+        clearTimeout(searchThreadPO);
+        searchThreadPO = setTimeout(function () {
+            // Jika kosong, clear filter (tampilkan semua data)
+            if (keyword === "") {
+                dtListProduksiRef.clearFilter();
+                return;
+            }
+
+            // Kalau kurang dari 3 karakter dan bukan Enter, jangan cari
+            if (keyword.length < 3 && e.keyCode !== 13) {
+                return;
+            }
+
+            // Jalankan filter multi-kolom
+            dtListProduksiRef.setFilter(function (data) {
+                return (
+                    String(data.kode_sales_order).toLowerCase().includes(keyword) ||
+                    String(data.style).toLowerCase().includes(keyword) ||
+                    String(data.deskripsi).toLowerCase().includes(keyword) ||
+                    String(data.buyer).toLowerCase().includes(keyword) ||
+                    String(data.color).toLowerCase().includes(keyword) ||
+                    String(data.qty_kirim).toLowerCase().includes(keyword) ||
+                    String(data.kode_ukuran).toLowerCase().includes(keyword)
+                );
+            });
+        }, 600);
+    });
+}
+
+
 const inpProses = $("#proses");
 const inpIdproses = $("#id_proses");
 
@@ -448,6 +485,7 @@ function loadDataSo() {
     }
 
     if (url_dis != null) {
+        $(".preloader").css("opacity", "0.7").show();
         $.ajax({
             url: url_dis,
             type: 'GET',
@@ -465,9 +503,10 @@ function loadDataSo() {
                         xrefData = data.dataSO;
                     }
                 }
-            
+                $(".preloader").hide().css("opacity", "1");
             },
             error: function(xhr, status, error) {
+                $(".preloader").hide().css("opacity", "1");
                 console.error('Error fetching data:', error);
             }
         });
@@ -734,7 +773,15 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
 btnRefPo.on("click", function(e) { 
     e.preventDefault();
 
-    if(refData.length == 0 && (selectProses.val() == null || selectOperator.val() == null)) { 
+    if (refData == null) {
+        return Swal.fire({
+            text: "Data TIdak Ditemukan!",
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    else if(refData.length == 0 && (selectProses.val() == null || selectOperator.val() == null)) { 
         return Swal.fire({
             text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
             icon: 'warning',
@@ -1249,8 +1296,16 @@ function simpanData(status) {
         source: function( request, response ) {
 
             // dtListProduksiRef.setData(refData);
+            if (refData == null) {
+                Swal.fire({
+                    text: "Data Tidak Ditemukan!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
             
-            if(refData.length > 0) { 
+           else  if(refData.length > 0) { 
                 const kataKunci = request.term
 
                 const data = refData;
@@ -1280,7 +1335,7 @@ function simpanData(status) {
                 response(results);
             }else{
                 Swal.fire({
-                    text: "Harap pilih No Transfer Referensi terlebih dahulu.",
+                    text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
                     icon: 'warning',
                     showConfirmButton: false,
                     timer: 2000
@@ -1288,7 +1343,7 @@ function simpanData(status) {
             }
             
         },
-        minLength: 2,
+        minLength: 3,
         select: function( event, ui ) {
             addItem(ui.item.data);
         },
@@ -1374,7 +1429,9 @@ function simpanData(status) {
 
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
+                console.log(arrKunci);
                 let hasil = refData.map(item => ({ ...item }));
+                
                 //  console.log('hasil', hasil)
                 //  console.log('arrKunci', arrKunci)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
@@ -1386,24 +1443,32 @@ function simpanData(status) {
                 }
                 //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
-                    const inputColor = arrKunci[2].toString().toLowerCase().trim();
-                    const inputColor2 = arrKunci[4].toString().toLowerCase().trim();
+                    const normalize = str => str.toUpperCase().replace(/\s+/g, ' ').trim();
+                    const inputColor = normalize(arrKunci[2]);
+                    const inputColor2 = normalize(arrKunci[4]);
+                    console.log(inputColor, inputColor2);
                     hasil = hasil.filter(item => {
                         if (item.color) {
-                            const firstColor = item.color.toString().split('~')[0].toLowerCase();
-                            const pertamaWarna = firstColor.toString().trim()
+                            const firstColor = item.color.toString().split('~')[0].toUpperCase();
+                            const pertamaWarna = normalize(firstColor);
 
-                            const secondColor = item.color.toString().split('~')[1].toLowerCase();
-                            const kode_ukuranWarna = secondColor.toString().trim()
-                            
-                            return pertamaWarna == inputColor && kode_ukuranWarna == inputColor2;
+                            const secondColor = item.color.toString().split('~')[1];
+                            if (secondColor != undefined && secondColor != "" && secondColor != null) {
+                                const secondColor2 = secondColor.toUpperCase();
+                                const kode_ukuranWarna = normalize(secondColor2);
+                                return pertamaWarna == inputColor && kode_ukuranWarna == inputColor2;
+                            }
+
+                            else {
+                                return pertamaWarna == inputColor;
+                            }
+
                         }
                         return false;
                     });
                 }
                 // console.log('hasil3', hasil)
                 // console.log('arrKunci', arrKunci)
-
 
                 hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                
@@ -1425,7 +1490,7 @@ function simpanData(status) {
                 }
             } else {
                 Swal.fire({
-                    text: "Harap pilih No Transfer Referensi terlebih dahulu.",
+                    text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
                     icon: 'warning',
                     showConfirmButton: false,
                     timer: 2000

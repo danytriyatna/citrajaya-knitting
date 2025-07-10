@@ -91,6 +91,7 @@ class Absensi extends BaseController
           // posisi
 
           $status_kehadiran = "";
+          $tanggal_merah = "<input type='checkbox' name='tanggal_merah[]' value='0'>";
 
           if($row->status_kehadiran == 1){
             $status_kehadiran = "Hadir";
@@ -118,6 +119,9 @@ class Absensi extends BaseController
           $outHour = '';
           if(!empty($row->jam_keluar)){
             $outHour = date('H:i', strtotime($row->jam_keluar));
+          }
+          if ($row->tanggal_merah == 1) {
+            $tanggal_merah = "<input type='checkbox' name='tanggal_merah[]' value='1' checked>";
           }
 
           $tgl_absen = \fdate_eng_to_ind($row->tgl_absen);
@@ -150,6 +154,7 @@ class Absensi extends BaseController
                   "potongan_keterangan" => $row->potongan_keterangan,
                   "bonus" => $row->bonus,
                   "bonus_keterangan" => $row->bonus,
+                  "tanggal_merah" => $row->tanggal_merah,
               )
           );
       }
@@ -270,7 +275,6 @@ class Absensi extends BaseController
             }
           }
         }
-
         if($x['status_kehadiran'] == "Hadir"){
           $status_kehadiran = 1;
         } else if($x['status_kehadiran'] == "Izin"){
@@ -290,6 +294,14 @@ class Absensi extends BaseController
           $status_lembur = 2;
         }
 
+        $tanggal_merah = $x['tanggal_merah'];
+        if($x['tanggal_merah'] == false){
+          $tanggal_merah = 0;
+        } else {
+          $tanggal_merah = 1;
+          $durasi_kerja += 60;
+        } 
+        // dd($durasi_kerja);
         $hari_hadir = 0;
         if(!empty($x['hari_hadir'])){
           $hari_hadir = (int) $x['hari_hadir'];
@@ -302,6 +314,7 @@ class Absensi extends BaseController
         $isi['hari_hadir'] = $hari_hadir;
         $isi['keterangan_kehadiran'] = $x['keterangan_kehadiran'];
         $isi['status_lembur'] = $status_lembur;
+        $isi['tanggal_merah'] = $tanggal_merah;
         if (empty($x['terlambat'])) {
           $isi['terlambat'] = null;
         }

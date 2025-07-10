@@ -23,7 +23,7 @@ class Mabsensi extends \App\Models\PrModel
                           rk.id as id_karyawan_tbl, rk.nip, rk.full_name, rk.posisi, rk.upah_lembur, rk.upah_harian, rk.upah_lembur_we,
                           sdm.id_shift, sdm.jadwal_masuk, sdm.jadwal_pulang, sdm.potongan, sdm.bonus, sdm.durasi_kerja,
                           sdm.bonus_keterangan, sdm.potongan_keterangan,
-                          sh.nama_shift, sh.jam_masuk as jam_masuk_shift, sh.jam_pulang as jam_pulang_shift, sdm.terlambat");
+                          sh.nama_shift, sh.jam_masuk as jam_masuk_shift, sh.jam_pulang as jam_pulang_shift, sdm.terlambat, sdm.tanggal_merah");
 
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
         $builder->join("m_shift sh", "sdm.id_shift = sh.id", "left");

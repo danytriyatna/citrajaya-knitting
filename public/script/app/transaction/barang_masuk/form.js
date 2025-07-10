@@ -820,7 +820,7 @@ dtListProduksiRef.on("rowClick", function(e, row){
     //         timer: 2000
     //     });
     // }
-
+    data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
     dtListProduksi.addRow(data);
     modalRefpo.modal("hide");
 
@@ -1390,7 +1390,7 @@ function simpanData(status) {
             //         timer: 2000
             //     });
             // }
-
+            data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
             dtListProduksi.addRow(data);
        }
 

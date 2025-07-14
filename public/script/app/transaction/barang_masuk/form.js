@@ -821,7 +821,8 @@ dtListProduksiRef.on("rowClick", function(e, row){
     //     });
     // }
     data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
-    dtListProduksi.addRow(data);
+    // dtListProduksi.addRow(data);
+    addItem(data);
     modalRefpo.modal("hide");
 
     setTimeout(() => {
@@ -1358,44 +1359,62 @@ function simpanData(status) {
 
 
     function addItem(data){
-        
-        // const data = row._row.data
         let produksi_data = dtListProduksi.getData();
         let index = -1;
-        if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
-            index = produksi_data.findIndex(x => 
+
+        // Cek apakah item sudah ada berdasarkan kombinasi unik
+        if (produksi_data.some(x =>
+            x.kode_sales_order == data.kode_sales_order &&
+            x.kode_ukuran == data.kode_ukuran &&
+            (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '')
+        )) {
+            index = produksi_data.findIndex(x =>
                 x.kode_sales_order == data.kode_sales_order &&
-                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '') &&
-                x.kode_ukuran == data.kode_ukuran
+                x.kode_ukuran == data.kode_ukuran &&
+                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '')
             );
         }
 
+        // ✅ Jika item sudah ada → update qty
+        if(index !== -1){
+            produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
+            produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
+            dtListProduksi.setData(produksi_data);
+        } else {
+            // ✅ Jika item belum ada → cari semua baris dengan kombinasi yang sama
+            const matchingItems = produksi_data.filter(x =>
+                x.kode_sales_order == data.kode_sales_order &&
+                x.kode_ukuran == data.kode_ukuran &&
+                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '')
+            );
 
-       if(index !== -1){
-           const row = produksi_data;
-            row[index].qty = parseFloat(row[index].qty) + parseFloat(data.qty);
-            dtListProduksi.setData(row);
-       }else{
+            let totalQty = 0;
+            let totalAmount = 0;
+
+            matchingItems.forEach(item => {
+                totalQty += parseFloat(item.qty) || 0;
+                totalAmount += parseFloat(item.amount) || 0;
+            });
+
+            // Hitung harga rata-rata jika ada, atau default ke 0
+            const hargaRata = totalQty > 0 ? Math.floor(totalAmount / totalQty) : 0;
+
             const now = new Date();
             const yyyy = now.getFullYear();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const dd = String(now.getDate()).padStart(2, '0');
             data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
 
-            // if (list_verif.length > 0) {
-            //     return Swal.fire({
-            //         text: `Data dengan warna ${data.color} dan ukuran ${data.kode_ukuran} sudah ada.`,
-            //         icon: 'error',
-            //         showConfirmButton: false,
-            //         timer: 2000
-            //     });
-            // }
-            data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
-            dtListProduksi.addRow(data);
-       }
+            // Set harga & amount otomatis
+            data.harga = hargaRata;
+            data.amount = (parseFloat(data.qty) || 0) * hargaRata;
 
-        $( "#text_barcode" ).val("");
+            dtListProduksi.addRow(data);
+        }
+
+        $("#text_barcode").val("");
     }
+
 
 
      $( "#text_barcode" ).on("keypress", function(e){
@@ -1429,7 +1448,6 @@ function simpanData(status) {
 
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
-                console.log(arrKunci);
                 let hasil = refData.map(item => ({ ...item }));
                 
                 //  console.log('hasil', hasil)
@@ -1446,7 +1464,6 @@ function simpanData(status) {
                     const normalize = str => str.toUpperCase().replace(/\s+/g, ' ').trim();
                     const inputColor = normalize(arrKunci[2]);
                     const inputColor2 = normalize(arrKunci[4]);
-                    console.log(inputColor, inputColor2);
                     hasil = hasil.filter(item => {
                         if (item.color) {
                             const firstColor = item.color.toString().split('~')[0].toUpperCase();

@@ -1362,26 +1362,18 @@ function simpanData(status) {
         let produksi_data = dtListProduksi.getData();
         let index = -1;
 
-        // Cek apakah item sudah ada berdasarkan kombinasi unik
-        if (produksi_data.some(x =>
-            x.kode_sales_order == data.kode_sales_order &&
-            x.kode_ukuran == data.kode_ukuran &&
-            (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '')
-        )) {
-            index = produksi_data.findIndex(x =>
+        if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
+            index = produksi_data.findIndex(x => 
+
                 x.kode_sales_order == data.kode_sales_order &&
-                x.kode_ukuran == data.kode_ukuran &&
-                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '')
+                (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '') && (x.color ? x.color.split('~')[1] : '') == (data.color ? data.color.split('~')[1] : '') &&                x.kode_ukuran == data.kode_ukuran
             );
         }
-
-        // ✅ Jika item sudah ada → update qty
         if(index !== -1){
             produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
             produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
             dtListProduksi.setData(produksi_data);
         } else {
-            // ✅ Jika item belum ada → cari semua baris dengan kombinasi yang sama
             const matchingItems = produksi_data.filter(x =>
                 x.kode_sales_order == data.kode_sales_order &&
                 x.kode_ukuran == data.kode_ukuran &&
@@ -1396,7 +1388,6 @@ function simpanData(status) {
                 totalAmount += parseFloat(item.amount) || 0;
             });
 
-            // Hitung harga rata-rata jika ada, atau default ke 0
             const hargaRata = totalQty > 0 ? Math.floor(totalAmount / totalQty) : 0;
 
             const now = new Date();
@@ -1405,9 +1396,9 @@ function simpanData(status) {
             const dd = String(now.getDate()).padStart(2, '0');
             data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
 
-            // Set harga & amount otomatis
-            data.harga = hargaRata;
-            data.amount = (parseFloat(data.qty) || 0) * hargaRata;
+            const hargaFix = (parseFloat(data.harga) || 0) > 0 ? parseFloat(data.harga) : hargaRata;
+            data.harga = hargaFix;
+            data.amount = (parseFloat(data.qty) || 0) * hargaFix;
 
             dtListProduksi.addRow(data);
         }

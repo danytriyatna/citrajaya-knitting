@@ -51,6 +51,7 @@ $routes->group('trans/work-order', ['namespace' => 'Modules\Transaction\Controll
   $routes->get('form/(:any)', 'WorkOrder::form/$1');
   $routes->post('save-warna', 'WorkOrder::saveWarna');
   $routes->post('save-data', 'WorkOrder::save');
+  $routes->get('print/(:any)', 'WorkOrder::print/$1');
 });
 
 $routes->group('trans/production', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

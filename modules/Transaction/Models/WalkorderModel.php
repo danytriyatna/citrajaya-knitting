@@ -505,5 +505,27 @@ class WalkorderModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    // WARNA    
+    function getData_warna_print($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table($this->table5 . " abx");
+
+        $builder->select(" abx.id, abx.id_walkorder_detail, abx.id_warna, abx.persen,
+                           abx.gram, abx.gram_nd, abx.kg, abx.loss, abx.kg_loss, abx.total,
+                           abx.kuota, abx.kuota_tambah, rw.kode_warna, rw.keterangan as warna_keterangan
+                        ");
+
+        $builder->join("ref_warna rw", "rw.id = abx.id_warna", "inner");
+        
+        $builder->join("trans_walkorder_detail wodet", "wodet.id = abx.id_walkorder_detail", "inner");
+        $builder->join("trans_walkorder wo", "wo.id = wodet.id_walkorder", "inner");
+
+        $builder->where('wo.id', $id);
+
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
     // END WARNA    
 }

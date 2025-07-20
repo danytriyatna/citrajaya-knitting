@@ -594,4 +594,61 @@ class WorkOrder extends BaseController
 
     return $this->response->setJSON($build_array);
   }
+
+  public function print($id = null)
+  {
+    if (!$this->auth->loggedIn()) {
+      return redirect()->to('/auth/login');
+    }
+    $dompdf = new \Dompdf\Dompdf();
+    // Set Dompdf options for portrait orientation
+    $dompdf->setPaper('A4', 'portrait');
+
+    $this->data['data'] = [];
+    if ($id != "") {
+      $id = decrypt($id);
+      // dd($id);
+      // die;
+      $resData = $this->mWalkorder->getData($id);
+      $salesOrder = $this->mSalesOrder->getData($resData->ref_id);
+      if (!empty($salesOrder)) {
+        $salesOrderDet = $this->mSalesOrder->getDataDetailSalesOrder_crostab($resData->ref_id);
+        $walkOrderDet = $this->mWalkorder->getData_warna_print($id);
+        
+      }
+      else {
+        $salesOrder = $this->mSample->getData($resData->ref_id);
+        $salesOrderDet = $this->mSample->getDataDetailSample_crostab($resData->ref_id);
+        $walkOrderDet = $this->mWalkorder->getData_warna_print($id);
+      }
+
+      // dd($salesOrderDet);
+      // $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+      // $pru['id_sales_order'] = $id;
+      // $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+
+      // $resDataDetail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
+      // $keysUkuran = !empty($resDataDetail) ? array_keys(get_object_vars($resDataDetail[0])) : [];
+
+      // // Tentukan key mana yang merupakan ukuran (filter selain `id`, `no`, `colordasar`, `colour`, dan `total_harga`)
+      // $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga"];
+      // $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
+
+      $this->data['data'] = !empty($resData) ? $resData : [];
+      $this->data['sales_order'] = !empty($salesOrder) ? $salesOrder : [];
+      $this->data['sales_order_det'] = !empty($salesOrderDet) ? $salesOrderDet : [];
+      $this->data['walk_order_det'] = !empty($walkOrderDet) ? $walkOrderDet : [];
+      // $this->data['ukuran'] = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
+      // $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
+    }
+
+    
+    $html = view($this->views . '\work_order_print', $this->data);
+
+
+    $dompdf->loadHtml($html);
+    $dompdf->render();
+    $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
+    exit;
+  }
 }

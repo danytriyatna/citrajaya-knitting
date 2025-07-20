@@ -60,8 +60,8 @@ class WarnaModel extends \App\Models\PrModel
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
-            $builder->where('LOWER(k.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->where('LOWER(uk.kode_ukuran) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->where('LOWER(uk.kode_warna) LIKE', strtolower("%{$filters[0]['value']}%"));
+            // $builder->where('LOWER(uk.kode_ukuran) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(uk.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }

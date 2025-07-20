@@ -229,8 +229,9 @@ class Penggajian extends BaseController
                         $dataIn['status'] = 3;
                         $mtd = "Reject";
                     }
-                    
-                    $this->mgaji->deleteRecordMultipleColumn($this->mgaji->table2, ["id_sdm_gaji" => $id]);
+                    if (empty($dtDet[0]["id"])) {
+                      $this->mgaji->deleteRecordMultipleColumn($this->mgaji->table2, ["id_sdm_gaji" => $id]);
+                    }
                     $inUp = $this->update($id, $dataIn, $dtDet);
                 }else{
 
@@ -251,7 +252,6 @@ class Penggajian extends BaseController
                     $this->_get_message("ERROR_VALIDATION", "Ulangi simpan data !");
                 }
             }else{
-              dd($this->validation->listErrors());
                 $this->data['errmsg'] = $this->_get_message("ERROR_VALIDATION", $this->validation->listErrors());
             }
 			
@@ -354,8 +354,8 @@ class Penggajian extends BaseController
         
         if(!empty($detail)){
           $detail_id = [];
+          
           foreach ($detail as $r) {
-            
               $dtIn["id_sdm_gaji"] = $id; 
               $dtIn["id_karyawan"] = $r["id_karyawan"]; 
               $dtIn["nip"] = $r["nip"]; 

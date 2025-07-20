@@ -401,7 +401,8 @@ class Absensi extends BaseController
                 $pr_kr['nip'] = $nip;
                 $get_karyawan = $this->mkaryawan->getData(null, 0, 1, null, null, $pr_kr);
                 $id_shift = 1;
-                $durasi_kerja = 8 * 60;
+                $durasi_kerja = $xr[14];
+                // $durasi_kerja = 8 * 60;
                 $jadwal_masuk = "08:00";
                 $jadwal_pulang = "17:00";
                 $prms['nama_shift'] = $shift;
@@ -436,13 +437,13 @@ class Absensi extends BaseController
                     // Hitung selisih dalam detik
                     $selisih_detik = $timestamp_masuk - $timestamp_keluar;
 
-                    $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detikif
+                    // $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detikif
 
-                    if($durasi_kerja >= 5){
-                      $durasi_kerja = $durasi_kerja - 60;
-                    } else if($durasi_kerja < 0){
-                      $durasi_kerja = 0;
-                    }
+                    // if($durasi_kerja >= 5){
+                    //   $durasi_kerja = $durasi_kerja - 60;
+                    // } else if($durasi_kerja < 0){
+                    //   $durasi_kerja = 0;
+                    // }
                   }
                 }
 
@@ -474,7 +475,6 @@ class Absensi extends BaseController
 
                     $jam_lembur = round($jam_lembur); 
                   }
-
                   $isi['jam_masuk'] = $tgl_absen . ' ' . $jamIn;
                   $isi['jam_keluar'] = $tgl_absen . ' ' . $jamOut;
                   $isi['status_kehadiran'] = $status_kehadiran;

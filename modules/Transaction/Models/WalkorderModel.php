@@ -513,7 +513,7 @@ class WalkorderModel extends \App\Models\PrModel
 
         $builder->select(" abx.id, abx.id_walkorder_detail, abx.id_warna, abx.persen,
                            abx.gram, abx.gram_nd, abx.kg, abx.loss, abx.kg_loss, abx.total,
-                           abx.kuota, abx.kuota_tambah, rw.kode_warna, rw.keterangan as warna_keterangan
+                           abx.kuota, abx.kuota_tambah, rw.kode_warna, rw.keterangan as warna_keterangan, wodet.qty
                         ");
 
         $builder->join("ref_warna rw", "rw.id = abx.id_warna", "inner");

@@ -223,7 +223,7 @@
         <?php
         $totalKg = 0;
         foreach ($walk_order_det as $i => $item): 
-            $qty = floatval($item->kg); // pastikan float untuk penjumlahan
+            $qty = $item->qty/$item->kg; // pastikan float untuk penjumlahan
             $totalKg += $qty;
         ?>
             <tr>

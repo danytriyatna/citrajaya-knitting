@@ -148,7 +148,7 @@
     <?php
         $data = $sales_order_det; // array of stdClass dari database
         $no = 1;
-        $sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'];
+        $sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', 'jumbo', '4xl', 'sm', 'ml', 'lxl', "all_"];
         $grandTotalQty = 0;
 
         foreach ($data as $item) {
@@ -156,17 +156,23 @@
             $totalQty = 0;
 
             // Cek apakah data ALL
-            if (!empty($item->all_)) {
-                $qty = (int)$item->all_;
-                $rowsToDisplay[] = ['size' => 'ALL', 'qty' => $qty];
-                $totalQty = $qty;
-            } else {
-                foreach ($sizes as $size) {
-                    if (!empty($item->$size) && $item->$size > 0) {
-                        $qty = (int)$item->$size;
-                        $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
-                        $totalQty += $qty;
+            foreach ($sizes as $size) {
+                if (!empty($item->$size) && $item->$size > 0) {
+                    $qty = (int)$item->$size;
+                    if ($size == "all_") {
+                        $size = "all";
                     }
+                    else if ($size == "sm") {
+                        $size = "s / m";
+                    }
+                    else if ($size == "ml") {
+                        $size = "m / l";
+                    }
+                    else if ($size == "lxl") {
+                        $size = "l / xl";
+                    }
+                    $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
+                    $totalQty += $qty;
                 }
             }
             $grandTotalQty += $totalQty;

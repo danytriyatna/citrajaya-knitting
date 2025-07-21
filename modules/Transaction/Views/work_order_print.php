@@ -214,7 +214,7 @@
         </tr>
         <tr>
             <th style="width: 27%;">WARNA</th>
-            <th>QTY</th>
+            <th style="width: 15%;">Kebutuhan (QTY/KG)</th>
             <th>LOT</th>
             <th style="width: 35%;">KIRIM SBB (QTY/KG)</th>
         </tr>

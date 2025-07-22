@@ -511,17 +511,24 @@ class WalkorderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table5 . " abx");
 
-        $builder->select(" abx.id, abx.id_walkorder_detail, abx.id_warna, abx.persen,
-                           abx.gram, abx.gram_nd, abx.kg, abx.loss, abx.kg_loss, abx.total,
-                           abx.kuota, abx.kuota_tambah, rw.kode_warna, rw.keterangan as warna_keterangan, wodet.qty
-                        ");
+        $builder->select(" 
+            abx.id_warna, 
+            rw.kode_warna,
+            SUM(abx.gram) as gram,
+            SUM(abx.kg) as kg,
+            SUM(abx.loss) as loss,
+            SUM(abx.kg_loss) as kg_loss,
+            SUM(abx.total) as total,
+            SUM(abx.kuota) as kuota,
+            SUM(abx.kuota_tambah) as kuota_tambah
+        ");
 
         $builder->join("ref_warna rw", "rw.id = abx.id_warna", "inner");
-        
         $builder->join("trans_walkorder_detail wodet", "wodet.id = abx.id_walkorder_detail", "inner");
         $builder->join("trans_walkorder wo", "wo.id = wodet.id_walkorder", "inner");
 
         $builder->where('wo.id', $id);
+        $builder->groupBy('abx.id_warna, rw.kode_warna');
 
         $this->_data = $builder->get()->getResult();
 

@@ -88,15 +88,15 @@
             
         }
     ?>
-  <div class="title">WO PRODUKSI</div>
+  <div class="title" style="font-size: 13px;">WO PRODUKSI</div>
 
   <div class="header">
-    <p style="text-align: right;">Hari/Tgl: <?= !empty($sales_order->tgl_transaksi) ? formatTanggalIndonesiaNow($sales_order->tgl_transaksi, 1) : date('Y-m-d') ?></strong></p>
-    <p>Kepada: <strong>TIM PRODUKSI</strong></p>
-    <p>Surat tembusan ini berisi detail PO yang harus dibuatkan dengan rincian sbb:</p>
+    <p style="text-align: right; font-size: 11px;">Hari/Tgl: <?= !empty($sales_order->tgl_transaksi) ? formatTanggalIndonesiaNow($sales_order->tgl_transaksi, 1) : date('Y-m-d') ?></strong></p>
+    <p style="font-size: 11px;">Kepada: <strong>TIM PRODUKSI</strong></p>
+    <p style="font-size: 11px;">Surat tembusan ini berisi detail PO yang harus dibuatkan dengan rincian sbb:</p>
   </div>
 
-  <table>
+  <table style="font-size: 10px;">
     <tr>
         <th rowspan="5" colspan="2">
             <?php 
@@ -110,29 +110,37 @@
                         } 
                     } 
                 }
+
+                $kodeSO = null;
+                if (!empty($sales_order->kode_sales_order)) {
+                  $kodeSO = $sales_order->kode_sales_order;
+                }
+                else if (!empty($sales_order->kode_sample)) {
+                  $kodeSO = $sales_order->kode_sample;
+                }
                 $type = pathinfo($path, PATHINFO_EXTENSION);
                 $data = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 echo '<img width = "90px" src="'.$base64.'" alt="My image" />';
             ?>
         </th>
-      <th style="text-align: left;">SO :</th>
-      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->kode_sales_order) ? $sales_order->kode_sales_order : $sales_order->kode_sample ; ?></td>
+      <th style="text-align: left;"><em>STYLE :</em></th>
+      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->style) ? $sales_order->style : null ; ?></td>
     </tr>
     <tr>
-      <th  style="text-align: left;">BUYER :</th>
+      <th  style="text-align: left;"><em>BUYER :</em></th>
       <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->nama) ? $sales_order->nama : null ; ?></td>
     </tr>
     <tr>
-      <th  style="text-align: left;">TANGGAL SO :</th>
-      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_transaksi) ? formatTanggalIndonesiaNow($sales_order->tgl_transaksi) : null ; ?></td>
+      <th  style="text-align: left;"><em>TGL & NO SO :</em></th>
+      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_transaksi) ? formatTanggalIndonesiaNow($sales_order->tgl_transaksi)." ".$kodeSO : null ; ?></td>
     </tr>
     <tr>
-      <th  style="text-align: left;">DEADLINE :</th>
+      <th  style="text-align: left;"><em>DEADLINE :</em></th>
       <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_deadline) ? formatTanggalIndonesiaNow($sales_order->tgl_deadline) : null ; ?></td>
     </tr>
     <tr>
-      <th  style="text-align: left;">DESK :</th>
+      <th  style="text-align: left;"><em>DESK :</em></th>
       <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->deskripsi) ? $sales_order->deskripsi : null ; ?></td>
     </tr>
 
@@ -211,7 +219,7 @@
     </tfoot>
   </table>
 
-  <table>
+  <table style="font-size: 10px;">
     <thead>
         <tr>
             <th style="width: 6%;" rowspan="2">NO</th>
@@ -252,7 +260,7 @@
     </tfoot>
   </table>
 
-  <table class="signature" style="border: none;">
+  <table class="signature" style="border: none; font-size: 10px;">
     <tr>
       <td style="width: 20%;">Pengirim</td>
       <td style="width: 20%;">Penerima</td>
@@ -262,7 +270,7 @@
     </tr>
   </table>
 
-  <div class="notes">
+  <div class="notes" style="font-size: 12px;">
     <strong>Notes:</strong><br>
   </div>
 

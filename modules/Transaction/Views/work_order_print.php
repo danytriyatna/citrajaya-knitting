@@ -98,7 +98,7 @@
 
   <table style="font-size: 10px;">
     <tr>
-        <th rowspan="5" colspan="2">
+        <th rowspan="5" colspan="2" style="padding: 1px; vertical-align: middle;">
             <?php 
                 $path = FCPATH . 'assets/images/placeholder.png';
                 if (!empty($sales_order->file_name)) {

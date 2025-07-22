@@ -20,7 +20,7 @@ class SalesOrderModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.status, 
                           abx.gambar_id,cbx.file_name, abx.id_sample, abx.uang_dp, abx.style as stylex , abx.style_cnt,
-                          concat(abx.style,' - ', abx.style_cnt) as style");
+                          concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("_files cbx", "abx.gambar_id = cbx.id", "left");
         if ($id == null or $id == "") {

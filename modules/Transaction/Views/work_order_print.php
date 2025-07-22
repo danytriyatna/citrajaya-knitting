@@ -125,15 +125,15 @@
             ?>
         </th>
       <th style="text-align: left;"><em>STYLE :</em></th>
-      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->style) ? $sales_order->style : null ; ?></td>
+      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->style_print) ? $sales_order->style_print : null ; ?></td>
     </tr>
     <tr>
       <th  style="text-align: left;"><em>BUYER :</em></th>
       <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->nama) ? $sales_order->nama : null ; ?></td>
     </tr>
     <tr>
-      <th  style="text-align: left;"><em>TGL & NO SO :</em></th>
-      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_transaksi) ? formatTanggalIndonesiaNow($sales_order->tgl_transaksi)." ".$kodeSO : null ; ?></td>
+      <th  style="text-align: left;"><em>NO SO :</em></th>
+      <td  style="text-align: left;" colspan="5"><?= !empty($kodeSO) ? $kodeSO : null ; ?></td>
     </tr>
     <tr>
       <th  style="text-align: left;"><em>DEADLINE :</em></th>

@@ -392,7 +392,7 @@ let dtList = new Tabulator("#dt-list", {
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         // {title: "Buyer", field: "buyer", width: "20%"},
         {title: "Colour", field: "color", width: "10%"},
-        {title: "Qty", field: "qty", width: "8%",editor:"number"},
+        {title: "Qty", field: "qty", width: "8%",editor:"number", formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum'},
         {title: "Ukuran", field: "kode_ukuran", width: "10%"},
         {title: "Keterangan", field: "keterangan", width: "20%",editor:"input"},
         // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {

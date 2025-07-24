@@ -725,7 +725,7 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             const qty = parseFloat(cell.getValue()) || 0;
             const harga = parseFloat(row.getCell("harga").getValue()) || 0;
             row.update({ amount: qty * harga });
-        }},
+        }, formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum'},
         {title: "Ukuran", field: "kode_ukuran", width: "8%"},
         {title: "Harga", field: "harga", width: "10%", formatter: "money", formatterParams: {
             decimal: ",",

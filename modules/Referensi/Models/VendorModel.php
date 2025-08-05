@@ -18,7 +18,7 @@ class VendorModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " k");
 
-        $builder->select("k.id, k.nama, k.alamat, k.no_hp, k.email");
+        $builder->select("k.id, k.nama, k.alamat, k.no_hp, k.email, k.pic");
 
         if ($id == null or $id == "") {
             $builder->where('k.active = 1');
@@ -27,6 +27,7 @@ class VendorModel extends \App\Models\PrModel
                 $builder->where('LOWER(k.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(k.alamat) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(k.email) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(k.pic) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 

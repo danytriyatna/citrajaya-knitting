@@ -156,15 +156,18 @@ $("#filter_barang").click(function () {
 });
 
 $("#btn-tampilkan").click(function () {
+    $(".preloader").css("opacity", "0.7").show();
     if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
       Swal.fire({
         title: 'Warning',
         text: 'Tahun,Bulan & Gudang harus dipilih',
         icon: 'warning',
       })
+      $(".preloader").hide().css("opacity", "1");
       return false    
     }
     getDataLaporan()
+    $(".preloader").hide().css("opacity", "1");
   });
 
   $("#btn-reset").click(function () {
@@ -194,15 +197,18 @@ $("#btn-tampilkan").click(function () {
   }
 
   $("#updateData").click(function () {
+    $(".preloader").css("opacity", "0.7").show();
     if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
       Swal.fire({
         title: 'Warning',
         text: 'Tahun,Bulan & Gudang harus dipilih',
         icon: 'warning',
       })
+      $(".preloader").hide().css("opacity", "1");
       return false    
     }
     getUpdateDataLaporan()
+    $(".preloader").hide().css("opacity", "1");
   });
 
   function getUpdateDataLaporan(){

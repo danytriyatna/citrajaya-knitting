@@ -2,26 +2,27 @@
 
 namespace Modules\Transaction\Controllers;
 
-use CodeIgniter\Controller;
+use App\Models\FileModel;
 
+use Endroid\QrCode\QrCode;
+use CodeIgniter\Controller;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Label\Label;
 use App\Libraries\DompdfGenerator;
 use App\Controllers\BaseController;
-use Modules\Transaction\Models\SalesOrderModel;
-use Modules\Referensi\Models\KonsumenModel;
-use Modules\Referensi\Models\UkuranModel;
-use Modules\Referensi\Models\WarnaModel;
-use Modules\Transaction\Models\SampleModel;
-use Modules\Transaction\Models\WalkorderModel;
-use App\Models\FileModel;
-use Endroid\QrCode\Color\Color;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Label\Label;
-use Endroid\QrCode\Logo\Logo;
-use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Modules\Referensi\Models\WarnaModel;
+use Modules\Referensi\Models\UkuranModel;
+use Modules\Referensi\Models\KonsumenModel;
+use Modules\Referensi\Models\RekeningModel;
+use Modules\Transaction\Models\SampleModel;
 use Endroid\QrCode\Writer\ValidationException;
+use Modules\Transaction\Models\WalkorderModel;
+use Modules\Transaction\Models\SalesOrderModel;
 
 class SalesOrder extends BaseController
 {
@@ -32,6 +33,7 @@ class SalesOrder extends BaseController
   protected $mUkuran;
   protected $mWarna;
   protected $mworkOrder;
+  protected $mRekening;
 
   protected $views = '\Modules\Transaction\Views';
   protected $urlv  = 'trans/sales_order';
@@ -47,6 +49,7 @@ class SalesOrder extends BaseController
     $this->mWarna = new WarnaModel();
     $this->mSample = new SampleModel();
     $this->mworkOrder = new WalkorderModel();
+    $this->mRekening   = new RekeningModel();
   }
 
 
@@ -58,8 +61,10 @@ class SalesOrder extends BaseController
 
     $this->data['titlehead'] = "SalesOrder";
     $this->data['buyer'] = $this->mkonsumen->where("active", 1)->findAll();
+    $this->data['type'] = $this->mkonsumen->where("active", 1)->findAll();
     $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
+    $this->data['rekening_list'] = $this->mRekening->where("active", 1)->findAll();
 
     return view($this->views . '\sales_order_list', $this->data);
   }
@@ -206,6 +211,8 @@ class SalesOrder extends BaseController
       "id_sample" => $results->id_sample,
       "status" => $status,
       "uang_dp" =>  !empty($results->uang_dp) ? $results->uang_dp : 0,
+      "tgl_dp" => $results->tgl_dp,
+      "type_dp" => $results->type_dp,
       "detail" => $detail,
       "key_ukuran" => $dtUkuran
     );
@@ -246,6 +253,8 @@ class SalesOrder extends BaseController
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
     $uang_dp = $this->request->getPost('uang_dp');
+    $tgl_dp = $this->request->getPost('tgl_dp');
+    $type_dp = $this->request->getPost('type_dp');
     $style = $this->request->getPost('style');
     $repeat = $this->request->getPost('repeat');
 
@@ -302,6 +311,8 @@ class SalesOrder extends BaseController
       'tgl_transaksi' => $tglTransaksi,
       'tgl_deadline' => $tglDeadline,
       'uang_dp' => $uang_dp,
+      'tgl_dp' => $tgl_dp,
+      'type_dp' => $type_dp,
       'style' => $style,
       'style_cnt' => $repeat,
       // 'kode_sales_order' => $noSalesOrder,

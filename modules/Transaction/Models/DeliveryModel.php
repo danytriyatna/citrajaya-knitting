@@ -106,13 +106,29 @@ class DeliveryModel extends \App\Models\PrModel
     function getDataProduksi($params){
         $builder = $this->db->table("trans_delivery_detail tdd");
         $builder->select("tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
-                          rk.kode_ukuran, rw.kode_warna");
+                          rk.kode_ukuran, TRIM ( BOTH ' - ' FROM
+                        COALESCE(rw1.kode_warna, '') ||
+                        CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                        CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                        CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                        CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                        CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                        CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                        CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+                    ) AS kode_warna");
         $builder->join('ref_ukuran rk', 'tdd.id_ukuran = rk.id');
         $builder->join('trans_delivery td', 'tdd.id_delivery = td.id');
         $builder->join('trans_walkorder tw', 'td.id_walkorder = tw.id');
         $builder->join("trans_sample_det tsd", "tdd.ref_detail_id = tsd.id and tw.tipe_id = 1", "left");
         $builder->join("trans_sales_order_det tsod", "tdd.ref_detail_id = tsod.id and tw.tipe_id = 2", "left");
-        $builder->join("ref_warna rw", "rw.id = (case when tw.tipe_id = 1 then tsd.id_warna_1 when tw.tipe_id = 2 then tsod.id_warna_1 else -1 end)", "left");
+        $builder->join("ref_warna rw1", "rw1.id = (case when tw.tipe_id = 1 then tsd.id_warna_1 when tw.tipe_id = 2 then tsod.id_warna_1 else -1 end)", "left");
+        $builder->join("ref_warna rw2", "rw2.id = (case when tw.tipe_id = 1 then tsd.id_warna_2 when tw.tipe_id = 2 then tsod.id_warna_2 else -1 end)", "left");
+        $builder->join("ref_warna rw3", "rw3.id = (case when tw.tipe_id = 1 then tsd.id_warna_3 when tw.tipe_id = 2 then tsod.id_warna_3 else -1 end)", "left");
+        $builder->join("ref_warna rw4", "rw4.id = (case when tw.tipe_id = 1 then tsd.id_warna_4 when tw.tipe_id = 2 then tsod.id_warna_4 else -1 end)", "left");
+        $builder->join("ref_warna rw5", "rw5.id = (case when tw.tipe_id = 1 then tsd.id_warna_5 when tw.tipe_id = 2 then tsod.id_warna_5 else -1 end)", "left");
+        $builder->join("ref_warna rw6", "rw6.id = (case when tw.tipe_id = 1 then tsd.id_warna_6 when tw.tipe_id = 2 then tsod.id_warna_6 else -1 end)", "left");
+        $builder->join("ref_warna rw7", "rw7.id = (case when tw.tipe_id = 1 then tsd.id_warna_7 when tw.tipe_id = 2 then tsod.id_warna_7 else -1 end)", "left");
+        $builder->join("ref_warna rw8", "rw8.id = (case when tw.tipe_id = 1 then tsd.id_warna_8 when tw.tipe_id = 2 then tsod.id_warna_8 else -1 end)", "left");
 
         if(!empty($params['id_delivery'])){
             $builder->where('id_delivery', $params['id_delivery']);

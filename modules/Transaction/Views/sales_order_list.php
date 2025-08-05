@@ -99,11 +99,31 @@
         </div>
 
         <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tgl_deadline">DownPayment</label>
-          <div class="col-md-9">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="uang_dp">DownPayment</label>
+          <div class="col-md-2">
             <input type="number" name="uang_dp" value="" id="uang_dp" min="0" step="1" pattern="[0-9]*" class="form-control" 
                  placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
                  data-politespace-reverse="" data-politespace-decimal-mark=".">
+            <div class="invalid-feedback">
+              Deadline tidak valid
+            </div>
+          </div>
+          <label class="control-label text-start text-md-end col-md-1 col-form-label" for="tgl_dp">Tanggal</label>
+          <div class="col-md-2">
+            <input type="text" id="tgl_dp" name="tgl_dp" class="form-control datepicker" placeholder="Pilih tgl dp" value="" required>
+            <div class="invalid-feedback">
+              Tanggal tidak valid
+            </div>
+          </div>
+          <label class="control-label text-start text-md-end col-md-1 col-form-label" for="select_type">Tipe</label>
+          <div class="col-md-3">
+            <select id="select_type" name="select_type" class="form-select select2" data-placeholder="-- Pilih Tipe Bayar --" required>
+              <option value=""></option>
+              <?php foreach ($rekening_list as $item) : ?>
+                <option value="<?= $item['id'] ?>"><?= $item['rekening_no']; ?> - <?= $item['rekening_bank']; ?></option>
+              <?php endforeach; ?>
+              
+            </select>
             <div class="invalid-feedback">
               Deadline tidak valid
             </div>

@@ -190,7 +190,6 @@ class SalesInvoice extends BaseController
       $params['id_invoice'] = $stdData->id;
       $params['id_konsumen'] = $stdData->id_konsumen;
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
-      // dd($dt);
       if (!empty($dt)) {
         $status = true;
         $message = "Berhasil mengambil data  ";
@@ -308,7 +307,7 @@ class SalesInvoice extends BaseController
         // $stdData->rentang_waktu  = trim($this->request->getPost('rentang_waktu'));
 
         $dt_details = trim($this->request->getPost('dt_details'));
-
+        
         $dt_details = json_decode($dt_details, true);
 
 
@@ -629,15 +628,15 @@ class SalesInvoice extends BaseController
         if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
         $ukuran .= ($ukuran == "") ? $keyUkuran : ", " . $keyUkuran;
       }
-
+      
       foreach ($dt as $x) {
-
+        
         $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
         $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
-
+        
         $total = ($x->tipe_id == 1) ? $x->total_harga : $x->total_harga;
         $total = !empty($total) ? (float) $total : 0;
-
+        
         $isi = [
           'id_walkorder'      => $x->id_walkorder,
           'tgl_transaksi'     => \fdate_eng_to_ind($x->tgl_transaksi),
@@ -652,12 +651,12 @@ class SalesInvoice extends BaseController
           'deliver_qty'       => $x->qty_dlv,
           'totals'            => $total - $uang_dp,
         ];
-
+        
         $do_harga = 0;
         $do_harga = 0;
-
+        
         $det_list = [];
-
+        
         $idDetail = [];
         if (!empty($x->id_walkorder)) {
           $paramx['id_konsumen']  = $konsumen_id;
@@ -666,21 +665,21 @@ class SalesInvoice extends BaseController
           $paramx['get'] =  1;
           $idDetail = $this->mInvoice->getDetail_delivery($paramx);
         }
-
+        
         $qty_do = 0;
         $total_harga = 0;
-
+        
         foreach ($idDetail as $d) {
-
+          
           $qty = 0;
           $ref_kode = "";
           $ref_id = 0;
           $ref_total = 0;
           $ref_dp = 0;
-
+          
           $qty_do = $qty_do  + $d->qty_do;
           $total_harga = $total_harga  + $d->total_harga;
-
+          
           $det_isi = [
             'ref_detail_id' => $d->ref_detail_id,
             'id_delivery' => $d->id_delivery,
@@ -690,10 +689,10 @@ class SalesInvoice extends BaseController
             'qty_do' => !empty($d->qty_do) ? $d->qty_do : 0,
             'total_harga' => !empty($d->total_harga) ? $d->total_harga : 0,
           ];
-
+          
           foreach ($rukuran as $iu) {
             $keyUkuran = $iu->key_ukuran;
-
+            
             if ($iu->key_ukuran == 'all') {
               $keyUkuran = 'all_';
               $det_isi[$keyUkuran] = !empty($d->$keyUkuran) ? $d->$keyUkuran : 0;
@@ -701,7 +700,7 @@ class SalesInvoice extends BaseController
               $det_isi[$keyUkuran] = !empty($d->$keyUkuran) ? $d->$keyUkuran : 0;
             }
           }
-
+          
           $det_list[] = $det_isi;
         }
         //  $isi['deliver_qty'] = $qty_do;
@@ -710,17 +709,17 @@ class SalesInvoice extends BaseController
         $isi['detail_data'] = $det_list;
         $xdata[] = $isi;
       }
-
+      
       $data = $xdata;
     }
-
+    
     $build_array['status']  = $status;
     $build_array['message'] = $message;
     $build_array['data']    = $data;
     return $this->response->setJSON($build_array);
   }
-
-
+  
+  
   function getDataProduksi()
   {
     $id_walkorder = $this->request->getPost("id_walkorder");
@@ -869,8 +868,14 @@ class SalesInvoice extends BaseController
       // get produksi data
       $params['id_invoice'] = $resData->id;
       $params['id_konsumen'] = $resData->id_konsumen;
-      $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
-      // dd($dt);
+      $dt = $this->mInvoice->get_walkorder_konsumen_ori_print($params);
+      $dtails = $this->mInvoice->getDataDetailNew(null, null, null, null. null, null, $params);
+      // dd($dtails);
+      if (!empty($dtails)) {
+        foreach ($dtails as $key_det => $value_det) {
+          # code...
+        }
+      }
       if (!empty($dt)) {
 
         $rukuran = $this->mUkuran->getData(0, 0, 999);
@@ -917,7 +922,7 @@ class SalesInvoice extends BaseController
             $paramx['ukuran'] = $ukuran;
             $idDetail = $this->mInvoice->getDetail_delivery($paramx);
           }
-
+          
           $qty_do = 0;
           $total_harga = 0;
 
@@ -965,12 +970,12 @@ class SalesInvoice extends BaseController
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
     }
-    $html = view($this->views . '\sales_invoice_print', $this->data);
+    $html = view($this->views . '\sales_invoice_print_new', $this->data);
 
 
     $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
     exit;
   }
 }

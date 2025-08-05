@@ -463,7 +463,7 @@ $(document).ready(function () {
 		let dataTable = dtListProduksi.getData();
 
 		let dataOrder = dtListDetail.getData();
-		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.id_warna == (data.id_warna));
+		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.kode_warna == (data.kode_warna));
 		let ix_order  = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
         // console.log(dataOrder);
         // console.log(data);
@@ -511,7 +511,7 @@ $(document).ready(function () {
                     let qty_orderO = dataOrder[ix_order].qty_prod;
                     data.qty = data.qty_prod + 1; 
                     if(qty_orderO < qty_order){
-                        dataTable[objIndex].qty = dataTable[objIndex].qty + 1; 
+                        dataTable[objIndex].qty = parseFloat(dataTable[objIndex].qty) + 1; 
                         addkuota(data.ref_detail_id, false);
                         // $("#modal-list-item").modal("hide");
                     }else{
@@ -571,6 +571,7 @@ $(document).ready(function () {
         setTimeout(() => {
             try {
                 let isdatap = JSON.parse(detail_produksi);
+                console.log(isdatap)
                 
                 // Set data ke Tabulator
                 dtListProduksi.setData(isdatap);

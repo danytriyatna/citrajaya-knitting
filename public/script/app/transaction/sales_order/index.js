@@ -14,6 +14,8 @@ $(document).ready(function () {
     const inpTglDeadline    = $('#tgl_deadline');
     const inpKetSalesOrder  = $('#ket_sales_order');
     const inpUangDP         = $('#uang_dp');
+    const inpTglDP         = $('#tgl_dp');
+    const inpTypeDP         = $('#select_type');
     const inpPoWarna1       = $('#po_warna1');
     const inpPoWarna2       = $('#po_warna2');
     const inpPoWarna3       = $('#po_warna3');
@@ -481,6 +483,8 @@ $(document).ready(function () {
         inpSample.val("").trigger("change")
         setTimeout(() => {
             inpUangDP.val("0").trigger("change");
+            inpTglDP.val("");
+            inpTypeDP.val("").trigger("change");
         }, 1000);
         rowDet.hide()
         btnSend.hide()
@@ -586,6 +590,8 @@ $(document).ready(function () {
                             inpSample.attr('value', data.id_sample);
                             inpSample.val(data.id_sample).trigger("change");
                             inpUangDP.val(data.uang_dp).trigger("change");
+                            inpTglDP.val(formatterDate(data.tgl_dp));
+                            inpTypeDP.val(data.type_dp).trigger("change");
                         }, 1000);
                     }, 2000);
                 }, 1000);
@@ -794,6 +800,8 @@ $(document).ready(function () {
             formData.append("keterangan",inpKetSalesOrder.val());
             formData.append("samples", inpSample.val())
             formData.append("uang_dp", inpUangDP.val());
+            formData.append("tgl_dp", formatLocaleDate(inpTglDP.val()));
+            formData.append("type_dp", inpTypeDP.val());
             formData.append("style", inpStyle.val());
             formData.append("repeat", inprepeat.val());
             formData.append("submit_data", send);

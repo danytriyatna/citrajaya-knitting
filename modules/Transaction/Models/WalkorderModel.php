@@ -370,7 +370,16 @@ class WalkorderModel extends \App\Models\PrModel
                             twpu.id, twpu.id_walkorder_proses, twpu.id_ukuran, twpu.qty, twpu.qty_prod, twpu.ref_detail_id,
                             rk.kode_ukuran, rk.keterangan, rk.key_ukuran,
                             twp.id_walkorder, tw.tipe_id, tw.id_konsumen, tw.keterangan_style,
-                            rw.kode_warna, rw.id as id_warna,
+                            TRIM ( BOTH ' - ' FROM
+                        COALESCE(rw1.kode_warna, '') ||
+                        CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                        CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                        CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                        CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                        CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                        CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                        CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+                    ) AS kode_warna, rw1.id as id_warna_1, rw2.id as id_warna_2, rw3.id as id_warna_3, rw4.id as id_warna_4, rw5.id as id_warna_5, rw6.id as id_warna_6, rw7.id as id_warna_7, rw8.id as id_warna_8,
                             (
                                 case when tw.tipe_id = 1 then 
                                                     (select x.harga_satuan from trans_sample_ukuran x where x.id_sample_det = twpu.ref_detail_id and x.id_ukuran = twpu.id_ukuran)
@@ -387,7 +396,14 @@ class WalkorderModel extends \App\Models\PrModel
         $builder->join("trans_walkorder tw", "twp.id_walkorder = tw.id", "inner");
         $builder->join("trans_sample_det tsd", "twpu.ref_detail_id = tsd.id and tw.tipe_id = 1", "left");
         $builder->join("trans_sales_order_det tsod", "twpu.ref_detail_id = tsod.id and tw.tipe_id = 2", "left");
-        $builder->join("ref_warna rw", "rw.id = (case when tw.tipe_id = 1 then tsd.id_warna_1 when tw.tipe_id = 2 then tsod.id_warna_1 else -1 end)", "left");
+        $builder->join("ref_warna rw1", "rw1.id = (case when tw.tipe_id = 1 then tsd.id_warna_1 when tw.tipe_id = 2 then tsod.id_warna_1 else -1 end)", "left");
+        $builder->join("ref_warna rw2", "rw2.id = (case when tw.tipe_id = 1 then tsd.id_warna_2 when tw.tipe_id = 2 then tsod.id_warna_2 else -1 end)", "left");
+        $builder->join("ref_warna rw3", "rw3.id = (case when tw.tipe_id = 1 then tsd.id_warna_3 when tw.tipe_id = 2 then tsod.id_warna_3 else -1 end)", "left");
+        $builder->join("ref_warna rw4", "rw4.id = (case when tw.tipe_id = 1 then tsd.id_warna_4 when tw.tipe_id = 2 then tsod.id_warna_4 else -1 end)", "left");
+        $builder->join("ref_warna rw5", "rw5.id = (case when tw.tipe_id = 1 then tsd.id_warna_5 when tw.tipe_id = 2 then tsod.id_warna_5 else -1 end)", "left");
+        $builder->join("ref_warna rw6", "rw6.id = (case when tw.tipe_id = 1 then tsd.id_warna_6 when tw.tipe_id = 2 then tsod.id_warna_6 else -1 end)", "left");
+        $builder->join("ref_warna rw7", "rw7.id = (case when tw.tipe_id = 1 then tsd.id_warna_7 when tw.tipe_id = 2 then tsod.id_warna_7 else -1 end)", "left");
+        $builder->join("ref_warna rw8", "rw8.id = (case when tw.tipe_id = 1 then tsd.id_warna_8 when tw.tipe_id = 2 then tsod.id_warna_8 else -1 end)", "left");
 
         if(!empty($params['id_walkorder'])){
             $builder->where('tw.id', $params['id_walkorder']);
@@ -407,7 +423,14 @@ class WalkorderModel extends \App\Models\PrModel
 
         if(!empty($params['kode_warna'])){
             // $builder->where('rw.kode_warna', $params['kode_warna']);
-            $builder->where('LOWER(rw.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->where('LOWER(rw1.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw2.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw3.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw4.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw5.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw6.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw7.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
+            $builder->orWhere('LOWER(rw8.kode_warna) LIKE', strtolower("%{$params['kode_warna']}%"));
         }
 
         if(!empty($params['last_proses']) && !empty($params['id_walkorder'])){
@@ -416,7 +439,14 @@ class WalkorderModel extends \App\Models\PrModel
 
         if(!empty($params['kata_kunci'])){
             $builder->groupStart();
-            $builder->where('LOWER(rw.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->where('LOWER(rw1.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw2.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw3.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw4.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw5.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw6.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw7.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
+            $builder->orWhere('LOWER(rw8.kode_warna) LIKE', strtolower("%{$params['kata_kunci']}%"));
             $builder->orWhere('LOWER(rk.kode_ukuran) LIKE', strtolower("%{$params['kata_kunci']}%"));
             $builder->groupEnd();
         }

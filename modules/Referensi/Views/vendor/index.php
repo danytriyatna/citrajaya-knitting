@@ -48,6 +48,16 @@
           </div>
         </div>
 
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pic">PIC<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <input type="text" id="pic" name="pic" class="form-control" placeholder="Ketik PIC" required>
+            <div class="invalid-feedback">
+              PIC Vendor tidak valid
+            </div>
+          </div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <button id="btn-save" type="button" class="m-s-5 btn btn-success"> <i class="fa fa-save"></i> Simpan</button>
@@ -110,7 +120,7 @@
               <div class="form-group">
                 <div class="input-group mb-3">
                   <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                  <input type="text" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                  <input id="tb-search" type="text" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
                 </div>
               </div>
             </div>

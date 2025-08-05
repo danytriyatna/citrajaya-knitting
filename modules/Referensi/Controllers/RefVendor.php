@@ -86,6 +86,7 @@ class RefVendor extends BaseController
                     "alamat" => $row->alamat,
                     "email" => $row->email,
                     "no_hp" => $row->no_hp,
+                    "pic" => $row->pic,
                 )
             );
         }
@@ -400,6 +401,7 @@ class RefVendor extends BaseController
         $alamat       = $this->request->getPost('alamat');
         $email        = $this->request->getPost('email');
         $no_hp        = $this->request->getPost('no_hp');
+        $pic        = $this->request->getPost('pic');
 
 
         $msg    = "Data gagal ditambahkan !";
@@ -410,6 +412,7 @@ class RefVendor extends BaseController
             'alamat' => $alamat,
             'email'  => $email,
             'no_hp'  => $no_hp,
+            'pic'  => $pic,
         ];
 
 

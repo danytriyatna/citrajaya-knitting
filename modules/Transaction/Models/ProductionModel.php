@@ -38,7 +38,7 @@ class ProductionModel extends \App\Models\PrModel
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_walkorder twx", "abx.id_walkorder = twx.id", "inner");
         // $builder->join("trans_sample ts", "ts.id = abx.ref_id and abx.tipe_id = 1", "left");
-        // $builder->join("trans_sales_order tso", "tso.id = abx.ref_id and abx.tipe_id = 2", "left");
+        $builder->join("trans_sales_order tso", "tso.id = twx.ref_id and twx.tipe_id = 2", "left");
         $builder->join("_files cbx", "abx.file_id = cbx.id", "left");
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
@@ -46,6 +46,7 @@ class ProductionModel extends \App\Models\PrModel
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 
@@ -545,7 +546,7 @@ class ProductionModel extends \App\Models\PrModel
 
          $ord = "";
          $ordx = "";
-         $ukuranArr = explode(",", $params['ukuran']);
+            $ukuranArr = array_unique(array_map('trim', explode(",", $params['ukuran'])));
          foreach ($ukuranArr as $item) {
              $item = trim($item); 
              $preg = preg_match('/^[a-zA-Z_]+$/', $item) ? $item : "\"$item\"";
@@ -572,7 +573,16 @@ class ProductionModel extends \App\Models\PrModel
                     tbl.id_walkorder,
                     tbl.id_proses,
                     tw.tipe_id,
-                    rw.kode_warna,
+                    TRIM ( BOTH ' - ' FROM
+                        COALESCE(rw1.kode_warna, '') ||
+                        CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                        CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                        CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                        CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                        CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                        CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                        CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+                    ) AS kode_warna,
                     {$col11},
                     {$col12}
                 FROM 
@@ -664,9 +674,44 @@ class ProductionModel extends \App\Models\PrModel
                 INNER JOIN trans_walkorder tw ON tbl.id_walkorder = tw.id
                 LEFT JOIN trans_sample_det tsd ON tbl.ref_detail_id = tsd.id AND tw.tipe_id = 1
                 LEFT JOIN trans_sales_order_det tsod ON tbl.ref_detail_id = tsod.id AND tw.tipe_id = 2
-                LEFT JOIN ref_warna rw ON rw.id = CASE 
+                LEFT JOIN ref_warna rw1 ON rw1.id = CASE 
                     WHEN tw.tipe_id = 1 THEN tsd.id_warna_1
-                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_1 
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_1
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw2 ON rw2.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_2
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_2
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw3 ON rw3.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_3
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_3
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw4 ON rw4.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_4
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_4
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw5 ON rw5.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_5
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_5
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw6 ON rw6.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_6
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_6
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw7 ON rw7.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_7
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_7
+                    ELSE -1 
+                END
+                LEFT JOIN ref_warna rw8 ON rw8.id = CASE 
+                    WHEN tw.tipe_id = 1 THEN tsd.id_warna_8
+                    WHEN tw.tipe_id = 2 THEN tsod.id_warna_8
                     ELSE -1 
                 END;
 

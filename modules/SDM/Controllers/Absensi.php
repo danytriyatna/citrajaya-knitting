@@ -231,6 +231,21 @@ class Absensi extends BaseController
           $id_shift = $dt_shift->id;
           $jadwal_masuk = $dt_shift->jam_masuk;
           $jadwal_pulang = $dt_shift->jam_pulang;
+          $result1 = $this->getCircularTimeDiff($jadwal_masuk, $jadwal_pulang);
+          $result2 = $this->getCircularTimeDiff($x['jam_masuk'], $x['jam_keluar']);
+
+          // if ($result2['minutes'] > $result1['minutes']) {
+          //   $durasi_kerja = $result1['minutes'];
+          // }
+          // else {
+          //   $durasi_kerja = $result2['minutes'];
+          // }
+
+          // if($durasi_kerja >= 5){
+          //   // $durasi_kerja = $durasi_kerja - 60;
+          // } else if($durasi_kerja < 0){
+          //   $durasi_kerja = 0;
+          // }
           
           if(!empty($x['jam_masuk'])){
             // $jam_awal  = new DateTime($dt_shift->jam_masuk);
@@ -269,7 +284,7 @@ class Absensi extends BaseController
             $durasi_kerja = floor($selisih_detik / 60); // 1 menit = 60 detik
 
             if($durasi_kerja >= 5){
-              $durasi_kerja = $durasi_kerja - 60;
+              // $durasi_kerja = $durasi_kerja - 60;
             } else if($durasi_kerja < 0){
               $durasi_kerja = 0;
             }
@@ -323,7 +338,7 @@ class Absensi extends BaseController
         }
         $isi['jml_lembur'] = $x['jml_lembur'];
         $isi['keterangan_lembur'] = $x['keterangan_lembur'];
-        $isi['durasi_kerja'] = $durasi_kerja;
+        // $isi['durasi_kerja'] = $durasi_kerja;
         $isi['bonus'] = $x['bonus'];
         $isi['bonus_keterangan'] = $x['bonus_keterangan'];
         $isi['potongan'] = $x['potongan'];
@@ -345,6 +360,29 @@ class Absensi extends BaseController
     $build_array["data"] = $data;
     return $this->response->setJSON($build_array);
   }
+
+  function getCircularTimeDiff($time1, $time2) {
+    $t1 = strtotime($time1);
+    $t2 = strtotime($time2);
+
+    // Hitung selisih absolut
+    $diff = abs($t2 - $t1);
+
+    // Bungkus dalam 24 jam
+    if ($diff > 12 * 3600) { // jika lebih dari 12 jam
+        $diff = (24 * 3600) - $diff;
+    }
+
+    $hours = floor($diff / 3600);
+    $minutes = floor(($diff % 3600) / 60);
+    $seconds = $diff % 60;
+
+    return [
+        'seconds' => $diff,
+        'minutes' => floor($diff / 60),
+        'formatted' => sprintf("%02d jam %02d menit %02d detik", $hours, $minutes, $seconds),
+    ];
+}
 
   // import langsung tanpa validasi
   function import_excel() 

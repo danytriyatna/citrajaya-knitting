@@ -6,6 +6,7 @@ $(document).ready(function () {
     let inpAlamat       = $('#alamat');
     let inpNoHP         = $('#no_hp');
     let inpEmail        = $('#email');
+    let inpPIC        = $('#pic');
 
     let isModal       = $("#modal-form-add-po");
 
@@ -57,6 +58,10 @@ $(document).ready(function () {
             {
                 title: "No. HP", field: "no_hp", headerSort: false,
                 width: "20%", cssClass : 'text-center'
+            },
+            {
+                title: "PIC", field: "pic", headerSort: false,
+                width: "15%", cssClass : 'text-center'
             },
         ],
         locale: 'id',    
@@ -142,6 +147,7 @@ $(document).ready(function () {
         let validation = true
         if(inpNamaKonsumen.val().length == 0) validation = false
         if(inpNoHP.val().length == 0) validation = false
+        if(inpPIC.val().length == 0) validation = false
         if(inpEmail.val().length == 0) validation = false
         if(inpAlamat.val().length == 0) validation = false
     
@@ -155,6 +161,7 @@ $(document).ready(function () {
                     alamat : inpAlamat.val(),
                     email  : inpEmail.val(),
                     no_hp  : inpNoHP.val(),
+                    pic  : inpPIC.val(),
                 },
                 dataType: "json",
                 beforeSend: function () {

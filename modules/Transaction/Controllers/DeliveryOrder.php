@@ -172,7 +172,6 @@ class DeliveryOrder extends BaseController
     $status = 1;
     if (!empty($id)) {
       $stdData = $this->mDelivery->getData($id);
-
       $stdData->do_no = $stdData->delivery_kode;
       $stdData->id_produksi = $stdData->id_produksi;
       $stdData->id_walkorder = $stdData->id_walkorder;
@@ -183,7 +182,7 @@ class DeliveryOrder extends BaseController
       $stdData->select_buyer =  $stdData->id_konsumen;
       $stdData->alamat_buyer  =  $stdData->alamat;
       $status = $stdData->status;
-
+      
       $dtWalkorder = $this->mWalkorder->getData($stdData->id_walkorder);
       // / $data_ukuran = $this->mUkuran->getData(0, 0, 999);
       if ($dtWalkorder->tipe_id == 1) {
@@ -196,14 +195,14 @@ class DeliveryOrder extends BaseController
         $data_ukuran = $this->mSalesOrder->getUkuranTrans($pru);
       }
       $this->data['dt_ukuran'] = json_encode($data_ukuran, true);
-
+      
       // $this->data['row']    = $stdData;
       // $this->data['detail'] = json_encode($list_detail);
 
       $status = $stdData->status;
-
+      
       $arr_qty = [];
-
+      
       $prx['id_delivery'] = $stdData->id;
       $rs_prod = $this->mDelivery->getDataProduksi($prx);
       if (!empty($rs_prod)) {
@@ -215,11 +214,11 @@ class DeliveryOrder extends BaseController
           $xisi['kode_ukuran'] = $xitem->kode_ukuran;
           $xisi['qty'] = $xitem->qty;
           $dt_prods[] = $xisi;
-
+          
           $arr_qty[$xitem->ref_detail_id] = $xitem->qty;
         }
       }
-
+      
       $dt_details = [];
       $prm['id_walkorder'] = $stdData->id_walkorder;
       $rukuran = $this->mUkuran->getData(0, 0, 999);
@@ -232,7 +231,7 @@ class DeliveryOrder extends BaseController
       $prm['ukuran'] = $ukuran;
       $dataProd = [];
       $rsProd = $this->mProduksi->getProduksilastV1($prm);
-
+      
       if (!empty($rsProd)) {
         foreach ($rsProd as $item) {
           $isi = array(
@@ -753,7 +752,14 @@ class DeliveryOrder extends BaseController
         $isi["id_walkorder"]  = $r->id_walkorder;
         $isi["ref_detail_id"] = $r->ref_detail_id;
         $isi["id_ukuran"]     = $r->id_ukuran;
-        $isi["id_warna"]      = $r->id_warna;
+        $isi["id_warna_1"]      = $r->id_warna_1;
+        $isi["id_warna_2"]      = $r->id_warna_2;
+        $isi["id_warna_3"]      = $r->id_warna_3;
+        $isi["id_warna_4"]      = $r->id_warna_4;
+        $isi["id_warna_5"]      = $r->id_warna_5;
+        $isi["id_warna_6"]      = $r->id_warna_6;
+        $isi["id_warna_7"]      = $r->id_warna_7;
+        $isi["id_warna_8"]      = $r->id_warna_8;
         $isi["qty"]           = $r->qty_prod;
         $isi["qty_prod"]      = 0;
         $isi["kata_kunci"]    =  "(" . $r->kode_warna . ") " . $r->kode_ukuran;

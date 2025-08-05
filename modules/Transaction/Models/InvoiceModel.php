@@ -126,6 +126,56 @@ class InvoiceModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataDetailNew($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table($this->table2 . " abx");
+
+        $builder->select(" abx.id, abx.id_invoice,  abx.id_ref, abx.kode_ref, abx.tipe_id,
+                            abx.qty, abx.qty_do,  abx.total, abx.down_payment, abx.grand_total,
+                            (case when abx.tipe_id = 1 then ts.kode_sample else tso.kode_sales_order end) as ref_kode,
+                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_tran saksi end) as ref_tgl, tso.tgl_deadline,
+                            tso.uang_dp, tso.tgl_dp, tso.type_dp, rek.rekening_no, rek.rekening_bank, kon.nama as buyer, kon.alamat as alamat_buyer,
+                            kon.no_hp as no_hp_buyer, tso.deskripsi");
+
+        $builder->join("trans_sample ts", "ts.id = abx.id_ref and abx.tipe_id = 1", "left");
+        $builder->join("trans_sales_order tso", "tso.id = abx.id_ref and abx.tipe_id = 2", "left");
+        $builder->join("ref_rekening rek", "rek.id = tso.type_dp", "left");
+        $builder->join("ref_konsumen kon", "kon.id = tso.id_konsumen", "left");
+
+        if ($id == null or $id == "") {
+            $builder->where('abx.active = 1');
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $builder->groupStart();
+                    $builder->where('LOWER(ts.kode_sample) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->groupEnd();
+            }
+
+            if (!empty($params['id_invoice'])) {
+                $builder->where('abx.id_invoice', $params['id_invoice']);
+            }
+
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy('abx.id desc');
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("abx.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+
+        return $this->_data;
+    }
+
     function getDataDetailCnt($filters = null, $params = null)
     {
         $builder = $this->db->table($this->table2 . " abx");
@@ -230,16 +280,19 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.qty, 0)) as qty,
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
+                    tso.tgl_dp, 
+                    COALESCE(rek.rekening_no, '') || ' - ' || COALESCE(rek.rekening_bank, '') AS rekening,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id ),0) as qty_dlv,
                     tw.id as id_walkorder
                 FROM
                     trans_sales_order_ukuran tsou
                     inner join trans_sales_order tso on tso.id = tsou.id_sales_order
                     inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                    inner join ref_rekening rek on rek.id = tso.type_dp
                     group by 
                         tso.id, tso.kode_sales_order,
                         tso.id_konsumen, tso.style,  tso.tgl_transaksi,
-                        tso.uang_dp, tw.id 
+                        tso.uang_dp, tw.id, tso.tgl_dp, rekening 
                 union all 
                 select 
                     1 as tipe_id,
@@ -251,6 +304,8 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsu.qty, 0)) as qty,
                     sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
+                    null as tgl_dp,
+                    null as rekening,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id ),0) as qty_dlv,
                     tw.id as id_walkorder
                 from 
@@ -277,13 +332,191 @@ class InvoiceModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function get_SO ($id = null) {
+        $builder = $this->db->table("trans_sales_order abx");
+
+        $builder->select("abx.id, abx.kode_sales_order");
+
+        $builder->whereIn("abx.id", $id);
+
+        $this->_data = $builder->get()->getRow();
+
+        return $this->_data;
+    }
+
+    function get_walkorder_konsumen_ori_print($params){
+
+        // $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        // $pru['id_sales_order'] = $id;
+        // $dtUkuran = $this->getUkuranTrans($pru);
+
+        // // looping data ukuran
+        // // Dynamic Columns
+        // $col11 = "";
+        // $col12 = "";
+        // $col21 = "";
+        // $col22 = "";
+        // $col3 = "";
+
+        // foreach ($dtUkuran as $item) {
+        //     $key = $item->key_ukuran;
+        //     if ($key == 'all') $key = 'all_';
+        //     $hrg = $key . '_hrg';
+
+        //     $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
+
+        //     $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql,  0) as $keySql" : ",coalesce(tbl.$keySql, 0) as $keySql";
+        //     //  $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg" : ",coalesce(tbl.$hrg,0) as $hrg";
+            
+        //     $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+
+        //     $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
+        //     //  $col22 .= ($col22 == "") ? "$hrg Float" : ",$hrg Float";
+        // }
+
+        $sqlUkuran = "SELECT DISTINCT kode_ukuran, key_ukuran FROM ref_ukuran ORDER BY kode_ukuran";
+        $queryUkuran = $this->db->query($sqlUkuran);
+
+        $resultUkuran = $queryUkuran->getResult();
+
+        $colUkuran = '';
+        $colUkuranNull = '';
+        foreach ($resultUkuran as $key => $value) {
+            $nama = $value->key_ukuran;
+            $namaAlias = preg_replace('/\s+/', '', $nama);
+            $namaAlias = preg_replace('/[^a-zA-Z0-9]/', '_', $namaAlias); // jadi: L_XL
+            $colUkuran .= "SUM(tsou.qty) FILTER (WHERE ru.key_ukuran = '{$namaAlias}') AS ukuran_{$namaAlias},\n";
+            $colUkuranNull .= "NULL AS ukuran_{$namaAlias},\n";
+        }
+        
+        $whereExist = "and NOT EXISTS (
+                            SELECT 1
+                            FROM trans_invoice_detail tdx
+                            WHERE tdx.id_ref = xtb.id AND tdx.tipe_id = xtb.tipe_id
+                        )";   
+                        
+        if(!empty($params['id_invoice'])){
+            $whereExist = "and EXISTS (
+                            SELECT 1
+                            FROM trans_invoice_detail tdx
+                            WHERE tdx.id_invoice = {$params['id_invoice']} AND tdx.id_ref = xtb.id AND tdx.tipe_id = xtb.tipe_id
+                        )";
+        }
+
+
+        $whereExist_deliv = "";
+
+        if(!empty($params['id_walkorder'])){
+            $whereExist_deliv = "and EXISTS (
+                            SELECT 1
+                            FROM trans_delivery tdd
+                            WHERE tdd.id_walkorder = xtb.id_walkorder and tdd.active = 1
+                        )";
+        }
+
+        $sql = "
+            select 
+                xtb.*,
+                rk.nama as konsumen_nama
+            from (
+                SELECT
+                    2 as tipe_id,
+                    tso.id,
+                    tso.kode_sales_order as kode,
+                    tso.id_konsumen,
+                    tso.style as keterangan_style,
+                    tso.tgl_transaksi,
+                    sum(coalesce(tsou.qty, 0)) as qty,
+                    sum(coalesce(tsou.harga_total, 0)) as total_harga,
+                    coalesce(tso.uang_dp, 0) as uang_dp, 
+                    tso.tgl_dp, 
+                    tso.deskripsi, 
+                    COALESCE(rek.rekening_no, '') || ' - ' || COALESCE(rek.rekening_bank, '') AS rekening,
+                    tsou.harga_satuan,
+                    TRIM ( BOTH ' - ' FROM COALESCE ( rw1.kode_warna, '' ) || 
+                                CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                                CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                                CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                                CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                                CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                                CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                                CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END 
+                        ) AS colour,
+                    {$colUkuran}
+                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id ),0) as qty_dlv,
+                    tw.id as id_walkorder
+                FROM
+                    trans_sales_order_ukuran tsou
+                    inner join trans_sales_order tso on tso.id = tsou.id_sales_order
+                    left join trans_sales_order_det tsot on tsot.id = tsou.id_sales_order_det
+                    inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                    left join ref_rekening rek on rek.id = tso.type_dp
+                    left join ref_warna rw1 on rw1.id = tsot.id_warna_1
+                    left join ref_warna rw2 on rw2.id = tsot.id_warna_2
+                    left join ref_warna rw3 on rw3.id = tsot.id_warna_3
+                    left join ref_warna rw4 on rw4.id = tsot.id_warna_4
+                    left join ref_warna rw5 on rw5.id = tsot.id_warna_5
+                    left join ref_warna rw6 on rw6.id = tsot.id_warna_6
+                    left join ref_warna rw7 on rw7.id = tsot.id_warna_7
+                    left join ref_warna rw8 on rw8.id = tsot.id_warna_8
+                    left join ref_ukuran ru on ru.id = tsou.id_ukuran
+                    group by 
+                        tso.id, tso.kode_sales_order,
+                        tso.id_konsumen, tso.style,  tso.tgl_transaksi,
+                        tso.uang_dp, tw.id, tso.tgl_dp, rekening, tsou.harga_satuan,
+                        rw1.kode_warna, rw2.kode_warna, rw3.kode_warna,
+                        rw4.kode_warna, rw5.kode_warna, rw6.kode_warna,
+                        rw7.kode_warna, rw8.kode_warna
+                union all 
+                select 
+                    1 as tipe_id,
+                    ts.id,
+                    ts.kode_sample as kode,
+                    ts.id_konsumen, 
+                    ts.style as keterangan_style,
+                    ts.tgl_transaksi,
+                    sum(coalesce(tsu.qty, 0)) as qty,
+                    sum(coalesce(tsu.harga_total, 0)) as total_harga,
+                    coalesce(ts.uang_dp, 0) as uang_dp,
+                    null as tgl_dp,
+                    null as deskripsi,
+                    null as rekening,
+                    null as harga_satuan,
+                    null as colour,
+                    {$colUkuranNull}
+                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id ),0) as qty_dlv,
+                    tw.id as id_walkorder
+                from 
+                    trans_sample_ukuran tsu
+                inner join trans_sample ts on ts.id = tsu.id_sample
+                inner join trans_walkorder tw on tw.ref_id = ts.id and tw.tipe_id = 1
+                group by 
+                   ts.id,
+                    ts.kode_sample,
+                    ts.id_konsumen, 
+                    ts.style,
+                    ts.tgl_transaksi,
+                    ts.uang_dp, tw.id
+            ) xtb 
+            inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
+            where xtb.id_konsumen = {$params['id_konsumen']} 
+            {$whereExist} {$whereExist_deliv}
+            order by xtb.tgl_transaksi desc
+        ";
+        $query = $this->db->query($sql);
+
+        $this->_data = $query->getResult();
+
+        return $this->_data;
+    }
+
     function getDetail_delivery($params){
         $id_walkorder = $params['id_walkorder'];
          // Dynamic Columns
          $col1 = "";
          $col2 = "";
          $col3 = "";
-         $ukuranArr = explode(",", $params['ukuran']);
+         $ukuranArr = array_unique(array_map('trim', explode(",", $params['ukuran'])));
          foreach ($ukuranArr as $item) {
              $preg = preg_match('/^[a-zA-Z_]+$/', $item) ? $item : "\"$item\"";
              $col1 .= ($col1 == "") ? "coalesce(tbl.$preg,0) as $preg" : ",coalesce(tbl.$preg,0) as $preg";
@@ -332,6 +565,30 @@ class InvoiceModel extends \App\Models\PrModel
 
         $this->_data = $query->getResult();
 
+        return $this->_data;
+    }
+
+    function getUkuranTrans($params)
+    {
+        $builder = $this->db->table('trans_sales_order_ukuran tu');
+        $builder->select("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, tu.id_sales_order");
+
+        $builder->join('trans_sales_order_det td', 'td.id = tu.id_sales_order_det', 'inner');
+        $builder->join('ref_ukuran rk', 'tu.id_ukuran = rk.id', 'inner');
+
+        if (!empty($params['use'])) {
+            $builder->where('(tu.qty is not null and tu.qty > 0)');
+        }
+
+        if (!empty($params['id_sales_order'])) {
+            $builder->whereIn('tu.id_sales_order', $params['id_sales_order']);
+        }
+
+        $builder->groupBy("tu.id_ukuran, rk.key_ukuran, rk.kode_ukuran, rk.seq, tu.id_sales_order");
+
+        $builder->orderBy("rk.seq");
+
+        $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
 }

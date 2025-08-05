@@ -611,6 +611,7 @@ class WorkOrder extends BaseController
       // die;
       $resData = $this->mWalkorder->getData($id);
       $salesOrder = $this->mSalesOrder->getData($resData->ref_id);
+      $ukuran = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
       if (!empty($salesOrder)) {
         $salesOrderDet = $this->mSalesOrder->getDataDetailSalesOrder_crostab($resData->ref_id);
         $walkOrderDet = $this->mWalkorder->getData_warna_print($id);
@@ -621,7 +622,7 @@ class WorkOrder extends BaseController
         $salesOrderDet = $this->mSample->getDataDetailSample_crostab($resData->ref_id);
         $walkOrderDet = $this->mWalkorder->getData_warna_print($id);
       }
-
+      // dd($salesOrderDet);
       // dd($salesOrderDet);
       // $pru['use'] = 1; // ambil ukuran yang digunnakan order 
       // $pru['id_sales_order'] = $id;
@@ -634,6 +635,7 @@ class WorkOrder extends BaseController
       // $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga"];
       // $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
 
+      $this->data['ukuran'] = !empty($ukuran) ? $ukuran : [];
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['sales_order'] = !empty($salesOrder) ? $salesOrder : [];
       $this->data['sales_order_det'] = !empty($salesOrderDet) ? $salesOrderDet : [];

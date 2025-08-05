@@ -156,7 +156,7 @@
     <?php
         $data = $sales_order_det; // array of stdClass dari database
         $no = 1;
-        $sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', 'jumbo', '4xl', 'sm', 'ml', 'lxl', "all_"];
+        $sizes = $ukuran;
         $grandTotalQty = 0;
 
         foreach ($data as $item) {
@@ -178,6 +178,15 @@
                     }
                     else if ($size == "lxl") {
                         $size = "l / xl";
+                    }
+                    else if ($size == "xxxxl") {
+                        $size = "4xl";
+                    }
+                    else if ($size == "xxxxxl") {
+                        $size = "5xl";
+                    }
+                    else if ($size == "xxxxxxl") {
+                        $size = "6xl";
                     }
                     $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
                     $totalQty += $qty;

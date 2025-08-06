@@ -23,7 +23,7 @@ class PurchaseDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
-        $builder->select("uk.id, uk.kode,uk.id_header,uk.qty,uk.qty_receive, uk.id_barang,uk.disc_price,uk.tax_price,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang,uk.tax,uk.disc,uk.price,uk.grand_price, (uk.grand_price/uk.qty) as price_2");
+        $builder->select("uk.id, uk.kode,uk.id_header,uk.qty,uk.qty_receive, uk.id_barang,uk.disc_price,uk.tax_price,fbx.nama_satuan as nama_unit, ,fbx.nama_satuan, ebx.id_satuan, ebx.kode_barang, ebx.nama_barang,uk.tax,uk.disc,uk.price,uk.grand_price, (uk.grand_price/uk.qty) as price_2");
 
         if (!empty($params['id_header'])) {
 

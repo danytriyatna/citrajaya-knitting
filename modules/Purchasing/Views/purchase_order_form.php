@@ -25,6 +25,7 @@
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_unit">Unit</label>
           <div class="col-md-9">
             <input type="text" id="unit" name="unit" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+            <input hidden type="text" id="id_unit" name="id_unit" class="form-control" placeholder="Terisi otomatis oleh sistem" value="">
           </div>
         </div>
         <div class="form-group row">
@@ -192,6 +193,16 @@
                         <?php }
                         endforeach ?>
                       </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-3 col-form-label" for="keterangan"><span class="text-nowrap">Keterangan</label>
+                    <div class="col-md-9">
+                      <textarea rows="3" id="keterangan" name="keterangan" class="form-control" placeholder="Ketikkan Keterangan"><?= !empty($resData->keterangan) ? $resData->keterangan : "" ?></textarea>
                     </div>
                   </div>
                 </div>

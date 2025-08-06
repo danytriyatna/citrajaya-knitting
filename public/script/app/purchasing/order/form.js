@@ -7,6 +7,7 @@ let inpKodeBarang = $('#kodeBarang');
 let inpTglExpec = $('#tgl_expected');
 let inpTglPO = $('#tgl_po');
 let inpShipTo = $('#ship_to');
+let inpKeterangan = $('#keterangan');
 let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
 let inpQty = $('#qty_item');
@@ -17,6 +18,7 @@ let inpUnitPrice = $('#unit_price');
 let spanBarang = $('#spanBarang');
 let selectTerm = $('#select_term');
 let inpUnit = $('#unit');
+let inpUnitID = $('#id_unit');
 let inpStatus = $('#status');
 let inpApproveStatus = $('#approve_status');
 let inpTax = $('#tax');
@@ -74,6 +76,10 @@ let dtList = new Tabulator("#dt-list", {
         {
             title: "Satuan", field: "nama_satuan", headerSort: false,
             width: "10%"
+        },
+        {
+            title: "ID Satuan", field: "id_satuan", headerSort: false,
+            width: "10%",visible:false
         },
         {
             title: "Harga Satuan",visible:false, field: "harga_satuan", headerSort: false,
@@ -240,6 +246,7 @@ dtList.on("rowClick", function(e, row){
     var idBarang = row._row.data.id;
     var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
+    var idSatuan = row._row.data.id_satuan.replace(/<[^>]*>/g, '');
     if(dtListDetailPO.getData().some(x => x.id_barang == idBarang)){
         return Swal.fire({
             text: "Barang sudah dipilih",
@@ -250,6 +257,7 @@ dtList.on("rowClick", function(e, row){
     }
 
     inpUnit.val(namaSatuan)
+    inpUnitID.val(idSatuan)
     inpIdBarang.val(idBarang)
     inpKodeBarang.val(kodeBarang)
     inpBarang.val(`${namaBarang}`)
@@ -488,6 +496,8 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQty.val(),
+                nama_satuan                      : inpUnit.val(),
+                id_satuan                      : inpUnitID.val(),
                 price                       : price,
                 grand_price                 : grandPrice,
                 disc_price:discPrice,
@@ -505,6 +515,8 @@ function openModalDetail(row = null){
                 kode_barang                 : inpKodeBarang.val(),
                 id_barang                   : inpIdBarang.val(),
                 qty                         : inpQty.val(),
+                nama_satuan                      : inpUnit.val(),
+                id_satuan                      : inpUnitID.val(),
                 price                       : price,
                 grand_price                 : grandPrice,
                 disc_price                  : discPrice,
@@ -634,6 +646,7 @@ function simpanData(stringButton) {
             date_exc:formatLocaleDate(inpTglExpec.val()),
             id_term:selectTerm.val(),
             ship_to:inpShipTo.val(),
+            keterangan:inpKeterangan.val(),
             qty:totalQty,
             total:totalGrandPrice,
             data:dtListDetailPO.getData(),
@@ -747,6 +760,8 @@ let dtListDetailPO = new Tabulator("#dt-list-po", {
         {title:"Nama Barang", field:"nama_barang", hozAlign:"left",width:"20%"},
         {title:"KODE", field:"kode", hozAlign:"left",width:"20%"},
         {title:"QTY", field:"qty", hozAlign:"center",width:"10%"},
+        {title:"Satuan", field:"nama_satuan", hozAlign:"center",width:"10%"},
+        {title:"ID Satuan", field:"id_satuan", hozAlign:"center",width:"10%", visible:false},
         {title:"Harga Per Unit", field:"price", hozAlign:"right",width:"15%",formatter: "money",formatterParams: {
                 decimal: ",",
                 thousand: ".",

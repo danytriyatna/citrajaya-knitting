@@ -184,6 +184,7 @@ class PurchaseOrder extends BaseController
     $date_exc = $this->request->getPost('date_exc');
     $id_term = $this->request->getPost('id_term');
     $ship_to = $this->request->getPost('ship_to');
+    $keterangan = $this->request->getPost('keterangan');
     $total = $this->request->getPost('total');
     $qty = $this->request->getPost('qty');
     $dataDetail = $this->request->getPost('data');
@@ -204,6 +205,7 @@ class PurchaseOrder extends BaseController
       "date_exc" => $date_exc,
       "id_term" => $id_term,
       "ship_to" => $ship_to,
+      "keterangan" => $keterangan,
       "qty_payment" => 0,
       "total_payment" => 0,
       "total" => $total,

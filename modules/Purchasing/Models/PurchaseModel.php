@@ -27,7 +27,7 @@ class PurchaseModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
-        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, uk.qty, uk.qty_payment, uk.total, uk.total_payment, uk.approve_status");
+        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, uk.qty, uk.qty_payment, uk.total, uk.total_payment, uk.approve_status, uk.keterangan");
 
         if (!empty($params['isReceive']) && $params['isReceive']) {
             $builder->groupStart();
@@ -199,6 +199,7 @@ class PurchaseModel extends \App\Models\PrModel
                     "kode" => !empty($rowData['kode']) ? $rowData['kode'] : null,
                     "id_header" => $id,
                     "qty_receive" => 0,
+                    "id_satuan" => !empty($rowData['id_satuan']) ? $rowData['id_satuan'] : null,
                     "qty" => $rowData['qty'],
 
                 ];

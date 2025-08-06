@@ -829,7 +829,7 @@ class SalesOrder extends BaseController
 
   function getQrcode()
   {
-
+    
     $ukuran = $this->request->getGet("ukuran");
     $qty = $this->request->getGet("qty");
     $qtyp = $this->request->getGet("qtyp");
@@ -844,11 +844,13 @@ class SalesOrder extends BaseController
     /* Data */
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
-    $save_name  = $warna . '-' . $noSample .'-'. time() . '.png';
+    $warnaNew = str_replace('/', '_', $warna);
+    $save_name  = $warnaNew . '-' . $noSample .'-'. time() . '.png';
 
     // $pr_warna['key_ukuran'] = $ukuran;
     $pr_warna['id_sales_order_det'] = $trans;
     $data_warna = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($pr_warna);
+    
     // dd($trans);
     // dd($data_warna);
     /* QR Code File Directory Initialize */
@@ -884,7 +886,6 @@ class SalesOrder extends BaseController
     }else{
       $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
     }
-
     /* QR Data  */
     $params['level']    = 'L';
     $params['size']     = 10;

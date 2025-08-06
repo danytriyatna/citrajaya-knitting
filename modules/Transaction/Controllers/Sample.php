@@ -487,7 +487,8 @@ class Sample extends BaseController
     /* Data */
     // $hex_data   = bin2hex($id);
     // $save_name  = $hex_data. '_'. time() . '.png';
-    $save_name  = $warna . '-' . $noSample . '.png';
+    $warnaNew = str_replace('/', '_', $warna);
+    $save_name  = $warnaNew . '-' . $noSample . '.png';
 
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';

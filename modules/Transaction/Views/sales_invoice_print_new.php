@@ -127,7 +127,7 @@
     <div class="invoice-title"><span style="border-bottom: 2px solid black; padding-bottom: 2px;">INVOICE ORDER</span></div>
     
     <div class="invoice-info" style="text-align: center;">
-        <div><strong>No. 033/LILY/VII/2025</strong></div>
+        <div><strong>No. <?= !empty($data->kode_invoice) ? $data->kode_invoice : "-" ?></strong></div>
         <div>Date <?= !empty($detail[0]->tgl_transaksi) ? date('d F, Y', strtotime($detail[0]->tgl_transaksi)) : "-" ?></div>
         <div>Deadline <?= !empty($detail[0]->tgl_deadline) ? date('d F, Y', strtotime($detail[0]->tgl_deadline)) : "-" ?></div>
     </div>

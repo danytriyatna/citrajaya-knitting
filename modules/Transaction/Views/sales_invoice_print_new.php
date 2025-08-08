@@ -5,12 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice Order</title>
     <style>
+
+        <?php 
+            $pathWatermark = FCPATH . 'assets/images/watermark.png'; // Pastikan PNG sudah transparan
+            $typeWatermark = pathinfo($pathWatermark, PATHINFO_EXTENSION);
+            $dataWatermark = file_get_contents($pathWatermark);
+            $base64Watermark = 'data:image/' . $typeWatermark . ';base64,' . base64_encode($dataWatermark);
+        ?>
+
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
             margin: 0;
             padding: 20px;
             color: #333;
+            background-image: url('<?= $base64Watermark ?>');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 75%; /* sesuaikan ukuran watermark */
         }
         
         .header {
@@ -64,7 +76,7 @@
         }
         
         th {
-            background-color: #f2f2f2;
+            /* background-color: #f2f2f2; */
         }
         
         .notes {

@@ -257,7 +257,12 @@ class SalesOrder extends BaseController
     $type_dp = $this->request->getPost('type_dp');
     $style = $this->request->getPost('style');
     $repeat = $this->request->getPost('repeat');
-
+    if (strpos($tgl_dp, 'undefined') !== false || empty($tgl_dp))  {
+        $tgl_dp = null;
+    }
+    if (empty($type_dp)) {
+        $type_dp = null;
+    }
 
     $this->validation->setRules([
       'idKonsumen '               => ['label' => 'Pilih Buyer', 'rules' => 'required'],

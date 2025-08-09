@@ -165,6 +165,9 @@
 
             // Cek apakah data ALL
             foreach ($sizes as $size) {
+                if ($size == "all") {
+                    $size = "all_";
+                }
                 if (!empty($item->$size) && $item->$size > 0) {
                     $qty = (int)$item->$size;
                     if ($size == "all_") {

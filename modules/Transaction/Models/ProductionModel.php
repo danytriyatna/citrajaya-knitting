@@ -33,7 +33,7 @@ class ProductionModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.id_walkorder,  abx.kode_walkorder, abx.id_konsumen, abx.id_style, abx.qty, abx.file_id,
                         abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style, abx.keterangan,
-                        abx.tipe_id, cbx.file_name,abx.kode_prod,twx.ref_kode as kode_walkorder_ref, twx.ref_id as id_walkorder_ref");
+                        abx.tipe_id, cbx.file_name,abx.kode_prod,twx.ref_kode as kode_walkorder_ref, twx.ref_id as id_walkorder_ref, tso.deskripsi");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_walkorder twx", "abx.id_walkorder = twx.id", "inner");
@@ -47,6 +47,7 @@ class ProductionModel extends \App\Models\PrModel
                 $builder->where('LOWER(abx.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 

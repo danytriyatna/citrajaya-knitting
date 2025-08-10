@@ -15,8 +15,13 @@ $(document).ready(function () {
 
 
     if(inpKonsumen.attr('value').length > 0) {
-        inpKonsumen.val(inpKonsumen.attr('value')).trigger('change')
+        inpKonsumen.val(inpKonsumen.attr('value')).trigger('change');
     }
+
+    $('#select_buyer').on('change', function () {
+        var alamat = $(this).find(':selected').data('alamat') || '';
+        $('#alamat_buyer').val(alamat);
+    });
     
     // conf function 
     let cellMoney = function(cell, formatterParams){
@@ -210,6 +215,11 @@ $(document).ready(function () {
 			},
 
             {
+				title: 'Style', field: 'deskripsi', headerSort:false, sorter: 'string',
+				formatter : "html", visible:false
+			},
+
+            {
 				title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',
 				width: 120, formatter : "html"
 			},				
@@ -306,10 +316,12 @@ $(document).ready(function () {
                     
                     let isProd = response.data.produksi;
                     let data = response.data;
+                    let kodeTampilanRef = isProd.kode_walkorder_ref + " (" + isProd.kode_prod + ")";
+                    let styleDesc = isProd.keterangan_style + " (" + isProd.deskripsi + ")";
 
                     inpRefNi.val(isProd.kode_prod);
                     inpRefSO.val(isProd.kode_walkorder_ref);
-                    inpStyle.val(isProd.keterangan_style);
+                    inpStyle.val(styleDesc);
                     inpProduksi.val(isProd.id).trigger("change");
                     inpWo.val(isProd.id_walkorder).trigger("change");
                     
@@ -426,6 +438,7 @@ $(document).ready(function () {
        
     });
 
+    let refData = [];
     $( "#text_barcode" ).autocomplete({
 		source: function( request, response ) {
 		  $.ajax({
@@ -629,4 +642,103 @@ $(document).ready(function () {
             }
         })
     });
+
+    $( "#text_barcode" ).on("keypress", function(e){
+		let key = e.which;
+		if(key == 13){
+			// $.ajax({
+			// 	url: "trans/item-transfer/src_produk",
+			// 	dataType: "json",
+			// 	data: {
+			// 	  kata_kunci   : $( "#text_barcode" ).val(),
+			// 	},
+			// 	type : 'post',
+			// 	success: function( es ) {
+            //         // console.log(es)
+			// 	  if(es.status){
+			// 		// response(data.slc);
+			// 		if(es.data.length > 0){
+			// 			addItem(es.data[0]);
+			// 		}else{
+			// 			alert("Produk tidak ditemukan !");
+			// 		}
+			// 	  }else{
+			// 		  console.log(es.msg);
+			// 	  }
+			// 	}
+			//   });
+
+
+            const kataKunci = $( "#text_barcode" ).val()
+            const arrKunvi = kataKunci.split(";");	
+
+            if (refData.length > 0) {
+                const arrKunci = kataKunci.split(";");
+                let hasil = refData.map(item => ({ ...item }));
+                
+                //  console.log('hasil', hasil)
+                //  console.log('arrKunci', arrKunci)
+                if (arrKunci[0]!= undefined && arrKunci[0] != '') {
+                    hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
+                }
+                //  console.log('hasil1', hasil)
+                if (arrKunci[1]!= undefined && arrKunci[1] != '') {
+                    hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
+                }
+                //  console.log('hasil2', hasil)
+                if (arrKunci[2]!= undefined && arrKunci[2] != '') {
+                    const normalize = str => str.toUpperCase().replace(/\s+/g, ' ').trim();
+                    const inputColor = normalize(arrKunci[2]);
+                    const inputColor2 = normalize(arrKunci[4]);
+                    hasil = hasil.filter(item => {
+                        if (item.color) {
+                            const firstColor = item.color.toString().split('~')[0].toUpperCase();
+                            const pertamaWarna = normalize(firstColor);
+
+                            const secondColor = item.color.toString().split('~')[1];
+                            if (secondColor != undefined && secondColor != "" && secondColor != null) {
+                                const secondColor2 = secondColor.toUpperCase();
+                                const kode_ukuranWarna = normalize(secondColor2);
+                                return pertamaWarna == inputColor && kode_ukuranWarna == inputColor2;
+                            }
+
+                            else {
+                                return pertamaWarna == inputColor;
+                            }
+
+                        }
+                        return false;
+                    });
+                }
+                // console.log('hasil3', hasil)
+                // console.log('arrKunci', arrKunci
+
+                
+               
+
+                if (hasil.length > 0) {
+                    hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+                    addItem(hasil[0]);
+
+                    setTimeout(() => {
+                        $( "#text_barcode" ).val("");
+                        refData = xrefData;
+                    }, 500);
+                } else {
+                    Swal.fire({
+                        text: "Produk tidak ditemukan!",
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            } else {
+                Swal.fire({
+                    text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            } }
+	});
 });

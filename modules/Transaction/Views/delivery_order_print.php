@@ -152,14 +152,14 @@
                                     <td><?= $data->konsumen_nama ?></td>
                                 </tr>
                                 <tr>
+                                    <td><?= $data->alamat ?></td>
+                                </tr>
+                                <!-- <tr>
                                     <td>&nbsp;</td>
                                 </tr>
                                 <tr>
                                     <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
+                                </tr> -->
                             </tbody>
                         </table>
                     </td>
@@ -169,7 +169,41 @@
     </div>
 
     <h1 class="uppercase text-lg mb-6 mt-0">DELIVERY ORDER</h1>
-    <p class="uppercase text-md my-0"><span class="d-inline-block" style="width: 152px;">No. DO</span> : <?= $data->delivery_kode ?></p>
+    <table style="border: none; width: 100%;">
+        <tbody>
+            <tr style="border: none;">
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    NO. DO
+                </td>
+                <td style="border: none; width: 3%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= $data->delivery_kode ?>
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    STYLE/DESKRIPSI
+                </td>
+                <td style="border: none; width: 3%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= $data->keterangan_style." (".$data->deskripsi.")" ?>
+                </td>
+            </tr>
+            <tr style="border: none;">
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    REF. NO 
+                </td>
+                <td style="border: none; width: 3%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= $data->kode_so ?>
+                </td>
+            </tr>
+        </tbody>
+    </table>
     <br>
 
     <table class="table-bordered w-100">

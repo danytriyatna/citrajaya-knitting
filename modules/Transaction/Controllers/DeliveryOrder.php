@@ -178,7 +178,7 @@ class DeliveryOrder extends BaseController
       $stdData->kode_produksi = $stdData->produksi_kode;
       $stdData->kode_so = $stdData->kode_so;
       $stdData->tgl_do = $stdData->tgl_transaksi;
-      $stdData->keterangan_style = $stdData->keterangan_style;
+      $stdData->keterangan_style = $stdData->keterangan_style." (".$stdData->deskripsi.")";
       $stdData->select_buyer =  $stdData->id_konsumen;
       $stdData->alamat_buyer  =  $stdData->alamat;
       $status = $stdData->status;
@@ -628,6 +628,7 @@ class DeliveryOrder extends BaseController
           "tgl_deadline"      => fdate_eng_to_ind($row->tgl_deadline),
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),
           "keterangan_style"  => $row->keterangan_style,
+          "deskripsi"  => $row->deskripsi,
           "status"            => $status,
         )
       );
@@ -831,7 +832,7 @@ class DeliveryOrder extends BaseController
 
     $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
     exit;
   }
 }

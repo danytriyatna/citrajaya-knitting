@@ -109,7 +109,7 @@
                     <select <?=  (!empty($id)) ? 'disabled' : ''; ?> id="select_buyer" name="select_buyer" class="form-select select2" data-placeholder="-- Pilih Buyer --" value="<?= !empty($row) ? $row->select_buyer : '' ;?>" >
                       <option value=""> - Pilih Buyer - </option>
                       <?php foreach ($buyer as $item) { ?>
-                        <option value="<?= $item['id']; ?>"><?= $item['nama']; ?></option> 
+                        <option value="<?= $item['id']; ?>" data-alamat="<?= $item['alamat'] ?>"><?= $item['nama']; ?></option> 
                       <?php } ?>
                     </select>
                   </div>
@@ -117,9 +117,11 @@
                 <div class="form-group row">
                   <label class="control-label text-start text-md-end col-md-2 col-form-label" for="alamat_buyer">Alamat</label>
                   <div class="col-md-9">
-                    <textarea <?=  ($view_read) ? 'disabled' : ''; ?> rows="3" id="alamat_buyer" name="alamat_buyer" class="form-control" placeholder="Ketikkan alamat">
-                        <?= !empty($row) ? $row->alamat_buyer : '' ;?>
-                    </textarea>
+                    <textarea <?= ($view_read) ? 'disabled' : ''; ?> rows="3"
+          id="alamat_buyer" name="alamat_buyer"
+          class="form-control" placeholder="Ketikkan alamat"><?=
+    !empty($row) ? trim($row->alamat_buyer) : '' ;
+?></textarea>
                   </div>
                 </div>
               </div>

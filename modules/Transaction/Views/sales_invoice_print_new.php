@@ -20,9 +20,10 @@
             padding: 20px;
             color: #333;
             background-image: url('<?= $base64Watermark ?>');
-            background-position: center center;
             background-repeat: no-repeat;
-            background-size: 75%; /* sesuaikan ukuran watermark */
+            background-size: 65%; /* sesuaikan ukuran watermark */
+
+            background-position: center 40%;
         }
         
         .header {
@@ -70,13 +71,9 @@
         }
         
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #808080;
             padding: 8px;
             text-align: center;
-        }
-        
-        th {
-            /* background-color: #f2f2f2; */
         }
         
         .notes {
@@ -116,7 +113,7 @@
 </head>
 <body>
     <?php 
-        $path = FCPATH . 'assets/images/LogoPrintHeader.jpg';
+        $path = FCPATH . 'assets/images/logoHeader.png';
         $type = pathinfo($path, PATHINFO_EXTENSION);
         $dataHeader = file_get_contents($path);
         $base64 = 'data:image/' . $type . ';base64,' . base64_encode($dataHeader);
@@ -126,164 +123,131 @@
         $dataFooter = file_get_contents($pathFooter);
         $base64Footer = 'data:image/' . $typeFooter . ';base64,' . base64_encode($dataFooter);
 
-        $pathTTD = FCPATH . 'assets/images/ttdEdwin.jpg';
+        $pathTTD = FCPATH . 'assets/images/ttdEdwin.png';
         $typeTTD = pathinfo($pathTTD, PATHINFO_EXTENSION);
         $dataTTD = file_get_contents($pathTTD);
         $base64TTD = 'data:image/' . $typeTTD . ';base64,' . base64_encode($dataTTD);
     ?>
-    <div class="header">
-        <div style="padding-bottom: 5px;"><img width = "250px" src="<?= $base64 ?>" alt="My image" /></div>
-        <div class="address">Jl. Terusan Panyileukan, Kav No. 4, Bandung</div>
-    </div>
-    <hr style="border: none; border-top: 1px solid #000;" />
-    <div class="invoice-title"><span style="border-bottom: 2px solid black; padding-bottom: 2px;">INVOICE ORDER</span></div>
+    <table>
+        <thead>
+            <tr style="border: none;">
+                <th style="width: 100%; border: none;">
+                    <img width = "250px" src="<?= $base64 ?>" alt="My image" />
+                </th>
+            </tr>
+            <tr style="border: none;">
+                <td style="border: none;font-size: 16px; border-bottom: 1px solid black; border-top: none; border-left: none; border-right: none;">
+                    <strong style="font-size: 21px;">Knitting a Legacy of Quality</strong>
+                    <br>
+                    Jalan Terusan Panyileukan Kavling No.1 Cipadung Kidul, Kota Bandung, Jawa Barat
+                </td>
+            </tr>
+        </thead>
+    </table>
     
-    <div class="invoice-info" style="text-align: center;">
-        <div><strong>No. <?= !empty($data->kode_invoice) ? $data->kode_invoice : "-" ?></strong></div>
-        <div>Date <?= !empty($detail[0]->tgl_transaksi) ? date('d F, Y', strtotime($detail[0]->tgl_transaksi)) : "-" ?></div>
-        <div>Deadline <?= !empty($detail[0]->tgl_deadline) ? date('d F, Y', strtotime($detail[0]->tgl_deadline)) : "-" ?></div>
-    </div>
-    
-    <div class="to-section">
-        <div><strong>To :</strong> <?= !empty($detail[0]->alamat_buyer) ? $detail[0]->alamat_buyer : "-" ?> Ph : <?= !empty($detail[0]->no_hp_buyer) ? $detail[0]->no_hp_buyer : "-" ?></div>
-        <div><strong>Up :</strong> <?= !empty($detail[0]->buyer) ? $detail[0]->buyer : "-" ?></div>
-    </div>
-    
-    <div>Dengan ini pesanan sebagai berikut :</div>
+    <table>
+        <tbody>
+            <tr style="border: none; font-size: 14px;">
+                <td style="border: none; width: 50%; text-align: left;">
+                    <strong>KEPADA:
+                    <br>
+                    <?= !empty($detail[0]->buyer) ? $detail[0]->buyer : "-" ?>
+                    </strong>
+                    <br>
+                    <?= !empty($detail[0]->alamat_buyer) ? $detail[0]->alamat_buyer : "-" ?>
+                </td>
+                <th style="text-align: center; border: none; vertical-align: top;">
+                    <span style="font-size: 30px;">INVOICE ORDER</span>
+                    <br>
+                    <span style="font-size: 14px;">NO. INVOICE: <?= !empty($data->kode_invoice) ? $data->kode_invoice : "-" ?></span>
+                    <br>
+                    <span style="font-size: 14px;">TANGGAL: <?= !empty($data->tgl_transaksi) ? date('d/m/Y', strtotime($data->tgl_transaksi)) : "-" ?></span>
+                </th>
+            </tr>
+        </tbody>
+    </table>
     
     <table>
         <thead>
-            <?php
-                    $sizes = $ukuran;
-                    $qtyToDisplay = [];
-                    foreach ($detail_so as $index => $row) {
-                         $rowsToDisplay = [];
-                        foreach ($sizes as $ind => $size) {
-                            if (!empty($row->$size)) {
-                                $qty = (int)$row->$size;
-                                if ($size == "all_") {
-                                    $size = "all";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "sm") {
-                                    $size = "s / m";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "ml") {
-                                    $size = "m / l";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "lxl") {
-                                    $size = "l / xl";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "xxxxl") {
-                                    $size = "4xl";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "xxxxxl") {
-                                    $size = "5xl";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else if ($size == "xxxxxxl") {
-                                    $size = "6xl";
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                else {
-                                    $qtyToDisplay[$index.strtoupper($size)] = $qty;
-                                }
-                                $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
-                                
-                            }
-                        }
-                        
-                    }
-                ?>
             <tr>
-                <th rowspan="2">No.</th>
-                <th rowspan="2">Deskripsi</th>
-                <th rowspan="2">Warna</th>
-                <th colspan="<?= count($rowsToDisplay) ?>">Size</th>
-                <th rowspan="2">Harga Unit / Pc (Rp)</th>
-                <th rowspan="2">Harga Total /Pc (Rp)</th>
+                <th rowspan="2">NO</th>
+                <th rowspan="2">DESKRIPSI</th>
+                <th rowspan="2" style="width: 25%;">WARNA</th>
+                <th colspan="<?= count($ukuran) ?>">SIZE</th>
+                <th rowspan="2" style="width: 15%;">HARGA UNI/PCS (Rp)</th>
+                <th rowspan="2">TOTAL (Rp)</th>
             </tr>
             <tr>
-                <?php
-                    foreach ($rowsToDisplay as $indexs => $rows) {
-
-                        echo "<th>{$rows['size']}</th>";
-                    }
-                ?>
+                <?php foreach ($ukuran as $rows): ?>
+                    <th><?= $rows ?></th>
+                <?php endforeach; ?>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td style="width: 5%;"></td>
-                <td style="width: 20%;"><?= !empty($detail[0]->deskripsi) ? $detail[0]->deskripsi : "-" ?></td>
-                <td style="width: 25%;">
-                    <?php
-                        foreach ($detail_so as $index => $row) {
-                            echo "$row->colour <br>";
-                        }
-                    ?>
-                </td>
-                <?php
-                    foreach ($rowsToDisplay as $indexs => $rows) {
+        <?php
+        $nomor = 1;
+        foreach ($data_detail as $key => $value):
+            foreach ($value as $w => $color):
+                echo "<tr>";
 
-                        echo "<td style='text-align: center;'>";
-                        for ($i=0; $i < count($detail_so); $i++) { 
-                            echo "{$qtyToDisplay[$i.$rows['size']]} <br>";
+                // Kolom NO & DESKRIPSI hanya di baris pertama warna pertama
+                if ($w === array_key_first($value)) {
+                    echo "<td rowspan='" . count($value) . "' style='text-align:center; vertical-align: top;'>{$nomor}</td>";
+                    echo "<td rowspan='" . count($value) . "' style='text-align:left; vertical-align: top;'>
+                            {$key}<br>{$deskripsi[$nomor-1]}
+                        </td>";
+                }
+
+                // Kolom warna
+                echo "<td style='text-align:left; vertical-align: top;'>{$color['warna']}</td>";
+
+                // Kolom ukuran
+                foreach ($ukuran as $sizeName) {
+                    $qty = 0;
+                    foreach ($color['ukuran'] as $size) {
+                        if ($size['size'] == $sizeName) {
+                            $qty = $size['qty'];
+                            break;
                         }
-                        echo "</td>";
                     }
-                ?>
-                <td style="text-align: right;">
-                    <?php
-                        foreach ($detail_so as $index => $row) {
-                            $allQty = 0;
-                            foreach ($rowsToDisplay as $indexs => $rows) {
-                                $allQty += $qtyToDisplay[$index.$rows['size']];
-                            }
-                            $format = number_format($row->total_harga/$allQty, 0, ',', '.');
-                            echo "$format <br>";
-                        }
-                    ?>
-                </td>
-                <td style="text-align: right;">
-                    <?php
-                    $subTotal = 0;
-                        foreach ($detail_so as $index => $row) {
-                            $subTotal += $row->total_harga;
-                            $format = number_format($row->total_harga, 0, ',', '.');
-                            echo "$format <br>";
-                        }
-                    ?>
-                </td>
-            </tr>
+                    echo "<td style='text-align:center; vertical-align: top;'>{$qty}</td>";
+                }
+
+                // Harga unit & total harga (per warna)
+                $hargaUnit = number_format($color['harga_satuan'], 0, ',', '.');
+                $totalHarga = number_format($color['total_harga'], 0, ',', '.');
+
+                echo "<td style='text-align:right; vertical-align: top;'>{$hargaUnit}</td>";
+                echo "<td style='text-align:right; vertical-align: top;'>{$totalHarga}</td>";
+
+                echo "</tr>";
+            endforeach;
+
+            $nomor++;
+        endforeach;
+        ?>
         </tbody>
+
         <tfoot>
             <?php 
 
-            $colspan = count($rowsToDisplay) + 4; // 4 for No, Deskripsi, Warna, Harga Unit
-            $formatSubTotal = number_format($subTotal, 0, ',', '.');
-            $total = !empty($detail[0]->uang_dp) ? $subTotal - $detail[0]->uang_dp : $subTotal;
+            $colspan = count($ukuran) + 3; // 4 for No, Deskripsi, Warna, Harga Unit
+            $formatSubTotal = number_format($sub_total, 0, ',', '.');
+            $total = !empty($total_dp) ? $sub_total - $total_dp : $sub_total;
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
             <tr>
-                <td colspan="<?= $colspan ?>"><strong>SUB TOTAL</strong></td>
+                <td colspan="<?= $colspan ?>" rowspan="3" style="text-align: left; vertical-align: top;"><strong style="font-size: 13px;">NOTES: </strong> <?= $data->keterangan ?></td>
+                <td><strong>SUB TOTAL</strong></td>
                 <td style="text-align: right;"><?= $formatSubTotal ?></td>
             </tr>
             <tr>
-                <td colspan="<?= $colspan ?>"><strong>DP INVOICE (<?= !empty($detail[0]->tgl_dp) ? date('d F Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
-                <td style="text-align: right;"><?= !empty($detail[0]->uang_dp) ? number_format($detail[0]->uang_dp, 0, ',', '.') : 0 ?></td>
+                <td><strong>DP (<?= !empty($detail[0]->tgl_dp) ? date('d/m/Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
+                <td style="text-align: right;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
             </tr>
             <tr>
-                <td colspan="<?= $colspan ?>"><strong>TOTAL</strong></td>
+                <td><strong>TOTAL</strong></td>
                 <td style="text-align: right;"><?= $formatTotal ?></td>
-            </tr>
-            <tr>
-                <th>Notes</th>
-                <td colspan="<?= $colspan ?>"><strong><?= $data->keterangan ?></strong></td>
             </tr>
         </tfoot>
     </table>
@@ -291,34 +255,21 @@
     <table style="border: none;">
         <tbody>
             <tr style="border: none;">
-                <td style="border: none; text-align: left;">Harga</td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
-            </tr>
-            <tr style="border: none;">
-                <td style="border: none;">Thanks & Regards, CJK</td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
-                <td style="border: none;">Confirmed & Accepted</td>
-            </tr>
-            <tr style="border: none;">
-                <td style="border: none;" class="signature-placeholder"><img width = "130px" src="<?= $base64TTD ?>" alt="My image" /></td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
-                <td style="border: none;" class="signature-placeholder"></td>
-            </tr>
-            <tr style="border: none;">
-                <td style="border: none;">Edwin Ferdiansyah</td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
-                <td style="border: none;"></td>
+                <td style="border: none; font-size: 14px; text-align: left; width: 40%;" class="signature-placeholder">
+                    <strong>PEMBAYARAN:</strong>
+                    <br>
+                    Bank Central Asia
+                    <br>
+                    Atas Nama : Edwin Ferdiansyah
+                    <br>
+                    No. Rekening : 2831218331
+                </td>
+                <th style="border: none; font-size: 14px;" class="signature-placeholder"><img width = "180px" src="<?= $base64TTD ?>" alt="My image" />
+                <br>
+                EDWIN FERDIANSYAH
+                </th>
             </tr>
         </tbody>
     </table>
-    
-    <div class="footer-logo">
-        <img width = "100px" src="<?= $base64Footer ?>" alt="My image" />
-    </div>
 </body>
 </html>

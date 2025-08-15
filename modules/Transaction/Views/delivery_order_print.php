@@ -13,7 +13,7 @@
         }
 
         body * {
-            font-family: "Arial", "Calibri", sans-serif !important;
+            font-family: "Arial", "Calibri", sans-serif;
         }
 
         .d-inline-block {
@@ -168,69 +168,105 @@
         </table>
     </div>
 
-    <h1 class="uppercase text-lg mb-6 mt-0">DELIVERY ORDER</h1>
+    <h1 class="uppercase text-lg mb-6 mt-0" style="font-family: 'Times New Roman', Times, serif; font-size : 32px;">DELIVERY ORDER</h1>
     <table style="border: none; width: 100%;">
         <tbody>
             <tr style="border: none;">
-                <td style="border: none; width: 20%; vertical-align: top;">
-                    NO. DO
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    No. DO
                 </td>
-                <td style="border: none; width: 3%; vertical-align: top;">
+                <td style="border: none; width: 2%; vertical-align: top;">
                     :
                 </td>
                 <td style="border: none; width: 20%; vertical-align: top;">
                     <?= $data->delivery_kode ?>
                 </td>
-                <td style="border: none; width: 20%; vertical-align: top;">
-                    STYLE/DESKRIPSI
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    Style
                 </td>
                 <td style="border: none; width: 3%; vertical-align: top;">
                     :
                 </td>
-                <td style="border: none; width: 20%; vertical-align: top;">
-                    <?= $data->keterangan_style." (".$data->deskripsi.")" ?>
+                <td style="border: none; width: 30%; vertical-align: top;">
+                    <?= $data->keterangan_style ?>
                 </td>
             </tr>
             <tr style="border: none;">
-                <td style="border: none; width: 20%; vertical-align: top;">
-                    REF. NO 
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    Ref. DO
                 </td>
-                <td style="border: none; width: 3%; vertical-align: top;">
+                <td style="border: none; width: 2%; vertical-align: top;">
                     :
                 </td>
                 <td style="border: none; width: 20%; vertical-align: top;">
                     <?= $data->kode_so ?>
                 </td>
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    Desk
+                </td>
+                <td style="border: none; width: 3%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 30%; vertical-align: top;">
+                    <?= $data->deskripsi ?>
+                </td>
             </tr>
         </tbody>
     </table>
     <br>
+    <span>Kami Kirim barang Sebagai Berikut: </span>
+        <?php 
+        $ukuranList = array_unique(array_column($detail, 'kode_ukuran'));
 
-    <table class="table-bordered w-100">
-        <thead>
-            <tr>
-                <th class="text-center" style="width: 10px;">No.</th>
-                <th class="text-center" style="width: 40%;">COLOUR</th>
-                <th class="text-center" style="width: 30%;">SIZE</th>
-                <th class="text-center" style="width: 20%;">QTY</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $i = 1;
-            foreach ($detail as $row) : ?>
-                <tr>
-                    <td><?= $i++ ?></td>
-                    <td><?= $row['kode_warna'] ?></td>
-                    <td><?= $row['kode_ukuran'] ?></td>
+        $grouped = [];
+        foreach ($detail as $row) {
+            $id = $row['ref_detail_id'];
+            if (!isset($grouped[$id])) {
+                $grouped[$id] = [
+                    'ref_detail_id' => $id,
+                    'kode_warna' => $row['kode_warna'],
+                    'ukuran' => array_fill_keys($ukuranList, 0), // set awal qty = 0
+                    'total' => 0
+                ];
+            }
+            $grouped[$id]['ukuran'][$row['kode_ukuran']] = $row['qty'];
+            $grouped[$id]['total'] += $row['qty'];
+        }
 
-                    <td class="text-right"><?= $row['qty'] ?></td>
+        // Cetak tabel
+        echo "<table class='table-bordered w-100'>";
 
+        // Header baris 1
+        echo "<tr>
+                <th rowspan='2'>NO</th>
+                <th rowspan='2'>WARNA</th>
+                <th colspan='" . count($ukuranList) . "'>SIZE</th>
+                <th rowspan='2'>TOTAL QTY</th>
+            </tr>";
 
-                </tr>
-            <?php endforeach ?>
+        // Header baris 2
+        $i = 1;
+        echo "<tr>";
+        foreach ($ukuranList as $u) {
+            echo "<th>{$u}</th>";
+        }
+        echo "</tr>";
 
-        </tbody>
-    </table>
+        // Isi data
+        foreach ($grouped as $g) {
+            echo "<tr>
+                    <td style='text-align: center;'>$i</td>
+                    <td>{$g['kode_warna']}</td>";
+            foreach ($ukuranList as $u) {
+                echo "<td style='text-align: center;'>{$g['ukuran'][$u]}</td>";
+            }
+            echo "<td style='text-align: center;'>{$g['total']}</td>
+                </tr>";
+                $i++;
+        }
+
+        echo "</table>";
+        ?>
 
     <table class="w-100">
         <tbody>

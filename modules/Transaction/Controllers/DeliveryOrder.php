@@ -799,7 +799,7 @@ class DeliveryOrder extends BaseController
     $dompdf = new \Dompdf\Dompdf();
     // Set Dompdf options for portrait orientation
     $dompdf->setPaper('A4', 'portrait');
-
+    $ukuranSize = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
     $this->data['data'] = [];
     if ($id != "") {
       $id = decrypt($id);
@@ -826,6 +826,8 @@ class DeliveryOrder extends BaseController
 
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['detail'] = !empty($dt_prods) ? $dt_prods : [];
+      $this->data['ukuran'] = !empty($ukuranSize) ? $ukuranSize : [];
+      // dd($dt_prods, $ukuranSize);
     }
     $html = view($this->views . '\delivery_order_print', $this->data);
 

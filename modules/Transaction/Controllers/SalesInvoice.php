@@ -870,14 +870,85 @@ class SalesInvoice extends BaseController
       $params['id_invoice'] = $resData->id;
       $params['id_konsumen'] = $resData->id_konsumen;
       $dtails = $this->mInvoice->getDataDetailNew(null, null, null, null. null, null, $params);
-      $dtails_so = null;
+      $ukuranSize = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
+      $dtails_so = [];
+      $kode_ref = [];
+      $deskripsi = [];
+      $warna = [];
+      $ukuranAll = [];
+      $total_dp = 0;
+      $sub_total = 0;
       if (!empty($dtails)) {
         foreach ($dtails as $key_det => $value_det) {
-          $dtails_so =$this->mSalesOrder->getDataDetailSalesOrder_crostab($value_det->id_ref);
+          if (!empty($value_det->uang_dp) && $value_det->uang_dp > 0) {
+            $total_dp += (float)$value_det->uang_dp;
+          }
+          $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab($value_det->id_ref);
+          $warna_det = [];
+          if (!empty($dtails_so)) {
+             $kode_ref[] = $value_det->kode_ref;
+             $deskripsi[] = $value_det->deskripsi;
+             foreach ($dtails_so as $keyso => $valueso) {
+                $rowsToDisplay = [];
+                $qty_total = 0;
+                foreach ($ukuranSize as $ind => $size) {
+                    if ($size == "all") {
+                        $size = "all_";
+                        
+                    }
+                    if (!empty($valueso->$size)) {
+                        $qty = (int)$valueso->$size;
+                        if ($size == "all_") {
+                            $size = "all";
+                            
+                        }
+                        else if ($size == "sm") {
+                            $size = "s / m";
+                            
+                        }
+                        else if ($size == "ml") {
+                            $size = "m / l";
+                            
+                        }
+                        else if ($size == "lxl") {
+                            $size = "l / xl";
+                            
+                        }
+                        else if ($size == "xxxxl") {
+                            $size = "4xl";
+                            
+                        }
+                        else if ($size == "xxxxxl") {
+                            $size = "5xl";
+                            
+                        }
+                        else if ($size == "xxxxxxl") {
+                            $size = "6xl";
+                            
+                        }
+                        $qty_total += $qty;
+                        $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
+                        if (!in_array(strtoupper($size), $ukuranAll)) {
+                          // Jika belum ada, tambahkan ke array
+                              $ukuranAll[] = strtoupper($size);
+                          }
+                    }
+                }
+                $sub_total += $valueso->total_harga;
+                $warna_det[] = [
+                  "warna" => $valueso->colour,
+                  "ukuran" => $rowsToDisplay,
+                  "qty_total" => $qty_total,
+                  "harga_satuan" => $qty_total != 0 ? (float)$valueso->total_harga/$qty_total : $valueso->total_harga,
+                  "total_harga" => $valueso->total_harga,
+                ];
+             }
+              $warna[$value_det->kode_ref] = $warna_det;
+          }
         }
       }
+      // dd($warna, $ukuranAll, $deskripsi, $kode_ref);
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
-      $ukuranSize = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
       if (!empty($dt)) {
 
         $rukuran = $this->mUkuran->getData(0, 0, 999);
@@ -973,7 +1044,12 @@ class SalesInvoice extends BaseController
       // $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
       $this->data['detail'] = !empty($dtails) ? $dtails : [];
       $this->data['detail_so'] = !empty($dtails_so) ? $dtails_so : [];
-      $this->data['ukuran'] = !empty($ukuranSize) ? $ukuranSize : [];
+      $this->data['ukuran'] = !empty($ukuranAll) ? $ukuranAll : [];
+      $this->data['kode_ref'] = !empty($kode_ref) ? $kode_ref : [];
+      $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
+      $this->data['data_detail'] = !empty($warna) ? $warna : [];
+      $this->data['total_dp'] = !empty($total_dp) ? $total_dp : [];
+      $this->data['sub_total'] = !empty($sub_total) ? $sub_total : [];
       // dd($this->data['detail']);
     }
     $html = view($this->views . '\sales_invoice_print_new', $this->data);

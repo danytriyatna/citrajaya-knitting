@@ -253,6 +253,7 @@
         echo "</tr>";
 
         // Isi data
+        $totalQTY = 0;
         foreach ($grouped as $g) {
             echo "<tr>
                     <td style='text-align: center;'>$i</td>
@@ -260,11 +261,16 @@
             foreach ($ukuranList as $u) {
                 echo "<td style='text-align: center;'>{$g['ukuran'][$u]}</td>";
             }
+            $totalQTY += $g['total'];
             echo "<td style='text-align: center;'>{$g['total']}</td>
                 </tr>";
                 $i++;
         }
-
+        
+        echo "<tr>";
+            echo "<th colspan='" . count($ukuranList) + 2 . "' style='text-align: right;'>TOTAL QTY</th>";
+            echo "<th>$totalQTY</th>";
+        echo "</tr>";
         echo "</table>";
         ?>
 

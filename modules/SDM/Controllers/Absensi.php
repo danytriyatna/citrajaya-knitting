@@ -216,7 +216,7 @@ class Absensi extends BaseController
     if(!empty($data_list)){
       $data_list = json_decode($data_list, true);
       $tgl_absen = \fdate_ind_to_eng($tgl_absen);
-      foreach ($data_list as $x) {
+      foreach ($data_list as $key => $x) {
         $id = \decrypt($x['id']);
         $status_kehadiran = null;
         $durasi_kerja = 8 * 60;
@@ -338,7 +338,6 @@ class Absensi extends BaseController
         }
         $isi['jml_lembur'] = $x['jml_lembur'];
         $isi['keterangan_lembur'] = $x['keterangan_lembur'];
-        // $isi['durasi_kerja'] = $durasi_kerja;
         $isi['bonus'] = $x['bonus'];
         $isi['bonus_keterangan'] = $x['bonus_keterangan'];
         $isi['potongan'] = $x['potongan'];
@@ -347,7 +346,22 @@ class Absensi extends BaseController
         $isi['id_shift'] = $id_shift;
         $isi['jadwal_masuk'] = $jadwal_masuk;
         $isi['jadwal_pulang'] = $jadwal_pulang; 
-
+        $durasi_tambahan = 0;
+        
+        $getDurasi = $this->mabsen->getData($id);
+        if (!empty($getDurasi)) {
+          $durasi_kerja = $getDurasi->durasi_kerja;
+          $oldTanggalMerah = $getDurasi->tanggal_merah == 0 ? false : true;
+          if ($oldTanggalMerah != $x['tanggal_merah']) {
+            if ($x['tanggal_merah'] == true) {
+              $durasi_kerja += 60;
+            }
+            else {
+              $durasi_kerja -= 60;
+            }
+          }
+          $isi['durasi_kerja'] = $durasi_kerja;
+        }
         $this->mabsen->updateRecord($this->mabsen->table, $isi, 'id', $id);
       }
 

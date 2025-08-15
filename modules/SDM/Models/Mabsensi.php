@@ -27,7 +27,7 @@ class Mabsensi extends \App\Models\PrModel
 
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
         $builder->join("m_shift sh", "sdm.id_shift = sh.id", "left");
-
+        
         if ($id == null or $id == "") {
             $builder->where('sdm.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -59,11 +59,10 @@ class Mabsensi extends \App\Models\PrModel
 
             $this->_data = $builder->get()->getResult();
         } else {
-            $builder->where("uk.id", $id);
-
+            $builder->where("sdm.id", $id);
             $this->_data = $builder->get()->getRow();
         }
-
+        
         return $this->_data;
     }
 

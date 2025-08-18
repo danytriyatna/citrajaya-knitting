@@ -225,6 +225,7 @@
                 $grouped[$id] = [
                     'ref_detail_id' => $id,
                     'kode_warna' => $row['kode_warna'],
+                    'keterangan' => $row['keterangan'],
                     'ukuran' => array_fill_keys($ukuranList, 0), // set awal qty = 0
                     'total' => 0
                 ];
@@ -257,7 +258,7 @@
         foreach ($grouped as $g) {
             echo "<tr>
                     <td style='text-align: center;'>$i</td>
-                    <td>{$g['kode_warna']}</td>";
+                    <td>{$g['keterangan']}</td>";
             foreach ($ukuranList as $u) {
                 echo "<td style='text-align: center;'>{$g['ukuran'][$u]}</td>";
             }

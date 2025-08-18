@@ -199,7 +199,7 @@
                 }
 
                 // Kolom warna
-                echo "<td style='text-align:left; vertical-align: top;'>{$color['warna']}</td>";
+                echo "<td style='text-align:left; vertical-align: top;'>{$color['keterangan']}</td>";
 
                 // Kolom ukuran
                 foreach ($ukuran as $sizeName) {

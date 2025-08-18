@@ -116,7 +116,17 @@ class DeliveryModel extends \App\Models\PrModel
                         CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
                         CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
                         CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
-                    ) AS kode_warna");
+                    ) AS kode_warna, 
+                     TRIM ( BOTH ' ~ ' FROM
+                        COALESCE(rw1.keterangan, '') ||
+                        CASE WHEN rw2.keterangan IS NOT NULL THEN ' ~ ' || rw2.keterangan ELSE '' END ||
+                        CASE WHEN rw3.keterangan IS NOT NULL THEN ' ~ ' || rw3.keterangan ELSE '' END ||
+                        CASE WHEN rw4.keterangan IS NOT NULL THEN ' ~ ' || rw4.keterangan ELSE '' END ||
+                        CASE WHEN rw5.keterangan IS NOT NULL THEN ' ~ ' || rw5.keterangan ELSE '' END ||
+                        CASE WHEN rw6.keterangan IS NOT NULL THEN ' ~ ' || rw6.keterangan ELSE '' END ||
+                        CASE WHEN rw7.keterangan IS NOT NULL THEN ' ~ ' || rw7.keterangan ELSE '' END ||
+                        CASE WHEN rw8.keterangan IS NOT NULL THEN ' ~ ' || rw8.keterangan ELSE '' END
+                    ) AS keterangan");
         $builder->join('ref_ukuran rk', 'tdd.id_ukuran = rk.id');
         $builder->join('trans_delivery td', 'tdd.id_delivery = td.id');
         $builder->join('trans_walkorder tw', 'td.id_walkorder = tw.id');

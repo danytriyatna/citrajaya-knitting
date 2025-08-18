@@ -883,7 +883,7 @@ class SalesInvoice extends BaseController
           if (!empty($value_det->uang_dp) && $value_det->uang_dp > 0) {
             $total_dp += (float)$value_det->uang_dp;
           }
-          $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab($value_det->id_ref);
+          $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab_si($value_det->id_ref);
           $warna_det = [];
           if (!empty($dtails_so)) {
              $kode_ref[] = $value_det->kode_ref;
@@ -937,6 +937,7 @@ class SalesInvoice extends BaseController
                 $sub_total += $valueso->total_harga;
                 $warna_det[] = [
                   "warna" => $valueso->colour,
+                  "keterangan" => $valueso->keterangan,
                   "ukuran" => $rowsToDisplay,
                   "qty_total" => $qty_total,
                   "harga_satuan" => $qty_total != 0 ? (float)$valueso->total_harga/$qty_total : $valueso->total_harga,

@@ -816,6 +816,7 @@ class DeliveryOrder extends BaseController
           $xisi['id_ukuran'] = $xitem->id_ukuran;
           $xisi['ref_detail_id'] = $xitem->ref_detail_id;
           $xisi['kode_warna'] = $xitem->kode_warna;
+          $xisi['keterangan'] = $xitem->keterangan;
           $xisi['kode_ukuran'] = $xitem->kode_ukuran;
           $xisi['qty'] = $xitem->qty;
           $dt_prods[] = $xisi;

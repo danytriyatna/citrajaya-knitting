@@ -118,7 +118,7 @@ class DeliveryOrder extends BaseController
       $status = $row->status  == 1 ? "Draft" : "Approved";
       $tipe   = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
-      $qty      = $row->qty;
+      $qty      = $row->sisa_qty;
       $qty_delv = $row->qty_delv;
 
       array_push(
@@ -206,6 +206,7 @@ class DeliveryOrder extends BaseController
       $prx['id_delivery'] = $stdData->id;
       $rs_prod = $this->mDelivery->getDataProduksi($prx);
       if (!empty($rs_prod)) {
+        $qty_prod = [];
         foreach ($rs_prod as $xitem) {
           $xisi = [];
           $xisi['id_ukuran'] = $xitem->id_ukuran;
@@ -214,8 +215,16 @@ class DeliveryOrder extends BaseController
           $xisi['kode_ukuran'] = $xitem->kode_ukuran;
           $xisi['qty'] = $xitem->qty;
           $dt_prods[] = $xisi;
+          if (!in_array($xitem->ref_detail_id, $qty_prod)) {
+          // Jika belum ada, tambahkan ke array
+              $qty_prod[] = $xitem->ref_detail_id;
+              $qty_prod["qty_".$xitem->ref_detail_id] = $xitem->qty;
+          }
+          else {
+            $qty_prod["qty_".$xitem->ref_detail_id] += $xitem->qty;
+          }
           
-          $arr_qty[$xitem->ref_detail_id] = $xitem->qty;
+          $arr_qty[$xitem->ref_detail_id] = $qty_prod["qty_".$xitem->ref_detail_id];
         }
       }
       
@@ -262,7 +271,6 @@ class DeliveryOrder extends BaseController
           );
         }
       }
-
       $dt_details  = $dataProd;
 
       $dt_details = json_encode($dt_details, true);

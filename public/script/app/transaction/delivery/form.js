@@ -113,11 +113,32 @@ $(document).ready(function () {
                     if (e.target.title === 'delete') {
                         if (confirm("Anda yakin akan menghapus data?")) {
                             let seq = cell.getRow().getData().korp_terkait_seq;
-                            cell.getRow().delete();
+                            let rowData = cell.getRow().getData();
+                            let curQty = rowData.qty;
+                            let refDetailId = rowData.ref_detail_id;
+                            let tblDetail = dtListDetail.getData();
+                            let kodeWarna = rowData.kode_warna.toLowerCase();
+                            let allData = cell.getTable().getData();
 
+                            // filter berdasarkan kode_warna, lalu ambil semua qty
+                            let qtyList = allData
+                                .filter(obj => obj.kode_warna && obj.kode_warna.toLowerCase() === kodeWarna)
+                                .map(obj => obj.qty);
+                            let totalQty = qtyList.reduce((sum, q) => sum + (parseFloat(q) || 0), 0);
+
+                            let newQty = totalQty - parseFloat(curQty);
+                            let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === parseInt(refDetailId));
+                            cell.getRow().delete();
                             // update penyebab
                             let dataDet = dtListProduksi.getData();
-                            addkuota(cell.getRow().getData().ref_detail_id, true)
+                            // addkuota(cell.getRow().getData().ref_detail_id, true)
+                            if (objIndex >= 0) {
+                                let originalQty = tblDetail[objIndex].qty;
+                                tblDetail[objIndex].qty_prod = newQty;
+                                tblDetail[objIndex].qty_remain = originalQty - newQty;
+                            }
+
+                            dtListDetail.replaceData(tblDetail);
                             //    remove rencana pengendalian
                             dataDet = dataDet.filter(function (item) {
                                 return parseInt(item.seq) !== seq;
@@ -147,22 +168,28 @@ $(document).ready(function () {
                 },
                 cellEdited: function(cell) {
                     let newQty = parseInt(cell.getValue());
+                    let oldQty = parseInt(cell.getOldValue()); 
                     let rowData = cell.getRow().getData();
                     // console.log(rowData)
                     let refDetailId = rowData.ref_detail_id;
 
                     let tblDetail = dtListDetail.getData();
-                    
+                    let kodeWarna = rowData.kode_warna.toLowerCase();
+                    // 🔥 ambil semua data dari Tabulator yg sama dengan cell ini
+                    let allData = cell.getTable().getData();
+
+                    // filter berdasarkan kode_warna, lalu ambil semua qty
+                    let qtyList = allData
+                        .filter(obj => obj.kode_warna && obj.kode_warna.toLowerCase() === kodeWarna)
+                        .map(obj => obj.qty);
+                    let totalQty = qtyList.reduce((sum, q) => sum + (parseFloat(q) || 0), 0);
                     let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === parseInt(refDetailId));
-                    // console.log("tblDetail",objIndex)
-                    // console.log("tblDetail",tblDetail[objIndex])
                     if (objIndex >= 0) {
                         let originalQty = tblDetail[objIndex].qty;
                         let currentDoQty = tblDetail[objIndex].qty_prod;
-
                         if (newQty <= (originalQty)) {
-                            tblDetail[objIndex].qty_prod = newQty;
-                            tblDetail[objIndex].qty_remain = originalQty - newQty;
+                            tblDetail[objIndex].qty_prod = totalQty;
+                            tblDetail[objIndex].qty_remain = originalQty - totalQty;
                         } else {
                             alert("Jumlah DO Qty melebihi jumlah yang tersedia!");
                             cell.setValue(currentDoQty); // Revert to the original value
@@ -476,7 +503,7 @@ $(document).ready(function () {
 		let dataTable = dtListProduksi.getData();
 
 		let dataOrder = dtListDetail.getData();
-		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.kode_warna == (data.kode_warna));
+		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.kode_warna == (data.kode_warna) && obj.kode_ukuran == (data.kode_ukuran));
 		let ix_order  = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
         // console.log(dataOrder);
         // console.log(data);
@@ -542,7 +569,6 @@ $(document).ready(function () {
 
     function addkuota(ref_detail_id, hapus){
 		seq = parseInt(ref_detail_id);
-
 		let tblDetail = dtListDetail.getData();
 		let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === seq);
 		let arrData  = tblDetail[objIndex];

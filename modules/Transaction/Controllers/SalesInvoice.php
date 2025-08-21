@@ -635,7 +635,7 @@ class SalesInvoice extends BaseController
         $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
         $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
 
-        $total = ($x->tipe_id == 1) ? $x->total_harga : $x->total_harga;
+        $total = ($x->tipe_id == 1) ? $x->total_harga_delivery : $x->total_harga_delivery;
         $total = !empty($total) ? (float) $total : 0;
 
         $isi = [
@@ -1049,8 +1049,8 @@ class SalesInvoice extends BaseController
       $this->data['kode_ref'] = !empty($kode_ref) ? $kode_ref : [];
       $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
       $this->data['data_detail'] = !empty($warna) ? $warna : [];
-      $this->data['total_dp'] = !empty($total_dp) ? $total_dp : [];
-      $this->data['sub_total'] = !empty($sub_total) ? $sub_total : [];
+      $this->data['total_dp'] = !empty($total_dp) ? $total_dp : 0;
+      $this->data['sub_total'] = !empty($sub_total) ? $sub_total : 0;
       // dd($this->data['detail']);
     }
     $html = view($this->views . '\sales_invoice_print_new', $this->data);

@@ -213,6 +213,7 @@ class DeliveryOrder extends BaseController
           $xisi['ref_detail_id'] = $xitem->ref_detail_id;
           $xisi['kode_warna'] = $xitem->kode_warna;
           $xisi['kode_ukuran'] = $xitem->kode_ukuran;
+          $xisi['key_ukuran'] = $xitem->key_ukuran;
           $xisi['qty'] = $xitem->qty;
           $dt_prods[] = $xisi;
           if (!in_array($xitem->ref_detail_id, $qty_prod)) {
@@ -243,6 +244,9 @@ class DeliveryOrder extends BaseController
       
       if (!empty($rsProd)) {
         foreach ($rsProd as $item) {
+          $params_prod['id_delivery'] = $stdData->id;
+          $params_prod['ref_detail_id'] = $item->ref_detail_id;
+          $getdProd = $this->mDelivery->getDataDetailProd($params_prod);
           $isi = array(
             "ref_detail_id" => ($item->ref_detail_id),
             "id_walkorder"  => ($item->id_walkorder),
@@ -255,9 +259,16 @@ class DeliveryOrder extends BaseController
 
             if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
             $indx      = $keyUkuran;
+            $indxKey      = $keyUkuran."_key";
             $xharga    = $keyUkuran . '_hrg';
 
             $isi[$indx] = $item->$keyUkuran;
+            foreach ($getdProd as $key => $valueProd) {
+              if ($valueProd->id_ukuran == $iu->id) {
+                # code...
+                $isi[$indxKey] = $valueProd->qty_do;
+              }
+            }
             $isi[$xharga] = $item->$xharga;
 
             $qty = $qty +  $item->$keyUkuran;
@@ -407,6 +418,7 @@ class DeliveryOrder extends BaseController
 
           if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
           $xdata['qty'] = $itemx[$keyUkuran];
+          $xdata['qty_do']          = $itemx[$keyUkuran."_key"];
           $xharga    = $keyUkuran . '_hrg';
 
           $xdata['id_ukuran']    = $iu->id_ukuran;
@@ -550,7 +562,7 @@ class DeliveryOrder extends BaseController
       $builderv->where("id_delivery", $id);
       $builderv->delete();
       foreach ($produksi as $itemx) {
-        // dd($itemx);
+        // dd($produksi);
         $xdata = [];
         $xdata['id_delivery']   = $id;
         $xdata['ref_detail_id'] = $itemx['ref_detail_id'];
@@ -563,6 +575,7 @@ class DeliveryOrder extends BaseController
 
           if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
           $xdata['qty']          = $itemx[$keyUkuran];
+          $xdata['qty_do']          = $itemx[$keyUkuran."_key"];
           $xharga    = $keyUkuran . '_hrg';
 
           $xdata['id_ukuran']    = $iu->id_ukuran;

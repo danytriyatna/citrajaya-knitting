@@ -100,6 +100,26 @@ class DeliveryModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataDetailProd($params = null)
+    {
+        $builder = $this->db->table($this->table3 . " abx");
+
+        $builder->select(" abx.id, abx.id_delivery,  abx.ref_detail_id, abx.id_ukuran, abx.qty,
+                            abx.qty_do, abx.harga_satuan, COALESCE(abx.qty, 0) * COALESCE(abx.harga_satuan, 0) AS total_harga");
+
+        if (!empty($params['id_delivery'])) {
+            $builder->where('abx.id_delivery', $params['id_delivery']);
+        }
+        
+        if (!empty($params['ref_detail_id'])) {
+            $builder->where('abx.ref_detail_id', $params['ref_detail_id']);
+        }
+
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
+
     function getAlldeliveryQty($params){
         $builder = $this->db->table($this->table2 . ' td');
 
@@ -115,7 +135,7 @@ class DeliveryModel extends \App\Models\PrModel
     function getDataProduksi($params){
         $builder = $this->db->table("trans_delivery_detail tdd");
         $builder->select("tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
-                          rk.kode_ukuran, TRIM ( BOTH ' - ' FROM
+                          rk.kode_ukuran, rk.key_ukuran, TRIM ( BOTH ' - ' FROM
                         COALESCE(rw1.kode_warna, '') ||
                         CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
                         CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||

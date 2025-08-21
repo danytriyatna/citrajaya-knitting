@@ -100,8 +100,6 @@ $(document).ready(function () {
 
 
     const inpStatus = ($("#status").val())
-    // console.log('inpStatus', inpStatus)
-    // console.log('inpStatus', !(inpStatus == 2))
     let dtListProduksi = new Tabulator("#dt-list-detail", {
         columns: [
             {
@@ -117,7 +115,11 @@ $(document).ready(function () {
                             let curQty = rowData.qty;
                             let refDetailId = rowData.ref_detail_id;
                             let tblDetail = dtListDetail.getData();
+                            let tblDetailcol = dtListDetail.getColumnDefinitions();
                             let kodeWarna = rowData.kode_warna.toLowerCase();
+                            let refUkuran = rowData.key_ukuran + "_key".toLowerCase();
+                            let colDef = tblDetailcol.find(col => col.field == refUkuran);
+                            let colDefField = colDef.field;
                             let allData = cell.getTable().getData();
 
                             // filter berdasarkan kode_warna, lalu ambil semua qty
@@ -136,6 +138,7 @@ $(document).ready(function () {
                                 let originalQty = tblDetail[objIndex].qty;
                                 tblDetail[objIndex].qty_prod = newQty;
                                 tblDetail[objIndex].qty_remain = originalQty - newQty;
+                                tblDetail[objIndex][colDefField] = 0;
                             }
 
                             dtListDetail.replaceData(tblDetail);
@@ -158,6 +161,10 @@ $(document).ready(function () {
                 title: 'Size', field: 'kode_ukuran', headerSort:false, formatter: "html", sorter: 'string',
                 width: '20%', hozAlign: 'right', cssClass: 'text-end'
             }, 
+            {
+                title: 'Size', field: 'key_ukuran', headerSort:false, formatter: "html", sorter: 'string',
+                width: '20%', hozAlign: 'right', cssClass: 'text-end', visible:false
+            }, 
     
             {
                 title: 'QTY', field: 'qty', headerSort:false, formatter: "html", sorter: 'string',
@@ -170,11 +177,18 @@ $(document).ready(function () {
                     let newQty = parseInt(cell.getValue());
                     let oldQty = parseInt(cell.getOldValue()); 
                     let rowData = cell.getRow().getData();
-                    // console.log(rowData)
                     let refDetailId = rowData.ref_detail_id;
+                    let refUkuran = rowData.key_ukuran + "_key".toLowerCase();
+                    if (refUkuran == "all_key") {
+                        refUkuran = "all__key"
+                    }
 
                     let tblDetail = dtListDetail.getData();
+                    let tblDetailcol = dtListDetail.getColumnDefinitions();
                     let kodeWarna = rowData.kode_warna.toLowerCase();
+                    let colDef = tblDetailcol.find(col => col.field == refUkuran);
+                    let colDefField = colDef.field;
+                    
                     // 🔥 ambil semua data dari Tabulator yg sama dengan cell ini
                     let allData = cell.getTable().getData();
 
@@ -190,6 +204,7 @@ $(document).ready(function () {
                         if (newQty <= (originalQty)) {
                             tblDetail[objIndex].qty_prod = totalQty;
                             tblDetail[objIndex].qty_remain = originalQty - totalQty;
+                            tblDetail[objIndex][colDefField] = newQty;
                         } else {
                             alert("Jumlah DO Qty melebihi jumlah yang tersedia!");
                             cell.setValue(currentDoQty); // Revert to the original value
@@ -317,8 +332,6 @@ $(document).ready(function () {
   
     dtListProds.on("rowClick", function(e, row){
         let data =  row.getData()
-
-        // console.log(data);
         $.ajax({
             type: 'POST',
             url: '/trans/delivery-order/det_produksi',
@@ -381,14 +394,19 @@ $(document).ready(function () {
                             title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
                         },];
         const dt_Ukuran = ukuran;
-        // console.log(dt_Ukuran)
-        // console.log(data)
         for (const el of dt_Ukuran) {
             const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
+            let newCol = isKey + "_key";
             newColum.push(
             {
                 title:el.kode_ukuran, field: isKey,  sorter: "string", headerSort:false, align: "center", cssClass: "text-center",
                 width:"8%", bottomCalc:"sum"
+            })
+
+            newColum.push(
+            {
+                title:el.kode_ukuran, field: newCol,  sorter: "string", headerSort:false, align: "center", cssClass: "text-center",
+                width:"8%", bottomCalc:"sum", visible:false
             })
         }
 
@@ -504,9 +522,7 @@ $(document).ready(function () {
 
 		let dataOrder = dtListDetail.getData();
 		let objIndex  = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.kode_warna == (data.kode_warna) && obj.kode_ukuran == (data.kode_ukuran));
-		let ix_order  = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
-        // console.log(dataOrder);
-        // console.log(data);
+        let ix_order  = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
 		// let ktQty     = isQty.findIndex(obj => obj.kategori_id == (data.kategori_id));
 		// let ktQtyO    = isQtyO.findIndex(obj => parseInt(obj.sl_order_det_id) === parseInt(isSlc.val()));
 		
@@ -521,8 +537,6 @@ $(document).ready(function () {
 		data.seq = dataTable.length + 1;
 		// if(data.qty > dataOrder[ix_order].qty_prod){
             if(dataTable[objIndex] == undefined){
-                // console.log('ix_order', ix_order);
-                // console.log('dataOrder', dataOrder);
                 // data.sl_order_det_id = isSlc.val();//get_sl_orderID(dataTable, dataOrder, ix_order, data.kategori_id);
                 if(dataOrder.length > 0){
                     let qty_order  = dataOrder[ix_order].qty;
@@ -530,7 +544,7 @@ $(document).ready(function () {
                     data.qty = data.qty_prod + 1; 
                     if(qty_orderO < qty_order){
                         dataTable.push(data);
-                        addkuota(data.ref_detail_id, false);
+                        addkuota(data.ref_detail_id, false, data);
                         // $("#modal-list-item").modal("hide");
                     }else{
                         alert("Jumlah Order item tersebut sudah terpenuhi !");
@@ -552,7 +566,7 @@ $(document).ready(function () {
                     data.qty = data.qty_prod + 1; 
                     if(qty_orderO < qty_order){
                         dataTable[objIndex].qty = parseFloat(dataTable[objIndex].qty) + 1; 
-                        addkuota(data.ref_detail_id, false);
+                        addkuota(data.ref_detail_id, false, data);
                         // $("#modal-list-item").modal("hide");
                     }else{
                         alert("Jumlah Order item tersebut sudah terpenuhi !");
@@ -567,11 +581,15 @@ $(document).ready(function () {
 		$( "#text_barcode" ).val("");
 	}
 
-    function addkuota(ref_detail_id, hapus){
+    function addkuota(ref_detail_id, hapus, dataProd){
 		seq = parseInt(ref_detail_id);
 		let tblDetail = dtListDetail.getData();
 		let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === seq);
 		let arrData  = tblDetail[objIndex];
+        let tblDetailcol = dtListDetail.getColumnDefinitions();
+        let refUkuran = dataProd.key_ukuran + "_key".toLowerCase();
+        let colDef = tblDetailcol.find(col => col.field == refUkuran);
+        let colDefField = colDef.field;
 		
 		if(objIndex >= 0){
 			if(hapus){
@@ -580,6 +598,7 @@ $(document).ready(function () {
 			}else{
 				tblDetail[objIndex].qty_prod   = parseInt(tblDetail[objIndex].qty_prod) + 1;
                 tblDetail[objIndex].qty_remain = parseInt(tblDetail[objIndex].qty_remain) - 1;
+                tblDetail[objIndex][colDefField] = parseInt(dataProd.qty);
 			}
 		}
 
@@ -701,17 +720,12 @@ $(document).ready(function () {
             if (refData.length > 0) {
                 const arrKunci = kataKunci.split(";");
                 let hasil = refData.map(item => ({ ...item }));
-                
-                //  console.log('hasil', hasil)
-                //  console.log('arrKunci', arrKunci)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
                     hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
                 }
-                //  console.log('hasil1', hasil)
                 if (arrKunci[1]!= undefined && arrKunci[1] != '') {
                     hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
                 }
-                //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
                     const normalize = str => str.toUpperCase().replace(/\s+/g, ' ').trim();
                     const inputColor = normalize(arrKunci[2]);
@@ -736,8 +750,6 @@ $(document).ready(function () {
                         return false;
                     });
                 }
-                // console.log('hasil3', hasil)
-                // console.log('arrKunci', arrKunci
 
                 
                

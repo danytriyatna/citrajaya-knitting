@@ -397,10 +397,14 @@ class SalesOrderModel extends \App\Models\PrModel
             ) AS keterangan,
             {$col11},
              COALESCE((
-                    SELECT SUM(x.harga_total)
-                    FROM trans_sales_order_ukuran x
-                    WHERE x.id_sales_order_det = tbl.id
-                ), 0) as total_harga
+    SELECT SUM(tdp.qty_do * tdp.harga_satuan)
+    FROM trans_delivery_detail tdd
+    INNER JOIN trans_delivery_prod tdp 
+        ON tdp.id_delivery = tdd.id_delivery 
+       AND tdp.id_ukuran = tdd.id_ukuran 
+       AND tdp.ref_detail_id = tdd.ref_detail_id
+    WHERE tdd.ref_detail_id = tbl.id
+), 0) AS total_harga
         FROM 
             CROSSTAB(
                 $$

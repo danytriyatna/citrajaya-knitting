@@ -281,6 +281,12 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id ),0) as qty_dlv,
+                    coalesce((
+    select sum(tdp.qty_do * tdp.harga_satuan)
+    from trans_delivery td
+    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+    where td.id_walkorder = tw.id
+),0) as total_harga_delivery,
                     tw.id as id_walkorder
                 FROM
                     trans_sales_order_ukuran tsou
@@ -302,6 +308,12 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id ),0) as qty_dlv,
+                    coalesce((
+    select sum(tdp.qty_do * tdp.harga_satuan)
+    from trans_delivery td
+    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+    where td.id_walkorder = tw.id
+),0) as total_harga_delivery,
                     tw.id as id_walkorder
                 from 
                     trans_sample_ukuran tsu

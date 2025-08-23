@@ -168,7 +168,7 @@ $(document).ready(function () {
     
             {
                 title: 'QTY', field: 'qty', headerSort:false, formatter: "html", sorter: 'string',
-                width: '30%', hozAlign: 'right', cssClass: 'text-end',
+                width: '30%', hozAlign: 'right', cssClass: 'text-end', bottomCalc:"sum",
                 editor: "input",
                 editorParams: {
                     min: 1
@@ -406,7 +406,7 @@ $(document).ready(function () {
             newColum.push(
             {
                 title:el.kode_ukuran, field: newCol,  sorter: "string", headerSort:false, align: "center", cssClass: "text-center",
-                width:"8%", bottomCalc:"sum", visible:false
+                width:"8%", bottomCalc:"sum"
             })
         }
 

@@ -347,7 +347,6 @@ $(document).ready(function () {
                         let row = cell.getRow();
                         let data_row = row.getData();
                         if (e.target.title === 'print-warna') {
-                            // console.log(data_row)
 
                             const inpp_slcUkuran = $("#print_slc_ukuran");
                             const inpp_qty       = $("#print_qty");
@@ -367,8 +366,6 @@ $(document).ready(function () {
                             brcStyle.val(data.style)
                             inpp_buyer.html(data.nama)
 
-                            // console.log("kolom print", data_row)
-
                             setTimeout(() => {
                                 inpp_trans.html(data_row.id);
                                 mdlPrint.modal("show");
@@ -384,7 +381,6 @@ $(document).ready(function () {
             for (const el of data.key_ukuran) {
                 const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
                 // total += isKey;
-                console.log(isKey + " || " + el.kode_ukuran);
                 isColumn.push({ 
                     headerSort: false,  
                     title: el.kode_ukuran, 
@@ -569,7 +565,6 @@ $(document).ready(function () {
                 });
             },
             success: function(data) {
-                console.log("userz", data)
                 idSalesOrder = id
                 rowDet.show()
                 inpData.val(data.id)
@@ -723,13 +718,11 @@ $(document).ready(function () {
     }
 
 
-    function deleteData($id) {
-        
+    function deleteData(id) {
             $.ajax({
-                type: 'POST',
-                url: '/trans/sales-order/delete/detail',
-                data: {id:$id},
-                dataType: "json",
+                type: 'GET',
+                url: `/trans/sales-order/delete/detail/${id}`,
+                dataType: 'json', 
                 beforeSend: function () {
                     Swal.fire({
                         title: 'Loading...',
@@ -989,7 +982,6 @@ $(document).ready(function () {
                     // inpDeskripsi.val(isSampleData[0].deskripsi)
                 }else{
                     setTimeout(() => {
-                        // console.log(inpSample.attr('value'))
                         inpSample.attr('value') != undefined ? inpSample.val(inpSample.attr('value')).trigger('change') : ''
                     }, 500);
                 }
@@ -1001,7 +993,6 @@ $(document).ready(function () {
             },
             error: function (res) {
               let msg = res.responseJSON.message;
-              console.log(res.responseJSON.message)
               Swal.close();
             },
           });

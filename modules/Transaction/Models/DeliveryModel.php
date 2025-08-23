@@ -33,7 +33,7 @@ class DeliveryModel extends \App\Models\PrModel
         ),0)
     ) as sisa_qty");
 
-        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inn er");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_produksi tp", "tp.id = abx.id_produksi", "inner");
         $builder->join("trans_walkorder twx", "tp.id_walkorder = twx.id", "inner");
         $builder->join("trans_sales_order tso", "tso.id = twx.ref_id and twx.tipe_id = 2", "left");
@@ -43,7 +43,7 @@ class DeliveryModel extends \App\Models\PrModel
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                     $builder->where('LOWER(abx.delivery_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    $builder->orWhere('LOWER(abx.wo_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 
@@ -91,7 +91,7 @@ class DeliveryModel extends \App\Models\PrModel
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
                 $builder->where('LOWER(abx.delivery_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(abx.wo_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }
 

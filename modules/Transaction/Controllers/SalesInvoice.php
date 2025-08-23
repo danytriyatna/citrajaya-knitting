@@ -116,10 +116,12 @@ class SalesInvoice extends BaseController
       // $tipe   = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
       $total       = $row->total;
+      $pay_item       = $row->pay_item;
       $diskon      = $row->diskon;
       $pph         = $row->pph;
       $pph_total   = $row->pph_total;
       $grand_total = $row->grand_total;
+      $sisa_bayar = !empty($pay_item)? $grand_total - $pay_item : $grand_total;
 
       array_push(
         $build_array["data"],
@@ -133,8 +135,8 @@ class SalesInvoice extends BaseController
           "pph"               => $pph,
           "grand_total"       => $grand_total,
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),
-          "bayar"             => 0,
-          "sisa_bayar"        => 0,
+          "bayar"             => $pay_item,
+          "sisa_bayar"        => $sisa_bayar,
           "status"            => $status,
           "aksi"              => $btnAction
         )

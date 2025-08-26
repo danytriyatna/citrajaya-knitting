@@ -118,6 +118,9 @@ $(document).ready(function () {
                             let tblDetailcol = dtListDetail.getColumnDefinitions();
                             let kodeWarna = rowData.kode_warna.toLowerCase();
                             let refUkuran = rowData.key_ukuran + "_key".toLowerCase();
+                            if (refUkuran == "all_key") {
+                                refUkuran = "all__key"
+                            }
                             let colDef = tblDetailcol.find(col => col.field == refUkuran);
                             let colDefField = colDef.field;
                             let allData = cell.getTable().getData();
@@ -406,7 +409,7 @@ $(document).ready(function () {
             newColum.push(
             {
                 title:el.kode_ukuran, field: newCol,  sorter: "string", headerSort:false, align: "center", cssClass: "text-center",
-                width:"8%", bottomCalc:"sum"
+                width:"8%", bottomCalc:"sum", visible:false
             })
         }
 
@@ -588,6 +591,9 @@ $(document).ready(function () {
 		let arrData  = tblDetail[objIndex];
         let tblDetailcol = dtListDetail.getColumnDefinitions();
         let refUkuran = dataProd.key_ukuran + "_key".toLowerCase();
+        if (refUkuran == "all_key") {
+            refUkuran = "all__key"
+        }
         let colDef = tblDetailcol.find(col => col.field == refUkuran);
         let colDefField = colDef.field;
 		

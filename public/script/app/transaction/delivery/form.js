@@ -488,7 +488,8 @@ $(document).ready(function () {
 
     let refData = [];
     $( "#text_barcode" ).autocomplete({
-		source: function( request, response ) {
+        source: function( request, response ) {
+        $(".preloader").css("opacity", "0.7").show();
 		  $.ajax({
 			url: "/trans/delivery-order/cari_produk",
 			dataType: "json",
@@ -504,6 +505,7 @@ $(document).ready(function () {
 			  }else{
 				  console.log(data.msg);
 			  }
+              $(".preloader").hide().css("opacity", "1");
 			}
 		  });
 		},

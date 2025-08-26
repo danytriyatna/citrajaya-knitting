@@ -20,7 +20,7 @@ class CrModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " tr");
 
         $builder->select("  tr.id, tr.kode_cr, tr.tgl_transaksi, tr.pph, tr.total_bayar, tr.id_rekening, 
-                            tr.status, rk.id as id_konsumen,  rk.nama as nama_konsumen,
+                            tr.status, rk.id as id_konsumen,  rk.nama as nama_konsumen,  rk.alamat as alamat_konsumen,
                             rka.rekening_no, rka.rekening_bank, rka.rekening_an");
 
         $builder->join("ref_konsumen rk", "tr.id_konsumen = rk.id", "inner");

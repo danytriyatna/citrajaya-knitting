@@ -257,10 +257,10 @@ $(document).ready(function () {
         if (dataItem && dataItem.length > 0) {
             inpLDetail.val(JSON.stringify(dataItem));
         }
-
-        if(fmTgl.val().length > 0){
-            fmTgl.val(formatLocaleDate(fmTgl.val())).trigger("change");
-        }
+		// console.log(fmTgl.val());
+        // if(fmTgl.val().length > 0){
+        //     fmTgl.val(formatLocaleDate(fmTgl.val())).trigger("change");
+        // }
     }
 
     // on save

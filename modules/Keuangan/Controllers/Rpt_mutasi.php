@@ -27,6 +27,7 @@ class Rpt_mutasi extends BaseController
     protected $mtrans_akun;
     protected $mtrans_det;
     protected $mrekening;
+    protected $mRekening;
 
 	function __construct()
     {
@@ -35,6 +36,7 @@ class Rpt_mutasi extends BaseController
         $this->mtrans_akun = new Mtrans_akun();
         $this->mtrans_det = new Mtrans_akun_det();
         $this->mrekening = new RekeningModel();
+        $this->mRekening   = new RekeningModel();
     }
 
 	public function index()
@@ -56,6 +58,7 @@ class Rpt_mutasi extends BaseController
         );
 
 		$this->data['titlehead'] = "Laporan Mutasi Beban Biaya";
+        $this->data['rekening_list'] = $this->mRekening->getData(null, 0, 9999);
 		return view($this->url_v.'\vakun_rep_mutasi', $this->data);
 	}
 
@@ -392,6 +395,242 @@ class Rpt_mutasi extends BaseController
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);
 		
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="'.$fileName.'"'); 
+        header('Cache-Control: max-age=0');
+        ob_end_clean();
+        $writer->save('php://output'); // download file 
+        exit;
+    }
+
+    public function exp_mutasi_new($from_date, $to_date, $ref_rekening){
+        $fileName = "laporan-mutasi.xlsx";
+        $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
+        $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
+
+        $results = $this->mcoa->get_mutasi_export($tanggal_sql_from, $tanggal_sql_to, $ref_rekening);
+        
+
+        //start phpspreadsheet
+        $sheets    = new Spreadsheet;
+
+        $gets = $sheets->getActiveSheet();
+        $title = formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $tanggal_sql_from))))." - ".formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $tanggal_sql_to))));
+        $gets->getStyle('A2')->getFont()->setName('Arial Narrow')->setSize('16')->setBold(true);
+          
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A2', 'Laporan Mutasi '. $title)
+
+               ->setCellValue('A4', 'Tanggal')
+               ->setCellValue('B4', 'Akun Kode')
+               ->setCellValue('C4', 'Kode')
+               ->setCellValue('D4', 'Nama Akun')
+               ->setCellValue('E4', 'Keterangan')
+               ->setCellValue('F4', 'Jumlah');
+
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+
+            $stylexArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+
+            $stylexArrayFooter = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+            ];
+
+            $styleArray_header = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+
+            $style_bodyRight = [
+                'borders' => [
+                    'right' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            $style_bodyTop = [
+                'borders' => [
+                    'top' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            $style_bodyBottom = [
+                'borders' => [
+                    'bottom' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            
+        $gets->getStyle('A4:F4')->applyFromArray($styleArray_header);
+        // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
+        
+        // set mergecell
+        // $sheets->getActiveSheet()->mergeCells('A2:I2');
+        $sheets->getActiveSheet()->mergeCells('A2:F2');
+        // $sheets->getActiveSheet()->mergeCells('A4:I4');
+        // $sheets->getActiveSheet()->mergeCells('A5:C5');
+
+        // set Center title
+        $sheets->getActiveSheet()->getStyle('A2')
+                ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+        
+        // set width
+          $gets->getColumnDimension('A')->setWidth(20);
+          $gets->getColumnDimension('B')->setWidth(25);
+          $gets->getColumnDimension('C')->setWidth(15);
+          $gets->getColumnDimension('D')->setWidth(45);
+          $gets->getColumnDimension('E')->setWidth(60);
+          $gets->getColumnDimension('F')->setWidth(30);
+        //   $gets->getColumnDimension('O')->setWidth(20);
+
+        // end set width
+        //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:F4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:F4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+
+        
+        $gets->setTitle('Detail');
+        $indexs = array(
+            'A','B','C','D', 'E','F'
+        );
+
+        for ($i=0; $i < 6 ; $i++) { 
+
+                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setARGB('C5D9F1');
+                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getEndColor()->setARGB('C5D9F1');
+            
+            // $sheets->getActiveSheet()->mergeCells($indexs[$i].'2');
+
+            $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
+                    ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                    
+            $gets->getStyle($indexs[$i].'4')->applyFromArray($styleArray_header);
+           
+        }
+
+        $ix = 5;
+        $is = 0;
+        // for ($i=1; $i <= 4 ; $i++) { 
+        //     // declaration image
+        //     $isR = $ix * $is;
+        //     if($is > 0){
+        //         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+        //         $drawing->setName('Paid');
+        //         $drawing->setDescription('Paid');
+        //         $drawing->setPath(ROOTPATH . 'public/assets/images/text-excel.png');
+        //         $drawing->setCoordinates('C'.$isR);
+        //         $drawing->setOffsetX(85);
+        //         $drawing->setRotation(-35);
+        //         // $drawing->getShadow()->setVisible(false);
+        //         // $drawing->getShadow()->setDirection(45);
+        //         $drawing->setHeight(65);
+        //         $drawing->setWorksheet($gets);
+        //     }
+
+        //     $is += $ix;
+        // }
+        
+        
+        $length = $ix;
+
+        if(!empty($results)){
+            $length += count($results);
+        }
+
+        $bckColor = "F2F2F2";
+        $ig = $ix;
+        $ip = $ix;
+        
+        $g_id = null; 
+        $p_id = null; 
+
+        $grand_total = 0;
+        for ($xx = 0; $xx < count($results) ; $xx++) { 
+            $r = $results[$xx];
+            $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
+            $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('A'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
+                    ->setCellValue('B'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                    ->setCellValue('C'.$ix, !empty($r->kode) ? $r->kode : 0)
+                    ->setCellValue('D'.$ix, !empty($r->nama) ? $r->nama : 0)
+                    ->setCellValue('E'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('F'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
+
+            // if($length > 0 && $ix === $length - 1){
+            //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
+            // }else{
+                $gets->getStyle('A'.$ix.':F'.$ix)->applyFromArray($stylexArray);
+            // }
+
+            $sheets->getActiveSheet()->getStyle("F" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+
+                    
+            $ix++;
+        }
+        
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Grand Total");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':E'. $length);
+        
+        $gets->getStyle('A'.$length.':F'.$length)->applyFromArray($stylexArrayFooter);
+        
+       
+        
+        $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('F'.$length, $grand_total);
+
+        $gets->getStyle("F" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+        
+        
+        
+        
+        $sheets->setActiveSheetIndex(0);
+        $writer = new Xlsx($sheets);
+        
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment;filename="'.$fileName.'"'); 
         header('Cache-Control: max-age=0');

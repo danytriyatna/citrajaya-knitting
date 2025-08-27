@@ -39,6 +39,25 @@
                       <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i>
                       Print</button>
                   </div>
+                  <div class="col-sm-2">
+                    <label class="control-label text-start col-form-label" for="from_date">From Date Export</label>
+                    <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="Pilih tanggal">
+                  </div>
+                  <div class="col-sm-2">
+                    <label class="control-label text-start col-form-label" for="to_date">To Date Export</label>
+                    <input type="text" id="to_date" name="to_date" class="form-control datepickerx" placeholder="Pilih tanggal">
+                  </div>
+                  <div class="col-sm-2">
+                    <label class="control-label text-start col-form-label" for="select_payment_type">Payment Type Export</label>
+                      <div class="col-md-9">
+                        <select id="select_payment_type" name="select_payment_type" class="form-select select2" data-placeholder="-- Pilih Payment Type --">
+                          <option value=""> - Pilih Payment Type - </option>
+                          <?php foreach ($rekening_list as $item) { ?>
+                            <option value="<?= $item->id; ?>"><?= $item->rekening_no; ?> - <?= $item->rekening_bank; ?></option> 
+                          <?php } ?>
+                      </select>
+                      </div>
+                  </div>
                   <div hidden class="col-sm-3 offset-sm-6">
                     <div class="input-group">
                       <input type="text" class="form-control" id="tb-search" placeholder="Pencarian . . .">

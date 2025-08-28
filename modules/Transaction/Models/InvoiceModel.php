@@ -153,14 +153,22 @@ class InvoiceModel extends \App\Models\PrModel
         $builder->select(" abx.id, abx.id_invoice,  abx.id_ref, abx.kode_ref, abx.tipe_id,
                             abx.qty, abx.qty_do,  abx.total, abx.down_payment, abx.grand_total,
                             (case when abx.tipe_id = 1 then ts.kode_sample else tso.kode_sales_order end) as ref_kode,
-                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_transaksi end) as ref_tgl, tso.tgl_deadline,
-                            tso.uang_dp, tso.tgl_dp, tso.type_dp, rek.rekening_no, rek.rekening_bank, kon.nama as buyer, kon.alamat as alamat_buyer,
-                            kon.no_hp as no_hp_buyer, tso.deskripsi, tso.tgl_transaksi, tso.id_konsumen");
+                            (case when abx.tipe_id = 1 then ts.deskripsi else tso.deskripsi end) as deskripsi,
+                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_transaksi end) as tgl_transaksi,
+                            (case when abx.tipe_id = 1 then ts.tgl_deadline else tso.tgl_deadline end) as tgl_deadline,
+                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_transaksi end) as ref_tgl,
+                            (case when abx.tipe_id = 1 then ts.id_konsumen else tso.id_konsumen end) as id_konsumen,
+                            (case when abx.tipe_id = 1 then kons.nama else kon.nama end) as buyer,
+                            (case when abx.tipe_id = 1 then kons.alamat else kon.alamat end) as alamat_buyer,
+                            (case when abx.tipe_id = 1 then kons.no_hp else kon.no_hp end) as no_hp_buyer,
+                            tso.uang_dp, tso.tgl_dp, tso.type_dp, rek.rekening_no, rek.rekening_bank
+                            ");
 
         $builder->join("trans_sample ts", "ts.id = abx.id_ref and abx.tipe_id = 1", "left");
         $builder->join("trans_sales_order tso", "tso.id = abx.id_ref and abx.tipe_id = 2", "left");
         $builder->join("ref_rekening rek", "rek.id = tso.type_dp", "left");
         $builder->join("ref_konsumen kon", "kon.id = tso.id_konsumen", "left");
+        $builder->join("ref_konsumen kons", "kons.id = ts.id_konsumen", "left");
 
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');

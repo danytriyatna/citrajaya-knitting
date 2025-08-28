@@ -170,6 +170,7 @@ class DeliveryOrder extends BaseController
     $dt_prods = [];
 
     $status = 1;
+    
     if (!empty($id)) {
       $stdData = $this->mDelivery->getData($id);
       $stdData->do_no = $stdData->delivery_kode;
@@ -562,7 +563,6 @@ class DeliveryOrder extends BaseController
       $builderv->where("id_delivery", $id);
       $builderv->delete();
       foreach ($produksi as $itemx) {
-        // dd($produksi);
         $xdata = [];
         $xdata['id_delivery']   = $id;
         $xdata['ref_detail_id'] = $itemx['ref_detail_id'];
@@ -581,7 +581,7 @@ class DeliveryOrder extends BaseController
           $xdata['id_ukuran']    = $iu->id_ukuran;
           $xdata['harga_satuan'] = $itemx[$xharga];
 
-          $this->mDelivery->insertRecordGetid($this->mDelivery->table3, $xdata);
+          $this->mDelivery->updateRecord($this->mDelivery->table3, $xdata, "id", $id);
         }
       }
     }

@@ -323,6 +323,115 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataDetailSample_crostab_si($id)
+    {
+
+
+        // get data ukuran 
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sample'] = $id;
+        $dtUkuran = $this->getUkuranTrans($pru);
+
+        // looping data ukuran
+        // Dynamic Columns
+        $col11 = "";
+        $col12 = "";
+        $col21 = "";
+        $col22 = "";
+        $col3 = "";
+
+        foreach ($dtUkuran as $item) {
+            $key = $item->key_ukuran;
+            if ($key == 'all') $key = 'all_';
+            
+            $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
+
+            // 👉 sekarang qty ambil dari delivery (tdd)
+            $col11 .= ($col11 == "") 
+                ? "coalesce(tbl.$keySql,0) as $keySql" 
+                : ",coalesce(tbl.$keySql,0) as $keySql";
+            
+            $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+
+            $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
+        }
+
+        // crostab query 
+        $sql = "
+                    SELECT 
+                        tbl.id,
+                        ROW_NUMBER ( ) OVER ( ORDER BY tbl.id ) AS no,
+                        COALESCE ( w1.kode_warna, '' ) as colorDasar,
+                        TRIM ( BOTH ' - ' FROM COALESCE ( w1.kode_warna, '' ) || 
+                                CASE WHEN w2.kode_warna IS NOT NULL THEN ' - ' || w2.kode_warna ELSE '' END ||
+                                CASE WHEN w3.kode_warna IS NOT NULL THEN ' - ' || w3.kode_warna ELSE '' END ||
+                                CASE WHEN w4.kode_warna IS NOT NULL THEN ' - ' || w4.kode_warna ELSE '' END ||
+                                CASE WHEN w5.kode_warna IS NOT NULL THEN ' - ' || w5.kode_warna ELSE '' END ||
+                                CASE WHEN w6.kode_warna IS NOT NULL THEN ' - ' || w6.kode_warna ELSE '' END ||
+                                CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
+                                CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
+                        ) AS colour,
+                         TRIM(BOTH ' ~ ' FROM COALESCE(w1.keterangan, '') ||
+                            CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
+                            CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
+                            CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
+                            CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
+                            CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
+                            CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
+                            CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
+                        ) AS keterangan,
+                        {$col11},
+                        COALESCE((
+    SELECT SUM(tdp.qty_do * tdp.harga_satuan)
+    FROM trans_delivery_detail tdd
+    INNER JOIN trans_delivery_prod tdp 
+        ON tdp.id_delivery = tdd.id_delivery 
+       AND tdp.id_ukuran = tdd.id_ukuran 
+       AND tdp.ref_detail_id = tdd.ref_detail_id
+    WHERE tdd.ref_detail_id = tbl.id
+), 0) AS total_harga
+                    FROM 
+                        CROSSTAB(
+                            $$ 
+                            SELECT 
+                                td.id,
+                                ru.seq,
+                                 (case when ru.key_ukuran = 'all' THEN 'all_' else ru.key_ukuran end) as key_ukuran,
+                                SUM(COALESCE(tu.qty, 0)) AS qty
+                            FROM 
+                                trans_sample_ukuran tu 
+                            INNER JOIN trans_sample_det td ON td.id = tu.id_sample_det
+                            INNER JOIN ref_ukuran ru on ru.id = tu.id_ukuran
+                            WHERE (tu.qty is not null and tu.qty > 0) AND td.id_sample = {$id}
+                            group by td.id, ru.key_ukuran, ru.seq
+                            order by td.id, ru.seq asc
+                            $$,
+                            $$ 
+                                SELECT unnest(string_to_array('{$col3}', ','))
+                            $$
+                        ) AS tbl (
+                            id INT,
+                            seq INT,
+                            {$col21}
+                        )
+                    INNER JOIN trans_sample_det td ON td.id = tbl.id
+                    INNER JOIN ref_warna w1 ON td.id_warna_1 = w1.id
+                    LEFT JOIN ref_warna w2 ON td.id_warna_2 = w2.id
+                    LEFT JOIN ref_warna w3 ON td.id_warna_3 = w3.id
+                    LEFT JOIN ref_warna w4 ON td.id_warna_4 = w4.id
+                    LEFT JOIN ref_warna w5 ON td.id_warna_5 = w5.id
+                    LEFT JOIN ref_warna w6 ON td.id_warna_6 = w6.id
+                    LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
+                    LEFT JOIN ref_warna w8 ON  td.id_warna_8 = w8.id;
+
+            ";
+
+        $query = $this->db->query($sql);
+        $this->_data = $query->getResult();
+
+        return $this->_data;
+    }
+
     function getDataSample($kodeSample)
     {
         $builder = $this->db->table($this->table);

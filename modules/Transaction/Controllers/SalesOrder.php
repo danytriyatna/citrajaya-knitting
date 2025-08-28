@@ -728,7 +728,7 @@ class SalesOrder extends BaseController
     }
 
     if ($id != null && $id != "") {
-      $id = decrypt($id);
+      // $id = decrypt($id);
     }
 
     $id = (int)$id;

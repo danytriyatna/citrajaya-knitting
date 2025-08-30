@@ -209,6 +209,7 @@
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
+            <td style="border-bottom:1px solid #000;" class="text-right"></td>
           </tr>
         <?php $proses = $r->proses; } ?>
 

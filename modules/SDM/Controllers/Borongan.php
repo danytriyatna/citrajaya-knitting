@@ -143,6 +143,20 @@ class Borongan extends BaseController
     // $params['id_proses'] = $id_proses;    
 
     $results = $this->mborongan->getData(null, 0, 99999, null, null, $params);
+    foreach ($results as $row) {
+        $keterangan_style = "";
+
+        if(!empty($row->keterangan_style)){
+          $keterangan_style = $row->keterangan_style;
+        }
+
+        if(!empty($row->keterangan)){
+          $keterangan_style .= ' '. $row->keterangan;
+        }
+        $row->keterangan_style = $keterangan_style;
+        $harga = $row->harga_total / $row->qty;
+        $row->harga = $harga;
+    }
     $this->data['row'] = $stdData;
     $this->data['results'] = $stdData;
     $this->data['detail'] = $results;

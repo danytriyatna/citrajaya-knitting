@@ -405,23 +405,22 @@ class DeliveryOrder extends BaseController
     if (!empty($produksi)) {
 
       // $rukuran = $this->mUkuran->getData(0, 0, 999);
-      foreach ($produksi as $itemx) {
-        // dd($itemx);
+      foreach ($produksi as $keyx => $itemx) {
         $xdata = [];
         $xdata['id_delivery']   = $id;
         $xdata['ref_detail_id'] = $itemx['ref_detail_id'];
-
+        
         $xdata['created_at']    = $tgl;
         $xdata['created_by']    = $userId;
-        foreach ($data_ukuran as $iu) {
+        foreach ($data_ukuran as $keyiu => $iu) {
           $keyUkuran = $iu->key_ukuran;
           $indx      = $iu->key_ukuran;
-
+          
           if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
           $xdata['qty'] = $itemx[$keyUkuran];
-          $xdata['qty_do']          = $itemx[$keyUkuran."_key"];
+          $xdata['qty_do']          = (!empty($itemx[$keyUkuran."_key"])) ? $itemx[$keyUkuran."_key"] : 0;
           $xharga    = $keyUkuran . '_hrg';
-
+          
           $xdata['id_ukuran']    = $iu->id_ukuran;
           $xdata['harga_satuan'] = $itemx[$xharga];
 

@@ -404,6 +404,9 @@ class Rpt_mutasi extends BaseController
     }
 
     public function exp_mutasi_new($from_date, $to_date, $ref_rekening){
+        if ($ref_rekening == "all") {
+            $ref_rekening = null;
+        }
         $fileName = "laporan-mutasi.xlsx";
         $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
         $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
@@ -422,12 +425,13 @@ class Rpt_mutasi extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A2', 'Laporan Mutasi '. $title)
 
-               ->setCellValue('A4', 'Tanggal')
-               ->setCellValue('B4', 'Akun Kode')
-               ->setCellValue('C4', 'Kode')
-               ->setCellValue('D4', 'Nama Akun')
-               ->setCellValue('E4', 'Keterangan')
-               ->setCellValue('F4', 'Jumlah');
+               ->setCellValue('A4', 'Tipe Bayar')
+               ->setCellValue('B4', 'Tanggal')
+               ->setCellValue('C4', 'Akun Kode')
+               ->setCellValue('D4', 'Kode')
+               ->setCellValue('E4', 'Nama Akun')
+               ->setCellValue('F4', 'Keterangan')
+               ->setCellValue('G4', 'Jumlah');
 
             $styleArray = [
                 'borders' => [
@@ -460,6 +464,56 @@ class Rpt_mutasi extends BaseController
                 'alignment' => [
                     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
                     'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'C5D9F1', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $stylexArraySubFooter = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $stylexArraySubFooter2 = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
                 ],
             ];
 
@@ -497,12 +551,12 @@ class Rpt_mutasi extends BaseController
                 ],
             ];
             
-        $gets->getStyle('A4:F4')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:G4')->applyFromArray($styleArray_header);
         // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
         // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:F2');
+        $sheets->getActiveSheet()->mergeCells('A2:G2');
         // $sheets->getActiveSheet()->mergeCells('A4:I4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
@@ -512,26 +566,27 @@ class Rpt_mutasi extends BaseController
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
         
         // set width
-          $gets->getColumnDimension('A')->setWidth(20);
-          $gets->getColumnDimension('B')->setWidth(25);
-          $gets->getColumnDimension('C')->setWidth(15);
-          $gets->getColumnDimension('D')->setWidth(45);
-          $gets->getColumnDimension('E')->setWidth(60);
-          $gets->getColumnDimension('F')->setWidth(30);
+          $gets->getColumnDimension('A')->setWidth(25);
+          $gets->getColumnDimension('B')->setWidth(20);
+          $gets->getColumnDimension('C')->setWidth(25);
+          $gets->getColumnDimension('D')->setWidth(15);
+          $gets->getColumnDimension('E')->setWidth(45);
+          $gets->getColumnDimension('F')->setWidth(60);
+          $gets->getColumnDimension('G')->setWidth(30);
         //   $gets->getColumnDimension('O')->setWidth(20);
 
         // end set width
         //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:F4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:F4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+          $gets->getStyle('A4:G4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:G4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F'
+            'A','B','C','D', 'E','F','G'
         );
 
-        for ($i=0; $i < 6 ; $i++) { 
+        for ($i=0; $i < 7 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -572,6 +627,7 @@ class Rpt_mutasi extends BaseController
         
         
         $length = $ix;
+        $length_sub = $ix;
 
         if(!empty($results)){
             $length += count($results);
@@ -585,44 +641,101 @@ class Rpt_mutasi extends BaseController
         $p_id = null; 
 
         $grand_total = 0;
+        $grand_total_sub = 0;
+        $ref_rekening_now = null;
+        $ref_bank = null;
         for ($xx = 0; $xx < count($results) ; $xx++) { 
+            
             $r = $results[$xx];
+            if ($xx == 0) {
+                $ref_rekening_now = $r->ref_rekening_id;
+                $ref_bank = $r->tipe_bayar;
+            }
+            else if ($r->ref_rekening_id != $ref_rekening_now) {
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, $ref_bank);
+
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('B'.$ix, "Total");
+                
+                $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
+                
+                $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
+                $gets->getStyle('B'.$ix.':G'.$ix)->applyFromArray($stylexArraySubFooter2);
+                
+                
+                
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('G'.$ix, $grand_total_sub);
+                
+                $gets->getStyle("G" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+                $grand_total_sub = 0;
+                $ref_bank = $r->tipe_bayar;
+                $ix++;
+                $length++;
+            }
+            else {
+                $ref_bank = $r->tipe_bayar;
+            }
             $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
+            $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
             $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('A'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
-                    ->setCellValue('B'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
-                    ->setCellValue('C'.$ix, !empty($r->kode) ? $r->kode : 0)
-                    ->setCellValue('D'.$ix, !empty($r->nama) ? $r->nama : 0)
-                    ->setCellValue('E'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('F'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                    ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
+                    ->setCellValue('C'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                    ->setCellValue('D'.$ix, !empty($r->kode) ? $r->kode : 0)
+                    ->setCellValue('E'.$ix, !empty($r->nama) ? $r->nama : 0)
+                    ->setCellValue('F'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('G'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':F'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':G'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("F" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("G" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
-                    
+            $ref_rekening_now = $r->ref_rekening_id;
             $ix++;
+            if ($xx == count($results) - 1) {
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, $ref_bank);
+
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('B'.$ix, "Total");
+                
+                $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
+                
+                $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
+                $gets->getStyle('B'.$ix.':G'.$ix)->applyFromArray($stylexArraySubFooter2);
+                
+                
+                
+                $sheets->setActiveSheetIndex(0)
+                ->setCellValue('G'.$ix, $grand_total_sub);
+                
+                $gets->getStyle("G" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+                $length++;
+            }
         }
-        
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Grand Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':E'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
         
-        $gets->getStyle('A'.$length.':F'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':G'.$length)->applyFromArray($stylexArrayFooter);
         
        
         
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('F'.$length, $grand_total);
+                    ->setCellValue('G'.$length, $grand_total);
 
-        $gets->getStyle("F" . $length )->getNumberFormat()
+        $gets->getStyle("G" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
         

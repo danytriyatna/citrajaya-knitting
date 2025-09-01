@@ -52,6 +52,7 @@
                       <div class="col-md-9">
                         <select id="select_payment_type" name="select_payment_type" class="form-select select2" data-placeholder="-- Pilih Payment Type --">
                           <option value=""> - Pilih Payment Type - </option>
+                          <option value="all"> Semua </option>
                           <?php foreach ($rekening_list as $item) { ?>
                             <option value="<?= $item->id; ?>"><?= $item->rekening_no; ?> - <?= $item->rekening_bank; ?></option> 
                           <?php } ?>

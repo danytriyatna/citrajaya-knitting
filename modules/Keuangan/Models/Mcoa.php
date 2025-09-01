@@ -188,14 +188,19 @@ class Mcoa extends PrModel
     }
 
     function get_mutasi_export($from_date = null, $to_date = null, $ref_rekening = null){
-        
         $builder = $this->db->table("trans_akun_det tad");
-        $builder->select("ta.trans_akun_date, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah");
+        $builder->select("ta.trans_akun_date, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
         $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
         $builder->join("m_coa mc", "mc.id = tad.coa_id", "left");
+        $builder->join("ref_rekening rr", "rr.id = ta.ref_rekening_id", "left");
         $builder->where("tad.active = 1");
         $builder->where("ta.trans_akun_date BETWEEN '$from_date' AND '$to_date'");
-        $builder->where("ta.ref_rekening_id", $ref_rekening);
+        if (!empty($ref_rekening)) {
+            $builder->where("ta.ref_rekening_id", $ref_rekening);
+        }
+        else {
+            $builder->orderBy("ta.ref_rekening_id ASC");
+        }
         $builder->orderBy("ta.trans_akun_date ASC");
         
         $this->_data = $builder->get()->getResult();

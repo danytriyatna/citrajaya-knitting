@@ -745,7 +745,7 @@ class SampleModel extends \App\Models\PrModel
     {
         $kd = $prefix;
         $builder = $this->db->table($table . ' a');
-        $builder->select("LEFT($kode, 6) AS tgl, RIGHT( $kode, 5 ) AS kode ");
+        $builder->select("LEFT($kode, 7) AS tgl, RIGHT( $kode, 4 ) AS kode ");
 
         $builder->orderBy('a.id', "DESC");
         $builder->limit(1);

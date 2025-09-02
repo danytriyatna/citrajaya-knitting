@@ -22,7 +22,7 @@ class InvoiceModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.tgl_transaksi,  abx.kode_invoice, abx.keterangan, abx.id_konsumen,
                             abx.status, abx.total, abx.diskon,  abx.pph, abx.pph_total, abx.grand_total,
-                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, cbx.pay_item");
+                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, COALESCE(SUM(cbx.pay_item),0) as pay_item");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");
@@ -46,6 +46,12 @@ class InvoiceModel extends \App\Models\PrModel
                 $builder->orderBy('abx.id desc');
             }
 
+            $builder->groupBy("
+                abx.id, abx.tgl_transaksi, abx.kode_invoice, abx.keterangan, abx.id_konsumen,
+                abx.status, abx.total, abx.diskon, abx.pph, abx.pph_total, abx.grand_total,
+                bbx.nama, abx.tgl_jatuh_tempo, abx.rentang_waktu
+            ");
+
             if (empty($offset)) $offset = 0;
             if (empty($limit)) $limit = 10;
 
@@ -54,6 +60,12 @@ class InvoiceModel extends \App\Models\PrModel
             $this->_data = $builder->get()->getResult();
         } else {
             $builder->where("abx.id", $id);
+
+            $builder->groupBy("
+                abx.id, abx.tgl_transaksi, abx.kode_invoice, abx.keterangan, abx.id_konsumen,
+                abx.status, abx.total, abx.diskon, abx.pph, abx.pph_total, abx.grand_total,
+                bbx.nama, abx.tgl_jatuh_tempo, abx.rentang_waktu
+            ");
 
             $this->_data = $builder->get()->getRow();
         }

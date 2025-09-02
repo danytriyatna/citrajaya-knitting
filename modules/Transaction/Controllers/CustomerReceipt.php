@@ -473,12 +473,22 @@ class CustomerReceipt extends BaseController
                     $isi["tgl_transaksi"] = fdate_eng_to_ind($r->tgl_transaksi);
 
                     $isi["total_item"] = $r->total;
-                    $isi["remain_item"] = !empty($r->remain_item) ? $r->remain_item : $r->grand_total;
+                    $params_det['id_invoice'] = $r->id;
+                    $resDataDetail = $this->mCr->getDataDet(null, 0, 9999, 0, 0, $params_det);
+                    $remain = !empty($r->remain_item) ? $r->remain_item : $r->grand_total;
+                    if (!empty($resDataDetail) && count($resDataDetail) > 0) {
+                        foreach ($resDataDetail as $key => $value) {
+                            $remain -= $value->pay_item;
+                        }
+                    }
+                    $isi["remain_item"] = $remain;
                     $isi["pph"] = $r->pph_total;
                     $isi["total"] = $r->grand_total;
                     $isi["pay_item"] = 0;
 
-                    $data[] = $isi;
+                    if ($remain > 0) {
+                        $data[] = $isi;
+                    }
                 }
 
                 $status = true;

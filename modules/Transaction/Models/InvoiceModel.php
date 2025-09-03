@@ -173,6 +173,7 @@ class InvoiceModel extends \App\Models\PrModel
                             (case when abx.tipe_id = 1 then kons.nama else kon.nama end) as buyer,
                             (case when abx.tipe_id = 1 then kons.alamat else kon.alamat end) as alamat_buyer,
                             (case when abx.tipe_id = 1 then kons.no_hp else kon.no_hp end) as no_hp_buyer,
+                            (case when abx.tipe_id = 1 then ts.style else tso.style end) as style,
                             tso.uang_dp, tso.tgl_dp, tso.type_dp, rek.rekening_no, rek.rekening_bank
                             ");
 

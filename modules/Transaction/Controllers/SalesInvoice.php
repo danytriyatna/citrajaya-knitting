@@ -894,7 +894,7 @@ class SalesInvoice extends BaseController
           $warna_det = [];
           if (!empty($dtails_so)) {
              $kode_ref[] = $value_det->kode_ref;
-             $deskripsi[] = $value_det->deskripsi;
+             $deskripsi[] = $value_det->style."/".$value_det->deskripsi;
              foreach ($dtails_so as $keyso => $valueso) {
                 $rowsToDisplay = [];
                 $qty_total = 0;

@@ -570,6 +570,8 @@ class ItemTransfer extends BaseController
 
         foreach ($results as $row) {
             $id = encrypt($row->id_barang);
+            $harga = !empty($row->price) ? $row->price * $row->qty : 0;
+            $harga_satuan = !empty($row->price) ? $row->price : 0;
             array_push(
                 $build_array["data"],
                 array(
@@ -577,7 +579,8 @@ class ItemTransfer extends BaseController
                     "nama_barang" => $row->nama_barang,
                     "kode_barang" => $row->kode_barang,
                     "nama_satuan" => $row->nama_satuan,
-                    "harga_satuan" => $row->harga_satuan,
+                    "harga_satuan" => $harga_satuan,
+                    "total_harga" => $harga,
                     "qty" => $row->qty,
                     "lot_no" => $row->lot_no,
                     "lot_id" => $row->lot_id,

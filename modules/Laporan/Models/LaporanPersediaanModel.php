@@ -598,7 +598,7 @@ $query = $this->db->query($sql, $params);
         $builder->join("({$subQuery->getCompiledSelect()}) e", 
                         'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
                         'inner');
-        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty, b.harga_satuan");
+        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty, a.price, b.harga_satuan");
         if (!empty($params['id_gudang'])) {
             $builder->where('a.id_gudang', $params['id_gudang']);
         }

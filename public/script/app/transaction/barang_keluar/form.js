@@ -176,6 +176,14 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
             title: "Qty", field: "qty", headerSort: false,
             width: "25%"
         },
+        {
+            title: "Harga Satuan", field: "harga_satuan", headerSort: false, 
+            
+        },
+        {
+            title: "Total Harga", field: "total_harga", headerSort: false, 
+            
+        },
     ],
     locale: 'id',    
     // ajaxURL: "/trans/outgoing-goods/list-barang",
@@ -266,17 +274,18 @@ dtListBarang.on("rowClick", function(e, row){
     var idBarang = row._row.data.id;
     var idLot = row._row.data.lot_id;
     var qty = row._row.data.qty;
+    var harga_satuan = row._row.data.harga_satuan;
     var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
     var lotNo = row._row.data.lot_no.replace(/<[^>]*>/g, '');
-    if(dtListDetail.getData().some(x=>x.id_barang == idBarang)){
-        return Swal.fire({
-            text: `Barang ${namaBarang} telah dipilih`,
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
+    // if(dtListDetail.getData().some(x=>x.id_barang == idBarang)){
+    //     return Swal.fire({
+    //         text: `Barang ${namaBarang} telah dipilih`,
+    //         icon: 'error',
+    //         showConfirmButton: false,
+    //         timer: 2000
+    //     });
+    // }
     if(dtListDetail.getData().some(x=>x.id_barang == idBarang && x.lot_id == idLot)){
         return Swal.fire({
             text: `Barang ${namaBarang} dengan lot ${lotNo} telah dipilih`,
@@ -291,6 +300,7 @@ dtListBarang.on("rowClick", function(e, row){
     inpUnit.val(namaSatuan)
     inpLotNo.val(lotNo)
     inpQtyExist.val(qty)
+    inpPrice.val(harga_satuan)
     inpIdLot.val(idLot)
     $("#modal-barang").modal("hide");
 })

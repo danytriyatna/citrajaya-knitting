@@ -24,9 +24,10 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
-        $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no AND gbx.id_gudang = $params[id_gudang] ", "inner");
+        // $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no AND gbx.id_gudang = $params[id_gudang] ", "inner");
 
-        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no,gbx.id as lot_id, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
+        // $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no,gbx.id as lot_id, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
+        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no,uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);

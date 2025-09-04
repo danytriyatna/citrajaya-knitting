@@ -325,7 +325,7 @@ class DeliveryOrder extends BaseController
           $inUp = $this->update($id, $data, $dt_details, $dt_prods);
         } else {
           $data['active'] = 1;
-          $data['delivery_kode'] = $this->mSample->generateNo("DO", "trans_delivery", "delivery_kode");
+          $data['delivery_kode'] = $this->mSample->generateNo("DO", "trans_delivery", "delivery_kode", "DO");
           $data['created_at'] = date('Y-m-d H:i:s');
           $data['created_by'] = $this->get_userid();
           // dd($data);

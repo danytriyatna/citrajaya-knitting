@@ -741,11 +741,16 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data->cnt;
     }
 
-    function generateNo($prefix, $table, $kode)
+    function generateNo($prefix, $table, $kode, $type_menu = null)
     {
         $kd = $prefix;
         $builder = $this->db->table($table . ' a');
-        $builder->select("LEFT($kode, 7) AS tgl, RIGHT( $kode, 4 ) AS kode ");
+        if (!empty($type_menu)) {
+            $builder->select("LEFT($kode, 6) AS tgl, RIGHT( $kode, 5 ) AS kode ");
+        }
+        else {
+            $builder->select("LEFT($kode, 7) AS tgl, RIGHT( $kode, 4 ) AS kode ");
+        }
 
         $builder->orderBy('a.id', "DESC");
         $builder->limit(1);

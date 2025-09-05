@@ -250,7 +250,7 @@ class CustomerReceipt extends BaseController
                     $inUp = $this->update($id, $dataIn, $dtDet);
                 } else {
 
-                    $dataIn['kode_cr'] =  $this->mSample->generateNo("CR", "trans_customer_receipt", "kode_cr");
+                    $dataIn['kode_cr'] =  $this->mSample->generateNo("CR", "trans_customer_receipt", "kode_cr", "CR");
                     $dataIn['created_by'] = $this->get_userid();
                     $dataIn['created_at'] = date('Y-m-d H:i:s');
                     $dataIn['active'] = 1;

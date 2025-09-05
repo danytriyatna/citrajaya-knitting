@@ -334,7 +334,7 @@ class SalesInvoice extends BaseController
           $inUp = $this->update($id, $data, $dt_details);
         } else {
           $data['active'] = 1;
-          $data['kode_invoice'] = $this->mSample->generateNo("SI", "trans_invoice", "kode_invoice");
+          $data['kode_invoice'] = $this->mSample->generateNo("SI", "trans_invoice", "kode_invoice", "SI");
           $data['created_at'] = date('Y-m-d H:i:s');
           $data['created_by'] = $this->get_userid();
 

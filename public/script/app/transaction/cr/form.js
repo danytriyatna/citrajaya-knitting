@@ -48,7 +48,7 @@ $(document).ready(function () {
 			ldDetail[objIndex].pay_item = vals;
 	
 			if(nrencana > nbayar){
-			  ldDetail[objIndex].bayar = false;
+			//   ldDetail[objIndex].bayar = false;
 			}
 		}
 		cell.getElement().className = "row_bayar tabulator-cell";
@@ -148,7 +148,7 @@ $(document).ready(function () {
 			// 	}, editable:editCheck 
 			// }
             , {
-				title: "PPH Nilai", field: "pph",
+				title: "DP", field: "dp",
 				width: 200, headerSort:false, align: "right", cssClass: 'text-end', formatter : "money" //, editor:!disabled_input ,  cellEdited: harga_pph23
 			},
 			
@@ -265,8 +265,23 @@ $(document).ready(function () {
 
     // on save
     $('#btn-save').on('click', function (e) {
-        e.preventDefault();
+		if(fmRekening.val() == null || fmRekening.val() == ""){
+			return Swal.fire({
+				text: "Tipe Pembayaran harus dipilih",
+				icon: 'error',
+				showConfirmButton: false,
+				timer: 2000
+			});
+		}
 
+		else if(fmKonsumen.val() == null || fmRekening.val() == ""){
+			return Swal.fire({
+				text: "Buyer harus dipilih",
+				icon: 'error',
+				showConfirmButton: false,
+				timer: 2000
+			});
+		}
         setDataInputTable();
         $("#actionf").val('save');
         $("#fmain").submit();

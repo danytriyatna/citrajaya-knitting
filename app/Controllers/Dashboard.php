@@ -195,8 +195,12 @@ class Dashboard extends BaseController
           if(!empty($row->tgl_jatuh_tempo)){
               $tgl_jatuh_tempo = fdate_eng_to_ind($row->tgl_jatuh_tempo);
           }
+          $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
+          $pembayaran = !empty($row->pembayaran)? $row->pembayaran : 0;
+          $pembayaran =  $pembayaran < 0 ? 0 - $pembayaran : $pembayaran;
 
-          $sisa_bayar = (float) $row->total_invoice - (float) $row->pembayaran;
+          $pembayaran = $pembayaran + $total_down_payment;
+          $sisa_bayar = (float) $row->total_invoice - (float) $pembayaran;
 
           
           
@@ -206,7 +210,7 @@ class Dashboard extends BaseController
               'nama' => $row->nama,
               'tgl_jatuh_tempo' => $tgl_jatuh_tempo,
               'total_invoice' => $row->total_invoice,
-              'pembayaran' => $row->pembayaran,
+              'pembayaran' => $pembayaran,
               'sisa_bayar' => $sisa_bayar,
           ));
 

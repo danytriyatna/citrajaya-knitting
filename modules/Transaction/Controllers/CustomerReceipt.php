@@ -187,6 +187,7 @@ class CustomerReceipt extends BaseController
                 // $isi["pay_item"] = $r->pay_item;
 
                 $isi["total_item"] = $r->total_item;
+                $isi["dp"] = $r->dp;
                 $isi["remain_item"] = !empty($r->remain_item) ? $r->remain_item : $r->grand_total;
                 $isi["pph"] = $r->pph;
                 $isi["pay_item"] = $r->pay_item;
@@ -320,14 +321,16 @@ class CustomerReceipt extends BaseController
         if (!empty($dataDet)) {
             foreach ($dataDet as $r) {
                 // dd($r);
-                // if($r["bayar"]){
-                if (!empty($r["pay_item"]) && $r["pay_item"] > 0) {
+                if($r["bayar"]){
+                    // if (!empty($r["pay_item"]) && $r["pay_item"] > 0) {
+                        
+                    // }
                     $inv_id = decrypt($r["id_invoice"]);
                     $dtIn["id_invoice"] = $inv_id;
                     $dtIn["id_cr"] = $id;
                     $dtIn["total_item"] = $r["total_item"];
                     $dtIn["remain_item"] = $r["remain_item"];
-                    $dtIn["pph"] = $r["pph"];
+                    // $dtIn["pph"] = $r["pph"];
                     $dtIn["total"] = $r["total"];
                     $dtIn["pay_item"] = $r["pay_item"];
 
@@ -481,8 +484,10 @@ class CustomerReceipt extends BaseController
                             $remain -= $value->pay_item;
                         }
                     }
+                    $remain = $remain - $r->total_down_payment;
                     $isi["remain_item"] = $remain;
                     $isi["pph"] = $r->pph_total;
+                    $isi["dp"] = $r->total_down_payment;
                     $isi["total"] = $r->grand_total;
                     $isi["pay_item"] = 0;
 

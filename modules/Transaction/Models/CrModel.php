@@ -94,7 +94,11 @@ class CrModel extends \App\Models\PrModel
                             trd.pay_item,
                             ti.id as id_invoice,
                             ti.tgl_transaksi,
-                            ti.kode_invoice");
+                            ti.kode_invoice, COALESCE((
+                                SELECT SUM(tid.down_payment)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_invoice = ti.id
+                            ),0) as dp");
 
         $builder->join("trans_invoice ti", "trd.id_invoice = ti.id", "inner");
 

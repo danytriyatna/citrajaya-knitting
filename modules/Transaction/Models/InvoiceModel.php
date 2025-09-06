@@ -22,7 +22,11 @@ class InvoiceModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.tgl_transaksi,  abx.kode_invoice, abx.keterangan, abx.id_konsumen,
                             abx.status, abx.total, abx.diskon,  abx.pph, abx.pph_total, abx.grand_total,
-                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, COALESCE(SUM(cbx.pay_item),0) as pay_item");
+                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, COALESCE(SUM(cbx.pay_item),0) as pay_item, COALESCE((
+                                SELECT SUM(tid.down_payment)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_invoice = abx.id
+                            ),0) as total_down_payment");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");

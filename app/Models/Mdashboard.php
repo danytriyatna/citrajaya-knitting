@@ -79,7 +79,10 @@ class Mdashboard extends Model
         $builder = $this->db->table("trans_invoice ti");
 
         $builder->select(" ti.id, ti.kode_invoice, ti.tgl_transaksi as tgl_invoice, rk.nama, ti.tgl_jatuh_tempo,  ti.grand_total as total_invoice,
-                           COALESCE((select sum(xc.pay_item) from trans_customer_receipt_detail xc where xc.id_invoice = ti.id), 0) as pembayaran");
+                           COALESCE((select sum(xc.pay_item) from trans_customer_receipt_detail xc where xc.id_invoice = ti.id), 0) as pembayaran,  COALESCE((SELECT SUM(tid.down_payment)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_invoice = ti.id
+                            ),0) as total_down_payment");
 
         $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
 
@@ -94,7 +97,7 @@ class Mdashboard extends Model
                 $builder->groupEnd();
             }
 
-            $builder->where("ti.grand_total > COALESCE((select sum(xc.pay_item) from trans_customer_receipt_detail xc where xc.id_invoice = ti.id), 0)"); // kondisi untuk invoice yang belum lunas
+            $builder->where("ti.grand_total > ( COALESCE((select sum(xc.pay_item) from trans_customer_receipt_detail xc where xc.id_invoice = ti.id), 0) + COALESCE((SELECT SUM(tid.down_payment) FROM trans_invoice_detail tid WHERE tid.id_invoice = ti.id),0))"); // kondisi untuk invoice yang belum lunas
 
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);

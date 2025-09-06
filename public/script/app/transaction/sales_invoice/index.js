@@ -22,18 +22,18 @@ $(document).ready(function () {
 			},
 
             {
-				title: 'SI Ammount', field: 'grand_total', headerSort:false, sorter: 'string',
+				title: 'SI Amount', field: 'grand_total', headerSort:false, sorter: 'string',
 				width: 160, formatter : "money", align:'center', cssClass:'text-end'
 			},
 
             {
-				title: 'Paid Ammount', field: 'bayar', formatter : "money", headerSort:false, sorter: 'string',
+				title: 'Paid Amount', field: 'bayar', formatter : "money", headerSort:false, sorter: 'string',
 				width: 160, align:'center', cssClass:'text-end'
 			} ,
 
             
             {
-				title: 'Remain Ammount', field: 'sisa_bayar', headerSort:false, sorter: 'string', align: "center",
+				title: 'Remain Amount', field: 'sisa_bayar', headerSort:false, sorter: 'string', align: "center",
                 width: 160, formatter : "money", align:'center', cssClass:'text-end'
 			} ,
 

@@ -191,22 +191,31 @@
         </thead>
         <tbody>
             <?php $i = 1;
+            $total_dp = 0;
+            $total_invoice = 0;
             $total_sisa = 0;
             $total_bayar = 0;
             foreach ($detail as $row) : ?>
+                <?php 
+                    $dp = !empty($row->dp) ? round($row->dp) : 0;   
+                    $sisa = !empty($row->remain_item) ? round($row->remain_item) : 0;
+                    $bayar = !empty($row->pay_item) ? round($row->pay_item) : 0;
+                ?>
                 <tr>
                     <td><?= $i++ ?></td>
                     <td><?= $row->kode_invoice ?></td>
                     <td><?= fdate_eng_to_ind($row->tgl_transaksi) ?></td>
                     <td class="text-right"><?= !empty($row->total_item) ? "Rp." . number_format(round($row->total_item)) : "" ?></td>
                     <td class="text-right"><?= !empty($row->remain_item) ? "Rp." . number_format(round($row->remain_item)) : "" ?></td>
-                    <td class="text-right"><?= !empty($row->pay_item) ? "Rp." . number_format(round($row->pay_item)) : "" ?></td>
+                    <td class="text-right"><?= "Rp." . number_format($bayar) ?></td>
                     
 
                 </tr>
             <?php 
+                $total_dp += !empty($row->dp) ? round($row->dp) : 0;
+                $total_invoice += !empty($row->total_item) ? round($row->total_item) : 0;
                 $total_sisa += !empty($row->remain_item) ? round($row->remain_item) : 0;
-                $total_bayar += !empty($row->pay_item) ? round($row->pay_item) : 0;
+                $total_bayar += !empty($bayar) ? round($bayar) : 0;
             
             endforeach ?>
 
@@ -214,18 +223,26 @@
         <tfoot>
                 <tr>
                     <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="5">
-                        SISA PEMBAYARAN
+                        TOTAL INVOICE
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000;">
-                        <?= "Rp." . number_format(round($total_sisa)) ?>
+                        <?= "Rp." . number_format(round($total_invoice)) ?>
+                    </th>
+                </tr>
+                <tr>
+                    <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="5">
+                        TOTAL PEMBAYARAN
+                    </th>
+                    <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000;">
+                        <?= "Rp." . number_format(round($total_bayar)) ?>
                     </th>
                 </tr>
                 <tr>
                     <th style="font-size: 12px; text-align: right; border-bottom:1px solid #000; border-left:1px solid #000; padding-right: 6px;" colspan="5">
-                        TOTAL PEMBAYARAN
+                        SISA PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000">
-                        <?= "Rp." . number_format(round($total_bayar)) ?>
+                        <?= "Rp." . number_format(round($total_invoice - $total_bayar)) ?>
                     </th>
                 </tr>
         </tfoot>

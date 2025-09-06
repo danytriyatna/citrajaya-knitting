@@ -446,7 +446,7 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.uang_dp, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
-            where xtb.id_konsumen = 21
+            where xtb.id_konsumen = {$params['id_konsumen']}
             and EXISTS (
                             SELECT 1
                             FROM trans_invoice_detail tdx

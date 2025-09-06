@@ -173,6 +173,10 @@ $(document).ready(function () {
                     width:"5%"
                 },
                 {
+                    title: "List Delivery", visible:false, field: "list_delivery",  sorter: "string", headerSort:false, align: "center", cssClass: "text-start",
+                    width:"10%", 
+                },
+                {
                     title: "Ref No.", field: "ref_kode",  sorter: "string", headerSort:false, align: "center", cssClass: "text-start",
                     width:"15%", 
                 },

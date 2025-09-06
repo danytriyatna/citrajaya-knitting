@@ -192,7 +192,6 @@ class SalesInvoice extends BaseController
       $params['id_invoice'] = $stdData->id;
       $params['id_konsumen'] = $stdData->id_konsumen;
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
-      // dd($dt);
       if (!empty($dt)) {
         $status = true;
         $message = "Berhasil mengambil data  ";
@@ -211,7 +210,7 @@ class SalesInvoice extends BaseController
           $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
           $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
 
-          $total = ($x->tipe_id == 1) ? $x->total_harga : $x->total_harga;
+          $total = ($x->tipe_id == 1) ? $x->total_harga_delivery : $x->total_harga_delivery;
           $total = !empty($total) ? (float) $total : 0;
 
           $isi = [
@@ -375,7 +374,6 @@ class SalesInvoice extends BaseController
 
   function insert($dataIn, $detail)
   {
-
     $tgl = date('Y-m-d H:i:s');
     $userId = $this->get_userid();
 
@@ -384,6 +382,7 @@ class SalesInvoice extends BaseController
     $id = $this->mInvoice->insertRecordGetid($this->mInvoice->table, $dataIn);
 
     $qty = 0;
+    $delivery_id = [];
     if (!empty($detail)) {
 
       $builderx = $this->mInvoice->table($this->mInvoice->table2);
@@ -391,6 +390,12 @@ class SalesInvoice extends BaseController
       $builderx->delete();
       foreach ($detail as $item) {
         if (!empty($item['bayar'])) {
+          $hasil = explode(",", $item['list_delivery']);
+          foreach ($hasil as $key => $value) {
+            if (!in_array($value, $delivery_id)) {
+                $delivery_id[] = $value;
+            } 
+          }
           $ddata = [];
           $ddata['id_invoice'] = $id;
           $ddata['id_ref'] = $item['ref_id'];
@@ -406,6 +411,7 @@ class SalesInvoice extends BaseController
           $ddata['created_at'] = $tgl;
           $ddata['created_by'] = $userId;
           $id_detail = $this->mInvoice->insertRecordGetid($this->mInvoice->table2, $ddata);
+          $ddataDel['invoice_status'] = $userId;
 
           foreach ($item['detail_data'] as $xdetail) {
             $dddata = [];
@@ -417,6 +423,14 @@ class SalesInvoice extends BaseController
             $this->mInvoice->insertRecordGetid($this->mInvoice->table3, $dddata);
           }
         }
+      }
+      
+      if (count($delivery_id) > 0) {
+          foreach ($delivery_id as $key => $value) {
+            $status['invoice_status'] = true;
+            $status['id_invoice'] = $id;
+            $this->mDelivery->updateRecord($this->mDelivery->table, $status, "id", $value);
+          }
       }
     }
 
@@ -618,7 +632,7 @@ class SalesInvoice extends BaseController
     $params['id_konsumen'] = $konsumen_id;
     $params['id_walkorder'] = 1;
     // $dt = $this->mInvoice->get_walkorder_konsumen($params);
-    $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
+    $dt = $this->mInvoice->get_walkorder_konsumen_ori_new($params);
     if (!empty($dt)) {
       $status = true;
       $message = "Berhasil mengambil data  ";
@@ -644,6 +658,7 @@ class SalesInvoice extends BaseController
           'id_walkorder'      => $x->id_walkorder,
           'tgl_transaksi'     => \fdate_eng_to_ind($x->tgl_transaksi),
           'keterangan_style'  => $x->keterangan_style,
+          'list_delivery'     => $x->list_delivery,
           'konsumen_nama'     => $x->konsumen_nama,
           'tipe_id'           => $x->tipe_id,
           'ref_id'            => ($x->tipe_id == 1) ? $x->id : $x->id,

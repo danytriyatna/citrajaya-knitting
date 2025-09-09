@@ -172,7 +172,7 @@ class DeliveryModel extends \App\Models\PrModel
         if(!empty($params['id_delivery'])){
             $builder->where('id_delivery', $params['id_delivery']);
         }
-
+        $builder->orderBy('rk.seq asc');
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }

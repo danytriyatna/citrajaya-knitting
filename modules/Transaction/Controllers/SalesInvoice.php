@@ -123,7 +123,7 @@ class SalesInvoice extends BaseController
       $diskon      = $row->diskon;
       $pph         = $row->pph;
       $pph_total   = $row->pph_total;
-      $grand_total = $row->grand_total;
+      $grand_total = $row->total;
       $sisa_bayar = $grand_total - $pay_item;
 
       array_push(
@@ -314,8 +314,6 @@ class SalesInvoice extends BaseController
         $dt_details = trim($this->request->getPost('dt_details'));
 
         $dt_details = json_decode($dt_details, true);
-
-
         $data['tgl_transaksi'] = \fdate_ind_to_eng($stdData->tgl_si);
         $data['keterangan'] = $stdData->keterangan;
         $data['id_konsumen'] = $stdData->id_konsumen;
@@ -907,7 +905,7 @@ class SalesInvoice extends BaseController
             $dtails_so = $this->mSample->getDataDetailSample_crostab_si($value_det->id_ref);
           }
           else {
-            $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab_si($value_det->id_ref);
+            $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab_si($value_det->id_ref, $id);
           }
           $warna_det = [];
           if (!empty($dtails_so)) {
@@ -919,7 +917,6 @@ class SalesInvoice extends BaseController
                 foreach ($ukuranSize as $ind => $size) {
                     if ($size == "all") {
                         $size = "all_";
-                        
                     }
                     if (!empty($valueso->$size)) {
                         $qty = (int)$valueso->$size;

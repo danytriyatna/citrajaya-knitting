@@ -484,7 +484,7 @@ class CustomerReceipt extends BaseController
                             $remain -= $value->pay_item;
                         }
                     }
-                    $remain = $remain - $r->total_down_payment;
+                    $remain = $remain;
                     $isi["remain_item"] = $remain;
                     $isi["pph"] = $r->pph_total;
                     $isi["dp"] = $r->total_down_payment;

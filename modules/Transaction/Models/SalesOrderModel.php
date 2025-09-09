@@ -344,17 +344,24 @@ class SalesOrderModel extends \App\Models\PrModel
 
     }
 
-    function getDataDetailSalesOrder_crostab_si($id)
+    function getDataDetailSalesOrder_crostab_si($id, $idInvoice = null)
 {
     // get data ukuran 
     $pru['use'] = 1; // ambil ukuran yang digunakan order 
     $pru['id_sales_order'] = $id;
     $dtUkuran = $this->getUkuranTrans($pru);
-
+    
     // Dynamic Columns
     $col11 = "";
     $col21 = "";
     $col3  = "";
+
+    if (!empty($idInvoice)) {
+        $idInvoice = " and td_head.id_invoice = $idInvoice";
+    }
+    else {
+        $idInvoice = "";
+    }
 
     foreach ($dtUkuran as $item) {
         $key = $item->key_ukuran;
@@ -371,7 +378,6 @@ class SalesOrderModel extends \App\Models\PrModel
 
         $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
     }
-
     $sql = "
         SELECT 
             tbl.id,
@@ -397,14 +403,16 @@ class SalesOrderModel extends \App\Models\PrModel
             ) AS keterangan,
             {$col11},
              COALESCE((
-    SELECT SUM(tdp.qty_do * tdp.harga_satuan)
-    FROM trans_delivery_detail tdd
-    INNER JOIN trans_delivery_prod tdp 
-        ON tdp.id_delivery = tdd.id_delivery 
-       AND tdp.id_ukuran = tdd.id_ukuran 
-       AND tdp.ref_detail_id = tdd.ref_detail_id
-    WHERE tdd.ref_detail_id = tbl.id
-), 0) AS total_harga
+                SELECT SUM(tdp.qty_do * tdp.harga_satuan)
+                FROM trans_delivery_detail tdd
+                INNER JOIN trans_delivery_prod tdp 
+                    ON tdp.id_delivery = tdd.id_delivery 
+                AND tdp.id_ukuran = tdd.id_ukuran 
+                AND tdp.ref_detail_id = tdd.ref_detail_id
+                INNER JOIN trans_delivery td_head 
+                    ON td_head.id = tdd.id_delivery
+                WHERE tdd.ref_detail_id = tbl.id and td_head.id_invoice = 45
+            ), 0) AS total_harga
         FROM 
             CROSSTAB(
                 $$
@@ -416,9 +424,11 @@ class SalesOrderModel extends \App\Models\PrModel
                     SUM(COALESCE(tdd.qty,0)) AS qty_do
                 FROM 
                     trans_delivery_detail tdd
+                INNER JOIN trans_delivery td_head ON td_head.id = tdd.id_delivery
                 INNER JOIN trans_sales_order_det td ON td.id = tdd.ref_detail_id
                 INNER JOIN ref_ukuran ru ON ru.id = tdd.id_ukuran
                 WHERE td.id_sales_order = {$id}
+                {$idInvoice}
                 GROUP BY td.id, ru.key_ukuran, ru.seq
                 ORDER BY td.id, ru.seq ASC
                 $$,

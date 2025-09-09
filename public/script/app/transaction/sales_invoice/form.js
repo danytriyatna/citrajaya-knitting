@@ -337,15 +337,19 @@ $(document).ready(function () {
     function setFooterHarga(){
         let detailList = dtListDetail.getData();
         let harga      = 0;
+        let harga_inv      = 0;
 
         for (const inv of detailList) {
             if(inv.bayar != undefined){
-                harga = harga + inv.totals;
+                harga_inv = harga_inv + inv.totals;
+                harga = harga + inv.ref_total;
             }
         }
 
-        let pajak = (harga * ppn) / 100;
-        let total = harga + pajak;
+        // let pajak = (harga * ppn) / 100;
+        // let total = harga + pajak;
+        let pajak = (harga_inv * ppn) / 100;
+        let total = harga_inv + pajak;
 
         ttlText.html(number_format(harga, 2, ',', '.'));
         pajakText.html(number_format(pajak, 2, ',', '.'));

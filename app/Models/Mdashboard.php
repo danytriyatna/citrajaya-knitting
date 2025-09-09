@@ -78,7 +78,7 @@ class Mdashboard extends Model
     {
         $builder = $this->db->table("trans_invoice ti");
 
-        $builder->select(" ti.id, ti.kode_invoice, ti.tgl_transaksi as tgl_invoice, rk.nama, ti.tgl_jatuh_tempo,  ti.grand_total as total_invoice,
+        $builder->select(" ti.id, ti.kode_invoice, ti.tgl_transaksi as tgl_invoice, rk.nama, ti.tgl_jatuh_tempo,  ti.grand_total as total_invoice_bayar, ti.total as total_invoice,
                            COALESCE((select sum(xc.pay_item) from trans_customer_receipt_detail xc where xc.id_invoice = ti.id), 0) as pembayaran,  COALESCE((SELECT SUM(tid.down_payment)
                                 FROM trans_invoice_detail tid
                                 WHERE tid.id_invoice = ti.id

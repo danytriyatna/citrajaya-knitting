@@ -213,11 +213,11 @@ class BarangKeluarModel extends \App\Models\PrModel
                 $dataDetail = [
                     "id_barang" => $idBarang,
                     "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                    "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                     "id_header" => $id,
                     "qty" => $rowData['qty'],
                     "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                 ];
-
                 $this->insertRecordGetid($this->tblDet, $dataDetail);
 
                 if ($data['status'] == 1) {
@@ -228,8 +228,8 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "id_gudang" => $data['id_gudang'],
                     ];
 
-                    $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
-
+                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $data['id_gudang']);
+                    // $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     if (!empty($resLotNo)) {
                         $idLots = $resLotNo->id;
                         $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));

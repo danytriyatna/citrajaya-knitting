@@ -906,6 +906,7 @@ class SalesInvoice extends BaseController
           }
           else {
             $dtails_so = $this->mSalesOrder->getDataDetailSalesOrder_crostab_si($value_det->id_ref, $id);
+            // dd($value_det->id_ref, $id);
           }
           $warna_det = [];
           if (!empty($dtails_so)) {

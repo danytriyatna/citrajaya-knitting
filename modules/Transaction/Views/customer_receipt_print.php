@@ -226,7 +226,7 @@
                         TOTAL INVOICE
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000;">
-                        <?= "Rp." . number_format(round($total_invoice)) ?>
+                        <?= "Rp." . number_format(round($total_sisa)) ?>
                     </th>
                 </tr>
                 <tr>
@@ -242,7 +242,7 @@
                         SISA PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000">
-                        <?= "Rp." . number_format(round($total_invoice - $total_bayar)) ?>
+                        <?= "Rp." . number_format(round($total_sisa - $total_bayar)) ?>
                     </th>
                 </tr>
         </tfoot>

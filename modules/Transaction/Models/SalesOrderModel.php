@@ -355,8 +355,9 @@ class SalesOrderModel extends \App\Models\PrModel
     $col11 = "";
     $col21 = "";
     $col3  = "";
-
+    $tddInvoice = "";
     if (!empty($idInvoice)) {
+        $tddInvoice = " and td_head.id_invoice = $idInvoice" ;
         $idInvoice = " and td_head.id_invoice = $idInvoice";
     }
     else {
@@ -411,7 +412,7 @@ class SalesOrderModel extends \App\Models\PrModel
                 AND tdp.ref_detail_id = tdd.ref_detail_id
                 INNER JOIN trans_delivery td_head 
                     ON td_head.id = tdd.id_delivery
-                WHERE tdd.ref_detail_id = tbl.id and td_head.id_invoice = 45
+                WHERE tdd.ref_detail_id = tbl.id {$tddInvoice}
             ), 0) AS total_harga
         FROM 
             CROSSTAB(

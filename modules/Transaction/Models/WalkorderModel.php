@@ -26,12 +26,14 @@ class WalkorderModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.ref_id, abx.ref_kode, abx.kode_walkorder, abx.id_konsumen, abx.id_style, abx.qty, abx.file_id,
                           abx.ref_kode, abx.status, bbx.nama as konsumen_nama, abx.tgl_deadline, abx.tgl_transaksi, abx.keterangan_style,
-                          abx.tipe_id, cbx.file_name, abx.id_gudang, abx.keterangan
+                          abx.tipe_id, cbx.file_name, abx.id_gudang, abx.keterangan, 
+                          (case when abx.tipe_id = 1 then ts.deskripsi else tso.deskripsi end) as deskripsi,
+                          (case when abx.tipe_id = 1 then ts.style else tso.style end) as style,
                         ");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
-        // $builder->join("trans_sample ts", "ts.id = abx.ref_id and abx.tipe_id = 1", "left");
-        // $builder->join("trans_sales_order tso", "tso.id = abx.ref_id and abx.tipe_id = 2", "left");
+        $builder->join("trans_sample ts", "ts.id = abx.ref_id and abx.tipe_id = 1", "left");
+        $builder->join("trans_sales_order tso", "tso.id = abx.ref_id and abx.tipe_id = 2", "left");
         $builder->join("_files cbx", "abx.file_id = cbx.id", "left");
 
         if ($id == null or $id == "") {
@@ -40,6 +42,8 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.ref_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 

@@ -140,7 +140,7 @@ class Dashboard extends BaseController
               'btnDev' => $btnDev,
               'tipe' => $tipe,
               'nama' => $row->nama,
-              'keterangan' => $row->keterangan,
+              'keterangan' => $row->style."/".$row->deskripsi,
               'tgl_transaksi' => $tgl_transaksi,
               'tgl_deadline' => $tgl_deadline,
               'qty' => $row->qty,

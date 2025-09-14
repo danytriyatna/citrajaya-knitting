@@ -64,7 +64,7 @@ $(document).ready(function () {
                       <div class="col-sm-3 text-start">
                         <h6 class="f-w-700 m-b-6">${data.kode_walkorder}</h6>
                         <p class="f-w-500 m-y-0">${data.ref_kode}</p>
-                        <p class="f-w-500 m-y-0">${data.tipe}</p>
+                        <p class="f-w-500 m-y-0">${data.style}</p>
                         <p class="f-w-500 m-y-0">${data.keterangan_style}</p>
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>

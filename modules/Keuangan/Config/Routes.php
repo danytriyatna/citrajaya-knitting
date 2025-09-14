@@ -31,6 +31,7 @@ $routes->group('keuangan/laporan_mutasi', ['namespace' => '\Modules\Keuangan\Con
     $routes->post('list', '\Modules\Keuangan\Controllers\Rpt_mutasi::lists');
     $routes->get('getExcel/(:any)', '\Modules\Keuangan\Controllers\Rpt_mutasi::exp_mutasi/$1');
     $routes->get('getExcelNew/(:any)/(:any)/(:any)', '\Modules\Keuangan\Controllers\Rpt_mutasi::exp_mutasi_new/$1/$2/$3');
+    $routes->get('getExcelAll/(:any)/(:any)/(:any)/(:any)', '\Modules\Keuangan\Controllers\Rpt_mutasi::exp_mutasi_all/$1/$2/$3/$4');
 
 });
 

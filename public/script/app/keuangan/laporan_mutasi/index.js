@@ -99,46 +99,88 @@ $(document).ready(function () {
         let from_date = $("#from_date").val();
         let to_date = $("#to_date").val();
         let select_payment_type = $("#select_payment_type").val();
-        if (from_date == null || from_date == "" || from_date == undefined) {
-            Swal.fire({
-                text: "From Date Export Harus Diisi!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
-        else if (to_date == null || to_date == "" || to_date == undefined) {
-            Swal.fire({
-                text: "To Date Export Harus Diisi!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
-        else if (select_payment_type == null || select_payment_type == "" || select_payment_type == undefined) {
-            Swal.fire({
-                text: "Payment Type Export Harus Diisi!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
-        else if (parseDate(from_date) > parseDate(to_date)) {
-            Swal.fire({
-                text: "From Date tidak boleh lebih besar dari To Date!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
+        let select_type_export = $("#select_type_export").val();
+        let filter_bulan = $("#filter_bulan").val();
+        let filter_tahun = $("#filter_tahun").val();
+        let select_payment_type_one = $("#select_payment_type_one").val();
+        let select_payment_type_one_text = $("#select_payment_type_one").find(':selected').text();
 
+        if (select_type_export == 0) {
+            if (from_date == null || from_date == "" || from_date == undefined) {
+                Swal.fire({
+                    text: "From Date Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+            else if (to_date == null || to_date == "" || to_date == undefined) {
+                Swal.fire({
+                    text: "To Date Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+            else if (select_payment_type == null || select_payment_type == "" || select_payment_type == undefined) {
+                Swal.fire({
+                    text: "Payment Type Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+            else if (parseDate(from_date) > parseDate(to_date)) {
+                Swal.fire({
+                    text: "From Date tidak boleh lebih besar dari To Date!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+
+            else {
+                let url = "/keuangan/laporan_mutasi/getExcelNew/" + from_date + "/" + to_date + "/" + select_payment_type;
+                window.open(url, '_blank');
+            }
+        }
         else {
-            let url = "/keuangan/laporan_mutasi/getExcelNew/" + from_date + "/" + to_date + "/" + select_payment_type;
-            window.open(url, '_blank');
+            if (filter_bulan == null || filter_bulan == "" || filter_bulan == undefined) {
+                Swal.fire({
+                    text: "Bulan Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+            else if (filter_tahun == null || filter_tahun == "" || filter_tahun == undefined) {
+                Swal.fire({
+                    text: "Tahun Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+            else if (select_payment_type_one == null || select_payment_type_one == "" || select_payment_type_one == undefined) {
+                Swal.fire({
+                    text: "Payment Type Export Harus Diisi!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+
+            else {
+                let url = "/keuangan/laporan_mutasi/getExcelAll/" + filter_bulan + "/" + filter_tahun + "/" + select_payment_type_one + "/" + select_payment_type_one_text;
+                window.open(url, '_blank');
+            }
         }
     });
 
@@ -148,6 +190,17 @@ $(document).ready(function () {
         return new Date(parts[2], parts[1] - 1, parts[0]); 
         // year, monthIndex (0=Jan), day
     }
+    
+    $('#select_type_export').on('change', function() {
+        let val = $(this).val();
+        if (val == "0") {
+            $('.type-export-beban').removeAttr('hidden'); // tampilkan
+            $('.type-export-mutasi').attr('hidden', true); // sembunyikan
+        } else if (val == "1") {
+            $('.type-export-beban').attr('hidden', true); // sembunyikan
+            $('.type-export-mutasi').removeAttr('hidden'); // tampilkan
+        }
+    });
 
     // let searchThread = null;
     // let elSearch = $("#tb-search");

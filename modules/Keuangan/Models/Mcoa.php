@@ -189,7 +189,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export($from_date = null, $to_date = null, $ref_rekening = null){
         $builder = $this->db->table("trans_akun_det tad");
-        $builder->select("ta.trans_akun_date, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
+        $builder->select("ta.trans_akun_date, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
         $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
         $builder->join("m_coa mc", "mc.id = tad.coa_id", "left");
         $builder->join("ref_rekening rr", "rr.id = ta.ref_rekening_id", "left");
@@ -201,6 +201,23 @@ class Mcoa extends PrModel
         else {
             $builder->orderBy("ta.ref_rekening_id ASC");
         }
+        $builder->orderBy("ta.trans_akun_date ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_export_all($month = null, $year = null, $ref_rekening = null){
+        $builder = $this->db->table("trans_akun_det tad");
+        $builder->select("ta.trans_akun_date, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
+        $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
+        $builder->join("m_coa mc", "mc.id = tad.coa_id", "left");
+        $builder->join("ref_rekening rr", "rr.id = ta.ref_rekening_id", "left");
+        $builder->where("tad.active = 1");
+        $builder->where('EXTRACT(MONTH FROM ta.trans_akun_date)', $month);
+        $builder->where('EXTRACT(YEAR FROM ta.trans_akun_date)', $year);
+
+        $builder->orderBy("ta.ref_rekening_id ASC");
         $builder->orderBy("ta.trans_akun_date ASC");
         
         $this->_data = $builder->get()->getResult();

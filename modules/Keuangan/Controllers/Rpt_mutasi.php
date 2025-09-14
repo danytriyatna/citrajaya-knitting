@@ -808,6 +808,9 @@ class Rpt_mutasi extends BaseController
                         'color' => ['argb' => '1f1f1f'],
                     ],
                 ],
+                'alignment' => [
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
             ];
 
             $stylexArrayFooter = [
@@ -1016,6 +1019,9 @@ class Rpt_mutasi extends BaseController
                 ->setCellValue('D1', "Periode");
         $sheets->setActiveSheetIndex(0)
                 ->setCellValue('E1', $nama_bulan." ".$tahun);
+        $sheets->getActiveSheet()->getStyle("F")
+            ->getAlignment()
+            ->setWrapText(true);
 
         for ($xx = 0; $xx < count($results) ; $xx++) { 
             
@@ -1068,6 +1074,8 @@ class Rpt_mutasi extends BaseController
                     ->setCellValue('E'.$ix, !empty($r->nama) ? $r->nama : 0)
                     ->setCellValue('F'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
                     ->setCellValue('G'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                $sheets->getActiveSheet()->getStyle("G" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
             }
             else {
                 $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
@@ -1080,6 +1088,8 @@ class Rpt_mutasi extends BaseController
                     ->setCellValue('E'.$ix, !empty($r->nama) ? $r->nama : 0)
                     ->setCellValue('F'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
                     ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
             }
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
@@ -1088,9 +1098,6 @@ class Rpt_mutasi extends BaseController
             // }else{
                 $gets->getStyle('A'.$ix.':H'.$ix)->applyFromArray($stylexArray);
             // }
-
-            $sheets->getActiveSheet()->getStyle("G" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
 
             $ref_rekening_now = $r->ref_rekening_id;
             $ix++;

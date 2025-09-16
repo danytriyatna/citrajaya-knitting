@@ -7,6 +7,7 @@ use \App\Models\PrModel;
 class Mcoa extends PrModel
 {
 	protected $table                = 'm_coa';
+	protected $table2               = 'm_mutasi_history';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $protectFields        = false;
@@ -207,7 +208,7 @@ class Mcoa extends PrModel
         return $this->_data;
     }
 
-    function get_mutasi_export_all($month = null, $year = null, $ref_rekening = null){
+    function get_mutasi_export_all($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_akun_det tad");
         $builder->select("ta.trans_akun_date, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
         $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
@@ -216,11 +217,25 @@ class Mcoa extends PrModel
         $builder->where("tad.active = 1");
         $builder->where('EXTRACT(MONTH FROM ta.trans_akun_date)', $month);
         $builder->where('EXTRACT(YEAR FROM ta.trans_akun_date)', $year);
+        $builder->groupStart();
+            $builder->where("tad.coa_id", $ref_masuk);
+            $builder->orWhere("rr.coa_id", $ref_masuk);
+        $builder->groupEnd();
 
-        $builder->orderBy("ta.ref_rekening_id ASC");
         $builder->orderBy("ta.trans_akun_date ASC");
         
         $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_history($month = null, $year = null, $ref_masuk = null){
+        $builder = $this->db->table("m_mutasi_history mh");
+        $builder->select("mh.id, mh.coa_id, mh.month, mh.year, mh.saldo");
+        $builder->where('mh.month', $month);
+        $builder->where('mh.year', $year);
+        $builder->where('mh.coa_id', $ref_masuk);
+        
+        $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
 }

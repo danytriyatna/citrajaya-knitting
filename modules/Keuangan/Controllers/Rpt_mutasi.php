@@ -769,7 +769,19 @@ class Rpt_mutasi extends BaseController
         $date = DateTime::createFromFormat('!m', $bulan); // !m → hanya bulan
         $nama_bulan = $date->format('F');
 
-        $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun);
+        $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun, $ref_masuk);
+
+        $getBulan = $bulan;
+        $getTahun = $tahun;
+        if ($bulan == 1) {
+            $getBulan = 12;
+            $getTahun = $tahun - 1;
+        }
+        else {
+            $getBulan = $bulan - 1;
+        }
+
+        $saldo = $this->mcoa->get_mutasi_history($getBulan, $getTahun, $ref_masuk);
         
 
         //start phpspreadsheet
@@ -1023,45 +1035,52 @@ class Rpt_mutasi extends BaseController
             ->getAlignment()
             ->setWrapText(true);
 
+        $sheets->setActiveSheetIndex(0)
+                ->setCellValue('G3', "Saldo Awal");
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('H3', !empty($saldo) ? $saldo->saldo : 0);
+            $gets->getStyle("H3" )->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
         for ($xx = 0; $xx < count($results) ; $xx++) { 
             
             $r = $results[$xx];
-            if ($xx == 0) {
-                $ref_rekening_now = $r->ref_rekening_id;
-                $ref_bank = $r->tipe_bayar;
-            }
-            else if ($r->ref_rekening_id != $ref_rekening_now) {
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('A'.$ix, $ref_bank);
+            // if ($xx == 0) {
+            //     $ref_rekening_now = $r->ref_rekening_id;
+            //     $ref_bank = $r->tipe_bayar;
+            // }
+            // else if ($r->ref_rekening_id != $ref_rekening_now) {
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('A'.$ix, $ref_bank);
 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('B'.$ix, "Total");
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('B'.$ix, "Total");
                 
-                $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
+            //     $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
                 
-                $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
-                $gets->getStyle('B'.$ix.':H'.$ix)->applyFromArray($stylexArraySubFooter2);
+            //     $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
+            //     $gets->getStyle('B'.$ix.':H'.$ix)->applyFromArray($stylexArraySubFooter2);
 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('G'.$ix, $grand_total_sub_masuk);
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('G'.$ix, $grand_total_sub_masuk);
                 
-                $gets->getStyle("G" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
-                $grand_total_sub_masuk = 0;
+            //     $gets->getStyle("G" . $ix )->getNumberFormat()
+            //     ->setFormatCode('#,##0.00');
+            //     $grand_total_sub_masuk = 0;
 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('H'.$ix, $grand_total_sub);
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('H'.$ix, $grand_total_sub);
                 
-                $gets->getStyle("H" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
-                $grand_total_sub = 0;
-                $ref_bank = $r->tipe_bayar;
-                $ix++;
-                $length++;
-            }
-            else {
-                $ref_bank = $r->tipe_bayar;
-            }
+            //     $gets->getStyle("H" . $ix )->getNumberFormat()
+            //     ->setFormatCode('#,##0.00');
+            //     $grand_total_sub = 0;
+            //     $ref_bank = $r->tipe_bayar;
+            //     $ix++;
+            //     $length++;
+            // }
+            // else {
+            //     $ref_bank = $r->tipe_bayar;
+            // }
             
             if ($r->coa_id == $ref_masuk) {
                 $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
@@ -1099,33 +1118,33 @@ class Rpt_mutasi extends BaseController
                 $gets->getStyle('A'.$ix.':H'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $ref_rekening_now = $r->ref_rekening_id;
+            // $ref_rekening_now = $r->ref_rekening_id;
             $ix++;
-            if ($xx == count($results) - 1) {
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('A'.$ix, $ref_bank);
+            // if ($xx == count($results) - 1) {
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('A'.$ix, $ref_bank);
 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('B'.$ix, "Total");
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('B'.$ix, "Total");
                 
-                $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
+            //     $sheets->getActiveSheet()->mergeCells('B'. $ix .':F'. $ix);
                 
-                $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
-                $gets->getStyle('B'.$ix.':H'.$ix)->applyFromArray($stylexArraySubFooter2);
+            //     $gets->getStyle('A'.$ix)->applyFromArray($stylexArraySubFooter);
+            //     $gets->getStyle('B'.$ix.':H'.$ix)->applyFromArray($stylexArraySubFooter2);
 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('G'.$ix, $grand_total_sub_masuk);
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('G'.$ix, $grand_total_sub_masuk);
                 
-                $gets->getStyle("G" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
+            //     $gets->getStyle("G" . $ix )->getNumberFormat()
+            //     ->setFormatCode('#,##0.00');
                 
-                $sheets->setActiveSheetIndex(0)
-                ->setCellValue('H'.$ix, $grand_total_sub);
+            //     $sheets->setActiveSheetIndex(0)
+            //     ->setCellValue('H'.$ix, $grand_total_sub);
                 
-                $gets->getStyle("H" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
-                $length++;
-            }
+            //     $gets->getStyle("H" . $ix )->getNumberFormat()
+            //     ->setFormatCode('#,##0.00');
+            //     $length++;
+            // }
         }
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Grand Total");
@@ -1149,7 +1168,7 @@ class Rpt_mutasi extends BaseController
         $length++;
 
         $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Saldo");
+               ->setCellValue('A'.$length, "Saldo Akhir");
 
         $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
         
@@ -1164,7 +1183,20 @@ class Rpt_mutasi extends BaseController
                ->setFormatCode('#,##0.00');
         
         
-        
+        $isiSaldo = [
+            'coa_id' => $ref_masuk,
+            'month' => $bulan,
+            'year' => $tahun,
+            'saldo' => $grand_total_masuk - $grand_total
+        ];
+        $saldo_new = $this->mcoa->get_mutasi_history($bulan, $tahun, $ref_masuk);
+        if (!empty($saldo_new)) {
+            $saldo_id = $this->mcoa->updateRecord($this->mcoa->table2, $isiSaldo, "id", $saldo_new->id);
+        }
+        else {
+            $saldo_id = $this->mcoa->insertRecordGetid($this->mcoa->table2, $isiSaldo);
+        }
+
         
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);

@@ -28,11 +28,9 @@
         <div class="table-striped" id="dt-warna">
         </div>
       </div>
-      <?php if($status == 1) { ?>
       <div class="modal-footer">
         <button type="button" class="m-s-5 btn btn-success" id="btn-save-warna"> <i class="fa fa-save"></i> Simpan</button>
       </div>
-      <?php } ?>
     </div>
   </div>
 </div>

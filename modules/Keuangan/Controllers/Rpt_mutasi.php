@@ -770,6 +770,9 @@ class Rpt_mutasi extends BaseController
         $nama_bulan = $date->format('F');
 
         $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun, $ref_masuk);
+        $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun, $ref_masuk);
+        $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun, $ref_masuk);
+        $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun, $ref_masuk);
 
         $getBulan = $bulan;
         $getTahun = $tahun;
@@ -797,12 +800,13 @@ class Rpt_mutasi extends BaseController
 
                ->setCellValue('A4', 'Tipe Bayar')
                ->setCellValue('B4', 'Tanggal')
-               ->setCellValue('C4', 'Akun Kode')
-               ->setCellValue('D4', 'Kode')
-               ->setCellValue('E4', 'Nama Akun')
-               ->setCellValue('F4', 'Keterangan')
-               ->setCellValue('G4', 'Masuk')
-               ->setCellValue('H4', 'Keluar');
+               ->setCellValue('C4', 'Transaksi')
+               ->setCellValue('D4', 'Akun Kode')
+               ->setCellValue('E4', 'Kode')
+               ->setCellValue('F4', 'Nama Akun')
+               ->setCellValue('G4', 'Keterangan')
+               ->setCellValue('H4', 'Masuk')
+               ->setCellValue('I4', 'Keluar');
 
             $styleArray = [
                 'borders' => [
@@ -925,12 +929,12 @@ class Rpt_mutasi extends BaseController
                 ],
             ];
             
-        $gets->getStyle('A4:H4')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:I4')->applyFromArray($styleArray_header);
         // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
         // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:H2');
+        $sheets->getActiveSheet()->mergeCells('A2:I2');
         // $sheets->getActiveSheet()->mergeCells('A4:I4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
@@ -942,26 +946,27 @@ class Rpt_mutasi extends BaseController
         // set width
           $gets->getColumnDimension('A')->setWidth(25);
           $gets->getColumnDimension('B')->setWidth(20);
-          $gets->getColumnDimension('C')->setWidth(25);
-          $gets->getColumnDimension('D')->setWidth(15);
-          $gets->getColumnDimension('E')->setWidth(45);
-          $gets->getColumnDimension('F')->setWidth(60);
-          $gets->getColumnDimension('G')->setWidth(30);
+          $gets->getColumnDimension('C')->setWidth(20);
+          $gets->getColumnDimension('D')->setWidth(25);
+          $gets->getColumnDimension('E')->setWidth(15);
+          $gets->getColumnDimension('F')->setWidth(45);
+          $gets->getColumnDimension('G')->setWidth(60);
           $gets->getColumnDimension('H')->setWidth(30);
+          $gets->getColumnDimension('I')->setWidth(30);
         //   $gets->getColumnDimension('O')->setWidth(20);
 
         // end set width
         //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:H4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:H4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+          $gets->getStyle('A4:I4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:I4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H'
+            'A','B','C','D', 'E','F','G', 'H', 'I'
         );
 
-        for ($i=0; $i < 8 ; $i++) { 
+        for ($i=0; $i < 9 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -1008,6 +1013,18 @@ class Rpt_mutasi extends BaseController
             $length += count($results);
         }
 
+        if(!empty($resultsSO)){
+            $length += count($resultsSO);
+        }
+
+        if(!empty($resultsCR)){
+            $length += count($resultsCR);
+        }
+
+        if(!empty($resultsPB)){
+            $length += count($resultsPB);
+        }
+
         $bckColor = "F2F2F2";
         $ig = $ix;
         $ip = $ix;
@@ -1036,10 +1053,10 @@ class Rpt_mutasi extends BaseController
             ->setWrapText(true);
 
         $sheets->setActiveSheetIndex(0)
-                ->setCellValue('G3', "Saldo Awal");
+                ->setCellValue('H3', "Saldo Awal");
         $sheets->setActiveSheetIndex(0)
-            ->setCellValue('H3', !empty($saldo) ? $saldo->saldo : 0);
-            $gets->getStyle("H3" )->getNumberFormat()
+            ->setCellValue('I3', !empty($saldo) ? $saldo->saldo : 0);
+            $gets->getStyle("I3" )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
         for ($xx = 0; $xx < count($results) ; $xx++) { 
@@ -1088,12 +1105,13 @@ class Rpt_mutasi extends BaseController
                 $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                     ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
-                    ->setCellValue('C'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
-                    ->setCellValue('D'.$ix, !empty($r->kode) ? $r->kode : 0)
-                    ->setCellValue('E'.$ix, !empty($r->nama) ? $r->nama : 0)
-                    ->setCellValue('F'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('G'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
-                $sheets->getActiveSheet()->getStyle("G" . $ix )->getNumberFormat()
+                    ->setCellValue('C'.$ix, "Beban Biaya")
+                    ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                    ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
+                    ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
                 ->setFormatCode('#,##0.00');
             }
             else {
@@ -1102,12 +1120,13 @@ class Rpt_mutasi extends BaseController
                 $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                     ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
-                    ->setCellValue('C'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
-                    ->setCellValue('D'.$ix, !empty($r->kode) ? $r->kode : 0)
-                    ->setCellValue('E'.$ix, !empty($r->nama) ? $r->nama : 0)
-                    ->setCellValue('F'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
-                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                    ->setCellValue('C'.$ix, "Beban Biaya")
+                    ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                    ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
+                    ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
             }
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
@@ -1115,7 +1134,7 @@ class Rpt_mutasi extends BaseController
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':H'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
             // }
 
             // $ref_rekening_now = $r->ref_rekening_id;
@@ -1146,23 +1165,90 @@ class Rpt_mutasi extends BaseController
             //     $length++;
             // }
         }
+
+        for ($xx = 0; $xx < count($resultsSO) ; $xx++) { 
+            
+            $r = $resultsSO[$xx];
+            
+            $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+            $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+            $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                ->setCellValue('B'.$ix, !empty($r->tgl_dp) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_dp)))) : "-")
+                ->setCellValue('C'.$ix, "Sales Order")
+                ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+                ->setCellValue('E'.$ix, "-")
+                ->setCellValue('F'.$ix, "-")
+                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                ->setCellValue('H'.$ix, !empty($r->uang_dp) ? $r->uang_dp : 0);
+            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
+            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+            $ix++;
+        }
+
+        for ($xx = 0; $xx < count($resultsCR) ; $xx++) { 
+            
+            $r = $resultsCR[$xx];
+            
+            $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+            $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+            $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                ->setCellValue('C'.$ix, "Customer Receipt")
+                ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
+                ->setCellValue('E'.$ix, "-")
+                ->setCellValue('F'.$ix, "-")
+                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
+            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+            $ix++;
+        }
+
+        for ($xx = 0; $xx < count($resultsPB) ; $xx++) { 
+            
+            $r = $resultsPB[$xx];
+            
+            $grand_total += !empty($r->total_bayar) ? $r->total_bayar : 0;
+            $grand_total_sub += !empty($r->total_bayar) ? $r->total_bayar : 0;
+            $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                ->setCellValue('B'.$ix, !empty($r->pay_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->pay_date)))) : "-")
+                ->setCellValue('C'.$ix, "Pembayaran")
+                ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
+                ->setCellValue('E'.$ix, "-")
+                ->setCellValue('F'.$ix, "-")
+                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+            $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+
+            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+            $ix++;
+        }
+
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Grand Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
         
-        $gets->getStyle('A'.$length.':H'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFooter);
         
        $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('G'.$length, $grand_total_masuk);
+                    ->setCellValue('H'.$length, $grand_total_masuk);
 
-        $gets->getStyle("G" . $length )->getNumberFormat()
+        $gets->getStyle("H" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('H'.$length, $grand_total);
+                    ->setCellValue('I'.$length, $grand_total);
 
-        $gets->getStyle("H" . $length )->getNumberFormat()
+        $gets->getStyle("I" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
         $length++;
@@ -1170,16 +1256,16 @@ class Rpt_mutasi extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Saldo Akhir");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
         
-        $gets->getStyle('A'.$length.':H'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFooter);
         
-        $sheets->getActiveSheet()->mergeCells('G'. $length .':H'. $length);
+        $sheets->getActiveSheet()->mergeCells('H'. $length .':I'. $length);
         
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('G'.$length, $grand_total_masuk - $grand_total);
+                    ->setCellValue('H'.$length, $grand_total_masuk - $grand_total);
 
-        $gets->getStyle("G" . $length )->getNumberFormat()
+        $gets->getStyle("H" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
         

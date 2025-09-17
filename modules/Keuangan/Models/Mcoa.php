@@ -228,6 +228,57 @@ class Mcoa extends PrModel
         return $this->_data;
     }
 
+    function get_mutasi_export_so($month = null, $year = null, $ref_masuk = null){
+        $builder = $this->db->table("trans_sales_order tso");
+        $builder->select("tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp, tso.kode_sales_order, tso.uang_dp");
+        $builder->join("ref_rekening rr", "rr.id = tso.type_dp", "left");
+        $builder->join("ref_konsumen rk", "rk.id = tso.id_konsumen", "left");
+        // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
+        $builder->where("tso.active = 1");
+        $builder->where('EXTRACT(MONTH FROM tso.tgl_dp)', $month);
+        $builder->where('EXTRACT(YEAR FROM tso.tgl_dp)', $year);
+        $builder->where("rr.coa_id", $ref_masuk);
+
+        $builder->orderBy("tso.tgl_dp ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_export_cr($month = null, $year = null, $ref_masuk = null){
+        $builder = $this->db->table("trans_customer_receipt tcr");
+        $builder->select("tcr.id_rekening, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tcr.tgl_transaksi, tcr.kode_cr, tcr.total_bayar");
+        $builder->join("ref_rekening rr", "rr.id = tcr.id_rekening", "left");
+        $builder->join("ref_konsumen rk", "rk.id = tcr.id_konsumen", "left");
+        // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
+        $builder->where("tcr.active = 1");
+        $builder->where('EXTRACT(MONTH FROM tcr.tgl_transaksi)', $month);
+        $builder->where('EXTRACT(YEAR FROM tcr.tgl_transaksi)', $year);
+        $builder->where("rr.coa_id", $ref_masuk);
+
+        $builder->orderBy("tcr.tgl_transaksi ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_export_pb($month = null, $year = null, $ref_masuk = null){
+        $builder = $this->db->table("trans_po_pembayaran tpp");
+        $builder->select("tpp.id_rek, CONCAT('Pembayaran Pembelian' , ' - ', rv.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tpp.pay_date, tpp.pay_no, tpp.total_bayar");
+        $builder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
+        $builder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
+        // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
+        $builder->where("tpp.active = 1");
+        $builder->where('EXTRACT(MONTH FROM tpp.pay_date)', $month);
+        $builder->where('EXTRACT(YEAR FROM tpp.pay_date)', $year);
+        $builder->where("rr.coa_id", $ref_masuk);
+
+        $builder->orderBy("tpp.pay_date ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
     function get_mutasi_history($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("m_mutasi_history mh");
         $builder->select("mh.id, mh.coa_id, mh.month, mh.year, mh.saldo");

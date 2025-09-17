@@ -68,7 +68,7 @@ class Rpt_mutasi extends BaseController
 
 		$this->data['titlehead'] = "Laporan Mutasi Beban Biaya";
         $this->data['rekening_list'] = $this->mRekening->getData(null, 0, 9999);
-        $this->data['coa_list'] = $this->mcoa->getData(null, 0, 9999);
+        $this->data['coa_list'] = $this->mcoa->getData(null, 0, 9999, null, null, null, null, null, 8);
 		return view($this->url_v.'\vakun_rep_mutasi', $this->data);
 	}
 
@@ -774,6 +774,14 @@ class Rpt_mutasi extends BaseController
         $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun, $ref_masuk);
         $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun, $ref_masuk);
 
+        // gabung semua data
+        $results_all = array_merge($results, $resultsSO, $resultsCR, $resultsPB);
+
+        // sort berdasarkan tanggal (pastikan semua alias tanggal sama)
+        usort($results_all, function ($a, $b) {
+            return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
+        });
+
         $getBulan = $bulan;
         $getTahun = $tahun;
         if ($bulan == 1) {
@@ -1009,20 +1017,8 @@ class Rpt_mutasi extends BaseController
         $length = $ix;
         $length_sub = $ix;
 
-        if(!empty($results)){
-            $length += count($results);
-        }
-
-        if(!empty($resultsSO)){
-            $length += count($resultsSO);
-        }
-
-        if(!empty($resultsCR)){
-            $length += count($resultsCR);
-        }
-
-        if(!empty($resultsPB)){
-            $length += count($resultsPB);
+        if(!empty($results_all)){
+            $length += count($results_all);
         }
 
         $bckColor = "F2F2F2";
@@ -1059,9 +1055,9 @@ class Rpt_mutasi extends BaseController
             $gets->getStyle("I3" )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
-        for ($xx = 0; $xx < count($results) ; $xx++) { 
+        for ($xx = 0; $xx < count($results_all) ; $xx++) { 
             
-            $r = $results[$xx];
+            $r = $results_all[$xx];
             // if ($xx == 0) {
             //     $ref_rekening_now = $r->ref_rekening_id;
             //     $ref_bank = $r->tipe_bayar;
@@ -1098,37 +1094,88 @@ class Rpt_mutasi extends BaseController
             // else {
             //     $ref_bank = $r->tipe_bayar;
             // }
-            
-            if ($r->coa_id == $ref_masuk) {
-                $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
-                $grand_total_sub_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+
+            if ($r->type == "Beban Biaya") {
+                if ($r->coa_id == $ref_masuk) {
+                    $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+                    $grand_total_sub_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+                    $sheets->setActiveSheetIndex(0)
+                        ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                        ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                        ->setCellValue('C'.$ix, "Beban Biaya")
+                        ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                        ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
+                        ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
+                        ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                        ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+                }
+                else {
+                    $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
+                    $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
+                    $sheets->setActiveSheetIndex(0)
+                        ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                        ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                        ->setCellValue('C'.$ix, "Beban Biaya")
+                        ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                        ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
+                        ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
+                        ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                        ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
+                        ->setFormatCode('#,##0.00');
+                }
+            }
+
+            else if ($r->type == "Sales Order") {
+                $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+                $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
                 $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                    ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
-                    ->setCellValue('C'.$ix, "Beban Biaya")
-                    ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
-                    ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
-                    ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
-                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                    ->setCellValue('C'.$ix, "Sales Order")
+                    ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+                    ->setCellValue('E'.$ix, "-")
+                    ->setCellValue('F'.$ix, "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                    ->setCellValue('H'.$ix, !empty($r->uang_dp) ? $r->uang_dp : 0);
                 $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
                 ->setFormatCode('#,##0.00');
             }
-            else {
-                $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
-                $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
+
+            else if ($r->type == "Customer Receipt") {
+                $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
                 $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                    ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
-                    ->setCellValue('C'.$ix, "Beban Biaya")
-                    ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
-                    ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
-                    ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
+                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                    ->setCellValue('C'.$ix, "Customer Receipt")
+                    ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
+                    ->setCellValue('E'.$ix, "-")
+                    ->setCellValue('F'.$ix, "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                    ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            }
+
+            else if ($r->type == "Pembayaran") {
+                $grand_total += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                $grand_total_sub += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                    ->setCellValue('C'.$ix, "Pembayaran")
+                    ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
+                    ->setCellValue('E'.$ix, "-")
+                    ->setCellValue('F'.$ix, "-")
                     ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                    ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
                 $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
             }
+            
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
@@ -1166,71 +1213,71 @@ class Rpt_mutasi extends BaseController
             // }
         }
 
-        for ($xx = 0; $xx < count($resultsSO) ; $xx++) { 
+        // for ($xx = 0; $xx < count($resultsSO) ; $xx++) { 
             
-            $r = $resultsSO[$xx];
+        //     $r = $resultsSO[$xx];
             
-            $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
-            $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
-            $sheets->setActiveSheetIndex(0)
-                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                ->setCellValue('B'.$ix, !empty($r->tgl_dp) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_dp)))) : "-")
-                ->setCellValue('C'.$ix, "Sales Order")
-                ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
-                ->setCellValue('E'.$ix, "-")
-                ->setCellValue('F'.$ix, "-")
-                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                ->setCellValue('H'.$ix, !empty($r->uang_dp) ? $r->uang_dp : 0);
-            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-            ->setFormatCode('#,##0.00');
+        //     $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+        //     $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+        //     $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+        //         ->setCellValue('B'.$ix, !empty($r->tgl_dp) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_dp)))) : "-")
+        //         ->setCellValue('C'.$ix, "Sales Order")
+        //         ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+        //         ->setCellValue('E'.$ix, "-")
+        //         ->setCellValue('F'.$ix, "-")
+        //         ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+        //         ->setCellValue('H'.$ix, !empty($r->uang_dp) ? $r->uang_dp : 0);
+        //     $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+        //     ->setFormatCode('#,##0.00');
 
-            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
-            $ix++;
-        }
+        //     $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+        //     $ix++;
+        // }
 
-        for ($xx = 0; $xx < count($resultsCR) ; $xx++) { 
+        // for ($xx = 0; $xx < count($resultsCR) ; $xx++) { 
             
-            $r = $resultsCR[$xx];
+        //     $r = $resultsCR[$xx];
             
-            $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
-            $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
-            $sheets->setActiveSheetIndex(0)
-                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                ->setCellValue('C'.$ix, "Customer Receipt")
-                ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
-                ->setCellValue('E'.$ix, "-")
-                ->setCellValue('F'.$ix, "-")
-                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
-            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-            ->setFormatCode('#,##0.00');
+        //     $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+        //     $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+        //     $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+        //         ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+        //         ->setCellValue('C'.$ix, "Customer Receipt")
+        //         ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
+        //         ->setCellValue('E'.$ix, "-")
+        //         ->setCellValue('F'.$ix, "-")
+        //         ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+        //         ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+        //     $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+        //     ->setFormatCode('#,##0.00');
 
-            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
-            $ix++;
-        }
+        //     $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+        //     $ix++;
+        // }
 
-        for ($xx = 0; $xx < count($resultsPB) ; $xx++) { 
+        // for ($xx = 0; $xx < count($resultsPB) ; $xx++) { 
             
-            $r = $resultsPB[$xx];
+        //     $r = $resultsPB[$xx];
             
-            $grand_total += !empty($r->total_bayar) ? $r->total_bayar : 0;
-            $grand_total_sub += !empty($r->total_bayar) ? $r->total_bayar : 0;
-            $sheets->setActiveSheetIndex(0)
-                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                ->setCellValue('B'.$ix, !empty($r->pay_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->pay_date)))) : "-")
-                ->setCellValue('C'.$ix, "Pembayaran")
-                ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
-                ->setCellValue('E'.$ix, "-")
-                ->setCellValue('F'.$ix, "-")
-                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
-            $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
+        //     $grand_total += !empty($r->total_bayar) ? $r->total_bayar : 0;
+        //     $grand_total_sub += !empty($r->total_bayar) ? $r->total_bayar : 0;
+        //     $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+        //         ->setCellValue('B'.$ix, !empty($r->pay_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->pay_date)))) : "-")
+        //         ->setCellValue('C'.$ix, "Pembayaran")
+        //         ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
+        //         ->setCellValue('E'.$ix, "-")
+        //         ->setCellValue('F'.$ix, "-")
+        //         ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+        //         ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+        //     $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
+        //         ->setFormatCode('#,##0.00');
 
-            $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
-            $ix++;
-        }
+        //     $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+        //     $ix++;
+        // }
 
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Grand Total");

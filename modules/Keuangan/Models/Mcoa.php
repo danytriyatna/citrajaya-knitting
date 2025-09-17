@@ -16,7 +16,7 @@ class Mcoa extends PrModel
 
 	public $_data = '';
 
-    function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $slc = null, $child = null, $parent = null)
+    function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $slc = null, $child = null, $parent = null, $parent_id = null)
     {
         $builder = $this->db->table($this->table.' a');
         $builder->select("a.id as coa_id, a.kode, a.parent_id, a.level, a.nama,
@@ -41,6 +41,10 @@ class Mcoa extends PrModel
 
             if(!empty($parent)){
                 $builder->where('b.kode', $parent);
+            }
+
+            if(!empty($parent_id)){
+                $builder->where('a.parent_id', $parent_id);
             }
 
             if(!empty($slc)){
@@ -210,7 +214,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_all($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_akun_det tad");
-        $builder->select("ta.trans_akun_date, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
+        $builder->select("'Beban Biaya' as type, ta.trans_akun_date as tgl_transaksi, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
         $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
         $builder->join("m_coa mc", "mc.id = tad.coa_id", "left");
         $builder->join("ref_rekening rr", "rr.id = ta.ref_rekening_id", "left");
@@ -230,7 +234,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_so($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_sales_order tso");
-        $builder->select("tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp, tso.kode_sales_order, tso.uang_dp");
+        $builder->select("'Sales Order' as type,tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp as tgl_transaksi, tso.kode_sales_order, tso.uang_dp");
         $builder->join("ref_rekening rr", "rr.id = tso.type_dp", "left");
         $builder->join("ref_konsumen rk", "rk.id = tso.id_konsumen", "left");
         // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
@@ -247,7 +251,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_cr($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_customer_receipt tcr");
-        $builder->select("tcr.id_rekening, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tcr.tgl_transaksi, tcr.kode_cr, tcr.total_bayar");
+        $builder->select("'Customer Receipt' as type,tcr.id_rekening, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tcr.tgl_transaksi, tcr.kode_cr, tcr.total_bayar");
         $builder->join("ref_rekening rr", "rr.id = tcr.id_rekening", "left");
         $builder->join("ref_konsumen rk", "rk.id = tcr.id_konsumen", "left");
         // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
@@ -264,7 +268,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_pb($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_po_pembayaran tpp");
-        $builder->select("tpp.id_rek, CONCAT('Pembayaran Pembelian' , ' - ', rv.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tpp.pay_date, tpp.pay_no, tpp.total_bayar");
+        $builder->select("'Pembayaran' as type, tpp.id_rek, CONCAT('Pembayaran Pembelian' , ' - ', rv.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tpp.pay_date as tgl_transaksi, tpp.pay_no, tpp.total_bayar");
         $builder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
         $builder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
         // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");

@@ -141,15 +141,18 @@ class WalkorderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table2 . " abx");
 
-        $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, abx.qty, abx.gram, abx.gram_nd, abx.kg, abx.loss,
+        $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, abx.gram, abx.gram_nd, abx.kg, abx.loss,
                           abx.kg_loss, abx.total, abx.tipe_id, abx.kuota, abx.kuota_tambah,
                           (case when abx.tipe_id = 2 then tso.id_warna_1 else ts.id_warna_1 end) as id_wdasar,
-		                  (case when abx.tipe_id = 2 then rw2.kode_warna else rw1.kode_warna end) as wdasar
+		                  (case when abx.tipe_id = 2 then rw2.kode_warna else rw1.kode_warna end) as wdasar,
+		                  (case when abx.tipe_id = 2 then tsou.qty else tsu.qty end) as qty,
                         ");
 
         $builder->join("trans_sales_order_det tso", "tso.id = abx.ref_detail_id and abx.tipe_id = 2", "left");
+        $builder->join("trans_sales_order_ukuran tsou", "tso.id = tsou.id_sales_order_det and abx.tipe_id = 2", "left");
         $builder->join("ref_warna rw2", "rw2.id = tso.id_warna_1", "left");
         $builder->join("trans_sample_det ts", "ts.id = abx.ref_detail_id and abx.tipe_id = 1", "left");
+        $builder->join("trans_sample_ukuran tsu", "ts.id = tsu.id_sample_det and abx.tipe_id = 1", "left");
         $builder->join("ref_warna rw1", "rw1.id = ts.id_warna_1", "left");
 
         if ($id == null or $id == "") {

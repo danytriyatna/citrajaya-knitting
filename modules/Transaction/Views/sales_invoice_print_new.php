@@ -71,7 +71,7 @@
         }
         
         th, td {
-            border: 1px solid #808080;
+            /* border: 1px solid #808080; */
             padding: 8px;
             text-align: center;
         }
@@ -170,16 +170,16 @@
     <table>
         <thead>
             <tr>
-                <th rowspan="2">NO</th>
-                <th rowspan="2">DESKRIPSI</th>
-                <th rowspan="2" style="width: 25%;">WARNA</th>
-                <th colspan="<?= count($ukuran) ?>">SIZE</th>
-                <th rowspan="2" style="width: 15%;">HARGA UNI/PCS (Rp)</th>
-                <th rowspan="2">TOTAL (Rp)</th>
+                <th rowspan="2" style="border: 1px solid #808080;">NO</th>
+                <th rowspan="2" style="border: 1px solid #808080;">DESKRIPSI</th>
+                <th rowspan="2" style="width: 25%; border: 1px solid #808080;">WARNA</th>
+                <th colspan="<?= count($ukuran) ?>" style="border: 1px solid #808080;">SIZE</th>
+                <th rowspan="2" style="width: 15%; border: 1px solid #808080;">HARGA UNI/PCS (Rp)</th>
+                <th rowspan="2" style="border: 1px solid #808080;">TOTAL (Rp)</th>
             </tr>
             <tr>
                 <?php foreach ($ukuran as $rows): ?>
-                    <th><?= $rows ?></th>
+                    <th style="border: 1px solid #808080;"><?= $rows ?></th>
                 <?php endforeach; ?>
             </tr>
         </thead>
@@ -192,14 +192,21 @@
 
                 // Kolom NO & DESKRIPSI hanya di baris pertama warna pertama
                 if ($w === array_key_first($value)) {
-                    echo "<td rowspan='" . count($value) . "' style='text-align:center; vertical-align: center;'>{$nomor}</td>";
-                    echo "<td rowspan='" . count($value) . "' style='text-align:left; vertical-align: center;'>
+                    // Baris pertama → tampil normal
+                    echo "<td style='text-align:center; vertical-align: top; border-left:1px solid #808080; border-right:1px solid #808080; border-top:1px solid #808080;'>{$nomor}</td>";
+                    echo "<td style='text-align:left; vertical-align: top; border-left:1px solid #808080; border-right:1px solid #808080; border-top:1px solid #808080;'>
                             {$key}<br>{$deskripsi[$nomor-1]}
                         </td>";
+                } 
+                else {
+                    // Baris berikutnya → kosong, tapi border-top dihilangkan
+                    echo "<td style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'></td>";
+                    echo "<td style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'></td>";
                 }
+                    
 
                 // Kolom warna
-                echo "<td style='text-align:left; vertical-align: center;'>{$color['keterangan']}</td>";
+                 echo "<td style='text-align:left; vertical-align: top; border:1px solid #808080;'>{$color['keterangan']}</td>";
 
                 // Kolom ukuran
                 foreach ($ukuran as $sizeName) {
@@ -210,15 +217,15 @@
                             break;
                         }
                     }
-                    echo "<td style='text-align:center; vertical-align: center;'>{$qty}</td>";
+                    echo "<td style='text-align:center; vertical-align: center; border: 1px solid #808080;'>{$qty}</td>";
                 }
 
                 // Harga unit & total harga (per warna)
                 $hargaUnit = number_format($color['harga_satuan'], 0, ',', '.');
                 $totalHarga = number_format($color['total_harga'], 0, ',', '.');
 
-                echo "<td style='text-align:right; vertical-align: center;'>{$hargaUnit}</td>";
-                echo "<td style='text-align:right; vertical-align: center;'>{$totalHarga}</td>";
+                echo "<td style='text-align:right; vertical-align: center; border: 1px solid #808080;'>{$hargaUnit}</td>";
+                echo "<td style='text-align:right; vertical-align: center; border: 1px solid #808080;'>{$totalHarga}</td>";
 
                 echo "</tr>";
             endforeach;
@@ -237,17 +244,17 @@
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
             <tr>
-                <td colspan="<?= $colspan ?>" rowspan="3" style="text-align: left; vertical-align: top;"><strong style="font-size: 13px;">NOTES: </strong> <?= $data->keterangan ?></td>
-                <td><strong>SUB TOTAL</strong></td>
-                <td style="text-align: right;"><?= $formatSubTotal ?></td>
+                <td colspan="<?= $colspan ?>" rowspan="3" style="text-align: left; vertical-align: top; border:1px solid #808080;"><strong style="font-size: 13px;">NOTES: </strong> <?= $data->keterangan ?></td>
+                <td style="border:1px solid #808080;"><strong>SUB TOTAL</strong></td>
+                <td style="text-align: right; border:1px solid #808080;"><?= $formatSubTotal ?></td>
             </tr>
             <tr>
-                <td><strong>DP (<?= !empty($detail[0]->tgl_dp) ? date('d/m/Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
-                <td style="text-align: right;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
+                <td style="border:1px solid #808080;"><strong>DP (<?= !empty($detail[0]->tgl_dp) ? date('d/m/Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
+                <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
             </tr>
             <tr>
-                <td><strong>TOTAL</strong></td>
-                <td style="text-align: right;"><?= $formatTotal ?></td>
+                <td style="border:1px solid #808080;"><strong>TOTAL</strong></td>
+                <td style="text-align: right; border:1px solid #808080;"><?= $formatTotal ?></td>
             </tr>
         </tfoot>
     </table>

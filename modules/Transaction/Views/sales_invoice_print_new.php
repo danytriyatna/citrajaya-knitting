@@ -244,15 +244,17 @@
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
             <tr>
-                <td colspan="<?= $colspan ?>" rowspan="3" style="text-align: left; vertical-align: top; border:1px solid #808080;"><strong style="font-size: 13px;">NOTES: </strong> <?= $data->keterangan ?></td>
+                <td colspan="<?= $colspan ?>" style="text-align: left; vertical-align: top; border-top:1px solid #808080; border-left:1px solid #808080; border-right:1px solid #808080;"><strong style="font-size: 13px;">NOTES: </strong></td>
                 <td style="border:1px solid #808080;"><strong>SUB TOTAL</strong></td>
                 <td style="text-align: right; border:1px solid #808080;"><?= $formatSubTotal ?></td>
             </tr>
             <tr>
+                <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'><?= $data->keterangan ?></td>
                 <td style="border:1px solid #808080;"><strong>DP (<?= !empty($detail[0]->tgl_dp) ? date('d/m/Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
                 <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
             </tr>
             <tr>
+                <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080; border-bottom:1px solid #808080;'></td>
                 <td style="border:1px solid #808080;"><strong>TOTAL</strong></td>
                 <td style="text-align: right; border:1px solid #808080;"><?= $formatTotal ?></td>
             </tr>

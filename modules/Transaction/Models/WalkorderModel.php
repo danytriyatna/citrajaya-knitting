@@ -63,6 +63,14 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->where('abx.tipe_id', $params['tipe_id']);
             }
 
+            // if (!empty($params['id'])) {
+            //     $builder->where('abx.id <>', $params['id']);
+            // }
+
+            // if (!empty($params['keterangan_style'])) {
+            //     $builder->where('abx.keterangan_style', $params['keterangan_style']);
+            // }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -100,6 +108,35 @@ class WalkorderModel extends \App\Models\PrModel
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
+    function getDataDetailWOApproveSO($style = null, $id_proses = null, $current_id_wo = null)
+    {
+        $builder = $this->db->table($this->table3 . " abx");
+
+        $builder->select("abx.harga, abx.id_walkorder, bbx.keterangan_style, bbx.kode_walkorder");
+        $builder->join("trans_walkorder bbx", "abx.id_walkorder = bbx.id", "left");
+        $builder->where('abx.active = 1');
+
+        if (!empty($style)) {
+            $builder->where('bbx.keterangan_style', $style);
+        }
+
+        if (!empty($id_proses)) {
+            $builder->where('abx.id_proses', $id_proses);
+        }
+
+        if (!empty($current_id_wo)) {
+            $builder->where('abx.id_walkorder <>', $current_id_wo);
+        }
+
+        $builder->orderBy('bbx.id desc');
+
+        $builder->limit(1);
+
+        $this->_data = $builder->get()->getRow();
 
         return $this->_data;
     }

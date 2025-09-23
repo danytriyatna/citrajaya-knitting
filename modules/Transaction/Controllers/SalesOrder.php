@@ -431,12 +431,13 @@ class SalesOrder extends BaseController
             // input proses 
             $params_wo['id_walkorder'] = $ref_sample_wo[0]->id;
             $proces_wo = $this->mworkOrder->getData_proses(0, 0, 9999, null, null, $params_wo);
-
             if (!empty($proces_wo)) {
               foreach ($proces_wo as $pro) {
+                $getPrefWoProses = $this->mworkOrder->getDataDetailWOApproveSO($style, $pro->id_proses, $wo_id);
                 $isiProses = [
                   'id_walkorder' => $wo_id,
                   'id_proses' => $pro->id_proses,
+                  'harga' => !empty($getPrefWoProses) ? $getPrefWoProses->harga : 0,
                   'created_at' => date('Y-m-d H:i:s')
                 ];
 

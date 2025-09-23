@@ -48,6 +48,7 @@ class ProductionModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 

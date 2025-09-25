@@ -112,13 +112,17 @@ class WalkorderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetailWOApproveSO($style = null, $id_proses = null, $current_id_wo = null)
+    function getDataDetailWOApproveSO($style = null, $id_proses = null, $current_id_wo = null, $type = null)
     {
         $builder = $this->db->table($this->table3 . " abx");
 
         $builder->select("abx.harga, abx.id_walkorder, bbx.keterangan_style, bbx.kode_walkorder");
         $builder->join("trans_walkorder bbx", "abx.id_walkorder = bbx.id", "left");
         $builder->where('abx.active = 1');
+
+        if (!empty($type)) {
+            $builder->where('bbx.tipe_id', $type);
+        }
 
         if (!empty($style)) {
             $builder->where('bbx.keterangan_style', $style);

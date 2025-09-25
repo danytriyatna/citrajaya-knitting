@@ -246,11 +246,11 @@ class Sample extends BaseController
     $deskripsi = $this->request->getPost('deskripsi');
     $keterangan = $this->request->getPost('deskripsi');
     $fileIdSampleOld = $this->request->getPost('fileIdSampleOld');
-    $qty = $this->request->getPost('qty');
+    $qty = !empty($this->request->getPost('qty')) && $this->request->getPost('qty') != "NaN" ? $this->request->getPost('qty') : null;
     $hargaTotal = $this->request->getPost('hargaTotal');
     $stat = $this->request->getPost('status');
     $style = $this->request->getPost('style');
-
+    
 
     $this->validation->setRules([
       'idKonsumen '               => ['label' => 'Pilih Buyer', 'rules' => 'required'],
@@ -324,7 +324,6 @@ class Sample extends BaseController
         $in_style['keterangan_style'] = $style;
         $this->mSample->insertRecordGetid('ref_konsumen_style', $in_style);
       }
-
       $arr_isi['created_at'] = date("Y-m-d H:i:s");
       $arr_isi['kode_sample'] = $this->mSample->generateNo("SPL", "trans_sample", "kode_sample");
       $this->mSample->insertRecordGetid($this->mSample->table, $arr_isi);

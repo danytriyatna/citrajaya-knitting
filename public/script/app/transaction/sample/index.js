@@ -97,9 +97,9 @@ $(document).ready(function () {
         let fmBtnDelete = "";        
         let fmBtnEdit = "";        
 
-        if (status == 0){
-            fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
-        }
+        // if (status == 0){
+        // }
+        fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
        
         fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
 
@@ -601,8 +601,8 @@ $(document).ready(function () {
                 rowDet.show()
                 if(data.status == 1){
                     $("#btn-save").hide()
-                    $("#btn-draft").hide()
-                    $("#btn-add-detail").hide()
+                    // $("#btn-draft").hide()
+                    // $("#btn-add-detail").hide()
                 } else{
                     $("#btn-save").show()
                     $("#btn-draft").show()
@@ -694,7 +694,7 @@ $(document).ready(function () {
             success: function(data) {
                 isModal.modal("hide")
                 if(status == 1){
-                    $("#btn-save-detail").hide()
+                    // $("#btn-save-detail").hide()
                 } else{
                     $("#btn-save-detail").show()
                 }

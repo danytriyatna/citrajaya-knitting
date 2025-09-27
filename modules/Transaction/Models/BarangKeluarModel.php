@@ -153,12 +153,17 @@ class BarangKeluarModel extends \App\Models\PrModel
     }
 
 
-    function generateKodePersediaan()
+    function generateKodePersediaan($type = null)
     {
         $kd = "BTK";
         $builder = $this->db->table($this->table . ' a');
-        $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
-
+        if (!empty($type)) {
+            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 5 ) AS kode ");
+        }
+        else {
+            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+        }
+        $builder->where("LEFT(kode_transaksi, 3) = '$kd'");
         $builder->orderBy('a.id', "DESC");
         $builder->limit(1);
         $query = $builder->get()->getRow();
@@ -178,7 +183,6 @@ class BarangKeluarModel extends \App\Models\PrModel
 
         $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
         $kodejadi = $kd . date('y') . date('m') . $kodemax;
-
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }
@@ -200,7 +204,7 @@ class BarangKeluarModel extends \App\Models\PrModel
                 ];
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
-                $data['kode_transaksi'] = $this->generateKodePersediaan();
+                $data['kode_transaksi'] = $this->generateKodePersediaan("BTK");
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 

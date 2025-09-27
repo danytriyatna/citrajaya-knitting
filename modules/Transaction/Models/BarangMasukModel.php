@@ -93,11 +93,17 @@ class BarangMasukModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function generateKodePersediaan()
+    function generateKodePersediaan($type = null)
     {
         $kd = "BTM";
         $builder = $this->db->table($this->table . ' a');
-        $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+        if (!empty($type)) {
+            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 5 ) AS kode ");
+        }
+        else {
+            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+        }
+        $builder->where("LEFT(kode_transaksi, 3) = '$kd'");
 
         $builder->orderBy('a.id', "DESC");
         $builder->limit(1);
@@ -143,7 +149,7 @@ class BarangMasukModel extends \App\Models\PrModel
                 ];
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
-                $data['kode_transaksi'] = $this->generateKodePersediaan();
+                $data['kode_transaksi'] = $this->generateKodePersediaan("BTM");
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 

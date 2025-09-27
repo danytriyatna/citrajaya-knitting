@@ -654,7 +654,7 @@ class SampleModel extends \App\Models\PrModel
             unset($arrData['qty']);
             $this->updateRecord("trans_sample", $arrData, 'id', $id);
 
-            if ($arrData['status'] == 1) {
+            if (!empty($arrData['status']) && $arrData['status'] == 1) {
                 $result = $this->getData($id);
                 $arrWorkOrder = [
                     "ref_id" => $id,

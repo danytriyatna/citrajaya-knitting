@@ -331,6 +331,9 @@ class Sample extends BaseController
       $status = true;
     } else {
       $arr_isi['updated_at'] = date("Y-m-d H:i:s");
+      if ($stat == 0) {
+        unset($arr_isi['status']);
+      }
       $id = decrypt($id);
       $res = $this->mSample->trxSubmitSample($arr_isi, $id);
       if ($res) {

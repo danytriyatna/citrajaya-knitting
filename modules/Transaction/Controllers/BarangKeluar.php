@@ -112,7 +112,7 @@ class BarangKeluar extends BaseController
                 $atr_edit['url'] = $this->urlv . '/edit/';
                 $atr_edit['class'] = '';
             }
-            if ($row->status != 0 && $row->id_kategori == 8) {
+            if ($row->status != 0) {
                 $atr_other['title'] = 'Print';
                 $atr_other['target'] = "blank";
                 $atr_other['url'] = $this->urlv . '/print/';
@@ -413,7 +413,7 @@ class BarangKeluar extends BaseController
                 ]
             ];
             $params['id_gudang'] =
-                $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
+            $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
             $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
             $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
             $this->data['data'] = !empty($resData) ? $resData : [];
@@ -424,7 +424,45 @@ class BarangKeluar extends BaseController
 
         $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
     exit;
     }
+
+    // public function print($id = null)
+    // {
+    //     if (!$this->auth->loggedIn()) {
+    //         return redirect()->to('/auth/login');
+    //     }
+    //     $dompdf = new \Dompdf\Dompdf();
+    //     // Set Dompdf options for portrait orientation
+    //     $dompdf->setPaper('A4', 'portrait');
+
+    //     $this->data['data'] = [];
+    //     if ($id != "") {
+    //         $id = decrypt($id);
+    //         // dd($id);
+    //         // die;
+    //         $resData = $this->mRef->getData($id);
+
+    //         $sort = [
+    //             [
+    //                 'field' => 'uk.id',
+    //                 'dir' => 'ASC'
+    //             ]
+    //         ];
+    //         $params['id_gudang'] =
+    //             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
+    //         $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+    //         $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+    //         $this->data['data'] = !empty($resData) ? $resData : [];
+    //         $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
+    //         $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
+    //     }
+    //     $html = view($this->views . '\barang_keluar_print', $this->data);
+
+    //     $dompdf->loadHtml($html);
+    // $dompdf->render();
+    // $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    // exit;
+    // }
 }

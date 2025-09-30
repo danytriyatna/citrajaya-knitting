@@ -45,7 +45,7 @@ if(inpIdHeader.val().length == 0){
 setTimeout(() => {
     if(selectKategori.val() == 3){
         divNamaKonsumen.removeClass("d-none")
-    }else if(selectKategori.val() == 12){
+    }else if(selectKategori.val() == 12 || selectKategori.val() == 1){
         dtList.hideColumn('amount');
         divDetail.hide();
         divRefProduk.show();
@@ -493,7 +493,7 @@ function loadDataSo() {
             success: function(data) {
                 
                 if(data.status){
-                    if(selectKategori.val() != 12){
+                    if(selectKategori.val() != 12 && selectKategori.val() != 1){
                         refData = [];
                         xrefData = [];
                         dtList.setData(data.dataSO);
@@ -522,7 +522,7 @@ selectOperator.on('change', function () {
 });
 
 setTimeout(() => {
-    if(selectKategori.val() == 12){
+    if(selectKategori.val() == 12 || selectKategori.val() == 1){
         loadDataSo();
     }
     else {
@@ -963,7 +963,7 @@ selectKategori.on("change",function(e){
     
     if(nilai == 9){
         divNamaKonsumen.addClass("d-none")
-    }else if(nilai == 12){
+    }else if(nilai == 12 || nilai == 1){
         divDetail.hide();
         divRefProduk.show();
     }
@@ -1012,7 +1012,7 @@ function submitData(status,message){
 
 
     
-    if(selectKategori.val() != 12){
+    if(selectKategori.val() != 12 && selectKategori.val() != 1){
         if(dtListDetail.getData().length == 0){
             return Swal.fire({
                 text: "Data detail tidak boleh kosong",

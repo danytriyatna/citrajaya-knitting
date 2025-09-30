@@ -235,7 +235,7 @@ class BarangMasukModel extends \App\Models\PrModel
                 }
             }
             // print_r($data);exit;
-            if($data['id_kategori'] == 12){
+            if($data['id_kategori'] == 12 || $data['id_kategori'] == 1){
                 if(!empty($dataProduksi)){
 
                     $hedr_data = $this->getData($id);
@@ -249,9 +249,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         $xpr = [];
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
                         $xpr['kode_ukuran'] = $xrow['kode_ukuran'];
-
                         $clr = explode('~', $xrow['color']);
-
                         $xpr['kode_warna1'] = $clr[0];
                         if(!empty($clr[1])){
                             $xpr['kode_warna2'] = $clr[1];
@@ -351,7 +349,11 @@ class BarangMasukModel extends \App\Models\PrModel
 
                                 $upd['qty_prod'] = $qty_now;
 
-                                $this->updateRecord('trans_walkorder_proses_ukuran', $upd, 'id', $id_wop);
+                                if ($data['id_kategori'] == 12) {
+                                    # code...
+                                    $this->updateRecord('trans_walkorder_proses_ukuran', $upd, 'id', $id_wop);
+                                }
+
                             }else{
                                 throw new \Exception("Ada salah satu data SO Belum sampai proses Produksi " . $xrow['kode_sales_order'] . ', pastikan data sudah sampai proses produksi');
                             }

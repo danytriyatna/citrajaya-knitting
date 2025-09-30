@@ -209,7 +209,7 @@ class BarangMasuk extends BaseController
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
 
-            if($resData->id_kategori == 12){
+            if($resData->id_kategori == 12 || $resData->id_kategori == 1){
                 if (isset($resData->no_ref_trf)) {
                 # code...
                     $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
@@ -319,7 +319,7 @@ class BarangMasuk extends BaseController
             $dataHeader['id_buyer'] = $id_buyer;
         }
 
-        if($id_kategori == 12){
+        if($id_kategori == 12 || $id_kategori == 1){
             $dataHeader['id_proses'] = $id_proses;
             $dataHeader['id_cmt'] = !empty($id_cmt) ? $id_cmt : -11 ;
             if (!empty($nomor_mesin)) {

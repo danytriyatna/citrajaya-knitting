@@ -105,7 +105,8 @@
                   <button id="btn-save" class="btn btn-primary" type="button"><i class="fa fa-save"></i>&nbsp; Simpan</button>
                   <button id="btn-approve" class="btn btn-success" type="button"><i class="fa fa-check"></i>&nbsp; Approve</button>
                 <?php }else { ?>
-                  <button id="btn-cetak-print" class="btn btn-success" type="button"><i class="fa fa-print"></i>&nbsp; Print</button>
+                  <button id="btn-cetak-print" class="btn btn-danger" type="button"><i class="fa fa-print"></i>&nbsp; Print PDF</button>
+                  <button id="btn-cetak-export" class="btn btn-success" type="button"><i class="fa fa-file-excel"></i>&nbsp; Print .xlsx</button>
                 <?php } ?>
                 <input type="hidden" name="detailData" id="detailData" value='<?= !empty($Ldetail) ? $Ldetail : ''?>'>
                 <input type="hidden" name="actionf" id="actionf" value="">

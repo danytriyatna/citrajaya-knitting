@@ -373,4 +373,25 @@ $(document).ready(function () {
     // }, 500);
 
     });
+
+    $("#btn-cetak-export").on('click', function (e) {
+        e.preventDefault()
+
+        // Query parameters
+        let params = {
+            data_id : inpid.val(),
+        };
+
+        // Buat query string
+        let queryString = $.param(params); // Convert objek ke query string
+        let fullUrl = `sdm/penggajian/generate-excel?${queryString}`;
+
+        // Buka link di tab baru
+        window.open(fullUrl, '_blank');
+    //   setTimeout(() => {
+    //     // inpp_trans.html(data.id);
+    //     mdlPrint.modal("hide");
+    // }, 500);
+
+    });
 });

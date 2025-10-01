@@ -174,6 +174,7 @@
             <!-- <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">ROLLING SHIFT</th> -->
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">JAM KERJA</th>
             <th style="width: 10%; border: 1px solid black; padding: 8px; text-align: left;">GAJI/UPAH</th>
+            <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">SAMPLE/PERBAIKAN</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HK</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">LEMBUR HL</th>
             <th style="width: 7%; border: 1px solid black; padding: 8px; text-align: left;">PREMI KEHADIRAN</th>
@@ -190,6 +191,7 @@
         <?php 
             $jam_kerja = 0;
             $gaji_harian = 0;
+            $sample = 0;
             $lembur = 0;
             $lembur_we = 0;
             $uang_lembur = 0;
@@ -211,6 +213,7 @@
 
                 $jam_kerja = $jam_kerja + $r->jam_kerja;
                 $gaji_harian = $gaji_harian + $r->gaji_harian;
+                $sample = $sample + $r->jml_sample;
                 $lembur = $lembur + $r->lembur;
                 $lembur_we = $lembur_we + $r->lembur_we;
                 $uang_lembur = $uang_lembur + $r->uang_lembur;
@@ -231,6 +234,7 @@
 
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->jam_kerja; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->gaji_harian); ?></td>
+                <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= format_angka($r->jml_sample); ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $r->lembur_we; ?></td>
                 <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($r->premi); ?></td>
@@ -252,6 +256,7 @@
           <!-- <td style="border: 1px solid black; padding: 8px;"></td> -->
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= ($jam_kerja); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= format_angka($gaji_harian); ?></td>
+          <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= format_angka($sample); ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur; ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:center;"><?= $lembur_we; ?></td>
           <td style="border: 1px solid black; padding: 8px;text-align:right;"><?= $premi; ?></td>

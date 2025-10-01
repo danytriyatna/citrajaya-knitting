@@ -128,6 +128,7 @@ class Mabsensi extends \App\Models\PrModel
                 'latest_bonus.bonus_keterangan as bonus_keterangan',
                 'COUNT(sdm.terlambat) FILTER (WHERE sdm.terlambat <> 0 AND sdm.terlambat is not null) AS terlambat',
                 'rk.premi_kehadiran as premi',
+                'COALESCE(tp1.jml_sample, 0) AS jml_sample',
             ]);
         }
 
@@ -176,6 +177,12 @@ class Mabsensi extends \App\Models\PrModel
         
         $builder->where('sdm.active', 1);
 
+        // Tambahkan kondisi WHERE untuk rentang tanggal jika parameter disediakan
+        if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
+            $builder->where("sdm.tgl_absen >=", $params['tgl_mulai']);
+            $builder->where("sdm.tgl_absen <=", $params['tgl_akhir']);
+        }
+
         if (!empty($params['type']) && $params['type'] == 2) {
             if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
                 $startDate = $params['tgl_mulai'];
@@ -184,8 +191,19 @@ class Mabsensi extends \App\Models\PrModel
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
                       FROM trans_produksi_operator 
                       WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
+                      AND id_category = 12 
                       GROUP BY id_operator) th",
                     'rk.id_operator = th.id_operator',
+                    'left'
+                );
+
+                $builder->join(
+                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
+                    FROM trans_produksi_operator
+                    WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
+                      AND id_category = 1 
+                      GROUP BY id_operator) tp1",
+                    'rk.id_operator = tp1.id_operator',
                     'left'
                 );
             }
@@ -193,26 +211,30 @@ class Mabsensi extends \App\Models\PrModel
                 $builder->join(
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
                       FROM trans_produksi_operator 
+                      WHERE id_category = 12
                       GROUP BY id_operator) th",
                     'rk.id_operator = th.id_operator',
+                    'left'
+                );
+
+                $builder->join(
+                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
+                    FROM trans_produksi_operator
+                      WHERE id_category = 1
+                      ROUP BY id_operator) tp1",
+                    'rk.id_operator = tp1.id_operator',
                     'left'
                 );
             }
             
             $builder->where("rk.type", $params['type']);
-            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total, latest_bonus.bonus_keterangan');
+            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total, latest_bonus.bonus_keterangan, tp1.jml_sample');
         }
         else {
             $builder->where('(rk.type <> 2 OR rk.type IS NULL)', null, false);
+            $builder->groupBy("rk.nip, rk.full_name, rk.posisi, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.id, latest_bonus.bonus_keterangan");
         }
     
-        // Tambahkan kondisi WHERE untuk rentang tanggal jika parameter disediakan
-        if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
-            $builder->where("sdm.tgl_absen >=", $params['tgl_mulai']);
-            $builder->where("sdm.tgl_absen <=", $params['tgl_akhir']);
-        }
-    
-        $builder->groupBy("rk.nip, rk.full_name, rk.posisi, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.id, latest_bonus.bonus_keterangan");
         
         $builder->orderBy("rk.nip ASC");
     

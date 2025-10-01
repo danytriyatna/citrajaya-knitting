@@ -191,6 +191,12 @@ $(document).ready(function () {
 			} ,
 
             {
+				title: 'Sample/Perbaikan', field: 'jml_sample', headerSort:false, sorter: 'string', align: "center",
+                width: 150, formatter:"money", cssClass:"text-end", bottomCalcFormatter: 'money', bottomCalc: 'sum'
+			},
+
+
+            {
 				title: 'Lembur HK', field: 'lembur', headerSort:false, sorter: 'string',
 				width: 100, cssClass:'text-center', bottomCalc: 'sum'
 			},

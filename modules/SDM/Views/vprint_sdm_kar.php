@@ -190,16 +190,21 @@
     </thead>
     <?php 
       $gaji = !empty($detail) ? $detail[0]->gaji_harian : 0;
+      $sample = !empty($detail) ? $detail[0]->jml_sample : 0;
       $lembur = !empty($detail) ? $detail[0]->uang_lembur  : 0;
       $bonus = !empty($detail) ? $detail[0]->bonus  : 0;
       $bonus_keterangan = !empty($detail) ? $detail[0]->bonus_keterangan  : null;
       $premi = !empty($detail) ? $detail[0]->premi  : 0;
 
-      $jml_pendapatan = $gaji + $lembur + $bonus + $premi;
+      $jml_pendapatan = $gaji + $sample + $lembur + $bonus + $premi;
       $potongan = !empty($detail) ? $detail[0]->potongan  : 0;
       $total_pendapatan = $jml_pendapatan - $potongan;
     ?>
     <tbody>
+      <tr>
+        <td>Sample</td>
+        <td>Rp <?= format_angka($sample, 2) ?></td>
+      </tr>
       <tr>
         <td>Gaji</td>
         <td>Rp <?= format_angka($gaji, 2) ?></td>

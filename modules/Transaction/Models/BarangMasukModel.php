@@ -334,6 +334,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "nomor_mesin" => !empty($data['nomor_mesin']) ? $data['nomor_mesin'] : '-',
                                     "active" => 1,
                                     "flag" => 1,
+                                    "id_category" => $data['id_kategori'],
                                     "created_at" =>  date("Y-m-d H:i:s"),
                 
                                 ];

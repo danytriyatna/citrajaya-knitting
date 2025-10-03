@@ -157,7 +157,8 @@ class Mabsensi extends \App\Models\PrModel
                           latest_bonus.bonus_keterangan as bonus_keterangan,
                           (COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) as gaji_lembur_we,
                           COUNT(sdm.terlambat) FILTER (WHERE sdm.terlambat <> 0 AND sdm.terlambat is not null) AS terlambat,
-                          rk.premi_kehadiran as premi");
+                          rk.premi_kehadiran as premi,
+                          0 as jml_sample");
         }
     
         $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");

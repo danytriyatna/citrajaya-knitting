@@ -946,7 +946,7 @@ class Penggajian extends BaseController
             $bonus = !empty($r) ? $r->bonus  : 0;
             
 
-            $jml_pendapatan = $gaji + $lembur + $bonus + $r->premi;
+            $jml_pendapatan = $gaji + $lembur + $bonus + $r->premi + $r->jml_sample;
             $potongan = !empty($r) ? $r->potongan  : 0;
             $total_pendapatan = $jml_pendapatan - $potongan;
             

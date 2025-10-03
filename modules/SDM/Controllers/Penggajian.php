@@ -176,7 +176,7 @@ class Penggajian extends BaseController
             foreach  ($is_detail as $r) {
               $is_detail[$i]->gaji_jam = $r->gaji_harian;
               // $is_detail[$i]->total = $r->gaji;
-              $is_detail[$i]->total = ($r->gaji_harian + $r->uang_lembur + $r->bonus + $r->premi) - $r->potongan;
+              $is_detail[$i]->total = ($r->gaji_harian + $r->uang_lembur + $r->bonus + $r->premi + $r->jml_sample) - $r->potongan;
               $i++;
             }
 
@@ -456,7 +456,7 @@ class Penggajian extends BaseController
           $data_laporan[$i]->premi = 0;
         }
 
-        $data_laporan[$i]->total = ($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus + $data_laporan[$i]->premi) - $data_laporan[$i]->potongan;
+        $data_laporan[$i]->total = ($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus + $data_laporan[$i]->premi + $data_laporan[$i]->jml_sample) - $data_laporan[$i]->potongan;
       
       }
       $status = true;

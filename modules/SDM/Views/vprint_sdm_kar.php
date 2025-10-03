@@ -203,23 +203,23 @@
     <tbody>
       <tr>
         <td>Sample/Perbaikan</td>
-        <td>Rp <?= format_angka($sample, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($sample, 2) ?></td>
       </tr>
       <tr>
         <td>Gaji/Upah</td>
-        <td>Rp <?= format_angka($gaji, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($gaji, 2) ?></td>
       </tr>
       <tr>
         <td>Lembur</td>
-        <td>Rp <?= format_angka($lembur, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($lembur, 2) ?></td>
       </tr>
       <tr>
         <td>Premi Harian</td>
-        <td>Rp <?= format_angka($premi, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($premi, 2) ?></td>
       </tr>
       <tr>
         <td>Penambahan dan lain-lain - <?= $bonus_keterangan ?></td>
-        <td>Rp <?= format_angka($bonus, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($bonus, 2) ?></td>
       </tr>
     </tbody>
   </table>
@@ -230,11 +230,11 @@
     <tbody>
       <tr>
         <td style="width: 75%;">Jumlah Pendapatan</td>
-        <td style="width: 25%;">Rp <?= format_angka($jml_pendapatan, 2) ?></td>
+        <td style="width: 25%;" class="text-right">Rp <?= format_angka($jml_pendapatan, 2) ?></td>
       </tr>
       <tr>
         <td>Potongan Kasbon</td>
-        <td>Rp <?= format_angka($potongan, 2) ?></td>
+        <td class="text-right">Rp <?= format_angka($potongan, 2) ?></td>
       </tr>
     </tbody>
   </table>
@@ -245,7 +245,7 @@
     <tbody>
       <tr>
         <th class="text-right pt-8 pr-16" style="width: 75%;">Jumlah Total Pendapatan Yang Diterima</th>
-        <td class="pt-8" style="width: 25%; border-top: 2px solid #888;">Rp <?= format_angka($total_pendapatan, 2) ?></td>
+        <td class="pt-8 text-right" style="width: 25%; border-top: 2px solid #888;">Rp <?= format_angka($total_pendapatan, 2) ?></td>
       </tr>
     </tbody>
   </table>

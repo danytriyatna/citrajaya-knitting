@@ -379,6 +379,7 @@ class Penggajian extends BaseController
               $dtIn["bonus_keterangan"] = $r["bonus_keterangan"]; 
               $dtIn["potongan"] = $r["potongan"]; 
               $dtIn['durasi_kerja'] = $r['jam_kerja'];
+              $dtIn['jml_sample'] = $r['jml_sample'];
               
               if(empty($r["id"])){
                 $dtIn["active"] = 1;

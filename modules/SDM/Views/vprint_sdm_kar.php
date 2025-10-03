@@ -202,11 +202,11 @@
     ?>
     <tbody>
       <tr>
-        <td>Sample</td>
+        <td>Sample/Perbaikan</td>
         <td>Rp <?= format_angka($sample, 2) ?></td>
       </tr>
       <tr>
-        <td>Gaji</td>
+        <td>Gaji/Upah</td>
         <td>Rp <?= format_angka($gaji, 2) ?></td>
       </tr>
       <tr>

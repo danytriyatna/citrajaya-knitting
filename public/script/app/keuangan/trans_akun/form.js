@@ -1,3 +1,4 @@
+
 $(document).ready(function () {
     $("[data-politespace]").politespace();
     $("#alert-success").hide();
@@ -102,6 +103,10 @@ $(document).ready(function () {
                 }
             },
             {
+                title: "id", field: "id",  sorter: "string", headerSort:false,
+				width: 220
+            },
+            {
                 title: "Nama Akun", field: "coa_nama",  sorter: "string", headerSort:false,
 				width: 220
             },
@@ -195,6 +200,16 @@ $(document).ready(function () {
 
         setDataInputTable();
         $("#actionf").val('save');
+		$("#status").val(0); 
+        $("#fmain").submit();
+    });
+
+	$('#btn-approve').on('click', function (e) {
+        e.preventDefault();
+
+        setDataInputTable();
+        $("#actionf").val('save');
+		$("#status").val(1); 
         $("#fmain").submit();
     });
 

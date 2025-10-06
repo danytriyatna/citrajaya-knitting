@@ -163,6 +163,7 @@ class Trans_akun extends BaseController
         $stdData->ref_rekening_id = '';
         $stdData->ref_so_sp = '';
         $stdData->keterangan = '';
+        $stdData->status = '';
         $Ldetail = '';
         
         if($id) {
@@ -173,13 +174,15 @@ class Trans_akun extends BaseController
             $i = 1;
             foreach ($dtData as $r) {
                 $isi = [];
+                $isi['id'] = $r->trans_akun_det_id;
+                $isi['coa_id'] = $r->coa_id;
                 $isi['coa_nama'] = $r->coa_kode . " " . $r->coa_nama;
                 $isi['keterangan'] = $r->keterangan;
                 $isi['jumlah'] = $r->jumlah;
                 $isi['seq'] = $i++;
                 $builds[] = $isi;
             }
-
+            
             $Ldetail = \json_encode($builds);
             $isDisable = true;
         }
@@ -191,6 +194,7 @@ class Trans_akun extends BaseController
             $stdData->ref_so_sp = trim($this->request->getPost('ref_so_sp'));
             $stdData->keterangan = trim($this->request->getPost('keterangan'));
             $Ldetail = trim($this->request->getPost('Ldetail'));
+            $stdData->status = trim($this->request->getPost('status'));
 
            
             $this->validation->setRules([
@@ -209,6 +213,7 @@ class Trans_akun extends BaseController
                 $dataIn['ref_rekening_id'] = $stdData->ref_rekening_id;
                 $dataIn['ref_so_sp'] = $stdData->ref_so_sp;
                 $dataIn['keterangan'] = $stdData->keterangan;
+                $dataIn['status'] = $stdData->status;
 
                 $dtDet = \json_decode($Ldetail);
                 
@@ -233,6 +238,7 @@ class Trans_akun extends BaseController
                     $this->session->setFlashdata('message', "{$mtd} data berhasil.." );
                     return redirect()->to('/keuangan/transaksi_akun');
                 }else{
+                     $this->data['errmsg'] = $this->_get_message("ERROR_VALIDATION", "Ulangi simpan data !");
                     $this->_get_message("ERROR_VALIDATION", "Ulangi simpan data !");
                 }
             }else{
@@ -298,13 +304,17 @@ class Trans_akun extends BaseController
         $this->data['Ldetail'] = array(
             'Ldetail'=> set_value('Ldetail', $Ldetail)
         );
-
+        $this->data['status'] = isset($stdData->status) ? $stdData->status : null;
         $show_save_btn = true;
-        if($isDisable){
+        if($isDisable && $this->data['status'] == 1){
             $this->data['ref_rekening_id']['disabled'] = null;
             $this->data['trans_akun_date']['readonly'] = null;
             $this->data['keterangan']['readonly'] = null;
             $show_save_btn = false;
+        }
+
+        if (empty($stdData->status)) {
+            $isDisable = false;
         }
 
         $this->data["disabled_input"] = $isDisable;
@@ -352,8 +362,26 @@ class Trans_akun extends BaseController
 
         $this->db->transBegin();
 
-        $inUp = $this->mtrans_akun->updateRecord($this->mtrans_akun->table, $dataIn, 'trans_akun_id', $id);
+        $total = 0;
+        foreach ($dtDetail as $r) {
+            $dtIn["trans_akun_id"] = $id;
+            $dtIn["coa_id"] = $r->coa_id;
+            $dtIn["jumlah"] = $r->jumlah;
+            $dtIn["keterangan"] = $r->keterangan;
+            $dtIn["created_by"] = $user_id;
+            $dtIn["created_date"] = $now;
+            if (!empty($r->id)) {
+                $inUp = $this->mtrans_akun->updateRecord($this->mtrans_det->table, $dtIn, 'id', $r->id);
+            }
+            else {
+                $this->mtrans_det->insertRecordGetid($this->mtrans_det->table, $dtIn);
+            }
 
+            $total += (float) $r->jumlah;
+        }
+
+        $dataIn['total'] = $total;
+        $this->mtrans_akun->updateRecord($this->mtrans_akun->table, $dataIn, 'id', $id);
         // if(!empty){
 
         // }

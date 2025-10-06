@@ -19,7 +19,7 @@ class Mtrans_akun extends PrModel
     {
         $builder = $this->db->table($this->table.' a');
         $builder->select("a.id as trans_akun_id, a.trans_akun_date, a.trans_akun_kode, a.ref_rekening_id, a.keterangan, a.ref_so_sp,
-                          b.rekening_no, b.rekening_bank, a.total");
+                          b.rekening_no, b.rekening_bank, a.total , a.status");
 
         $builder->join('ref_rekening b', "a.ref_rekening_id = b.id", "left");
        

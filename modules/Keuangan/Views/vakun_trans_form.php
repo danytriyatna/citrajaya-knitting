@@ -31,7 +31,7 @@
               <div class="card-body">
               <form action="<?= base_url().'/'.uri_string(); ?>" id="fmain" method="post" enctype='multipart/form-data' class="form-horizontal">
                   <div class="form-body">
-
+                    <input type="hidden" id="status" name="status" value="<?= !empty($status) ? $status : null ?>" class="form-control">
                     <?php if (isset($message) && $message != "") { ?>
                         <?php echo (isset($message) && $message != "") ? $message : ""; ?>
                     <?php } ?>
@@ -107,6 +107,7 @@
                             <a href="<?= base_url(); ?>/keuangan/transaksi_akun" class="btn btn-secondary" ><i class="fa fa-arrow-left"></i> Kembali</a>
                             <?php if (isset($show_save_btn) && $show_save_btn === TRUE) : ?>
                             <button id="btn-save" type="button" name="actionf" class="m-s-5 btn btn-success"> <i class="fa fa-save"></i> Simpan</button>
+                            <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
                             <?php endif; ?>
                           </div>
                         </div>

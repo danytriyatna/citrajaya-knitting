@@ -363,6 +363,7 @@ class Trans_akun extends BaseController
         $this->db->transBegin();
 
         $total = 0;
+        $id_det = [];
         foreach ($dtDetail as $r) {
             $dtIn["trans_akun_id"] = $id;
             $dtIn["coa_id"] = $r->coa_id;
@@ -372,13 +373,14 @@ class Trans_akun extends BaseController
             $dtIn["created_date"] = $now;
             if (!empty($r->id)) {
                 $inUp = $this->mtrans_akun->updateRecord($this->mtrans_det->table, $dtIn, 'id', $r->id);
+                $id_det[] = $r->id;
             }
             else {
-                $this->mtrans_det->insertRecordGetid($this->mtrans_det->table, $dtIn);
+                $id_det[] = $this->mtrans_det->insertRecordGetid($this->mtrans_det->table, $dtIn);
             }
-
             $total += (float) $r->jumlah;
         }
+        $inUp = $this->mtrans_akun->deleteRecordCondition($this->mtrans_det->table, "id", $id_det, "trans_akun_id", $id);
 
         $dataIn['total'] = $total;
         $this->mtrans_akun->updateRecord($this->mtrans_akun->table, $dataIn, 'id', $id);

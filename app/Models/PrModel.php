@@ -47,6 +47,18 @@ class PrModel extends Model
         return $result;
     }
 
+    public function deleteRecordCondition($table, $column, $id, $parent_id, $parent_value)
+    {
+        $builder = $this->db->table($table);
+
+        $builder->whereNotIn($column, $id);
+        $builder->where($parent_id, $parent_value);
+
+        $result = $builder->delete();
+
+        return $result;
+    }
+
     public function insertRecordGetid($table, $data)
     {
 

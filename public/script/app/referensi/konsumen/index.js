@@ -7,6 +7,7 @@ $(document).ready(function () {
     let inpNoHP         = $('#no_hp');
     let inpEmail        = $('#email');
     let inpNpwp         = $('#npwp');
+    let inpPIC        = $('#pic');
 
     let isModal       = $("#modal-form-add-po");
 
@@ -38,6 +39,7 @@ $(document).ready(function () {
                         inpAlamat.val(data_row.alamat)
                         inpNoHP.val(data_row.no_hp)
                         inpEmail.val(data_row.email)
+                        inpPIC.val(data_row.pic)
                         setTimeout(() => {
                             getKonsumenStyle()
                             dtListStyle.redraw(true)
@@ -148,6 +150,7 @@ $(document).ready(function () {
         if(inpNoHP.val().length == 0) validation = false
         if(inpEmail.val().length == 0) validation = false
         if(inpAlamat.val().length == 0) validation = false
+        if(inpPIC.val().length == 0) validation = false
     
         if(validation){
             $.ajax({
@@ -159,7 +162,8 @@ $(document).ready(function () {
                     alamat : inpAlamat.val(),
                     email  : inpEmail.val(),
                     no_hp  : inpNoHP.val(),
-                    npwp   : inpNpwp.val()
+                    npwp   : inpNpwp.val(),
+                    pic  : inpPIC.val(),
                 },
                 dataType: "json",
                 beforeSend: function () {

@@ -38,6 +38,7 @@ $(document).ready(function () {
                         inpAlamat.val(data_row.alamat)
                         inpNoHP.val(data_row.no_hp)
                         inpEmail.val(data_row.email)
+                        inpPIC.val(data_row.pic)
 
                         isModal.modal("show");
                     }   

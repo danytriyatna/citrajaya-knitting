@@ -58,6 +58,16 @@
           </div>
         </div>
 
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pic">PIC<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <input type="text" id="pic" name="pic" class="form-control" placeholder="Ketik PIC" required>
+            <div class="invalid-feedback">
+              PIC Konsumen tidak valid
+            </div>
+          </div>
+        </div>
+
         <div id="div_komsumen">
           <hr>
           <div class="row">

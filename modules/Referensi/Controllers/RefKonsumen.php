@@ -86,6 +86,7 @@ class RefKonsumen extends BaseController
                     "alamat" => $row->alamat,
                     "email" => $row->email,
                     "no_hp" => $row->no_hp,
+                    "pic" => $row->pic,
                 )
             );
         }
@@ -468,6 +469,7 @@ class RefKonsumen extends BaseController
         $no_hp        = $this->request->getPost('no_hp');
         $dataStyle    = $this->request->getPost('data_style');
         $npwp         = $this->request->getPost('npwp');
+        $pic        = $this->request->getPost('pic');
 
 
         $msg    = "Data gagal ditambahkan !";
@@ -478,7 +480,8 @@ class RefKonsumen extends BaseController
             'alamat' => $alamat,
             'email'  => $email,
             'no_hp'  => $no_hp,
-            'npwp'   => $npwp
+            'npwp'   => $npwp,
+            'pic'  => $pic,
         ];
 
         // $style_data = json_decode($dataStyle, true);

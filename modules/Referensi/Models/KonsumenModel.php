@@ -18,7 +18,7 @@ class KonsumenModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " k");
 
-        $builder->select("k.id, k.nama, k.alamat, k.no_hp, k.email, k.npwp");
+        $builder->select("k.id, k.nama, k.alamat, k.no_hp, k.email, k.npwp, k.pic");
 
         if ($id == null or $id == "") {
             $builder->where('k.active = 1');

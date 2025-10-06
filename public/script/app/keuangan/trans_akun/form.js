@@ -103,7 +103,7 @@ $(document).ready(function () {
                 }
             },
             {
-                title: "id", field: "id",  sorter: "string", headerSort:false,
+                title: "id", field: "id",  sorter: "string", headerSort:false, visible:false,
 				width: 220
             },
             {

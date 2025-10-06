@@ -28,6 +28,7 @@ class SalesOrderModel extends \App\Models\PrModel
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(abx.style) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }

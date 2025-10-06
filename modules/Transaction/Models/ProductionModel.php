@@ -43,12 +43,14 @@ class ProductionModel extends \App\Models\PrModel
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $value = strtolower("%{$filters[0]['value']}%");
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
                 $builder->groupEnd();
             }
 

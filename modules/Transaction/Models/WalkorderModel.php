@@ -39,11 +39,13 @@ class WalkorderModel extends \App\Models\PrModel
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $value = strtolower("%{$filters[0]['value']}%");
                 $builder->groupStart();
                 $builder->where('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.ref_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
                 $builder->groupEnd();
             }
 

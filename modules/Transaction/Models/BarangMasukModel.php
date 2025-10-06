@@ -93,6 +93,26 @@ class BarangMasukModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function get_export($from_date = null, $to_date = null){
+        $builder = $this->db->table("trans_barang_masuk_produksi tbmp");
+        $builder->join($this->table . " uk", "tbmp.id_header = uk.id", "inner");
+        $builder->join($this->tblGudang . " abx", "uk.id_gudang = abx.id", "left");
+        $builder->join($this->tblKategori . " dbx", "uk.id_kategori = dbx.id", "inner");
+        $builder->join($this->tblBuyer . " ebx", "tbmp.id_konsumen = ebx.id", "left");
+        $builder->join('_jenis_proses_produksi jp', 'jp.id = uk.id_proses', 'left');
+        $builder->join('ref_operator rp', 'rp.id = uk.id_cmt', 'left');
+
+        $builder->select("uk.tanggal, uk.kode_transaksi, dbx.kategori as jenis_transaksi, uk.no_ref_trf, tbmp.kode_sales_order, ebx.nama as nama_buyer, tbmp.style, tbmp.deskripsi, abx.nama_gudang as gudang_pengirim, 
+                        jp.nama as nama_proses, rp.nama_operator as nama_cmt, tbmp.color, tbmp.kode_ukuran, tbmp.keterangan, 
+                        tbmp.nomor_mesin, tbmp.jam_mesin, tbmp.nilai_mesin, tbmp.qty_kirim, tbmp.qty, tbmp.harga, tbmp.amount, uk.status");
+        $builder->where('uk.active = 1');
+        $builder->where("uk.tanggal BETWEEN '$from_date' AND '$to_date'");
+        $builder->orderBy("uk.tanggal");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
     function generateKodePersediaan($type = null)
     {
         $kd = "BTM";

@@ -244,7 +244,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">Proses Produksi</label>
                     <div class="col-md-8" style="padding-top:2%;">
-                        <input type="checkbox" name="ref_prduksi" id="ref_prduksi" <?= !empty($resData->ref_produk)? "checked" : ""; ?> />
+                        <input type="checkbox" name="ref_prduksi" id="ref_prduksi" <?= (isset($resData->ref_produk) && $resData->ref_produk == 1) || empty($resData) ? "checked" : ""; ?> />
                     </div>
                   </div>
                 </div>

@@ -127,6 +127,7 @@ $routes->group('trans/incoming-goods', ['namespace' => 'Modules\Transaction\Cont
   $routes->post('save', 'BarangMasuk::save');
   $routes->get('print/(:any)', 'BarangMasuk::print/$1');
   $routes->get('print-faktur/(:any)', 'BarangMasuk::print_faktur/$1');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'BarangMasuk::print_excel_lists/$1/$2');
 });
 $routes->group('trans/outgoing-goods', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
   $routes->get('/', 'BarangKeluar::index');

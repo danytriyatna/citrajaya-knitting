@@ -119,6 +119,12 @@ class Trans_akun extends BaseController
 
             $date = "";
 
+            $status = "<span class='badge bg-danger'>Draft</span>";
+
+            if (!empty($row->status) && $row->status == 1) {
+                $status = "<span class='badge bg-success'>Approved</span>";
+            }
+
             if(!empty($row->trans_akun_date)){
                 $date = date('d-m-Y', strtotime($row->trans_akun_date));
             }
@@ -129,6 +135,7 @@ class Trans_akun extends BaseController
                'ref_rekening'    => $row->rekening_no . " - " . $row->rekening_bank,
                'trans_akun_date' => $date,
                'total'           => $row->total,
+               'status'           => $status,
                'keterangan'      => $row->keterangan
             ));
 

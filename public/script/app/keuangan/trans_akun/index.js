@@ -32,11 +32,15 @@ $(document).ready(function () {
 			}, 
             {
 				title: 'Keterangan', field: 'keterangan', headerSort:false, sorter: 'string',
-				
+				width: "30%",
 			},
             {
 				title: 'Jumlah', field: 'total', headerSort:false, sorter: 'string',
-				width: "10%", formatter : "money", cssClass:"text-right"
+				width: "10%", formatter : "money", cssClass:"text-end"
+			}, 
+            {
+				title: 'Status', field: 'status', headerSort:false, sorter: 'string', formatter: "html",
+				width: "10%", 
 			}, 
 			
            

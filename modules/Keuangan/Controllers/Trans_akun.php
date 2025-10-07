@@ -175,7 +175,7 @@ class Trans_akun extends BaseController
         
         if($id) {
             $stdData = $this->mtrans_akun->getData($id);  
-            $stdData->trans_akun_date = !empty($stdData->trans_akun_date) ? \fdate_eng_to_ind_4($stdData->trans_akun_date) : "";  
+            $stdData->trans_akun_date = date("d F Y", strtotime($stdData->trans_akun_date));
             $dtData = $this->mtrans_det->getData(null, 0, 9999, null, null, $id);  
             $builds = [];
             $i = 1;
@@ -280,7 +280,7 @@ class Trans_akun extends BaseController
             'placeholder' => 'No. Transaksi',
             'value' => set_value('trans_akun_kode', $stdData->trans_akun_kode)
         );
-
+        
         $this->data['trans_akun_date'] = array(
             'id' => 'trans_akun_date',
             'name'  => 'trans_akun_date',

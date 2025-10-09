@@ -2,24 +2,41 @@ let dtList = new Tabulator("#dt-list", {
     pagination: true, 
     paginationSize: 100,
     paginationButtonCount: 5,
+    paginationCounter:"rows",
     groupBy: ['nama_jenis_barang','barang'],
+    // groupCalcs: false, //
     columns:[
         // {title:"LOT ID", field:"lot_id", width:"10%"},
-        {title:"LOT", field:"lot_no", width:"8%"},
-        {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"12%"},
+        {title:"LOT", field:"lot_no", width:"9%"},
+        {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"15%"},
         {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"12%"},
         {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"12%"},
         {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"12%"},
         {title:"Qty<br>Akhir", field:"saldo_akhir", hozAlign:"right",width:"12%"},
-        {title:"Nilai", field:"price", hozAlign:"right",width:"15%",formatter : "money",
-            formatterParams: {
-                decimal: ",",
-                thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            },},
+        {
+            title:"Nilai",
+            field:"price",
+            hozAlign:"right",
+            width:"17%",
+            formatter:"money",
+            formatterParams:{
+                decimal:",",
+                thousand:".",
+                symbol:"Rp",
+                precision:0,
+            },
+            // bottomCalc:"sum", // 🔥 ini menghitung total seluruh kolom
+            // bottomCalcFormatter:"money",
+            // bottomCalcFormatterParams:{
+            //     decimal:",",
+            //     thousand:".",
+            //     symbol:"Rp ",
+            //     precision:0,
+            // },
+        },
         {title:"Tanggal", field:"tanggal", hozAlign:"right",width:"10%"},
     ],
+    // columnCalcs:"table",
     locale: 'id',    
     // layout: 'fitColumns',
     placeholder: "Tidak ada data",

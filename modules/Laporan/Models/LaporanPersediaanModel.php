@@ -194,6 +194,10 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             $params['prev_month'] = $month - 1;
             $params['prev_year'] = $year;
         }
+        $idJenisBarangSql = "";
+        if (!empty($idJenisBarang)) {
+            $idJenisBarangSql = "AND dbx.id_jenis_barang = $idJenisBarang";
+        }
 
         $sql = "WITH normalized_trans as ( SELECT
             abx.tanggal,
@@ -211,7 +215,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             dbx.kode_barang,
             ebx.nama_jenis_barang,
             fbx.nama_satuan,
-            abx.price
+            abx.price,
+            dbx.id_jenis_barang
         FROM
             trans_barang abx
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
@@ -224,7 +229,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             AND EXTRACT(MONTH FROM  abx.tanggal) = $month
             AND EXTRACT(YEAR FROM  abx.tanggal) = $year
             AND abx.id_gudang_asal = $idGudang
-            AND dbx.id_jenis_barang = $idJenisBarang
+            $idJenisBarangSql
             --AND abx.id_barang = 226 
             
         UNION ALL
@@ -244,7 +249,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             dbx.kode_barang,
             ebx.nama_jenis_barang,
             fbx.nama_satuan,
-            abx.price
+            abx.price,
+            dbx.id_jenis_barang
         FROM
             trans_barang abx 
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
@@ -257,7 +263,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             AND EXTRACT(MONTH FROM  abx.tanggal) = $month
             AND EXTRACT(YEAR FROM  abx.tanggal) = $year
             AND abx.id_gudang_tujuan = $idGudang
-            AND dbx.id_jenis_barang = $idJenisBarang
+            $idJenisBarangSql
             --AND abx.id_barang = 161
             
             ),
@@ -289,6 +295,7 @@ stock_base AS (
         nt.created_at,
         nt.name AS transaksi,
         nt.kode_transaksi,
+        nt.id_jenis_barang,
         nt.id_barang,
         nt.id_gudang,
         nt.lot_id,
@@ -360,7 +367,7 @@ $query = $this->db->query($sql, $params);
         return $this->_data;
     }
 
-    function getDataGudang($idJenisBarang = null, $idGudang = null, $year = null, $month = null)
+    function getDataGudang($idJenisBarang = null, $idGudang = null, $year = null, $month = null, $params = null)
     {
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
@@ -378,6 +385,15 @@ $query = $this->db->query($sql, $params);
         }
         if (!empty($year)) {
             $builder->where("a.year", $year);
+        }
+        if (!empty($params['id_barang'])) {
+            $builder->where("a.id_barang", $params['id_barang']);
+        }
+        if (!empty($params['lot_no'])) {
+            $builder->where("a.lot_no", $params['lot_no']);
+        }
+        if (!empty($params['lot_id'])) {
+            $builder->where("a.lot_id", $params['lot_id']);
         }
         $builder->orderBy("c.nama_jenis_barang", "ASC");
         $builder->orderBy("b.nama_barang", "ASC");    
@@ -434,7 +450,6 @@ $query = $this->db->query($sql, $params);
         $lot_no = [];
         $stok_awal = [];
         $data_barang = [];
-
         foreach ($dataOld as $key => $value) {
             // Buat key gabungan unik
             $combinedKey = $value->id_barang . '_' . $value->lot_no;
@@ -448,6 +463,7 @@ $query = $this->db->query($sql, $params);
             $data_barang[] = [
                 "id_barang" => $value->id_barang,
                 "lot_no" => $value->lot_no,
+                "id_jenis_barang" => $value->id_jenis_barang,
             ];
 
             $lot_id[] = $value->lot_id;
@@ -461,6 +477,7 @@ $query = $this->db->query($sql, $params);
         foreach ($data_barang as $key => $lot) {
             $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
             $lot_no = $lot['lot_no'];
+            $id_jenis_barang = $lot['id_jenis_barang'];
             $builder = $this->db->table("trans_barang abx");
             $builder->join("trans_lots tl", "abx.lot_id = tl.id", "inner");
             $builder->select("
@@ -545,7 +562,7 @@ $query = $this->db->query($sql, $params);
                         $tahun = $nextYear;
                     }
                     $isi['id_barang'] = $data->id_barang;
-                    $isi['id_jenis_barang'] = $idJenisBarang;
+                    $isi['id_jenis_barang'] = !empty($idJenisBarang) ? $idJenisBarang : $id_jenis_barang;
                     $isi['lot_id'] = $lot_id[$key];
                     $isi['lot_no'] = $lot_no;
                     $isi['stok_awal'] = $saldo_awal;
@@ -579,6 +596,39 @@ $query = $this->db->query($sql, $params);
                     }
                 }
                 
+            }
+        }
+
+        $resData = $this->getDataGudang($idJenisBarang, $idGudang, $year, $month);
+        foreach ($resData as $key => $value) {
+            
+            $paramsNext = array(
+                "id_barang" => $value->id_barang,
+                "lot_no" => $value->lot_no,
+                "lot_id" => $value->lot_id,
+            );
+            $getNextData = $this->getDataGudang($idJenisBarang, $idGudang, $nextYear, $nextMonth, $paramsNext);
+            if (empty($getNextData)) {
+                $isi['id_barang'] = $value->id_barang;
+                $isi['id_jenis_barang'] = $value->id_jenis_barang;
+                $isi['lot_id'] = $value->lot_id;
+                $isi['lot_no'] = $value->lot_no;
+                $isi['stok_awal'] = $value->stok_awal;
+                $isi['masuk'] = $value->masuk;
+                $isi['keluar'] = $value->keluar;
+                $isi['month'] = $nextMonth;
+                $isi['year'] = $nextYear;
+                $isi['jumlah'] = $value->jumlah;
+                $isi['id_gudang'] = $idGudang;
+                $isi['tanggal'] = $value->tanggal;
+                $isi['price'] = $value->price;
+
+                $builder_detail_insert = $this->db->table("trans_barang_history");
+                if ($builder_detail_insert->insert($isi) === false) {
+                    $error = $this->db->error();
+                    var_dump($error);
+                    die;
+                }
             }
         }
         return true;

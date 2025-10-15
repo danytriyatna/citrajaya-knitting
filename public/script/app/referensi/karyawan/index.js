@@ -21,6 +21,10 @@ $(document).ready(function () {
     let selectCMT = $('#id_cmt');
     let divCMT = $('#div-cmt');
 
+    const fileKaryawan     = $('#fileKaryawan');
+    const fileKaryawanOld  = $('#fileKaryawanOld');
+    const linkFileKaryawan = $('#linkFileKaryawan');
+
     let isModal       = $("#modal-form-add-po");
 
     let buttonRowAction = function(cell) {
@@ -71,6 +75,12 @@ $(document).ready(function () {
                             divCMT.removeClass("d-none")
                             selectCMT.val(data_row.id_operator).trigger("change")
                         } 
+
+                        if(data_row.file_gambar){
+                            fileKaryawanOld.val(data_row.gambar_id)
+                            linkFileKaryawan.removeClass("d-none")
+                            linkFileKaryawan.attr('src', data_row.file_gambar)
+                        }
 
 
 
@@ -194,6 +204,10 @@ $(document).ready(function () {
         inpPosisi.val("")
         inpTglBergabung.val("")
         inpJenisKelamin.val("")
+        fileKaryawanOld.val("")
+        fileKaryawan.val("")
+        linkFileKaryawan.addClass("d-none");
+        linkFileKaryawan.attr('src', '');
 
         setTimeout(() => {
             inpUpahHarian.val("").trigger('change');
@@ -239,29 +253,32 @@ $(document).ready(function () {
         console.log("masuk selectTipe", selectTipe.val())
 
         if(validation){
+            var formData = new FormData();
+            formData.append("dataId",inpData.val());
+            formData.append("nip",inpNip.val());
+            formData.append("full_name",inpNama.val());
+            formData.append("email",inpEmail.val());
+            formData.append("posisi",inpPosisi.val());
+            formData.append("alamat",inpAlamat.val());
+            formData.append("fileKaryawan",fileKaryawan[0].files[0]);
+            formData.append("fileKaryawanOld",fileKaryawanOld.val());
+            formData.append("tgl_bergabung",formatLocaleDate(inpTglBergabung.val()));
+            formData.append("jenis_kelamin",inpJenisKelamin.val());
+            formData.append("no_hp",inpNoHP.val());
+            formData.append("upah_harian", inpUpahHarian.val())
+            formData.append("upah_lembur", inpUpahLembur.val());
+            formData.append("upah_lembur_we", inpUpahLemburWe.val());
+            formData.append("upah_jam", inpUpahPerjam.val());
+            formData.append("premi_kehadiran", inpPremiKehadiran.val());
+            formData.append("type", selectTipe.val());
+            formData.append("id_operator", selectCMT.val());
             $.ajax({
                 type: 'POST',
                 url: '/master-data/karyawan/simpan',
-                data: {
-                    dataId : inpData.val(),
 
-                    nip : inpNip.val(),
-                    full_name : inpNama.val(),
-                    email : inpEmail.val(),
-                    posisi : inpPosisi.val(),
-                    alamat : inpAlamat.val(),
-                    tgl_bergabung : inpTglBergabung.val(),
-                    jenis_kelamin : inpJenisKelamin.val(),
-                    no_hp : inpNoHP.val(),
-                    upah_harian : inpUpahHarian.val(),
-                    upah_lembur : inpUpahLembur.val(),
-                    upah_lembur_we : inpUpahLemburWe.val(),
-                    upah_jam : inpUpahPerjam.val(),
-                    premi_kehadiran : inpPremiKehadiran.val(),
-                    type : selectTipe.val(),
-                    id_operator : selectCMT.val()
-                },
-                dataType: "json",
+                data: formData,
+                processData: false,  // Jangan ubah data menjadi string
+                contentType: false,
                 beforeSend: function () {
                     Swal.fire({
                         title: 'Loading...',

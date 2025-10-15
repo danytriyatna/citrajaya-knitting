@@ -170,6 +170,17 @@
           </div>
         </div>
 
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="foto_style">Foto</label>
+          <div class="col-md-9">
+            <input type="hidden" id="fileKaryawanOld">
+            <input type="file" id="fileKaryawan" onchange="readURL(this,'#fileKaryawan')" name="fileKaryawan" class="form-control file-drag-drop" accept=".jpg, .jpeg, .png">
+            <small class="form-text">Format file *.JPG, *.JPEG, *.PNG, ukuran maks. 1 MB</small>
+            <br>
+            <img class="m-t-10 w-40 d-none" id="linkFileKaryawan" alt="Foto Sales Order">
+          </div>
+        </div>
+
         
         
       </div>

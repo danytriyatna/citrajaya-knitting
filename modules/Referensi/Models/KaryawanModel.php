@@ -19,8 +19,8 @@ class KaryawanModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " ky");
 
         $builder->select("ky.id, ky.nip, ky.full_name, ky.email, ky.posisi, ky.tgl_bergabung, ky.jenis_kelamin, ky.tgl_lahir, ky.tempat_lahir,
-                          ky.no_hp, ky.alamat, ky.upah_lembur, ky.upah_harian, ky.upah_lembur_we, ky.upah_jam, ky.premi_kehadiran, ky.type, ky.id_operator");
-
+                          ky.no_hp, ky.alamat, ky.upah_lembur, ky.upah_harian, ky.upah_lembur_we, ky.upah_jam, ky.premi_kehadiran, ky.type, ky.id_operator, cbx.file_name ");
+        $builder->join("_files cbx", "ky.gambar_id = cbx.id", "left");
         if ($id == null or $id == "") {
             $builder->where('ky.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {

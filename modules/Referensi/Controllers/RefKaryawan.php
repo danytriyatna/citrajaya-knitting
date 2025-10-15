@@ -107,6 +107,7 @@ class RefKaryawan extends BaseController
                     "premi_kehadiran" => $row->premi_kehadiran,
                     "type" => $row->type,
                     "id_operator" => $row->id_operator,
+                    "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/karyawan/"  . $row->file_name : "",
                 )
             );
         }
@@ -134,12 +135,55 @@ class RefKaryawan extends BaseController
         $premi_kehadiran =  $this->request->getPost('premi_kehadiran');
         $type =  $this->request->getPost('type');
         $id_operator =  $this->request->getPost('id_operator');
+        $fileIdKaryawanOld = $this->request->getPost('fileIdKaryawanOld');
         if ($id_operator == "") {
             $id_operator = null;
         }
 
         $msg    = "Data gagal ditambahkan !";
         $status = false;
+
+        if (!empty($this->request->getFile('fileKaryawan'))) {
+            $fileKaryawan       = $this->request->getFile('fileKaryawan');
+            $fileName       = $fileKaryawan->getRandomName();
+            $originName     = $fileKaryawan->getName();
+            $fileType       = $fileKaryawan->getMimeType();
+            $fileSize       = $fileKaryawan->getSize();
+
+
+            if (!in_array($fileType, ['image/png', 'image/jpeg', 'image/webp'])) {
+                $build_array['message'] = "<br>File <b>Karyawan</b> hanya menerima tipe file <b>*.webp</b> <b>*.jpg</b>, atau <b>*.png</b>";
+                $build_array['status']  = false;
+                return $this->response->setJSON($build_array);
+            }
+
+            // $path = FCPATH . 'uploads/karyawan/';
+
+            // // Cek apakah folder sudah ada
+            // if (!is_dir($path)) {
+            //     mkdir($path, 0777, true); // true = recursive (buat parent folder juga kalau belum ada)
+            // }
+
+            $this->files->insert([
+                'file_name' => $fileName,
+                'file_size' => $fileSize,
+                'file_type' => $fileType,
+                'file_name_origin' => $originName,
+                'active'    => 1,
+            ]);
+
+            $fileIdKaryawan = $this->files->insertID();
+            $fileKaryawan->move(WRITEPATH . 'uploads/karyawan/', $fileName);
+
+            if ($fileIdKaryawanOld != "") {
+                // $nama_file =  $this->files->where('id', $fileIdKaryawanOld)->get()->getRow()->file_name;
+                // unlink(WRITEPATH . 'uploads/karyawan/' . $nama_file);
+
+                // $this->files->delete(['id' => $fileIdKaryawanOld]);
+            }
+        } else {
+            $fileIdKaryawan = $fileIdKaryawanOld;
+        }
 
         // $tgl_lahir = \fdate_eng_to_ind_3($tgl_lahir);
         $tgl_bergabung = \fdate_ind_to_eng($tgl_bergabung);
@@ -161,7 +205,8 @@ class RefKaryawan extends BaseController
             'upah_jam' => $upah_jam,
             'premi_kehadiran' => $premi_kehadiran,
             'type' => $type,
-            'id_operator' => $id_operator
+            'id_operator' => $id_operator,
+            'gambar_id' => !empty($fileIdKaryawan) ? $fileIdKaryawan : null
         ];
 
         

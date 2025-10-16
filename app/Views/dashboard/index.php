@@ -228,43 +228,23 @@
           </div>
         </div>
       </div> -->
-      <div class="col-lg-6">
-        <div class="card">
-          <div class="card-header">
-            <h6 class="mb-0 f-w-600">GRAFIK PENJUALAN DAN BIAYA</h6>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-sm-6">
-                <div class="form-group row mb-0">
-                  <div class="col-md-12">
-                    <label class="control-label text-start col-form-label" for="filter_gaji_from">Periode</label>
-                    <input type="text" id="filter_gaji_from" name="filter_gaji_from" class="form-control datepicker" placeholder="Pilih tanggal awal" value="">
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6">
-                <div class="form-group row mb-0">
-                  <div class="col-md-12">
-                    <label class="control-label text-start col-form-label" for="filter_gaji_to">&nbsp;</label>
-                    <input type="text" id="filter_gaji_to" name="filter_gaji_to" class="form-control datepicker" placeholder="Pilih tanggal akhir" value="">
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <hr>
-            
-            <div class="table-responsive">
-              <div id="chartBar" style="width: 100%; height: 400px;"></div>
+      <div class="row align-items-stretch">
+        <div class="col-lg-6 mb-3">
+          <div class="card h-100">
+            <div class="card-header">
+              <h6 class="mb-0 f-w-600">GRAFIK PENJUALAN DAN BIAYA</h6>
+            </div>
+            <div class="card-body mt-5">
+              
+              <div id="chartBar" style="width: auto; height: 600px;"></div>
+
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="card">
-          <div class="card-header">
+        <div class="col-lg-6 mb-3">
+          <div class="card h-100">
+            <div class="card-header">
             <h6 class="mb-0 f-w-600">LAPORAN LABA/RUGI</h6>
           </div>
           <div class="card-body">
@@ -378,6 +358,7 @@
                 </tbody>
               </table>
             </div>
+          </div>
           </div>
         </div>
       </div>

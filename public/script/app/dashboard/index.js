@@ -498,6 +498,8 @@ $(document).ready(function () {
                     // Konfigurasi grafik batang
 
                     const option = {
+                                responsive: true,
+                                 maintainAspectRatio: false,
                                 // title: {
                                 //     text: 'Grafik Penjualan & Biaya per Bulan',
                                 //     left: 'center'
@@ -564,7 +566,7 @@ $(document).ready(function () {
 
                     // Render chart
                     myChart.setOption(option);
-
+                            
                     // Biar responsive
                     window.addEventListener('resize', () => {
                         myChart.resize();

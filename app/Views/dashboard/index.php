@@ -231,7 +231,7 @@
       <div class="col-lg-6">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">GAJI/UPAH/BORONGAN</h6>
+            <h6 class="mb-0 f-w-600">GRAFIK PENJUALAN DAN BIAYA</h6>
           </div>
           <div class="card-body">
             <div class="row">

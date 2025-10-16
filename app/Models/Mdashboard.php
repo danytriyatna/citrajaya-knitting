@@ -340,4 +340,62 @@ class Mdashboard extends Model
 
         return $this->_data;
     }
+
+    function getGrafikDataPenjualan($year = null)
+    {
+        $builder = $this->db->table("trans_invoice abx");
+        $builder->select("
+            EXTRACT(MONTH FROM abx.tgl_transaksi) AS bulan,
+            SUM(abx.grand_total) AS total_penjualan
+        ");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->where("abx.active", 1);
+        $builder->where("EXTRACT(YEAR FROM abx.tgl_transaksi)", $year);
+        $builder->groupBy("EXTRACT(MONTH FROM abx.tgl_transaksi)");
+        $builder->orderBy("bulan", "ASC");
+
+        $result = $builder->get()->getResult();
+
+        // Jika mau hasil dalam bentuk array bulan => total
+        $data = [];
+        for ($i = 0; $i < 12; $i++) {
+            $data[$i] = 0; // default 0
+        }
+
+        foreach ($result as $row) {
+            $data[(int)$row->bulan-1] = (float)$row->total_penjualan;
+        }
+
+        return $data;
+    }
+
+    function getGrafikDataPemakaian($year = null)
+    {
+        $builder = $this->db->table("trans_barang_detail abx");
+        $builder->select("
+            EXTRACT(MONTH FROM bbx.tanggal) AS bulan,
+            SUM(COALESCE(abx.price, 0) * COALESCE(abx.qty, 0)) AS total_pemakaian
+        ");
+        $builder->join("trans_barang_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
+        $builder->where("bbx.active", 1);
+        $builder->where("bbx.jenis_transaksi", 2);
+        $builder->where("EXTRACT(YEAR FROM bbx.tanggal)", $year);
+        $builder->groupBy("EXTRACT(MONTH FROM bbx.tanggal)");
+        $builder->orderBy("bulan", "ASC");
+
+        $result = $builder->get()->getResult();
+
+        // Pastikan hasil lengkap dari bulan 1–12 (yang kosong diisi 0)
+        $data = [];
+        for ($i = 0; $i < 12; $i++) {
+            $data[$i] = 0;
+        }
+
+        foreach ($result as $row) {
+            $data[(int)$row->bulan-1] = (float)$row->total_pemakaian;
+        }
+
+        return $data;
+    }
+
 }

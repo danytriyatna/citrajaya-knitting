@@ -43,6 +43,7 @@ $routes->post('/dashboard/list_order', 'Dashboard::lists',  ['filter' => 'otoris
 $routes->post('/dashboard/list_invoice', 'Dashboard::lists_inv',  ['filter' => 'otorisasi:MOD_HOME']);
 $routes->post('/dashboard/list_po', 'Dashboard::lists_po',  ['filter' => 'otorisasi:MOD_HOME']);
 $routes->get('/dashboard/list_laba', 'Dashboard::lists_laba',  ['filter' => 'otorisasi:MOD_HOME']);
+$routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 'otorisasi:MOD_HOME']);
 
 $routes->post('api/login', 'API\Auth::login');
 

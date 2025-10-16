@@ -377,7 +377,16 @@ $(document).ready(function () {
     }
     // end table PO
 
-    $('#filter_lap_bulan, #filter_lap_tahun').on('change', fetchData);
+    $('#filter_lap_bulan').on('change', function () {
+        $(".preloader").css("opacity", "0.7").show();
+        fetchData(); // Panggil fungsi fetchData saat halaman dimuat
+    });
+
+    $('#filter_lap_tahun').on('change', function () {
+        $(".preloader").css("opacity", "0.7").show();
+        fetchGrafikData();
+        fetchData(); // Panggil fungsi fetchData saat halaman dimuat
+    });
 
     const bulanSekarang = new Date().getMonth() + 1;
     const tahunSekarang = new Date().getFullYear();
@@ -385,6 +394,7 @@ $(document).ready(function () {
     $('#filter_lap_bulan').val(bulanSekarang);
     $('#filter_lap_tahun').val(tahunSekarang);
 
+    fetchGrafikData();
     fetchData(); // Panggil fungsi fetchData saat halaman dimuat
 
     function fetchData() {
@@ -442,56 +452,130 @@ $(document).ready(function () {
                     `;
                     targetRow.before(rowHtml);
                 }
+                $(".preloader").hide().css("opacity", "1");
             },
             error: function () {
               $('#result').html('Gagal memuat data.');
+              $(".preloader").hide().css("opacity", "1");
             }
           });
         }
       }
 
-    
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    // ambil elemen div tempat grafik akan ditampilkan
-    var chartDom = document.getElementById('chartBar');
-    var myChart = echarts.init(chartDom);
-
-    // Contoh data (nanti bisa diganti dari backend CI4 via AJAX)
-    var option = {
-        title: {
-            text: 'Penjualan Produk 2025',
-            left: 'center'
-        },
-        tooltip: {
-            trigger: 'axis'
-        },
-        xAxis: {
-            type: 'category',
-            data: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']
-        },
-        yAxis: {
-            type: 'value'
-        },
-        series: [
-            {
-                name: 'Jumlah Terjual',
-                data: [120, 200, 150, 80, 70, 110],
-                type: 'bar',
-                color: '#4369ff',
-                barWidth: '40%',
-                label: {
-                    show: true,
-                    position: 'top'
-                }
+      function fetchGrafikData() {
+            const val2 = $('#filter_lap_tahun').val();
+            if (!val2) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops!',
+                    text: 'Harap Pilih tahun Dahulu!'
+                });
+                return;
             }
-        ]
-    };
+            
+            // Hanya panggil jika keduanya terisi (atau sesuai logikamu)
+            if (val2) {
+                
+            $.ajax({
+                url: '/dashboard/list_grafik',
+                method: 'GET',
+                data: {
+                year: val2
+                },
+                success: function (data) {
 
-    // render grafik
-    myChart.setOption(option);
+                    const penjualan = data.penjualan;
+                    
 
-    // biar responsive
-    window.addEventListener('resize', myChart.resize);
+                    // Inisialisasi elemen chart
+                    var chartDom = document.getElementById('chartBar');
+                    var myChart = echarts.init(chartDom);
+
+                    // Contoh data statis (12 bulan)
+                    const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                    const biaya = data.biaya;
+                    console.log( data.penjualan, biaya);
+                    // Konfigurasi grafik batang
+
+                    const option = {
+                                // title: {
+                                //     text: 'Grafik Penjualan & Biaya per Bulan',
+                                //     left: 'center'
+                                // },
+                                tooltip: {
+                                    trigger: 'axis'
+                                },
+                                legend: {
+                                    data: ['Penjualan', 'Biaya']
+                                },
+                                toolbox: {
+                                    show: true,
+                                    feature: {
+                                        dataView: { show: true, readOnly: false },
+                                        magicType: { show: true, type: ['line', 'bar'] },
+                                        restore: { show: true },
+                                        saveAsImage: { show: true }
+                                    }
+                                },
+                                calculable: true,
+                                xAxis: [
+                                    {
+                                        type: 'category',
+                                        // prettier-ignore
+                                        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                    }
+                                ],
+                                yAxis: [
+                                    {
+                                        type: 'value'
+                                    }
+                                ],
+                                series: [
+                                    {
+                                        name: 'Penjualan',
+                                        type: 'bar',
+                                        data: penjualan,
+                                        markPoint: {
+                                            data: [
+                                                // { type: 'max', name: 'Max' },
+                                                { type: 'min', name: 'Min' }
+                                            ]
+                                        },
+                                        // markLine: {
+                                        //     data: [{ type: 'average', name: 'Avg' }]
+                                        // }
+                                    },
+                                    {
+                                        name: 'Biaya',
+                                        type: 'bar',
+                                        data: biaya,
+                                        markPoint: {
+                                            data: [
+                                                // { type: 'max', name: 'Max' },
+                                                { type: 'min', name: 'Min' }
+                                            ]
+                                        },
+                                        // markLine: {
+                                        //     data: [{ type: 'average', name: 'Avg' }]
+                                        // }
+                                    }
+                                ]
+                            };
+
+                    // Render chart
+                    myChart.setOption(option);
+
+                    // Biar responsive
+                    window.addEventListener('resize', () => {
+                        myChart.resize();
+                    });
+                },
+                error: function () {
+                    $('#result').html('Gagal memuat data.');
+                }
+            });
+        }
+      }
+
+    
 });

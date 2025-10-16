@@ -70,11 +70,23 @@ $(document).ready(function () {
                 title: "NO. TRANSAKSI", field: "btnOrder", headerSort: false, formatter: "html",
                 width: 130, hozAlign: 'center', cssClass: 'text-center'
             },
-
             {
-                title: "TIPE", field: "tipe", headerSort: false, formatter: "html",
-                width: 120, 
-            },
+				title: 'NILAI SO', field: 'harga_total', headerSort:false, sorter: 'string',
+				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+			}, 
+            {
+				title: 'NILAI DP', field: 'uang_dp', headerSort:false, sorter: 'string',
+				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+			}, 
+            {
+				title: 'NILAI INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
+				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+			}, 
+
+            // {
+            //     title: "TIPE", field: "tipe", headerSort: false, formatter: "html",
+            //     width: 120, 
+            // },
 
             
         ],
@@ -90,6 +102,7 @@ $(document).ready(function () {
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
+            params.tracking_id = $("#filter_tracking").val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtListTracking.getPageSize();
@@ -125,6 +138,14 @@ $(document).ready(function () {
             sorters: "order"
         },
         selectableRows: false,
+    });
+
+    $("#filter_tracking").on("change", function () {
+        let val = $(this).val();
+        console.log("Filter tracking berubah ke:", val);
+
+        // Reset ke halaman pertama biar data sesuai
+        dtListTracking.setData("/dashboard/list_order");
     });
 
     let searchThread = null;
@@ -428,4 +449,49 @@ $(document).ready(function () {
           });
         }
       }
+
+    
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // ambil elemen div tempat grafik akan ditampilkan
+    var chartDom = document.getElementById('chartBar');
+    var myChart = echarts.init(chartDom);
+
+    // Contoh data (nanti bisa diganti dari backend CI4 via AJAX)
+    var option = {
+        title: {
+            text: 'Penjualan Produk 2025',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            type: 'category',
+            data: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                name: 'Jumlah Terjual',
+                data: [120, 200, 150, 80, 70, 110],
+                type: 'bar',
+                color: '#4369ff',
+                barWidth: '40%',
+                label: {
+                    show: true,
+                    position: 'top'
+                }
+            }
+        ]
+    };
+
+    // render grafik
+    myChart.setOption(option);
+
+    // biar responsive
+    window.addEventListener('resize', myChart.resize);
 });

@@ -36,13 +36,23 @@ class Dashboard extends BaseController
       $limit   = $this->request->getPost('length');
       $filters = $this->request->getPost('filter');
       $order   = $this->request->getPost('order');
+      $tracking_id   = $this->request->getPost('tracking_id');
       // $tahun   = $this->request->getPost('tahun');
 
       // $params['tahun'] = $tahun;
       $params = [];
-      $results = $this->mdashboard->getData(null, $start, $limit, $order, $filters, $params);
-      $totalfiltered = $this->mdashboard->getDataCnt($filters, $params);
-      $totaldata = $this->mdashboard->getDataCnt(null, $params);
+      if ($tracking_id == 1) {
+        $results = $this->mdashboard->getDataSample(null, $start, $limit, $order, $filters, $params);
+        $totalfiltered = $this->mdashboard->getDataCntSample($filters, $params);
+        $totaldata = $this->mdashboard->getDataCntSample(null, $params);
+      }
+
+      else {
+        $results = $this->mdashboard->getData(null, $start, $limit, $order, $filters, $params);
+        $totalfiltered = $this->mdashboard->getDataCnt($filters, $params);
+        $totaldata = $this->mdashboard->getDataCnt(null, $params);
+      }
+      
       $maxpage = ceil($totalfiltered / $limit);
       $build_array = array(
           "last_page" => $maxpage,
@@ -146,6 +156,9 @@ class Dashboard extends BaseController
               'qty' => $row->qty,
               'qty_prod' => $row->qty_prod,
               'qty_kirim' => $row->qty_kirim,
+              'uang_dp' => $row->uang_dp,
+              'harga_total' => $row->harga_total,
+              'nilai_invoice' => $row->nilai_invoice,
               'qty_sisa' => $qty_sisa,
               'qty_hasil' => $qty_hasil,
               'qty_sisa_kirim' => $qty_sisa_kirim,

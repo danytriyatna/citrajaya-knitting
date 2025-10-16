@@ -23,18 +23,30 @@
             <h6 class="mb-0 f-w-600">TRACKING PRODUKSI</h6>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-sm-4 offset-md-8">
-                <div class="form-group">
-                  <div class="input-group mb-3">
-                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text"id="inp-tracking" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+            <div class="row mb-2 align-items-end">
+              <div class="col-sm-4 mb-2">
+                <div class="form-group mb-0">
+                  <select id="filter_tracking" name="filter_tracking" class="form-select">
+                    <option value="1">Sample</option>
+                    <option value="2" selected>Sales Order</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="col-sm-8 d-flex justify-content-end mb-2">
+                <div class="form-group mb-0" style="max-width: 450px; width: 100%;">
+                  <div class="input-group">
+                    <span class="input-group-text bg-white" id="basic-addon11">
+                      <i class="ti-search"></i>
+                    </span>
+                    <input type="text" id="inp-tracking" class="form-control" placeholder="Pencarian" aria-label="Pencarian" aria-describedby="basic-addon11">
                   </div>
                 </div>
               </div>
             </div>
+
             <div class="table-responsive">
-              <div class="table-striped"  id="tbl-tracking"></div>
+              <div class="table-striped" id="tbl-tracking"></div>
             </div>
           </div>
         </div>
@@ -120,7 +132,7 @@
     </div>
 
     <div class="row">
-      <div class="col-lg-6">
+      <!-- <div class="col-lg-6">
         <div class="card">
           <div class="card-header">
             <h6 class="mb-0 f-w-600">GAJI/UPAH/BORONGAN</h6>
@@ -212,6 +224,39 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div> -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0 f-w-600">GAJI/UPAH/BORONGAN</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="form-group row mb-0">
+                  <div class="col-md-12">
+                    <label class="control-label text-start col-form-label" for="filter_gaji_from">Periode</label>
+                    <input type="text" id="filter_gaji_from" name="filter_gaji_from" class="form-control datepicker" placeholder="Pilih tanggal awal" value="">
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group row mb-0">
+                  <div class="col-md-12">
+                    <label class="control-label text-start col-form-label" for="filter_gaji_to">&nbsp;</label>
+                    <input type="text" id="filter_gaji_to" name="filter_gaji_to" class="form-control datepicker" placeholder="Pilih tanggal akhir" value="">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+            
+            <div class="table-responsive">
+              <div id="chartBar" style="width: 100%; height: 400px;"></div>
             </div>
           </div>
         </div>

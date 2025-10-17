@@ -286,7 +286,7 @@ class Mdashboard extends Model
     {
         $builder = $this->db->table("trans_invoice abx");
         
-        $builder->select("sum(abx.grand_total) as grand_total");
+        $builder->select("SUM(abx.grand_total::float) as grand_total");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->where('abx.active = 1');
 
@@ -346,7 +346,7 @@ class Mdashboard extends Model
         $builder = $this->db->table("trans_invoice abx");
         $builder->select("
             EXTRACT(MONTH FROM abx.tgl_transaksi) AS bulan,
-            SUM(abx.grand_total) AS total_penjualan
+            SUM(abx.grand_total::float) AS total_penjualan
         ");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->where("abx.active", 1);

@@ -61,7 +61,7 @@ class Dashboard extends BaseController
             "data" => array()
         );
 
-        foreach ($results as $row) {
+        foreach ($results as $key => $row) {
             $id = encrypt($row->trans_id);
 
             $btnOrder = "";
@@ -117,29 +117,38 @@ class Dashboard extends BaseController
 
             $parms['last_proses'] = 1;
             $parms['id_walkorder'] = $row->id_walkorder;
-            $dataLast = $this->mProduksi->getDataProsesProd($parms);
-            $last_data = !empty($dataLast) ? $dataLast[0] : [];
-
-            $qty_kirim = 0;
-            if(!empty($row->id_prod)){
-                $param_dlv['id_produksi'] = $row->id_prod;
-                $data_pengirimasn = $this->mdelivery->getData(null, 0, 9999, null, null, $param_dlv);
-
-                if(!empty($data_pengirimasn)){
-                    foreach ($data_pengirimasn as $rd) {
-                    $qty_kirim += $rd->qty_delv;
+            if (!empty($row->id_walkorder)) {
+                $dataLast = $this->mProduksi->getDataProsesProd($parms);
+                $last_data = !empty($dataLast) ? $dataLast[0] : [];
+    
+                $qty_kirim = 0;
+                if(!empty($row->id_prod)){
+                    $param_dlv['id_produksi'] = $row->id_prod;
+                    $data_pengirimasn = $this->mdelivery->getData(null, 0, 9999, null, null, $param_dlv);
+    
+                    if(!empty($data_pengirimasn)){
+                        foreach ($data_pengirimasn as $rd) {
+                        $qty_kirim += $rd->qty_delv;
+                        }
                     }
                 }
+    
+                $qty_hasil = null;
+                if (!empty($last_data)) {
+                    $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                }
+    
+                $qty_sisa = (int) $row->qty - (int) $row->qty_prod;
+                //   $qty_sisa_kirim = (int) $row->qty_prod - (int) $row->qty_kirim;
+                $qty_sisa_kirim = (int) $row->qty - (int) $row->qty_kirim;
+                
             }
+            else {
+                $qty_hasil = null;
+                $qty_sisa = null;
+                $qty_sisa_kirim = null;
 
-            $qty_hasil = null;
-            if (!empty($last_data)) {
-                $qty_hasil = $last_data->qty_prod - $qty_kirim;
             }
-
-            $qty_sisa = (int) $row->qty - (int) $row->qty_prod;
-            //   $qty_sisa_kirim = (int) $row->qty_prod - (int) $row->qty_kirim;
-            $qty_sisa_kirim = (int) $row->qty - (int) $row->qty_kirim;
 
             
             

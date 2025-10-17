@@ -543,6 +543,9 @@ $(document).ready(function () {
                                                 { type: 'min', name: 'Min' }
                                             ]
                                         },
+                                        itemStyle: {
+                                            color: "#28a745"  // pakai warna bootstrap success
+                                        },
                                         // markLine: {
                                         //     data: [{ type: 'average', name: 'Avg' }]
                                         // }
@@ -556,6 +559,9 @@ $(document).ready(function () {
                                                 // { type: 'max', name: 'Max' },
                                                 { type: 'min', name: 'Min' }
                                             ]
+                                        },
+                                        itemStyle: {
+                                            color: "#dc3545"  // pakai warna bootstrap success
                                         },
                                         // markLine: {
                                         //     data: [{ type: 'average', name: 'Avg' }]

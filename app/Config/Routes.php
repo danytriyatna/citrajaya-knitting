@@ -18,7 +18,7 @@ if (file_exists(SYSTEMPATH . 'Config/Routes.php'))
  * --------------------------------------------------------------------
  */
 $routes->setDefaultNamespace('App\Controllers');
-$routes->setDefaultController('Dashboard');
+$routes->setDefaultController('Home');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
@@ -32,18 +32,19 @@ $routes->setAutoRoute(true);
 
 // We get a performance increase by specifying the default
 // route since we don't have to scan directories.
-$routes->get('/', 'Dashboard::index',  ['filter' => 'otorisasi:MOD_HOME']);
+$routes->get('/', 'Home::index',  ['filter' => 'otorisasi:MOD_HOME']);
+$routes->get('/dashboard', 'Dashboard::index',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->post('/req_captcha', 'Auth::req_captcha');
 $routes->post('/validate_captcha', 'Auth::validate_captcha');
 $routes->get('/register', 'Auth::register');
 $routes->post('/register', 'Auth::proses_register');
 $routes->get('/forgot_password', 'Auth::forgot_password');
 
-$routes->post('/dashboard/list_order', 'Dashboard::lists',  ['filter' => 'otorisasi:MOD_HOME']);
-$routes->post('/dashboard/list_invoice', 'Dashboard::lists_inv',  ['filter' => 'otorisasi:MOD_HOME']);
-$routes->post('/dashboard/list_po', 'Dashboard::lists_po',  ['filter' => 'otorisasi:MOD_HOME']);
-$routes->get('/dashboard/list_laba', 'Dashboard::lists_laba',  ['filter' => 'otorisasi:MOD_HOME']);
-$routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 'otorisasi:MOD_HOME']);
+$routes->post('/dashboard/list_order', 'Dashboard::lists',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->post('/dashboard/list_invoice', 'Dashboard::lists_inv',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->post('/dashboard/list_po', 'Dashboard::lists_po',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/list_laba', 'Dashboard::lists_laba',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 
 $routes->post('api/login', 'API\Auth::login');
 

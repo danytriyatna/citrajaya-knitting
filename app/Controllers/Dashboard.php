@@ -14,6 +14,7 @@ class Dashboard extends BaseController
 
     function __construct()
     {
+        $this->MOD_ALIAS = "MOD_DASHBOARD";
         $this->mdashboard = new Mdashboard();
         $this->mProduksi = new ProductionModel();
         $this->mdelivery = new DeliveryModel();
@@ -26,7 +27,7 @@ class Dashboard extends BaseController
         } else {
             $this->data['titlehead'] = "Dashboard";
 
-            return view('dashboard/index', $this->data);
+            return view('dashboard/index', $this->data); 
         }
     }
 

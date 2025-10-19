@@ -19,6 +19,8 @@ class Mdashboard extends Model
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 
+        // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
+        // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
         if ($id == null or $id == "") {
             
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -66,6 +68,9 @@ class Mdashboard extends Model
                 $builder->orWhere('LOWER(tbl.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }
+
+        // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
+        // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
 
         $this->_data = $builder->get()->getRow()->_cnt;
 
@@ -279,6 +284,19 @@ class Mdashboard extends Model
 
         $this->_data = $builder->get()->getRow()->_cnt;
 
+        return $this->_data;
+    }
+
+    function getDataDP($month = null, $year = null)
+    {
+        $builder = $this->db->table("trans_sales_order abx");
+        $builder->select("SUM(abx.uang_dp::float) as total_dp");
+        
+        $builder->where('abx.active = 1');
+        $builder->where("EXTRACT(MONTH FROM abx.tgl_dp) = $month");
+        $builder->where("EXTRACT(YEAR FROM abx.tgl_dp) = $year");    
+
+        $this->_data = $builder->get()->getRow()->total_dp;
         return $this->_data;
     }
 

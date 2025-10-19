@@ -61,7 +61,7 @@ class Dashboard extends BaseController
             "recordsFiltered" => $totalfiltered,
             "data" => array()
         );
-
+        // $total = 0;
         foreach ($results as $key => $row) {
             $id = encrypt($row->trans_id);
 
@@ -151,7 +151,7 @@ class Dashboard extends BaseController
 
             }
 
-            
+            // $total += ($row->uang_dp + $row->nilai_invoice);
             
             array_push($build_array['data'], array(
                 'btnGambar' => $btnGambar,
@@ -316,13 +316,20 @@ class Dashboard extends BaseController
         // $params['tahun'] = $tahun;
         $laba_kotor = 0;
         $format_laba_kotor = '0,00';
+
+        $total_dp = $this->mdashboard->getDataDP($month, $year);
+        if (is_null($total_dp) || $total_dp == 0) {
+            $format_penjualan = '0,00';  // Atau bisa gunakan format lain
+        } else {
+            $laba_kotor += $total_dp;
+        }
+
         $penjualan = $this->mdashboard->getDataPenjualan($month, $year);
-            if (is_null($penjualan) || $penjualan == 0) {
-                $format_penjualan = '0,00';  // Atau bisa gunakan format lain
-            } else {
-                $format_penjualan = '' . number_format($penjualan, 2, ',', '.');
-                $laba_kotor += $penjualan;
-            }
+        if (!empty($penjualan)) {
+            $laba_kotor += $penjualan;// Atau bisa gunakan format lain
+        } 
+
+        $format_penjualan = '' . number_format( $laba_kotor, 2, ',', '.');
 
         $Pemakaian = $this->mdashboard->getDataPemakaian($month, $year);
             if (is_null($Pemakaian) || $Pemakaian == 0) {
@@ -388,10 +395,11 @@ class Dashboard extends BaseController
         $format_laba_kotor = '0,00';
         $penjualan = $this->mdashboard->getGrafikDataPenjualan($year);
         $pemakaian = $this->mdashboard->getGrafikDataPemakaian($year);
-        
+        $dp = [];
         $operasional = [];
         for ($i=0; $i < 12; $i++) { 
             $biaya = $this->mdashboard->getDataBiaya($i+1, $year);
+            $dp[] = $this->mdashboard->getDataDP($i+1, $year);
 
             $code = [];
             $nama_biaya = [];
@@ -407,9 +415,14 @@ class Dashboard extends BaseController
             }
             $operasional[] =  $total_biaya;
         }
+        foreach ($dp as $key => $value) {
+            $penjualan[$key] = $penjualan[$key] + $value;
+        }
+
         $total = array_map(function($a, $b) {
             return $a + $b;
         }, $pemakaian, $operasional);
+        
         $build_array = array(
             "penjualan" => $penjualan,
             "biaya" => $total,

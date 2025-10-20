@@ -494,7 +494,6 @@ $(document).ready(function () {
                     // Contoh data statis (12 bulan)
                     const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                     const biaya = data.biaya;
-                    console.log( data.penjualan, biaya);
                     // Konfigurasi grafik batang
 
                     const option = {
@@ -529,7 +528,16 @@ $(document).ready(function () {
                                 ],
                                 yAxis: [
                                     {
-                                        type: 'value'
+                                        type: 'value',
+                                        axisLabel: {
+                                            formatter: function (value) {
+                                                if (value >= 1_000_000_000_000) return (value / 1_000_000_000_000) + 'T';
+                                                if (value >= 1_000_000_000) return (value / 1_000_000_000) + 'M';
+                                                if (value >= 1_000_000) return (value / 1_000_000) + 'Jt';
+                                                if (value >= 1_000) return (value / 1_000) + 'K';
+                                                return value;
+                                            }
+                                        }
                                     }
                                 ],
                                 series: [

@@ -398,9 +398,11 @@ class Mdashboard extends Model
     function getDataPoCntNew($filters = null, $params = null)
     {
         $addSQL = '';
+        $sqlOld = 'COUNT(id_vendor) as _cnt';
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $data = $filters[0]['value'];
             $addSQL = " AND rv.nama ILIKE '%{$data}%'";
+            $sqlOld = 'COUNT(DISTINCT id_vendor) as _cnt';
         }
         $sql = "
             WITH po_filtered AS (
@@ -430,7 +432,7 @@ class Mdashboard extends Model
                     {$addSQL} 
             )
             SELECT 
-                COUNT(id_vendor) as _cnt
+                {$sqlOld}
             FROM po_filtered
             GROUP BY id_vendor, nama_vendor
             ORDER BY nama_vendor;

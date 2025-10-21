@@ -677,4 +677,32 @@ class SalesOrderModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
+
+    function get_export($from_date = null, $to_date = null)
+    {
+        $builder = $this->db->table($this->table . " abx");
+
+        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.qty,
+                          abx.uang_dp, abx.style as stylex , abx.style_cnt,
+                          concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp,
+                          COALESCE((
+                                SELECT SUM(tsou.harga_total)
+                                FROM trans_sales_order_ukuran tsou
+                                WHERE tsou.id_sales_order = abx.id
+                            ), 0) as harga_total,
+                            COALESCE((
+                                SELECT SUM(tid.grand_total)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_ref = abx.id
+                            ), 0) as nilai_invoice
+                            ");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+       
+        $builder->where("abx.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+        $builder->orderBy("abx.tgl_transaksi", 'desc');
+        
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
 }

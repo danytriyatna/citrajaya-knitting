@@ -527,4 +527,34 @@ class InvoiceModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function get_export($from_date = null, $to_date = null)
+    {
+        $builder = $this->db->table($this->table . " abx");
+
+        $builder->select("abx.id, abx.tgl_transaksi,  abx.kode_invoice,
+                            abx.total, abx.grand_total,
+                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, COALESCE(SUM(cbx.pay_item),0) as pay_item, COALESCE((
+                                SELECT SUM(tid.down_payment)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_invoice = abx.id
+                            ),0) as total_down_payment");
+
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");
+
+        $builder->where("abx.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+
+        $builder->groupBy("
+                abx.id, abx.tgl_transaksi, abx.kode_invoice, abx.keterangan, abx.id_konsumen,
+                abx.status, abx.total, abx.diskon, abx.pph, abx.pph_total, abx.grand_total,
+                bbx.nama, abx.tgl_jatuh_tempo, abx.rentang_waktu
+            ");
+       
+        $builder->orderBy("abx.tgl_transaksi", 'desc');
+        
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
 }

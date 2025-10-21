@@ -8,6 +8,7 @@ $routes->group('purchasing/purchase-order', ['namespace' => 'Modules\Purchasing\
   $routes->get('form', 'PurchaseOrder::form');
   $routes->get('form/(:any)', 'PurchaseOrder::form/$1');
   $routes->get('check-unit-price', 'PurchaseOrder::checkUnitPrice');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'PurchaseOrder::print_excel_lists/$1/$2');
 });
 
 $routes->group('purchasing/receive-item', ['namespace' => 'Modules\Purchasing\Controllers'], static function ($routes) {

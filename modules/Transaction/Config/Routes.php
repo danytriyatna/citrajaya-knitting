@@ -29,6 +29,7 @@ $routes->group('trans/sales-order', ['namespace' => 'Modules\Transaction\Control
   $routes->post('getSample', 'SalesOrder::getSampleBuyer');
   $routes->get('print/(:any)', 'SalesOrder::print/$1');
   $routes->get('view', 'SalesOrder::view');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'SalesOrder::print_excel_lists/$1/$2');
 });
 
 $routes->group('trans/delivery-order', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
@@ -78,6 +79,7 @@ $routes->group('trans/sales-invoice', ['namespace' => 'Modules\Transaction\Contr
   $routes->post('get_order', 'SalesInvoice::walkorder_user');
   $routes->post('cari_produk', 'SalesInvoice::getDataProduksiItem');
   $routes->get('print/(:any)', 'SalesInvoice::print/$1');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'SalesInvoice::print_excel_lists/$1/$2');
 });
 
 $routes->group('trans/customer-receipt', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

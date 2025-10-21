@@ -219,4 +219,35 @@ class PurchaseModel extends \App\Models\PrModel
             throw $e;
         }
     }
+
+    function get_export($from_date = null, $to_date = null)
+    {
+        $builder = $this->db->table($this->table . " uk");
+        $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
+        $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
+        $builder->select("uk.id, uk.po_no, uk.id_vendor, uk.po_no,dbx.nama as nama_vendor, uk.po_date, 
+                            uk.date_exc, uk.qty, 
+                            COALESCE((
+                                SELECT SUM(xt.qty)
+                                FROM trans_receive_header xt
+                                WHERE xt.id_po = uk.id
+                            ), 0) as qty_receive
+                            , uk.total, 
+                            COALESCE((
+                                SELECT SUM(xc.grand_total)
+                                FROM trans_po_pembayaran_detail xc
+                                WHERE xc.id_po = uk.id
+                            ), 0) as total_payment, 
+                            COALESCE((
+                                SELECT SUM(xd.diskon)
+                                FROM trans_po_pembayaran_detail xd
+                                WHERE xd.id_po = uk.id
+                            ), 0) as diskon");
+        $builder->where("uk.po_date BETWEEN '$from_date' AND '$to_date'");
+        $builder->orderBy("uk.po_date", 'desc');
+        
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
 }

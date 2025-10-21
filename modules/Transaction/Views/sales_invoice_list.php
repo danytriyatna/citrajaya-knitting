@@ -28,10 +28,19 @@
       <div class="card">
         <div class="card-body">
           <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-2 mb-3">
               <a href="/trans/sales-invoice/add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
             </div>
-            <div class="col-sm-4 offset-md-5">
+            <div class="col-sm-2 mb-3">
+              <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="FROM DATE">
+            </div>
+            <div class="col-sm-2 mb-3">
+              <input type="text" id="to_date" name="to_date" class="form-control datepickerx" placeholder="TO DATE">
+            </div>
+            <div class="col-sm-2 mb-3">
+              <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Print</button>
+            </div>
+            <div class="col-sm-4">
               <div class="form-group">
                 <div class="input-group mb-3">
                   <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>

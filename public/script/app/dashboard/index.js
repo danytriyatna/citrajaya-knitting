@@ -168,39 +168,43 @@ $(document).ready(function () {
     // table invoice
     let dtListInvoice = new Tabulator("#tbl-invoice", {
         columns: [
-            {
-                title: "NO. INVOICE", field: "btnInv", headerSort: false, formatter: "html",
-                width: 110, hozAlign: 'center', cssClass: 'text-center'
-            }, 
+            // {
+            //     title: "NO. INVOICE", field: "btnInv", headerSort: false, formatter: "html",
+            //     width: 110, hozAlign: 'center', cssClass: 'text-center'
+            // }, 
 
-			{
-				title: 'TGL<br>INVOICE', field: 'tgl_invoice', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
-			}, 
+			// {
+			// 	title: 'TGL<br>INVOICE', field: 'tgl_invoice', headerSort:false, sorter: 'string',
+			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			// }, 
 				
 			{
 				title: 'BUYER', field: 'nama', headerSort:false, sorter: 'string',
-				width: 120
+				width: 195, formatter : "textarea", vertAlign: 'middle'
 			}, 
+
+            // {
+			// 	title: 'TGL<br>JATUH<br>TEMPO', field: 'tgl_jatuh_tempo', headerSort:false, sorter: 'string',
+			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			// }, 
 
             {
-				title: 'TGL<br>JATUH<br>TEMPO', field: 'tgl_jatuh_tempo', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+				title: 'NILAI SO', field: 'nilai_so', headerSort:false, sorter: 'string',
+				width: 170, formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
 			}, 
-
             {
 				title: 'NILAI<br>INVOICE', field: 'total_invoice', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: 170, formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
 			}, 
 
             {
 				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: 170, formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
 			}, 
 
             {
 				title: 'SISA', field: 'sisa_bayar', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: 170, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             
@@ -272,43 +276,43 @@ $(document).ready(function () {
     // table PO
     let dtListPo = new Tabulator("#tbl-po", {
         columns: [
-            {
-                title: "NO. PO", field: "btnPo", headerSort: false, formatter: "html",
-                width: 110, hozAlign: 'center', cssClass: 'text-center'
-            }, 
+            // {
+            //     title: "NO. PO", field: "btnPo", headerSort: false, formatter: "html",
+            //     width: 110, hozAlign: 'center', cssClass: 'text-center'
+            // }, 
 
-			{
-				title: 'TGL<br>PO', field: 'po_date', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
-			}, 
+			// {
+			// 	title: 'TGL<br>PO', field: 'po_date', headerSort:false, sorter: 'string',
+			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			// }, 
 				
 			{
-				title: 'BUYER', field: 'nama', headerSort:false, sorter: 'string',
-				width: 120
+				title: 'SUPPLIER', field: 'nama', headerSort:false, sorter: 'string', formatter : "textarea",
+				width: 185
 			}, 
 
             // {
 			// 	title: 'TGL<br>JATUH<br>TEMPO', field: 'date_exc', headerSort:false, sorter: 'string',
 			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
 			// }, 
-            {
-				title: 'TGL<br>JATUH<br>TEMPO', field: 'due_date', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
-			}, 
+            // {
+			// 	title: 'TGL<br>JATUH<br>TEMPO', field: 'due_date', headerSort:false, sorter: 'string',
+			// 	width: 100, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			// }, 
 
             {
-				title: 'NILAI<br>PO', field: 'total_bayar', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				title: 'NILAI PO', field: 'total_bayar', headerSort:false, sorter: 'string',
+				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             {
 				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             {
 				title: 'SISA', field: 'sisa_bayar', headerSort:false, sorter: 'string',
-				width: 150, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             

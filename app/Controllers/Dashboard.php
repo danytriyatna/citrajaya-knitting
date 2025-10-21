@@ -201,37 +201,38 @@ class Dashboard extends BaseController
         );
 
         foreach ($results as $row) {
-            $id = encrypt($row->id);
+            // $id = encrypt($row->id);
 
-            $btnInv = "";
+            // $btnInv = "";
             
-            $link_inv = base_url() . "/trans/sales-invoice/form/" . $id;
-            $btnInv = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_inv." > ".$row->kode_invoice." </a>";
+            // $link_inv = base_url() . "/trans/sales-invoice/form/" . $id;
+            // $btnInv = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_inv." > ".$row->kode_invoice." </a>";
 
             
-            $tgl_invoice = "";
-            if(!empty($row->tgl_invoice)){
-                $tgl_invoice = fdate_eng_to_ind($row->tgl_invoice);
-            }
+            // $tgl_invoice = "";
+            // if(!empty($row->tgl_invoice)){
+            //     $tgl_invoice = fdate_eng_to_ind($row->tgl_invoice);
+            // }
 
-            $tgl_jatuh_tempo = "";
-            if(!empty($row->tgl_jatuh_tempo)){
-                $tgl_jatuh_tempo = fdate_eng_to_ind($row->tgl_jatuh_tempo);
-            }
+            // $tgl_jatuh_tempo = "";
+            // if(!empty($row->tgl_jatuh_tempo)){
+            //     $tgl_jatuh_tempo = fdate_eng_to_ind($row->tgl_jatuh_tempo);
+            // }
             $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
             $pembayaran = !empty($row->pembayaran)? $row->pembayaran : 0;
             $pembayaran =  $pembayaran < 0 ? 0 - $pembayaran : $pembayaran;
 
             $pembayaran = $pembayaran + $total_down_payment;
             $sisa_bayar = (float) $row->total_invoice - (float) $pembayaran;
-
+            // dd($row->nilai_so, $row->nilai_sample, $row->nilai_so + $row->nilai_sample);
             
             
             array_push($build_array['data'], array(
-                'btnInv' => $btnInv,
-                'tgl_invoice' => $tgl_invoice,
+                // 'btnInv' => $btnInv,
+                // 'tgl_invoice' => $tgl_invoice,
                 'nama' => $row->nama,
-                'tgl_jatuh_tempo' => $tgl_jatuh_tempo,
+                // 'tgl_jatuh_tempo' => $tgl_jatuh_tempo,
+                'nilai_so' => $row->nilai_so + $row->nilai_sample,
                 'total_invoice' => $row->total_invoice,
                 'pembayaran' => $pembayaran,
                 'sisa_bayar' => $sisa_bayar,
@@ -252,9 +253,9 @@ class Dashboard extends BaseController
 
         // $params['tahun'] = $tahun;
         $params = [];
-        $results = $this->mdashboard->getDataPo(null, $start, $limit, $order, $filters, $params);
-        $totalfiltered = $this->mdashboard->getDataPoCnt($filters, $params);
-        $totaldata = $this->mdashboard->getDataPoCnt(null, $params);
+        $results = $this->mdashboard->getDataPoNew(null, $start, $limit, $order, $filters, $params);
+        $totalfiltered = $this->mdashboard->getDataPoCntNew($filters, $params);
+        $totaldata = $this->mdashboard->getDataPoCntNew(null, $params);
         $maxpage = ceil($totalfiltered / $limit);
         $build_array = array(
             "last_page" => $maxpage,
@@ -264,43 +265,46 @@ class Dashboard extends BaseController
         );
 
         foreach ($results as $row) {
-            $id = encrypt($row->id);
+            // $id = encrypt($row->id);
 
-            $btnPo = "";
+            // $btnPo = "";
             
-            $link_Po = base_url() . "/purchasing/purchase-order/form//" . $id;
-            $btnPo = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_Po." > ".$row->po_no." </a>";
+            // $link_Po = base_url() . "/purchasing/purchase-order/form//" . $id;
+            // $btnPo = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_Po." > ".$row->po_no." </a>";
 
             
-            $po_date = "";
-            $due_date = "";
-            if(!empty($row->tgl_po)){
-                $po_date = fdate_eng_to_ind($row->tgl_po);
-                if (!empty($row->days)) {
-                    $expr_date = date("Y-m-d", strtotime($row->tgl_po . " +".$row->days." days"));
-                    $due_date = fdate_eng_to_ind($expr_date);
-                }
-            }
+            // $po_date = "";
+            // $due_date = "";
+            // if(!empty($row->tgl_po)){
+            //     $po_date = fdate_eng_to_ind($row->tgl_po);
+            //     if (!empty($row->days)) {
+            //         $expr_date = date("Y-m-d", strtotime($row->tgl_po . " +".$row->days." days"));
+            //         $due_date = fdate_eng_to_ind($expr_date);
+            //     }
+            // }
 
-            $date_exc = "";
-            if(!empty($row->date_exc)){
-                $date_exc = fdate_eng_to_ind($row->date_exc);
-            }
+            // $date_exc = "";
+            // if(!empty($row->date_exc)){
+            //     $date_exc = fdate_eng_to_ind($row->date_exc);
+            // }
 
 
             $sisa_bayar = (float) $row->total_bayar - (float) $row->dibayar;
 
+            if ($sisa_bayar == 0) {
+                continue;
+            }
             
             
             array_push($build_array['data'], array(
-                'btnPo' => $btnPo,
-                'po_date' => $po_date,
-                'nama' => $row->nama,
-                'date_exc' => $date_exc,
+                // 'btnPo' => $btnPo,
+                // 'po_date' => $po_date,
+                'nama' => $row->nama_vendor,
+                // 'date_exc' => $date_exc,
                 'total_bayar' => $row->total_bayar,
                 'dibayar' => $row->dibayar,
                 'sisa_bayar' => $sisa_bayar,
-                'due_date' => $due_date,
+                // 'due_date' => $due_date,
             ));
 
         }

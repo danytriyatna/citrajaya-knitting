@@ -291,6 +291,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "deskripsi" => $xrow['deskripsi'],
                             "style" => !empty($xrow['style']) ? $xrow['style'] : null,
                             "qty" => !empty($xrow['qty']) ? $xrow['qty'] : null,
+                            "berat" => !empty($xrow['berat']) ? $xrow['berat'] : null,
                             "qty_kirim" => !empty($xrow['qty_kirim']) ? $xrow['qty_kirim'] : null,
                             "id_konsumen" => $xrow['id_konsumen'],
                             "kode_sales_order" => $xrow['kode_sales_order'],
@@ -331,6 +332,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
                                 $amount = !empty($xrow['amount']) ? $xrow['amount'] : 0;
                                 $qty = !empty($xrow['qty']) ? $xrow['qty'] : 0;
+                                $berat = !empty($xrow['berat']) ? $xrow['berat'] : 0;
                                 $harga = !empty($xrow['harga']) ? $xrow['harga'] : 0;
                               
                                 // $harga = 0;
@@ -349,6 +351,7 @@ class BarangMasukModel extends \App\Models\PrModel
                                     "id_operator" => $id_cmt,
                                     "tgl_transaksi" => $rtgl,//date('Y-m-d'),
                                     "qty" =>  $qty,
+                                    "berat" =>  $berat,
                                     "harga" => $harga,
                                     "harga_total" => $amount,
                                     "ref_detail_id" => $dtSo->id,
@@ -545,7 +548,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->select("abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
                           abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
                           abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin, abx.harga,
-                          (abx.qty - abx.qty_kirim) as qty_sisa");
+                          (abx.qty - abx.qty_kirim) as qty_sisa, abx.berat");
 
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
 

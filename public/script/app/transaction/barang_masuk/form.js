@@ -726,6 +726,25 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             const harga = parseFloat(row.getCell("harga").getValue()) || 0;
             row.update({ amount: qty * harga });
         }, formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum'},
+        { 
+            title: "Berat (Kg)", 
+            field: "berat", 
+            width: "8%", 
+            hozAlign: "right",
+            editor: "input",
+            validator: ["numeric"], 
+            formatterParams: {
+                decimal: ".",
+                thousand: ","
+            },
+            editorParams: {
+                elementAttributes: {
+                type: "number",
+                step: "0.01", 
+                min: "0"
+                }
+            }
+        },
         {title: "Ukuran", field: "kode_ukuran", width: "8%"},
         {title: "Harga", field: "harga", width: "10%", formatter: "money", formatterParams: {
             decimal: ",",

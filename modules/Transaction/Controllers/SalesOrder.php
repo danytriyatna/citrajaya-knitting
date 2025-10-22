@@ -980,11 +980,12 @@ class SalesOrder extends BaseController
                ->setCellValue('D4', 'BUYER')
                ->setCellValue('E4', 'STYLE')
                ->setCellValue('F4', 'DESKRIPSI')
-               ->setCellValue('G4', 'QTY')
-               ->setCellValue('H4', 'NILAI SO')
-               ->setCellValue('I4', 'NILAI DP')
-               ->setCellValue('J4', 'NILAI INVOICE')
-               ->setCellValue('K4', 'SISA TAGIHAN');
+               ->setCellValue('G4', 'NOMOR INVOICE')
+               ->setCellValue('H4', 'QTY')
+               ->setCellValue('I4', 'NILAI SO')
+               ->setCellValue('J4', 'NILAI DP')
+               ->setCellValue('K4', 'NILAI INVOICE')
+               ->setCellValue('L4', 'SISA TAGIHAN');
 
             $styleArray = [
                 'borders' => [
@@ -1105,13 +1106,13 @@ class SalesOrder extends BaseController
             ];
             
         $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:K4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:K3')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:L4')->applyFromArray($styleArray_header);
+        // $gets->getStyle('A3:L3')->applyFromArray($styleArray_header);
         
         // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:K2');
-        $sheets->getActiveSheet()->mergeCells('A2:K2');
-        // $sheets->getActiveSheet()->mergeCells('A4:K4');
+        // $sheets->getActiveSheet()->mergeCells('A2:L2');
+        $sheets->getActiveSheet()->mergeCells('A2:L2');
+        // $sheets->getActiveSheet()->mergeCells('A4:L4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
         // set Center title
@@ -1126,22 +1127,23 @@ class SalesOrder extends BaseController
         $gets->getColumnDimension('D')->setWidth(35);
         $gets->getColumnDimension('E')->setWidth(35);
         $gets->getColumnDimension('F')->setWidth(40);
-        $gets->getColumnDimension('G')->setWidth(20);
-        $gets->getColumnDimension('H')->setWidth(35);
+        $gets->getColumnDimension('G')->setWidth(30);
+        $gets->getColumnDimension('H')->setWidth(20);
         $gets->getColumnDimension('I')->setWidth(35);
         $gets->getColumnDimension('J')->setWidth(35);
         $gets->getColumnDimension('K')->setWidth(35);
+        $gets->getColumnDimension('L')->setWidth(35);
 
-        $gets->getStyle('A4:K4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-        $gets->getStyle('A4:K4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:L4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+        $gets->getStyle('A4:L4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I', 'J','K'
+            'A','B','C','D', 'E','F','G', 'H','I', 'J','K', 'L'
         );
 
-        for ($i=0; $i < 11 ; $i++) { 
+        for ($i=0; $i < 12 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -1197,20 +1199,21 @@ class SalesOrder extends BaseController
                     ->setCellValue('D'.$ix, !empty($r->nama) ? $r->nama : '-')
                     ->setCellValue('E'.$ix, !empty($r->style) ? $r->style : '-')
                     ->setCellValue('F'.$ix, !empty($r->deskripsi) ? $r->deskripsi : '-')
-                    ->setCellValue('G'.$ix, $qty)
-                    ->setCellValue('H'.$ix, $nilai_so)
-                    ->setCellValue('I'.$ix, $nilai_dp)
-                    ->setCellValue('J'.$ix, $nilai_invoice)
-                    ->setCellValue('K'.$ix, $sisa);
+                    ->setCellValue('G'.$ix, !empty($r->kode_invoice) ? $r->kode_invoice : '-')
+                    ->setCellValue('H'.$ix, $qty)
+                    ->setCellValue('I'.$ix, $nilai_so)
+                    ->setCellValue('J'.$ix, $nilai_dp)
+                    ->setCellValue('K'.$ix, $nilai_invoice)
+                    ->setCellValue('L'.$ix, $sisa);
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':K'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':L'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("H" . $ix .":K" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("H" . $ix .":L" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
             $ix++;
@@ -1218,26 +1221,26 @@ class SalesOrder extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
         
-        $gets->getStyle('A'.$length.':K'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':L'.$length)->applyFromArray($stylexArrayFooter);
         
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('G'.$length, $total_qty);
+                      ->setCellValue('H'.$length, $total_qty);
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('H'.$length, $total_so);
+                      ->setCellValue('I'.$length, $total_so);
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('I'.$length, $total_dp);
+                    ->setCellValue('J'.$length, $total_dp);
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('J'.$length, $total_invoice);
+                    ->setCellValue('K'.$length, $total_invoice);
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('K'.$length, $total_sisa);
+                      ->setCellValue('L'.$length, $total_sisa);
 
-        $gets->getStyle('H'. $length .':K'. $length)->getNumberFormat()
+        $gets->getStyle('I'. $length .':L'. $length)->getNumberFormat()
                 ->setFormatCode('#,##0.00');
         
         $sheets->setActiveSheetIndex(0);

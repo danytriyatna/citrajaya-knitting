@@ -694,7 +694,13 @@ class SalesOrderModel extends \App\Models\PrModel
                                 SELECT SUM(tid.grand_total)
                                 FROM trans_invoice_detail tid
                                 WHERE tid.id_ref = abx.id
-                            ), 0) as nilai_invoice
+                            ), 0) as nilai_invoice,
+                            COALESCE((
+                                SELECT STRING_AGG(ti.kode_invoice, ' - ')
+                                FROM trans_invoice_detail tidt
+                                INNER JOIN trans_invoice ti on ti.id = CAST(tidt.id_invoice  AS INTEGER)
+                                WHERE tidt.id_ref = abx.id
+                            ), '-') as kode_invoice
                             ");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
        

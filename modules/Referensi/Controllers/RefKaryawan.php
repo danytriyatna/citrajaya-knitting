@@ -136,10 +136,9 @@ class RefKaryawan extends BaseController
         $type =  $this->request->getPost('type');
         $id_operator =  $this->request->getPost('id_operator');
         $fileIdKaryawanOld = $this->request->getPost('fileIdKaryawanOld');
-        if ($id_operator == "") {
+        if ($id_operator == "" || $id_operator=='null') {
             $id_operator = null;
         }
-
         $msg    = "Data gagal ditambahkan !";
         $status = false;
 

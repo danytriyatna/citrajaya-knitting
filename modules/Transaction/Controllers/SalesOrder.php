@@ -412,7 +412,7 @@ class SalesOrder extends BaseController
           'keterangan_style' => $style,
           'keterangan' => $deskripsi,
           'tgl_deadline' => $tglDeadline,
-          'tgl_deadline_dua' => $tglDeadlineDua,
+          // 'tgl_deadline_dua' => $tglDeadlineDua,
           'tgl_transaksi' => date("Y-m-d"),
           // 'id_style' => $id,
           'qty' => !empty($allQty) ? $allQty : 0,
@@ -865,8 +865,6 @@ class SalesOrder extends BaseController
     $pr_warna['id_sales_order_det'] = $trans;
     $data_warna = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($pr_warna);
     
-    // dd($trans);
-    // dd($data_warna);
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
     if (!file_exists($dir)) {
@@ -912,7 +910,6 @@ class SalesOrder extends BaseController
 
     $this->data["data"] = $data;
     $this->data["fileName"] = $save_name;
-    // dd($this->data);
     return view($this->views . '\vprint_qrcode', $this->data);
   }
 
@@ -928,7 +925,6 @@ class SalesOrder extends BaseController
     $this->data['data'] = [];
     if ($id != "") {
       $id = decrypt($id);
-      // dd($id);
       // die;
       $resData = $this->mSalesOrder->getData($id);
       $pru['use'] = 1; // ambil ukuran yang digunnakan order 

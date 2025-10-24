@@ -207,18 +207,34 @@ class Mdashboard extends Model
                 $builder->groupEnd();
             }
 
-            $builder->where("
-                ti.grand_total > (
-                    COALESCE((SELECT SUM(xc.pay_item)
-                            FROM trans_customer_receipt_detail xc
-                            WHERE xc.id_invoice = ti.id), 0)
-                    +
-                    COALESCE((SELECT SUM(tid.down_payment)
-                            FROM trans_invoice_detail tid
-                            WHERE tid.id_invoice = ti.id), 0)
-                )
-                ");
              $builder->groupBy("rk.id, rk.nama");
+             $builder->having("(COALESCE(SUM((
+                                SELECT SUM(tsou.harga_total)
+                                FROM trans_sales_order_ukuran tsou
+                                INNER JOIN trans_sales_order tso ON tsou.id_sales_order = tso.id 
+                                INNER JOIN trans_invoice_detail tidt ON tso.id = tidt.id_ref 
+                                WHERE tidt.id_invoice = ti.id and tipe_id = 2
+                            )), 0)
+                            +
+                            COALESCE(SUM((
+                                SELECT SUM(tsu.harga_total)
+                                FROM trans_sample_ukuran tsu
+                                INNER JOIN trans_sample ts ON tsu.id_sample = ts.id 
+                                INNER JOIN trans_invoice_detail tidt ON ts.id = tidt.id_ref 
+                                WHERE tidt.id_invoice = ti.id and tipe_id = 1
+                            )), 0))
+                            >
+                            (COALESCE(SUM((
+                                SELECT SUM(tid.down_payment)
+                                FROM trans_invoice_detail tid
+                                WHERE tid.id_invoice = ti.id and tipe_id = 2
+                            )), 0)
+                            +
+                            COALESCE(SUM((
+                                SELECT SUM(xc.pay_item)
+                                FROM trans_customer_receipt_detail xc
+                                WHERE xc.id_invoice = ti.id
+                            )), 0))", null, false);
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {

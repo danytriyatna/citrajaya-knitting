@@ -274,11 +274,11 @@
 
   <table class="signature" style="border: none; font-size: 10px;">
     <tr>
-      <td style="width: 20%;">Pengirim</td>
-      <td style="width: 20%;">Penerima</td>
-      <td style="width: 20%;">Montir</td>
-      <td style="width: 20%;">Kepala Rajut</td>
       <td style="width: 20%;">Mengetahui,</td>
+      <td style="width: 20%;">Kepala Produksi</td>
+      <td style="width: 20%;">Kepala Gudang</td>
+      <td style="width: 20%;">Dikirim Oleh</td>
+      <td style="width: 20%;">Dibuat Oleh</td>
     </tr>
   </table>
 

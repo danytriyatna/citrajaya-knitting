@@ -140,6 +140,7 @@ class SalesOrder extends BaseController
           "tgl_transaksi" => $row->tgl_transaksi,
           "kode_sales_order" => $row->kode_sales_order,
           "tgl_deadline" => $row->tgl_deadline,
+          "tgl_deadline_dua" => $row->tgl_deadline_dua,
           "deskripsi" => $row->deskripsi,
           "stylex" => $row->stylex,
           "style" => $row->style,
@@ -207,6 +208,7 @@ class SalesOrder extends BaseController
       "tgl_transaksi" => $results->tgl_transaksi,
       "kode_sales_order" => $results->kode_sales_order,
       "tgl_deadline" => $results->tgl_deadline,
+      "tgl_deadline_dua" => $results->tgl_deadline_dua,
       "deskripsi" => $results->deskripsi,
       "gambar_id" => $results->gambar_id,
       "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sales_order/" . $results->file_name : "",
@@ -233,6 +235,7 @@ class SalesOrder extends BaseController
       "tgl_transaksi" => $results->tgl_transaksi,
       "kode_sales_order" => $results->kode_sales_order,
       "tgl_deadline" => $results->tgl_deadline,
+      "tgl_deadline_dua" => $results->tgl_deadline_dua,
       "deskripsi" => $results->deskripsi,
       "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sales_order/" . $results->file_name : "",
       "detail" => $this->mSalesOrder->getDataDetailSampleWarna($id, $idSalesOrderDet),
@@ -248,6 +251,7 @@ class SalesOrder extends BaseController
     $idKonsumen         = $this->request->getPost('idKonsumen');
     $tglTransaksi = $this->request->getPost('tglTransaksi');
     $tglDeadline = $this->request->getPost('tglDeadline');
+    $tglDeadlineDua = $this->request->getPost('tglDeadlineDua');
     $deskripsi = $this->request->getPost('deskripsi');
     $keterangan = $this->request->getPost('deskripsi');
     $fileIdSalesOrderOld = $this->request->getPost('fileIdSalesOrderOld');
@@ -317,6 +321,7 @@ class SalesOrder extends BaseController
       'deskripsi' => $deskripsi,
       'tgl_transaksi' => $tglTransaksi,
       'tgl_deadline' => $tglDeadline,
+      'tgl_deadline_dua' => $tglDeadlineDua,
       'uang_dp' => $uang_dp,
       'tgl_dp' => $tgl_dp,
       'type_dp' => $type_dp,
@@ -407,6 +412,7 @@ class SalesOrder extends BaseController
           'keterangan_style' => $style,
           'keterangan' => $deskripsi,
           'tgl_deadline' => $tglDeadline,
+          'tgl_deadline_dua' => $tglDeadlineDua,
           'tgl_transaksi' => date("Y-m-d"),
           // 'id_style' => $id,
           'qty' => !empty($allQty) ? $allQty : 0,

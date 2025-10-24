@@ -99,6 +99,16 @@
         </div>
 
         <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tgl_deadline_dua">Deadline 2<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <input type="text" id="tgl_deadline_dua" name="tgl_deadline_dua" class="form-control datepicker" placeholder="Pilih tanggal deadline 2" value="" required>
+            <div class="invalid-feedback">
+              Deadline Kedua tidak valid
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="uang_dp">DownPayment</label>
           <div class="col-md-2">
             <input type="number" name="uang_dp" value="" id="uang_dp" min="0" step="1" pattern="[0-9]*" class="form-control" 

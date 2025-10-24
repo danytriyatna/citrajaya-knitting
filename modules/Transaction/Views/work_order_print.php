@@ -32,7 +32,6 @@
       margin-bottom: 10px;
     }
     .signature td {
-      height: 80px;
       vertical-align: top;
       text-align: center;
       border: none;
@@ -279,6 +278,37 @@
       <td style="width: 20%;">Kepala Gudang</td>
       <td style="width: 20%;">Dikirim Oleh</td>
       <td style="width: 20%;">Dibuat Oleh</td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td colspan="5"></td>
+    </tr>
+    <tr>
+      <td style="width: 20%;">....................................</td>
+      <td style="width: 20%;">....................................</td>
+      <td style="width: 20%;">....................................</td>
+      <td style="width: 20%;">....................................</td>
+      <td style="width: 20%;">....................................</td>
     </tr>
   </table>
 

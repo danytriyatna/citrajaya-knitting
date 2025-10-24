@@ -12,6 +12,7 @@ $(document).ready(function () {
     const inpBuyer          = $('#select_buyer');
     const inpTglTransaksi   = $('#tgl_sales_order');
     const inpTglDeadline    = $('#tgl_deadline');
+    const inpTglDeadlineDua    = $('#tgl_deadline_dua');
     const inpKetSalesOrder  = $('#ket_sales_order');
     const inpUangDP         = $('#uang_dp');
     const inpTglDP         = $('#tgl_dp');
@@ -473,6 +474,7 @@ $(document).ready(function () {
         inpBuyer.val("").trigger("change")
         inpTglTransaksi.val(formatterDate(today))
         inpTglDeadline.val("")
+        inpTglDeadlineDua.val("")
         inpKetSalesOrder.val("")
         inpStyle.val("")
         inprepeat.val(0)
@@ -579,6 +581,7 @@ $(document).ready(function () {
                     inpBuyer.val(data.id_konsumen).trigger('change')
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(data.tgl_deadline))
+                        inpTglDeadlineDua.val(formatterDate(data.tgl_deadline_dua))
                         inpTglTransaksi.val(formatterDate(data.tgl_transaksi))
                         Swal.close();
                         setTimeout(() => {
@@ -777,6 +780,7 @@ $(document).ready(function () {
         if(inpDeskripsi.val().length == 0) validation = false
         if(inpBuyer.val().length == 0) validation = false
         if(inpTglDeadline.val().length == 0) validation = false
+        if(inpTglDeadlineDua.val().length == 0) validation = false
         if(inpTglTransaksi.val().length == 0) validation = false
         // if(fileSalesOrder[0].files[0] == undefined) validation = false
     
@@ -789,6 +793,7 @@ $(document).ready(function () {
             formData.append("fileIdSalesOrderOld",fileSalesOrderOld.val());
             formData.append("idKonsumen",inpBuyer.val());
             formData.append("tglDeadline",formatLocaleDate(inpTglDeadline.val()));
+            formData.append("tglDeadlineDua",formatLocaleDate(inpTglDeadlineDua.val()));
             formData.append("tglTransaksi",formatLocaleDate(inpTglTransaksi.val()));
             formData.append("keterangan",inpKetSalesOrder.val());
             formData.append("samples", inpSample.val())
@@ -1013,6 +1018,7 @@ $(document).ready(function () {
                setTimeout(() => {
                     inpTglTransaksi.val("")
                     inpTglDeadline.val("")
+                    inpTglDeadlineDua.val("")
                     let tglTr = isin[0].tgl_transaksi.split('-')
                     let tglTransaksi = tglTr['2'] + '-' + tglTr['1']+ '-' + tglTr['0']
                     // inpTglTransaksi.datepicker('setDate', tglTransaksi); //.val(changeTgl(isin[0].tgl_transaksi))
@@ -1023,6 +1029,7 @@ $(document).ready(function () {
                     inprepeat.val(isin[0].style_cnt_order);
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
+                        inpTglDeadlineDua.val(formatterDate(isin[0].tgl_deadline_dua))
                         inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))
                     }, 600);
                     inpKetSalesOrder.val(isin[0].deskripsi)

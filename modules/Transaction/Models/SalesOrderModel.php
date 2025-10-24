@@ -18,7 +18,7 @@ class SalesOrderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " abx");
 
-        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, bbx.alamat, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.status, 
+        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, bbx.alamat, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua, abx.status, 
                           abx.gambar_id,cbx.file_name, abx.id_sample, abx.uang_dp, abx.style as stylex , abx.style_cnt,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp, abx.type_dp");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
@@ -682,7 +682,7 @@ class SalesOrderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " abx");
 
-        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.qty,
+        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua, abx.qty,
                           abx.uang_dp, abx.style as stylex , abx.style_cnt,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp,
                           COALESCE((

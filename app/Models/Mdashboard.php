@@ -183,14 +183,14 @@ class Mdashboard extends Model
                 FROM trans_sales_order_ukuran tsou
                 inner join trans_sales_order tso on tsou.id_sales_order = tso.id 
                 inner join trans_invoice_detail tidt on tso.id = tidt.id_ref 
-                WHERE tidt.id_invoice = ti.id and tipe_id = 2
+                WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 2 and tsou.active = 1
             )), 0) as nilai_so,
             COALESCE(SUM((
                 SELECT sum(tsu.harga_total)
                 FROM trans_sample_ukuran tsu
                 inner join trans_sample ts on tsu.id_sample = ts.id 
                 inner join trans_invoice_detail tidt on ts.id = tidt.id_ref 
-                WHERE tidt.id_invoice = ti.id and tipe_id = 1
+                WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 1 and ts.active = 1
             )), 0) as nilai_sample,
         ");
 

@@ -780,7 +780,7 @@ $(document).ready(function () {
         if(inpDeskripsi.val().length == 0) validation = false
         if(inpBuyer.val().length == 0) validation = false
         if(inpTglDeadline.val().length == 0) validation = false
-        if(inpTglDeadlineDua.val().length == 0) validation = false
+        // if(inpTglDeadlineDua.val().length == 0) validation = false
         if(inpTglTransaksi.val().length == 0) validation = false
         // if(fileSalesOrder[0].files[0] == undefined) validation = false
     
@@ -1029,7 +1029,7 @@ $(document).ready(function () {
                     inprepeat.val(isin[0].style_cnt_order);
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
-                        inpTglDeadlineDua.val(formatterDate(isin[0].tgl_deadline_dua))
+                        // inpTglDeadlineDua.val(formatterDate(isin[0].tgl_deadline_dua))
                         inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))
                     }, 600);
                     inpKetSalesOrder.val(isin[0].deskripsi)

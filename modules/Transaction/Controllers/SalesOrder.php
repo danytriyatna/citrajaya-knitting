@@ -266,6 +266,9 @@ class SalesOrder extends BaseController
     if (strpos($tgl_dp, 'undefined') !== false || empty($tgl_dp))  {
         $tgl_dp = null;
     }
+    if (strpos($tglDeadlineDua, 'undefined') !== false || empty($tglDeadlineDua))  {
+        $tglDeadlineDua = null;
+    }
     if (empty($type_dp)) {
         $type_dp = null;
     }

@@ -276,7 +276,7 @@
       <td style="width: 20%;">Mengetahui,</td>
       <td style="width: 20%;">Kepala Produksi</td>
       <td style="width: 20%;">Kepala Gudang</td>
-      <td style="width: 20%;">Dikirim Oleh</td>
+      <td style="width: 20%;">Diterima Oleh</td>
       <td style="width: 20%;">Dibuat Oleh</td>
     </tr>
     <tr>

@@ -654,4 +654,69 @@ class WorkOrder extends BaseController
     $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
     exit;
   }
+
+  function getQrcode()
+  {
+    
+    $ukuran = $this->request->getGet("ukuran");
+    $ukuran_text = $this->request->getGet("ukuran_text");
+    $qty = $this->request->getGet("qty");
+    $qtyp = $this->request->getGet("qtyp");
+    $noSample = $this->request->getGet("noSample");
+    $deskripsi = $this->request->getGet("deskripsi");
+    $buyer = $this->request->getGet("buyer");
+    $warna = $this->request->getGet("warna");
+    $trans = $this->request->getGet("trans");
+    $style = $this->request->getGet("style");
+
+    $pr_warna['id_sales_order_det'] = $trans;
+    $pr_warna['key_ukuran'] = $ukuran;
+    if (strtoupper(substr($noSample, 0, 3)) === 'SOD') {
+        // ...
+        $data_warna = $this->mSalesOrder->getDataDetailSalesOrderUkuranById($pr_warna);
+        if (!empty($data_warna)) {
+          $data_so = $this->mSalesOrder->getData($data_warna[0]->id_sales_order);
+        }
+    }
+    else {
+      $data_warna = $this->mSample->getDataDetailSalesOrderUkuranById($pr_warna);
+      if (!empty($data_warna)) {
+        $data_so = $this->mSample->getData($data_warna[0]->id_sales_order);
+      }
+        
+    }
+    $warna_array = [];
+    if (!empty($data_warna)) {
+      foreach ($data_warna as $key => $value) {
+        for ($i=0; $i < 8; $i++) { 
+          $index = $i+1;
+          if ($value->{'warna_' . $index}) {
+            $warna_array[] = $value->{'warna_' . $index};
+          }
+        }
+      }
+    }
+
+    $data = [
+      'ukuran' => $ukuran,
+      'ukuran_text' => $ukuran_text,
+      'qty' => $qty,
+      'qtyp' => $qtyp,
+      'noSample' => $noSample,
+      'deskripsi' => $deskripsi,
+      'buyer' => $buyer,
+      'warna' => $warna,
+      'data_warna' => $warna_array,
+      'stylex' => $style,
+      'style' => !empty($data_so) ? $data_so->stylex : null,
+      'warna_2' => ''
+    ];
+
+    /* QR Data  */
+    $params['level']    = 'L';
+    $params['size']     = 10;
+
+    $this->data["data"] = $data;
+    return view($this->views . '\vprint_kartu_produksi', $this->data);
+  }
 }

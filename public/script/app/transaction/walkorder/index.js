@@ -15,9 +15,11 @@ $(document).ready(function () {
      const inpp_warna = $("#warnaPrint");
      const inpp_trans = $("#warnaTrans");
      const brcStyle            = $("#style_input");
+     let qty_ukuran            = [];
+
+    
     function cardFormatter(cell, formatterParams, onRendered){
         let data = cell.getRow().getData(); // Ambil data row
-        console.log("data", data);
         let status = '';
         let aksi = '';
         if(data.status == 'Draft'){
@@ -106,20 +108,39 @@ $(document).ready(function () {
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
+                {headerSort: false,  title:"Kartu Produksi", width:"10%", hozAlign:"center",  formatter: print_btn,
                     cellClick: function(e, cell) {
                         let row = cell.getRow();
+                        let rowIndex = cell.getRow().getPosition();
                         let data_row = row.getData();
                         if (e.target.title === 'print-warna') {
-                            // console.log(data_row)
+                            qty_ukuran = [];
                             const xdata = data.ref_data;
                             const inpp_slcUkuran = $("#print_slc_ukuran");
                             const inpp_qty       = $("#print_qty");
                             const inpp_qtyp      = $("#print_qtyp");
-
+                            const allowed = data.key_ukuran.map(x => x.key_ukuran); // ambil semua kode_ukuran
+                            const select = document.getElementById('print_slc_ukuran');
+                            
+                            select.querySelectorAll('option').forEach(opt => {
+                            if (opt.value === '' || allowed.includes(opt.value)) {
+                                opt.hidden = false; // tampilkan kalau cocok
+                                if (opt.value == 'all') {
+                                    qty_ukuran[opt.value] = data_row["all_"]
+                                }
+                                else {
+                                    qty_ukuran[opt.value] = data_row[opt.value]
+                                }
+                            } else {
+                                opt.hidden = true; // sembunyikan kalau tidak ada di daftar
+                            }
+                            });
+                            let keys = Object.keys(data_row);
                             // inpp_slcUkuran
                             inpp_qty.val(1)
                             inpp_qtyp.val(1)
+
+                             
 
                             inpp_foto.attr('src', data.file_name);
                             inpp_noSo.html(data.ref_kode)
@@ -131,7 +152,6 @@ $(document).ready(function () {
                             brcStyle.val(xdata.style)
                             inpp_buyer.html(data.konsumen_nama)
 
-                            // console.log("kolom print", data_row)
 
                             setTimeout(() => {
                                 inpp_trans.html(data_row.id);
@@ -148,7 +168,6 @@ $(document).ready(function () {
             for (const el of data.key_ukuran) {
                 const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
                 // total += isKey;
-                console.log(isKey + " || " + el.kode_ukuran);
                 isColumn.push({ 
                     headerSort: false,  
                     title: el.kode_ukuran, 
@@ -229,6 +248,16 @@ $(document).ready(function () {
     
         return cardHtml; // Return HTML Card
     }
+
+    $("#print_slc_ukuran").change(function() {
+        let selectedUkuran = $(this).val();
+        $("#print_qty").val(qty_ukuran[selectedUkuran])
+    });
+
+    $('#modal-print-barcode').on('hidden.bs.modal', function () {
+        $(this).find('input, select, textarea').val(''); // kosongkan semua nilai
+        $(this).find('input[type=checkbox], input[type=radio]').prop('checked', false); // reset checkbox & radio
+    });
 
     let dtList = new Tabulator("#dt-list", {
         columns: [
@@ -418,7 +447,8 @@ $(document).ready(function () {
 
     $("#btn-cetak-print").on('click', function (e) {
         e.preventDefault()
-
+        validation = true;
+        
         //   const inpp_slcWarna = $("#print_slc_warna");
         const inpp_slcUkuran = $("#print_slc_ukuran");
         const inpp_qty       = $("#print_qty");
@@ -432,11 +462,24 @@ $(document).ready(function () {
         const dt_trans = inpp_trans.html()
 
         const dt_style = brcStyle.val()
+
+        if(inpp_slcUkuran.val() == "" || inpp_slcUkuran.val() == null) validation = false
+
+        if (validation == false) {
+            Swal.fire({
+                text: "Lengkapi isian pada form !",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 1000
+            });
+            return false;
+        }
         // inpp_trans
 
         // Query parameters
         let params = {
             ukuran : inpp_slcUkuran.val(),
+            ukuran_text : inpp_slcUkuran.find("option:selected").text(),
             qty : inpp_qty.val(),
             qtyp : inpp_qtyp.val(),
             noSample : dt_noSample,
@@ -449,7 +492,7 @@ $(document).ready(function () {
   
           // Buat query string
           let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/sales-order/generate?${queryString}`;
+          let fullUrl = `trans/work-order/generate?${queryString}`;
   
           // Buka link di tab baru
           window.open(fullUrl, '_blank');

@@ -53,7 +53,7 @@
                     </td> -->
                     <td>
                       <select id="print_slc_ukuran" class="form-select">
-                        <option value="" disabled>-- Pilih Ukuran --</option>
+                        <option value="" disabled selected>-- Pilih Ukuran --</option>
                         <?php foreach ($ukuran as $item) : ?>
                           <option value="<?= $item['key_ukuran'] ?>"><?= $item['kode_ukuran'] ?></option>
                         <?php endforeach; ?>

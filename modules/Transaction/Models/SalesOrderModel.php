@@ -643,7 +643,9 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder = $this->db->table("trans_sales_order_ukuran tu");
         $builder->select(" tu.id as id_ukuran_so, tu.id_ukuran,ru.kode_ukuran, ru.key_ukuran, 
                            w1.kode_warna as warna_1, w2.kode_warna as warna_2, w3.kode_warna as warna_3,
-                           tod.kode_sales_order, tod.style, tod.deskripsi");
+                           w4.kode_warna as warna_4, w5.kode_warna as warna_5, w6.kode_warna as warna_6,
+                           w7.kode_warna as warna_7, w8.kode_warna as warna_8,
+                           tod.kode_sales_order, tod.style, tod.deskripsi, tu.id_sales_order");
 
         $builder->join("trans_sales_order_det td", "td.id = tu.id_sales_order_det", "inner");
         $builder->join("trans_sales_order tod", "tod.id = td.id_sales_order", "inner");

@@ -53,6 +53,7 @@ $routes->group('trans/work-order', ['namespace' => 'Modules\Transaction\Controll
   $routes->post('save-warna', 'WorkOrder::saveWarna');
   $routes->post('save-data', 'WorkOrder::save');
   $routes->get('print/(:any)', 'WorkOrder::print/$1');
+  $routes->get('generate', 'WorkOrder::getQrcode');
 });
 
 $routes->group('trans/production', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

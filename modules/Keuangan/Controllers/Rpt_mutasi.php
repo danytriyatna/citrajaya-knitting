@@ -1309,18 +1309,19 @@ class Rpt_mutasi extends BaseController
         
         $sheets->getActiveSheet()->mergeCells('H'. $length .':I'. $length);
         
+        $saldo = !empty($saldo->saldo) ? $saldo->saldo : 0;
+        
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('H'.$length, $grand_total_masuk - $grand_total);
+                    ->setCellValue('H'.$length, $saldo + $grand_total_masuk - $grand_total);
 
         $gets->getStyle("H" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
-        
         
         $isiSaldo = [
             'coa_id' => $ref_masuk,
             'month' => $bulan,
             'year' => $tahun,
-            'saldo' => $grand_total_masuk - $grand_total
+            'saldo' => $saldo + $grand_total_masuk - $grand_total
         ];
         $saldo_new = $this->mcoa->get_mutasi_history($bulan, $tahun, $ref_masuk);
         if (!empty($saldo_new)) {

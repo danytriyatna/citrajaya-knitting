@@ -160,7 +160,7 @@ $(document).ready(function () {
 				title: "Sisa", field: "remain_item",
 				width: 200, headerSort:false, align: "right", cssClass: 'text-end', formatter : "money"
 			}, {
-				title: "Jumlah Pembayaran", field: "pay_item", editor:"number", formatter: "money",
+				title: "Jumlah Pembayaran", field: "pay_item", formatter: "money",
 				width: 200, headerSort:false, align: "right", cssClass: 'text-end', cellEdited: harga_bayar
 			}
 		],

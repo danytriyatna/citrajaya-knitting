@@ -189,9 +189,9 @@ class Dashboard extends BaseController
 
         // $params['tahun'] = $tahun;
         $params = [];
-        $results = $this->mdashboard->getDataInv(null, $start, $limit, $order, $filters, $params);
-        $totalfiltered = $this->mdashboard->getDataInvCnt($filters, $params);
-        $totaldata = $this->mdashboard->getDataInvCnt(null, $params);
+        $results = $this->mdashboard->getDataInvNew(null, $start, $limit, $order, $filters, $params);
+        $totalfiltered = $this->mdashboard->getDataInvCntNew($filters, $params);
+        $totaldata = $this->mdashboard->getDataInvCntNew(null, $params);
         $maxpage = ceil($totalfiltered / $limit);
         $build_array = array(
             "last_page" => $maxpage,
@@ -199,7 +199,7 @@ class Dashboard extends BaseController
             "recordsFiltered" => $totalfiltered,
             "data" => array()
         );
-
+        
         foreach ($results as $row) {
             // $id = encrypt($row->id);
 
@@ -218,25 +218,26 @@ class Dashboard extends BaseController
             // if(!empty($row->tgl_jatuh_tempo)){
             //     $tgl_jatuh_tempo = fdate_eng_to_ind($row->tgl_jatuh_tempo);
             // }
-            $nilai_so = $row->nilai_so + $row->nilai_sample;
-            $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
-            $pembayaran = !empty($row->pembayaran)? $row->pembayaran : 0;
-            // $pembayaran =  $pembayaran < 0 ? 0 - $pembayaran : $pembayaran;
+            // $nilai_so = $row->nilai_so + $row->nilai_sample;
+            // $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
+            // $pembayaran = !empty($row->pembayaran)? $row->pembayaran : 0;
+            // // $pembayaran =  $pembayaran < 0 ? 0 - $pembayaran : $pembayaran;
 
-            $pembayaran = $pembayaran + $total_down_payment;
-            $sisa_bayar = (float) $nilai_so - (float) $pembayaran;
+            // $pembayaran = $pembayaran + $total_down_payment;
+            // $sisa_bayar = (float) $nilai_so - (float) $pembayaran;
             // dd($row->nilai_so, $row->nilai_sample, $row->nilai_so + $row->nilai_sample);
             
             
             array_push($build_array['data'], array(
                 // 'btnInv' => $btnInv,
                 // 'tgl_invoice' => $tgl_invoice,
-                'nama' => $row->nama,
+                'nama' => $row->buyer,
                 // 'tgl_jatuh_tempo' => $tgl_jatuh_tempo,
-                'nilai_so' => $row->nilai_so + $row->nilai_sample,
-                'total_invoice' => $row->total_invoice,
-                'pembayaran' => $pembayaran,
-                'sisa_bayar' => $sisa_bayar,
+                'nilai_so' => $row->nilai_so,
+                'nilai_invoice' => $row->nilai_invoice,
+                'pembayaran' => $row->pembayaran,
+                'sisa_tagihan' => $row->sisa_tagihan,
+                'sisa_pembayaran' => $row->sisa_pembayaran,
             ));
 
         }

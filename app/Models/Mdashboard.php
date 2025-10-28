@@ -157,6 +157,192 @@ class Mdashboard extends Model
         return $this->_data;
     }
 
+    function getDataInvNew($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table('ref_konsumen rk');
+
+        $subNilaiSO = "
+            COALESCE((
+                SELECT SUM(tsou.harga_total)
+                FROM trans_sales_order_ukuran tsou
+                INNER JOIN trans_sales_order tsod ON tsod.id = tsou.id_sales_order
+                WHERE tsou.active = 1
+                AND tsod.id_konsumen = rk.id
+                AND tsod.id IN (
+                    SELECT DISTINCT tid.id_ref
+                    FROM trans_invoice_detail tid
+                    WHERE tid.tipe_id = 2
+                )
+            ), 0)
+        ";
+
+        $subNilaiSample = "
+            COALESCE(SUM((
+                SELECT SUM(tsu.harga_total)
+                FROM trans_sample_ukuran tsu
+                INNER JOIN trans_sample tsd ON tsd.id = tsu.id_sample
+                WHERE tsu.active = 1 
+                AND tsd.id_konsumen = rk.id
+                AND tsd.id IN (
+                    SELECT DISTINCT tid.id_ref
+                    FROM trans_invoice_detail tid
+                    where tid.tipe_id = 1
+                )
+            )), 0)
+        ";
+
+        $subTotalInvoice = "
+            COALESCE((
+                SELECT SUM(ti.total)
+                FROM trans_invoice ti
+                WHERE ti.id_konsumen = rk.id
+            ), 0)
+        ";
+
+        $subTotalDP = "
+            COALESCE(SUM((
+                SELECT SUM(tsot.down_payment)
+                FROM trans_invoice_detail tsot
+                INNER JOIN trans_invoice ti ON ti.id = tsot.id_invoice
+                WHERE ti.id_konsumen = rk.id
+            )), 0)
+        ";
+
+        $subPembayaran = "
+            COALESCE((
+                SELECT SUM(xc.pay_item)
+                FROM trans_customer_receipt_detail xc
+                INNER JOIN trans_customer_receipt tcr ON tcr.id = xc.id_cr
+                WHERE tcr.id_konsumen = rk.id
+            ), 0)
+        ";
+
+        // Pilih kolom utama dan subquery
+        $builder->select("
+            rk.nama AS buyer,
+            {$subNilaiSO} AS nilai_so,
+            {$subTotalInvoice} AS nilai_invoice,
+            ({$subTotalDP} + {$subPembayaran}) AS pembayaran,
+            ({$subNilaiSO} - {$subTotalInvoice}) AS sisa_tagihan,
+            ({$subNilaiSO} - ({$subTotalDP} + {$subPembayaran})) AS sisa_pembayaran
+        ");
+
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $builder->groupStart();
+                // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+                // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->where('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->groupEnd();
+        }
+
+        // Group & filter
+        $builder->groupBy(['rk.id', 'rk.nama']);
+        $builder->having("{$subNilaiSO} > ({$subTotalDP} + {$subPembayaran})");
+        $builder->orderBy('rk.nama', 'ASC');
+
+        // Eksekusi
+        $query = $builder->get();
+        $result = $query->getResult();
+        return $result;
+
+    }
+
+    function getDataInvCntNew($filters = null, $params = null)
+    {
+        $builder = $this->db->table('ref_konsumen rk');
+
+        $subNilaiSO = "
+            COALESCE((
+                SELECT SUM(tsou.harga_total)
+                FROM trans_sales_order_ukuran tsou
+                INNER JOIN trans_sales_order tsod ON tsod.id = tsou.id_sales_order
+                WHERE tsou.active = 1
+                AND tsod.id_konsumen = rk.id
+                AND tsod.id IN (
+                    SELECT DISTINCT tid.id_ref
+                    FROM trans_invoice_detail tid
+                    WHERE tid.tipe_id = 2
+                )
+            ), 0)
+        ";
+
+        $subNilaiSample = "
+            COALESCE(SUM((
+                SELECT SUM(tsu.harga_total)
+                FROM trans_sample_ukuran tsu
+                INNER JOIN trans_sample tsd ON tsd.id = tsu.id_sample
+                WHERE tsu.active = 1 
+                AND tsd.id_konsumen = rk.id
+                AND tsd.id IN (
+                    SELECT DISTINCT tid.id_ref
+                    FROM trans_invoice_detail tid
+                    where tid.tipe_id = 1
+                )
+            )), 0)
+        ";
+
+        $subTotalInvoice = "
+            COALESCE((
+                SELECT SUM(ti.total)
+                FROM trans_invoice ti
+                WHERE ti.id_konsumen = rk.id
+            ), 0)
+        ";
+
+        $subTotalDP = "
+            COALESCE(SUM((
+                SELECT SUM(tsot.down_payment)
+                FROM trans_invoice_detail tsot
+                INNER JOIN trans_invoice ti ON ti.id = tsot.id_invoice
+                WHERE ti.id_konsumen = rk.id
+            )), 0)
+        ";
+
+        $subPembayaran = "
+            COALESCE((
+                SELECT SUM(xc.pay_item)
+                FROM trans_customer_receipt_detail xc
+                INNER JOIN trans_customer_receipt tcr ON tcr.id = xc.id_cr
+                WHERE tcr.id_konsumen = rk.id
+            ), 0)
+        ";
+
+        // Pilih kolom utama dan subquery
+        $builder->select("
+            rk.nama AS buyer,
+            {$subNilaiSO} AS nilai_so,
+            {$subTotalInvoice} AS nilai_invoice,
+            ({$subTotalDP} + {$subPembayaran}) AS pembayaran,
+            ({$subNilaiSO} - {$subTotalInvoice}) AS sisa_tagihan,
+            ({$subNilaiSO} - ({$subTotalDP} + {$subPembayaran})) AS sisa_pembayaran
+        ");
+
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $builder->groupStart();
+                // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+                // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->where('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->groupEnd();
+        }
+
+        // Group & filter
+        $builder->groupBy(['rk.id', 'rk.nama']);
+        $builder->having("{$subNilaiSO} > ({$subTotalDP} + {$subPembayaran})");
+        $builder->orderBy('rk.nama', 'ASC');
+
+        // Dapatkan SQL-nya
+        $sql = $builder->getCompiledSelect();
+
+        // Bungkus dan hitung jumlah baris
+        $countQuery = $this->db->query("SELECT COUNT(*) AS total FROM ({$sql}) AS x");
+        $total = $countQuery->getRow()->total;
+
+        return $total;
+
+    }
+
 
 
     function getDataInv($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
@@ -254,7 +440,7 @@ class Mdashboard extends Model
     {
         $builder = $this->db->table("trans_invoice ti");
 
-        $builder->select("COUNT(DISTINCT rk.id) as _cnt");
+        $builder->select("COUNT(rk.id) as _cnt");
 
         $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
 
@@ -268,16 +454,22 @@ class Mdashboard extends Model
         }
 
         $builder->where("
-                ti.grand_total > (
-                    COALESCE((SELECT SUM(xc.pay_item)
-                            FROM trans_customer_receipt_detail xc
-                            WHERE xc.id_invoice = ti.id), 0)
+                ti.total > 
+                (
+                    COALESCE((
+                        SELECT SUM(tid.down_payment)
+                        FROM trans_invoice_detail tid
+                        WHERE tid.id_invoice = ti.id AND tid.tipe_id = 2
+                    ), 0)
                     +
-                    COALESCE((SELECT SUM(tid.down_payment)
-                            FROM trans_invoice_detail tid
-                            WHERE tid.id_invoice = ti.id), 0)
+                    COALESCE((
+                        SELECT SUM(xc.pay_item)
+                        FROM trans_customer_receipt_detail xc
+                        WHERE xc.id_invoice = ti.id
+                    ), 0)
                 )
-        ");
+            ", null, false);
+        $builder->groupBy("rk.id, rk.nama");
         $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;

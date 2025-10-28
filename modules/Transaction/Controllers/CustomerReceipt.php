@@ -489,7 +489,7 @@ class CustomerReceipt extends BaseController
                     $isi["pph"] = $r->pph_total;
                     $isi["dp"] = $r->total_down_payment;
                     $isi["total"] = $r->grand_total;
-                    $isi["pay_item"] = 0;
+                    $isi["pay_item"] = $remain;
 
                     if ($remain > 0) {
                         $data[] = $isi;

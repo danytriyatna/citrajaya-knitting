@@ -956,16 +956,20 @@ class SalesOrder extends BaseController
     exit;
   }
 
-  public function print_excel_lists($from_date, $to_date){
+  public function print_excel_lists($from_date, $to_date, $buyer){
 
         $fileName = "SO-List.xlsx";
+
+        if ($buyer == 'all') {
+          $buyer = null;
+        }
 
         $id = $this->request->getGet('data_id');
 
         $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
         $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
 
-        $results = $this->mSalesOrder->get_export($tanggal_sql_from, $tanggal_sql_to);
+        $results = $this->mSalesOrder->get_export($tanggal_sql_from, $tanggal_sql_to, $buyer);
         
 
         //start phpspreadsheet
@@ -1195,8 +1199,8 @@ class SalesOrder extends BaseController
             $nilai_so = !empty($r->harga_total) ? $r->harga_total : 0;
             $nilai_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
             $nilai_invoice = !empty($r->nilai_invoice) ? $r->nilai_invoice : 0;
-            $sisa = $nilai_so - ($nilai_dp + $nilai_invoice); 
             $pembayaran = !empty($r->pembayaran) ? $r->pembayaran : 0;
+            $sisa = $nilai_so - ($nilai_dp + $nilai_invoice); 
             $sisa_pembayaran = $nilai_so - ($nilai_dp + $pembayaran);
 
             $total_qty += $qty; 

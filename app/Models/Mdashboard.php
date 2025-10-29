@@ -167,6 +167,29 @@ class Mdashboard extends Model
                         SELECT SUM(tsou.harga_total)
                         FROM trans_sales_order_ukuran tsou
                         WHERE tsou.id_sales_order = abx.id
+                        AND (
+                            -- Kondisi 1: Belum ada invoice sama sekali
+                            abx.id NOT IN (
+                                SELECT DISTINCT id_ref
+                                FROM trans_invoice_detail
+                                WHERE tipe_id = 2
+                            )
+
+                            -- Kondisi 2: Sudah ada invoice, tapi masih ada sisa tagihan
+                            OR (
+                                (
+                                    SELECT COALESCE(SUM(tidd.grand_total), 0)
+                                    FROM trans_invoice_detail tidd
+                                    WHERE tidd.id_ref = abx.id 
+                                        AND tidd.tipe_id = 2 
+                                        AND tidd.payment_status = 1
+                                ) < (
+                                    SELECT COALESCE(SUM(tsou2.harga_total), 0)
+                                    FROM trans_sales_order_ukuran tsou2
+                                    WHERE tsou2.id_sales_order = abx.id
+                                )
+                            )
+                        )
                     ), 0)
                 ) AS nilai_so,
                 SUM(
@@ -188,6 +211,69 @@ class Mdashboard extends Model
                 ) AS pembayaran
             ")
             ->join('ref_konsumen bbx', 'abx.id_konsumen = bbx.id', 'inner')
+            ->where("
+                abx.active = 1
+            ")
+            ->where("
+                COALESCE((
+                        SELECT SUM(tsou.harga_total)
+                        FROM trans_sales_order_ukuran tsou
+                        WHERE tsou.id_sales_order = abx.id
+                        AND (
+                            -- Kondisi 1: Belum ada invoice sama sekali
+                            abx.id NOT IN (
+                                SELECT DISTINCT id_ref
+                                FROM trans_invoice_detail
+                                WHERE tipe_id = 2
+                            )
+
+                            -- Kondisi 2: Sudah ada invoice, tapi masih ada sisa tagihan
+                            OR (
+                                (
+                                    SELECT COALESCE(SUM(tidd.grand_total), 0)
+                                    FROM trans_invoice_detail tidd
+                                    WHERE tidd.id_ref = abx.id 
+                                        AND tidd.tipe_id = 2 
+                                        AND tidd.payment_status = 1
+                                ) < (
+                                    SELECT COALESCE(SUM(tsou2.harga_total), 0)
+                                    FROM trans_sales_order_ukuran tsou2
+                                    WHERE tsou2.id_sales_order = abx.id
+                                )
+                            )
+                        )
+                    ), 0)
+                >
+                (
+                    abx.uang_dp +
+                    COALESCE((
+                        SELECT SUM(tidd.grand_total)
+                        FROM trans_invoice_detail tidd
+                        WHERE tidd.id_ref = abx.id 
+                        AND tidd.tipe_id = 2 
+                        AND tidd.payment_status = 1
+                    ), 0)
+                )
+            ")
+            // ->orWhere("
+            //     (
+            //         COALESCE((
+            //             SELECT SUM(tid.grand_total)
+            //             FROM trans_invoice_detail tid
+            //             WHERE tid.id_ref = abx.id AND tid.tipe_id = 2
+            //         ), 0) = 0
+            //         AND
+            //         COALESCE((
+            //             SELECT SUM(tidd.grand_total)
+            //             FROM trans_invoice_detail tidd
+            //             WHERE tidd.id_ref = abx.id 
+            //             AND tidd.tipe_id = 2 
+            //             AND tidd.payment_status = 1
+            //         ), 0) = 0
+            //         AND
+            //         abx.uang_dp = 0
+            //     )
+            // ")
             ->groupBy('bbx.nama')
             ->getCompiledSelect(); // hasilkan subquery sebagai string SQL
 
@@ -200,7 +286,7 @@ class Mdashboard extends Model
             x.total_down_payment AS DP,
             x.pembayaran AS CR,
             (x.total_down_payment + x.pembayaran) AS pembayaran,
-            (x.nilai_so - x.nilai_invoice) AS sisa_tagihan,
+            x.nilai_so - (x.nilai_invoice + x.total_down_payment) AS sisa_tagihan,
             (x.nilai_so - (x.total_down_payment + x.pembayaran)) AS sisa_pembayaran
         ");
 
@@ -242,6 +328,29 @@ class Mdashboard extends Model
                         SELECT SUM(tsou.harga_total)
                         FROM trans_sales_order_ukuran tsou
                         WHERE tsou.id_sales_order = abx.id
+                        AND (
+                            -- Kondisi 1: Belum ada invoice sama sekali
+                            abx.id NOT IN (
+                                SELECT DISTINCT id_ref
+                                FROM trans_invoice_detail
+                                WHERE tipe_id = 2
+                            )
+
+                            -- Kondisi 2: Sudah ada invoice, tapi masih ada sisa tagihan
+                            OR (
+                                (
+                                    SELECT COALESCE(SUM(tidd.grand_total), 0)
+                                    FROM trans_invoice_detail tidd
+                                    WHERE tidd.id_ref = abx.id 
+                                        AND tidd.tipe_id = 2 
+                                        AND tidd.payment_status = 1
+                                ) < (
+                                    SELECT COALESCE(SUM(tsou2.harga_total), 0)
+                                    FROM trans_sales_order_ukuran tsou2
+                                    WHERE tsou2.id_sales_order = abx.id
+                                )
+                            )
+                        )
                     ), 0)
                 ) AS nilai_so,
                 SUM(
@@ -263,6 +372,50 @@ class Mdashboard extends Model
                 ) AS pembayaran
             ")
             ->join('ref_konsumen bbx', 'abx.id_konsumen = bbx.id', 'inner')
+            ->where("
+                abx.active = 1
+            ")
+            ->where("
+                COALESCE((
+                        SELECT SUM(tsou.harga_total)
+                        FROM trans_sales_order_ukuran tsou
+                        WHERE tsou.id_sales_order = abx.id
+                        AND (
+                            -- Kondisi 1: Belum ada invoice sama sekali
+                            abx.id NOT IN (
+                                SELECT DISTINCT id_ref
+                                FROM trans_invoice_detail
+                                WHERE tipe_id = 2
+                            )
+
+                            -- Kondisi 2: Sudah ada invoice, tapi masih ada sisa tagihan
+                            OR (
+                                (
+                                    SELECT COALESCE(SUM(tidd.grand_total), 0)
+                                    FROM trans_invoice_detail tidd
+                                    WHERE tidd.id_ref = abx.id 
+                                        AND tidd.tipe_id = 2 
+                                        AND tidd.payment_status = 1
+                                ) < (
+                                    SELECT COALESCE(SUM(tsou2.harga_total), 0)
+                                    FROM trans_sales_order_ukuran tsou2
+                                    WHERE tsou2.id_sales_order = abx.id
+                                )
+                            )
+                        )
+                    ), 0)
+                >
+                (
+                    abx.uang_dp +
+                    COALESCE((
+                        SELECT SUM(tidd.grand_total)
+                        FROM trans_invoice_detail tidd
+                        WHERE tidd.id_ref = abx.id 
+                        AND tidd.tipe_id = 2 
+                        AND tidd.payment_status = 1
+                    ), 0)
+                )
+            ")
             ->groupBy('bbx.nama')
             ->getCompiledSelect(); // hasilkan subquery sebagai string SQL
 
@@ -275,7 +428,7 @@ class Mdashboard extends Model
             x.total_down_payment AS DP,
             x.pembayaran AS CR,
             (x.total_down_payment + x.pembayaran) AS pembayaran,
-            (x.nilai_so - x.nilai_invoice) AS sisa_tagihan,
+            x.nilai_so - (x.nilai_invoice + x.total_down_payment) AS sisa_tagihan,
             (x.nilai_so - (x.total_down_payment + x.pembayaran)) AS sisa_pembayaran
         ");
 

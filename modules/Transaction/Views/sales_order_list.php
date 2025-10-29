@@ -506,6 +506,14 @@
               <button type="button" class="btn btn-sm btn-success" id="btn-add"> <i class="fa fa-plus"></i> Tambah</button>
             </div>
             <div class="col-sm-2 mb-3">
+              <select id="filter_buyer" name="filter_buyer" class="form-select select2" data-placeholder="-- Pilih Buyer --" required>
+                <option value="all" selected>Semua Buyer</option>
+                <?php foreach ($buyer as $item) : ?>
+                  <option value="<?= $item['id'] ?>"><?= $item['nama'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-sm-2 mb-3">
               <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="FROM DATE">
             </div>
             <div class="col-sm-2 mb-3">
@@ -514,7 +522,7 @@
             <div class="col-sm-2 mb-3">
               <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Print</button>
             </div>
-            <div class="col-sm-4">
+            <div class="col-sm-2">
               <div class="form-group">
                 <div class="input-group mb-3">
                   <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>

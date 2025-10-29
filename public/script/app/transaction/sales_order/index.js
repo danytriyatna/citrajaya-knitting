@@ -1181,6 +1181,7 @@ function readURL(input,id) {
     btnExcel.on("click", function(){
         let from_date = $("#from_date").val();
         let to_date = $("#to_date").val();
+        let inpFilterBuyer  = $('#filter_buyer').val();
         
 
         if (from_date == null || from_date == "" || from_date == undefined) {
@@ -1212,7 +1213,7 @@ function readURL(input,id) {
         }
 
         else {
-            let url = "/trans/sales-order/print_excel_lists/" + from_date + "/" + to_date;
+            let url = "/trans/sales-order/print_excel_lists/" + from_date + "/" + to_date + "/" + inpFilterBuyer;
             window.open(url, '_blank');
         }
     });

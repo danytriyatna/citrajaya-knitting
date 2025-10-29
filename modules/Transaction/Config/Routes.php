@@ -29,7 +29,7 @@ $routes->group('trans/sales-order', ['namespace' => 'Modules\Transaction\Control
   $routes->post('getSample', 'SalesOrder::getSampleBuyer');
   $routes->get('print/(:any)', 'SalesOrder::print/$1');
   $routes->get('view', 'SalesOrder::view');
-  $routes->get('print_excel_lists/(:any)/(:any)', 'SalesOrder::print_excel_lists/$1/$2');
+  $routes->get('print_excel_lists/(:any)/(:any)/(:any)', 'SalesOrder::print_excel_lists/$1/$2/$3');
 });
 
 $routes->group('trans/delivery-order', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

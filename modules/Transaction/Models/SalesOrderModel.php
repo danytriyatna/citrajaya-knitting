@@ -680,7 +680,7 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function get_export($from_date = null, $to_date = null)
+    function get_export($from_date = null, $to_date = null, $buyer = null)
     {
         $builder = $this->db->table($this->table . " abx");
 
@@ -706,12 +706,32 @@ class SalesOrderModel extends \App\Models\PrModel
                             COALESCE((
                                 SELECT SUM(tidd.grand_total)
                                 FROM trans_invoice_detail tidd
-                                WHERE tidd.id_ref = abx.id and tidd.tipe_id = 2 and tidd.payment_status = 1
+                                WHERE tidd.id_ref = abx.id AND tidd.tipe_id = 2 AND tidd.payment_status = 1
                             ), 0) as pembayaran
                             ");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
        
+        $builder->where('abx.active = 1');
         $builder->where("abx.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+        // $builder->where("
+        //     COALESCE((
+        //         SELECT SUM(tsou.harga_total)
+        //         FROM trans_sales_order_ukuran tsou
+        //         WHERE tsou.id_sales_order = abx.id
+        //     ), 0)
+        //     >
+        //     (
+        //         abx.uang_dp +
+        //         COALESCE((
+        //             SELECT SUM(tidd.grand_total)
+        //             FROM trans_invoice_detail tidd
+        //             WHERE tidd.id_ref = abx.id AND tidd.tipe_id = 2 AND tidd.payment_status = 1
+        //         ), 0)
+        //     )
+        // ");
+        if (!empty($buyer)) {
+            $builder->where("abx.id_konsumen", $buyer);
+        }
         $builder->orderBy("abx.tgl_transaksi", 'desc');
         
         $this->_data = $builder->get()->getResult();

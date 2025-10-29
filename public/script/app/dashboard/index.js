@@ -132,7 +132,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 25,
+        paginationSize: 20,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
@@ -232,6 +232,7 @@ $(document).ready(function () {
             let pageNo = dtListInvoice.getPage();
             let startRow = (pageSize * (pageNo - 1)) + 1;
             let endRow = response.data.length + startRow - 1;
+            console.log(response.data.length, startRow, endRow);
             if (response.data.length === 0) {
                 startRow = 0; endRow = 0;
             }
@@ -255,7 +256,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 25,
+        paginationSize: 10,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
@@ -363,7 +364,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 25,
+        paginationSize: 10,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"

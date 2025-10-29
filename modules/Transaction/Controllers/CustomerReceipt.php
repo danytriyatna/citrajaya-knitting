@@ -347,12 +347,18 @@ class CustomerReceipt extends BaseController
                     //     $dtInv["pph23"] =  $r["pph23"];
                     //     $dtIn["pph23"] = $r["pph23"];
                     // }
-
+                    $arrInv = [
+                        "payment_status" => 1,
+                    ];
+                    $arrParam =  [
+                        "id_invoice" => $inv_id,
+                    ];
+                    $this->mInvoice->updateRecords($this->mInvoice->table2, $arrInv, $arrParam);
                     $this->mCr->insertRecordGetid($this->mCr->table2, $dtIn);
+                    // dd("asas");
                     // $this->mtrans_invoice->updateRecord($this->mtrans_invoice->table, $dtInv, 'sl_invoice_id', $inv_id);
                 }
             }
-
             $upd['total_bayar'] = $bayar;
             $upd['pph'] = $pph;
             $this->mCr->updateRecord($this->mCr->table, $upd, 'id', $id);

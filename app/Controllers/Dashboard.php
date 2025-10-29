@@ -53,7 +53,6 @@ class Dashboard extends BaseController
             $totalfiltered = $this->mdashboard->getDataCnt($filters, $params);
             $totaldata = $this->mdashboard->getDataCnt(null, $params);
         }
-        
         $maxpage = ceil($totalfiltered / $limit);
         $build_array = array(
             "last_page" => $maxpage,
@@ -175,7 +174,6 @@ class Dashboard extends BaseController
             ));
 
         }
-        
         return $this->response->setJSON($build_array);
     }
 
@@ -201,31 +199,7 @@ class Dashboard extends BaseController
         );
         
         foreach ($results as $row) {
-            // $id = encrypt($row->id);
-
-            // $btnInv = "";
             
-            // $link_inv = base_url() . "/trans/sales-invoice/form/" . $id;
-            // $btnInv = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_inv." > ".$row->kode_invoice." </a>";
-
-            
-            // $tgl_invoice = "";
-            // if(!empty($row->tgl_invoice)){
-            //     $tgl_invoice = fdate_eng_to_ind($row->tgl_invoice);
-            // }
-
-            // $tgl_jatuh_tempo = "";
-            // if(!empty($row->tgl_jatuh_tempo)){
-            //     $tgl_jatuh_tempo = fdate_eng_to_ind($row->tgl_jatuh_tempo);
-            // }
-            // $nilai_so = $row->nilai_so + $row->nilai_sample;
-            // $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
-            // $pembayaran = !empty($row->pembayaran)? $row->pembayaran : 0;
-            // // $pembayaran =  $pembayaran < 0 ? 0 - $pembayaran : $pembayaran;
-
-            // $pembayaran = $pembayaran + $total_down_payment;
-            // $sisa_bayar = (float) $nilai_so - (float) $pembayaran;
-            // dd($row->nilai_so, $row->nilai_sample, $row->nilai_so + $row->nilai_sample);
             
             
             array_push($build_array['data'], array(
@@ -241,7 +215,6 @@ class Dashboard extends BaseController
             ));
 
         }
-        
         return $this->response->setJSON($build_array);
     }
 

@@ -981,7 +981,7 @@ class SalesOrder extends BaseController
           
 
         $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A2', 'Sales Order '. $title)
+               ->setCellValue('A2', 'Sales Order (APPROVED ONLY) '. $title)
 
                ->setCellValue('A4', 'SO NO')
                ->setCellValue('B4', 'TANGGAL SO')
@@ -1190,7 +1190,8 @@ class SalesOrder extends BaseController
         $total_sisa = 0;
         $total_pembayaran = 0;
         $total_sisa_pembayaran = 0;
-        
+
+        $startRow = $ix;
         for ($xx = 0; $xx < count($results) ; $xx++) { 
             
             $r = $results[$xx];
@@ -1237,7 +1238,7 @@ class SalesOrder extends BaseController
             $sheets->getActiveSheet()->getStyle("H" . $ix .":N" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
-            $ix++;
+          $ix++;
         }
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Total");
@@ -1247,25 +1248,25 @@ class SalesOrder extends BaseController
         $gets->getStyle('A'.$length.':N'.$length)->applyFromArray($stylexArrayFooter);
         
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('H'.$length, $total_qty);
+                      ->setCellValue('H' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('I'.$length, $total_so);
+                      ->setCellValue('I' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('J'.$length, $total_dp);
+                    ->setCellValue('J' . $length, '=SUM(J' . $startRow . ':J' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('K'.$length, $total_invoice);
+                    ->setCellValue('K' . $length, '=SUM(K' . $startRow . ':K' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('L'.$length, $total_sisa);
+                      ->setCellValue('L' . $length, '=SUM(L' . $startRow . ':L' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('M'.$length, $total_pembayaran);
+                      ->setCellValue('M' . $length, '=SUM(M' . $startRow . ':M' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                      ->setCellValue('N'.$length, $total_sisa_pembayaran);
+                      ->setCellValue('N' . $length, '=SUM(N' . $startRow . ':N' . $length-1 . ')');
 
         $gets->getStyle('I'. $length .':N'. $length)->getNumberFormat()
                 ->setFormatCode('#,##0.00');

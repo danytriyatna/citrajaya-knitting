@@ -685,7 +685,7 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " abx");
 
         $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua, abx.qty,
-                          abx.uang_dp, abx.style as stylex , abx.style_cnt,
+                          abx.uang_dp, abx.style as stylex , abx.style_cnt, abx.status,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp,
                           COALESCE((
                                 SELECT SUM(tsou.harga_total)
@@ -712,6 +712,7 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
        
         $builder->where('abx.active = 1');
+        $builder->where('abx.status = 2');
         $builder->where("abx.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
         // $builder->where("
         //     COALESCE((

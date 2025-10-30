@@ -214,6 +214,7 @@ class Mdashboard extends Model
             ->where("
                 abx.active = 1
             ")
+            ->where('abx.status = 2')
             ->where("
                 COALESCE((
                         SELECT SUM(tsou.harga_total)
@@ -375,6 +376,7 @@ class Mdashboard extends Model
             ->where("
                 abx.active = 1
             ")
+            ->where('abx.status = 2')
             ->where("
                 COALESCE((
                         SELECT SUM(tsou.harga_total)

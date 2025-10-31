@@ -883,4 +883,108 @@ class Mdashboard extends Model
         return $data;
     }
 
+    function getDataSaldo($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        
+        $builder = $this->db->table("m_coa mc");
+
+        $builder->select("mc.id, mc.kode, mc.nama,
+                        COALESCE((
+                            SELECT SUM(mmh.saldo)
+                            FROM m_mutasi_history mmh 
+                            WHERE mmh.coa_id = mc.id 
+                            and mmh.month = {$params['month']}
+                            and mmh.year = {$params['year']}
+                        ), 0) AS saldo");
+
+        $builder->where('LOWER(mc.kode) LIKE', '13%');
+
+        // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
+        // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
+        if ($id == null or $id == "") {
+            
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $builder->groupStart();
+                    $builder->where('LOWER(mc.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->groupEnd();
+            }
+
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy("mc.kode asc");
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("mc.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+        return $this->_data;
+    }
+
+    function getDataSaldoAll($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        
+        $sub = "
+            COALESCE((
+                SELECT SUM(mmh.saldo)
+                FROM m_mutasi_history mmh
+                WHERE mmh.coa_id = mc.id
+                AND mmh.month = {$params['month']}
+                AND mmh.year = {$params['year']}
+            ), 0)
+        ";
+
+        // 1) Ambil data (dengan pagination)
+        $builder = $this->db->table("m_coa mc");
+        $builder->select("mc.id, mc.kode, mc.nama, {$sub} AS saldo", FALSE);
+        $builder->where("LOWER(mc.kode) LIKE", "13%");
+        $builder->orderBy("mc.kode", "asc", TRUE);
+        $builder->limit($limit ?: 10, $offset ?: 0);
+        $rows = $builder->get()->getResult();
+
+        // 2) Ambil total semua saldo (tanpa limit)
+        $builder2 = $this->db->table("m_coa mc");
+        $builder2->select("SUM({$sub}) AS total_saldo", FALSE);
+        $builder2->where("LOWER(mc.kode) LIKE", "13%");
+        if (!empty($filters) && is_array($filters)) {
+            $builder2->groupStart();
+            $builder2->where('LOWER(mc.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder2->groupEnd();
+        }
+        $totalRow = $builder2->get()->getRow();
+        $totalSaldo = $totalRow ? (float)$totalRow->total_saldo : 0;
+
+        return $totalSaldo;
+    }
+
+    function getDataSaldoCnt($filters = null, $params = null)
+    {
+        $builder = $this->db->table("m_coa mc");
+
+        $builder->select("count(1) as _cnt");
+
+        $builder->where('LOWER(mc.kode) LIKE', '13%');
+
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+             $builder->groupStart();
+                $builder->where('LOWER(mc.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->groupEnd();
+        }
+
+        // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
+        // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
+
+        $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
 }

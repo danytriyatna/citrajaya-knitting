@@ -1,5 +1,12 @@
 $(document).ready(function () {
+    const bulanSekarang = new Date().getMonth() + 1;
+    const tahunSekarang = new Date().getFullYear();
 
+    $('#filter_lap_bulan').val(bulanSekarang);
+    $('#filter_lap_tahun').val(tahunSekarang);
+
+    $('#filter_saldo_bulan').val(bulanSekarang);
+    $('#filter_saldo_tahun').val(tahunSekarang);
     // table tracking order 
     let dtListTracking = new Tabulator("#tbl-tracking", {
         columns: [
@@ -222,7 +229,7 @@ $(document).ready(function () {
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 300,
+        minHeight: 1000,
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -256,7 +263,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 10,
+        paginationSize: 20,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
@@ -331,7 +338,7 @@ $(document).ready(function () {
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 300,
+        minHeight: 200,
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -364,13 +371,153 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 10,
+        paginationSize: 5,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
         },
         selectableRows: false,
     });
+
+    // table saldo
+    let dtListSaldo = new Tabulator("#tbl-saldo", {
+        columns: [
+            {
+                title: "KODE", field: "kode", headerSort: false, formatter: "html",
+                width: "10%", cssClass: 'text-center'
+            }, 
+				
+			{
+				title: 'NAMA', field: 'nama', headerSort:false, sorter: 'string', formatter : "textarea",
+				width: "40%"
+			}, 
+
+            {
+				title: 'SALDO', field: 'saldo', headerSort:false, sorter: 'string',
+				width: "50%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
+			}, 
+
+            
+        ],
+        layout: 'fitColumns',
+        ajaxURL: "/dashboard/list_saldo",
+        placeholder: "Tidak ada data",
+        ajaxConfig: "POST",
+        ajaxSorting: true,
+        ajaxFiltering: false,
+        sortMode: "remote",
+        filterMode: "remote",
+        minHeight: 450,
+        ajaxRequesting: function (url, params) {
+            params.start = params.size * (params.page - 1);
+            params.length = params.size;
+            params.month = $("#filter_saldo_bulan").val();
+            params.year = $("#filter_saldo_tahun").val();
+        },
+        ajaxResponse: function (url, params, response) {
+            let pageSize = dtListPo.getPageSize();
+            let pageNo = dtListPo.getPage();
+            let startRow = (pageSize * (pageNo - 1)) + 1;
+            let endRow = response.data.length + startRow - 1;
+            if (response.data.length === 0) {
+                startRow = 0; endRow = 0;
+            }
+            let recordsFiltered = parseInt(response.recordsFiltered);
+            let recordsTotal = parseInt(response.recordsTotal);
+            $('#total_saldo').text(response.total_saldo); 
+            console.log(response.total_saldo);
+
+            $("#table-footer-saldo .tabulator-startrow").text(startRow);
+            $("#table-footer-saldo .tabulator-endrow").text(endRow);
+            $("#table-footer-saldo .tabulator-totalrow").text(recordsFiltered);
+
+            let elTotalFilteredRow = $("#table-footer-saldo .tabulator-totalfilteredrow");
+            elTotalFilteredRow.text("");
+            if (recordsTotal > recordsFiltered) {
+                elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+                    + " entri keseluruhan)");
+            }
+            return response;
+        },
+        footerElement: '<div id="table-footer-saldo" class="pull-left tabulator-info">'
+            + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+            + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+        pagination: true,
+        paginationMode: "remote",
+        paginationSize: 15,
+        paginationButtonCount: 10,
+        dataSendParams: {
+            sorters: "order"
+        },
+        selectableRows: false,
+    });
+
+    $("#filter_saldo_bulan").on("change", function () {
+        let val = $(this).val();
+        // Reset ke halaman pertama biar data sesuai
+        dtListSaldo.setData("/dashboard/list_saldo");
+    });
+    
+    $("#filter_saldo_tahun").on("change", function () {
+        let val = $(this).val();
+        // Reset ke halaman pertama biar data sesuai
+        dtListSaldo.setData("/dashboard/list_saldo");
+    });
+
+    $("#btn_update").click(function () {
+        $(".preloader").css("opacity", "0.7").show();
+        // if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
+        //     Swal.fire({
+        //         title: 'Warning',
+        //         text: 'Tahun,Bulan & Gudang harus dipilih',
+        //         icon: 'warning',
+        //     })
+        //      $(".preloader").hide().css("opacity", "1");
+        //     return false    
+        // }
+        getUpdateDataLaporan()
+    });
+
+  function getUpdateDataLaporan(){
+    const tahun = $('#filter_saldo_tahun').val();
+    const bulan = $('#filter_saldo_bulan').val();
+    const url = `/dashboard/update_saldo/${tahun}/${bulan}`;
+    // let url = "/keuangan/laporan_mutasi/getExcelAll/" + filter_bulan + "/" + filter_tahun + "/" + select_payment_type_one + "/" + select_payment_type_one_text;
+    $.ajax({
+        url: url,
+        type: 'GET',
+        dataType: 'json', 
+        success: function(data) {
+            
+            // dtListSaldo.setData(data.data)
+    
+            // setTimeout(() => {
+            //     dtListSaldo.redraw(true)
+            // }, 500);
+            dtListSaldo.setData("/dashboard/list_saldo");
+            $(".preloader").hide().css("opacity", "1");
+        },
+        error: function(xhr, status, error) {
+            $(".preloader").hide().css("opacity", "1");
+            console.error('Error fetching data:', error);
+        }
+    });
+  }
+
+    let searchThreadSaldo = null;
+    let elSearchSaldo = $("#inp-saldo");
+    if (elSearchSaldo != null) {
+        elSearchSaldo.keyup(function (e) {
+            if ($(this).val().length < 3 && e.keyCode > 13) {
+                return;
+            }
+            clearTimeout(searchThreadSaldo);
+            searchThreadSaldo = setTimeout(function () {
+                dtListSaldo.setFilter("", "like", elSearchSaldo.val());
+            }, 600);
+        });
+    }
 
     let searchThreadPo = null;
     let elSearchPo = $("#inp-po");
@@ -397,12 +544,6 @@ $(document).ready(function () {
         fetchGrafikData();
         fetchData(); // Panggil fungsi fetchData saat halaman dimuat
     });
-
-    const bulanSekarang = new Date().getMonth() + 1;
-    const tahunSekarang = new Date().getFullYear();
-
-    $('#filter_lap_bulan').val(bulanSekarang);
-    $('#filter_lap_tahun').val(tahunSekarang);
 
     fetchGrafikData();
     fetchData(); // Panggil fungsi fetchData saat halaman dimuat

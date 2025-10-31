@@ -221,10 +221,12 @@ class Mcoa extends PrModel
         $builder->where("tad.active = 1");
         $builder->where('EXTRACT(MONTH FROM ta.trans_akun_date)', $month);
         $builder->where('EXTRACT(YEAR FROM ta.trans_akun_date)', $year);
-        $builder->groupStart();
-            $builder->where("tad.coa_id", $ref_masuk);
-            $builder->orWhere("rr.coa_id", $ref_masuk);
-        $builder->groupEnd();
+        if (!empty($ref_masuk)) {
+            $builder->groupStart();
+                $builder->where("tad.coa_id", $ref_masuk);
+                $builder->orWhere("rr.coa_id", $ref_masuk);
+            $builder->groupEnd();
+        }
 
         $builder->orderBy("ta.trans_akun_date ASC");
         
@@ -241,7 +243,10 @@ class Mcoa extends PrModel
         $builder->where("tso.active = 1");
         $builder->where('EXTRACT(MONTH FROM tso.tgl_dp)', $month);
         $builder->where('EXTRACT(YEAR FROM tso.tgl_dp)', $year);
-        $builder->where("rr.coa_id", $ref_masuk);
+        if (!empty($ref_masuk)) {
+            $builder->where("rr.coa_id", $ref_masuk);
+        }
+        
 
         $builder->orderBy("tso.tgl_dp ASC");
         
@@ -258,7 +263,9 @@ class Mcoa extends PrModel
         $builder->where("tcr.active = 1");
         $builder->where('EXTRACT(MONTH FROM tcr.tgl_transaksi)', $month);
         $builder->where('EXTRACT(YEAR FROM tcr.tgl_transaksi)', $year);
-        $builder->where("rr.coa_id", $ref_masuk);
+        if (!empty($ref_masuk)) {
+            $builder->where("rr.coa_id", $ref_masuk);
+        }
 
         $builder->orderBy("tcr.tgl_transaksi ASC");
         
@@ -275,7 +282,9 @@ class Mcoa extends PrModel
         $builder->where("tpp.active = 1");
         $builder->where('EXTRACT(MONTH FROM tpp.pay_date)', $month);
         $builder->where('EXTRACT(YEAR FROM tpp.pay_date)', $year);
-        $builder->where("rr.coa_id", $ref_masuk);
+        if (!empty($ref_masuk)) {
+            $builder->where("rr.coa_id", $ref_masuk);
+        }
 
         $builder->orderBy("tpp.pay_date ASC");
         
@@ -288,7 +297,9 @@ class Mcoa extends PrModel
         $builder->select("mh.id, mh.coa_id, mh.month, mh.year, mh.saldo");
         $builder->where('mh.month', $month);
         $builder->where('mh.year', $year);
-        $builder->where('mh.coa_id', $ref_masuk);
+        if (!empty($ref_masuk)) {
+            $builder->where('mh.coa_id', $ref_masuk);
+        }
         
         $this->_data = $builder->get()->getRow();
         return $this->_data;

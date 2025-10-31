@@ -43,6 +43,8 @@ $routes->get('/forgot_password', 'Auth::forgot_password');
 $routes->post('/dashboard/list_order', 'Dashboard::lists',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->post('/dashboard/list_invoice', 'Dashboard::lists_inv',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->post('/dashboard/list_po', 'Dashboard::lists_po',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->post('/dashboard/list_saldo', 'Dashboard::lists_saldo',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/update_saldo/(:any)/(:any)', 'Dashboard::update_saldo/$1/$2',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/list_laba', 'Dashboard::lists_laba',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 

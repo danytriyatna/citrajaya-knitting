@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Mdashboard;
+use Modules\Keuangan\Models\Mcoa;
 use Modules\Transaction\Models\DeliveryModel;
 use Modules\Transaction\Models\ProductionModel;
 
@@ -11,6 +12,7 @@ class Dashboard extends BaseController
     protected $mdashboard;
     protected $mProduksi;
     protected $mdelivery;
+    protected $mcoa;
 
     function __construct()
     {
@@ -18,6 +20,7 @@ class Dashboard extends BaseController
         $this->mdashboard = new Mdashboard();
         $this->mProduksi = new ProductionModel();
         $this->mdelivery = new DeliveryModel();
+        $this->mcoa = new Mcoa();
     }
 
     public function index()
@@ -270,7 +273,7 @@ class Dashboard extends BaseController
                 continue;
             }
             
-            
+            # code...
             array_push($build_array['data'], array(
                 // 'btnPo' => $btnPo,
                 // 'po_date' => $po_date,
@@ -409,5 +412,161 @@ class Dashboard extends BaseController
         
         return $this->response->setJSON($build_array);
     }
-    
+
+    public function lists_saldo()
+    {
+        $start   = $this->request->getPost('start');
+        $limit   = $this->request->getPost('length');
+        $filters = $this->request->getPost('filter');
+        $order   = $this->request->getPost('order');
+        $month   = $this->request->getPost('month');
+        $year   = $this->request->getPost('year');
+        // $tahun   = $this->request->getPost('tahun');
+
+        // $params['tahun'] = $tahun;
+        $params['month'] = $month;
+        $params ['year'] = $year;
+        $results = $this->mdashboard->getDataSaldo(null, $start, $limit, $order, $filters, $params);
+        $totalSaldoGet = $this->mdashboard->getDataSaldoAll(null, $start, $limit, $order, $filters, $params);
+
+        $totalfiltered = $this->mdashboard->getDataSaldoCnt($filters, $params);
+        $totaldata = $this->mdashboard->getDataSaldoCnt(null, $params);
+        $maxpage = ceil($totalfiltered / $limit);
+        $build_array = array(
+            "total_saldo" => !empty($totalSaldoGet) ?  number_format($totalSaldoGet, 2, ',', '.') : 0,
+            "last_page" => $maxpage,
+            "recordsTotal" => $totaldata,
+            "recordsFiltered" => $totalfiltered,
+            "data" => array()
+        );
+
+        foreach ($results as $row) {
+            // $id = encrypt($row->id);
+
+            // $btnPo = "";
+            
+            // $link_Po = base_url() . "/purchasing/purchase-order/form//" . $id;
+            // $btnPo = "<a class='btn btn-sm btn-primary' target='_blank' href=".$link_Po." > ".$row->po_no." </a>";
+
+            
+            // $po_date = "";
+            // $due_date = "";
+            // if(!empty($row->tgl_po)){
+            //     $po_date = fdate_eng_to_ind($row->tgl_po);
+            //     if (!empty($row->days)) {
+            //         $expr_date = date("Y-m-d", strtotime($row->tgl_po . " +".$row->days." days"));
+            //         $due_date = fdate_eng_to_ind($expr_date);
+            //     }
+            // }
+
+            // $date_exc = "";
+            // if(!empty($row->date_exc)){
+            //     $date_exc = fdate_eng_to_ind($row->date_exc);
+            // }
+            
+            array_push($build_array['data'], array(
+                'kode' => $row->kode,
+                'nama' => $row->nama,
+                'saldo' => $row->saldo,
+            ));
+        }
+        
+        return $this->response->setJSON($build_array);
+    }
+
+    public function update_saldo($tahun, $bulan){
+
+        $refCoa = $this->mcoa->getData(null, 0, 9999, null, null, null, null, null, 8);
+
+        try {
+            if (!empty($refCoa)) {
+            foreach ($refCoa as $key => $value) {
+                $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun, $value->coa_id);
+                $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun, $value->coa_id);
+                $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun, $value->coa_id);
+                $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun, $value->coa_id);
+
+                $results_all = array_merge($results, $resultsSO, $resultsCR, $resultsPB);
+
+                // sort berdasarkan tanggal (pastikan semua alias tanggal sama)
+                usort($results_all, function ($a, $b) {
+                    return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
+                });
+
+                $getBulan = $bulan;
+                $getTahun = $tahun;
+                if ($bulan == 1) {
+                    $getBulan = 12;
+                    $getTahun = $tahun - 1;
+                }
+                else {
+                    $getBulan = $bulan - 1;
+                }
+
+                $saldo = $this->mcoa->get_mutasi_history($getBulan, $getTahun, $value->coa_id);
+
+                $grand_total = 0;
+                $grand_total_masuk = 0;
+                $grand_total_sub = 0;
+                $grand_total_sub_masuk = 0;
+
+                for ($xx = 0; $xx < count($results_all) ; $xx++) { 
+            
+                    $r = $results_all[$xx];
+
+                    if ($r->type == "Beban Biaya") {
+                        if ($r->coa_id == $value->coa_id) {
+                            $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+                            $grand_total_sub_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+                        }
+                        else {
+                            $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
+                            $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
+                        }
+                    }
+
+                    else if ($r->type == "Sales Order") {
+                        $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+                        $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+                    }
+
+                    else if ($r->type == "Customer Receipt") {
+                        $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                        $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                    }
+
+                    else if ($r->type == "Pembayaran") {
+                        $grand_total += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                        $grand_total_sub += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                    }
+                }
+
+                $saldo = !empty($saldo->saldo) ? $saldo->saldo : 0;
+
+                $isiSaldo = [
+                    'coa_id' => $value->coa_id,
+                    'month' => $bulan,
+                    'year' => $tahun,
+                    'saldo' => $saldo + $grand_total_masuk - $grand_total
+                ];
+                $saldo_new = $this->mcoa->get_mutasi_history($bulan, $tahun, $value->coa_id);
+                if (!empty($saldo_new)) {
+                    $saldo_id = $this->mcoa->updateRecord($this->mcoa->table2, $isiSaldo, "id", $saldo_new->id);
+                }
+                else {
+                    $saldo_id = $this->mcoa->insertRecordGetid($this->mcoa->table2, $isiSaldo);
+                }
+                }
+            }
+            $build_array["status"] = true;
+
+            return $this->response->setJSON($build_array);
+        } catch (\Throwable $th) {
+            $build_array["status"] = false;
+
+            return $this->response->setJSON($build_array);
+        }
+
+
+    }
 }

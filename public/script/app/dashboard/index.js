@@ -82,11 +82,11 @@ $(document).ready(function () {
 				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
             {
-				title: 'NILAI DP', field: 'uang_dp', headerSort:false, sorter: 'string',
+				title: 'NILAI INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
 				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
             {
-				title: 'NILAI INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
+				title: 'NILAI PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
 				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
@@ -203,17 +203,14 @@ $(document).ready(function () {
 				title: 'NILAI<br>INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
 				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
 			}, 
-
-            {
-				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
-				width: "16%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
-			}, 
-
             {
 				title: 'SISA <br>TAGIHAN', field: 'sisa_tagihan', headerSort:false, sorter: 'string',
 				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
 			}, 
-
+            {
+				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
+				width: "16%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+			}, 
             {
 				title: 'SISA <br> PEMBAYARAN', field: 'sisa_pembayaran', headerSort:false, sorter: 'string',
 				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'

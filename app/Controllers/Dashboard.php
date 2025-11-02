@@ -153,6 +153,9 @@ class Dashboard extends BaseController
 
             }
 
+            $pembayaran = !empty($row->nilai_pembayaran) ? $row->nilai_pembayaran : 0;
+            $dp = !empty($row->uang_dp) ? $row->uang_dp : 0;
+
             // $total += ($row->uang_dp + $row->nilai_invoice);
             
             array_push($build_array['data'], array(
@@ -168,7 +171,8 @@ class Dashboard extends BaseController
                 'qty' => $row->qty,
                 'qty_prod' => $row->qty_prod,
                 'qty_kirim' => $row->qty_kirim,
-                'uang_dp' => $row->uang_dp,
+                'uang_dp' => $dp,
+                'pembayaran' => $pembayaran + $dp,
                 'harga_total' => $row->harga_total,
                 'nilai_invoice' => $row->nilai_invoice,
                 'qty_sisa' => $qty_sisa,
@@ -268,10 +272,6 @@ class Dashboard extends BaseController
 
 
             $sisa_bayar = (float) $row->total_bayar - (float) $row->dibayar;
-
-            if ($sisa_bayar == 0) {
-                continue;
-            }
             
             # code...
             array_push($build_array['data'], array(

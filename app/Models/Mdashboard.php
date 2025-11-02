@@ -16,7 +16,7 @@ class Mdashboard extends Model
         $builder = $this->db->table("v_traking_order_so tbl");
 
         $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
-                          tbl.kode_prod, tbl.id_prod, tbl.qty_prod, 
+                          tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
                           tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
@@ -452,306 +452,321 @@ class Mdashboard extends Model
 
     }
 
+    // function getDataInv($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    // {
+    //     $builder = $this->db->table("trans_invoice ti");
 
-
-    function getDataInv($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
-    {
-        $builder = $this->db->table("trans_invoice ti");
-
-        //SUM(ti.total) as total_invoice,
+    //     //SUM(ti.total) as total_invoice,
         
-        $builder->select("
-            rk.id,
-            rk.nama,
-            COALESCE(SUM((
-                SELECT SUM(tid.total)
-                FROM trans_invoice_detail tid
-                WHERE tid.id_invoice = ti.id
-            )), 0) as total_invoice, 
-            SUM(ti.grand_total) as total_invoice_bayar,
-            COALESCE(SUM((
-                SELECT SUM(xc.pay_item)
-                FROM trans_customer_receipt_detail xc
-                WHERE xc.id_invoice = ti.id
-            )), 0) as pembayaran,
-            COALESCE(SUM((
-                SELECT SUM(tid.down_payment)
-                FROM trans_invoice_detail tid
-                WHERE tid.id_invoice = ti.id and tipe_id = 2
-            )), 0) as total_down_payment,
-            COALESCE(SUM((
-                SELECT sum(tsou.harga_total)
-                FROM trans_sales_order_ukuran tsou
-                inner join trans_sales_order tso on tsou.id_sales_order = tso.id 
-                inner join trans_invoice_detail tidt on tso.id = tidt.id_ref 
-                WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 2 and tsou.active = 1
-            )), 0) as nilai_so,
-            COALESCE(SUM((
-                SELECT sum(tsu.harga_total)
-                FROM trans_sample_ukuran tsu
-                inner join trans_sample ts on tsu.id_sample = ts.id 
-                inner join trans_invoice_detail tidt on ts.id = tidt.id_ref 
-                WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 1 and ts.active = 1
-            )), 0) as nilai_sample,
-        ");
+    //     $builder->select("
+    //         rk.id,
+    //         rk.nama,
+    //         COALESCE(SUM((
+    //             SELECT SUM(tid.total)
+    //             FROM trans_invoice_detail tid
+    //             WHERE tid.id_invoice = ti.id
+    //         )), 0) as total_invoice, 
+    //         SUM(ti.grand_total) as total_invoice_bayar,
+    //         COALESCE(SUM((
+    //             SELECT SUM(xc.pay_item)
+    //             FROM trans_customer_receipt_detail xc
+    //             WHERE xc.id_invoice = ti.id
+    //         )), 0) as pembayaran,
+    //         COALESCE(SUM((
+    //             SELECT SUM(tid.down_payment)
+    //             FROM trans_invoice_detail tid
+    //             WHERE tid.id_invoice = ti.id and tipe_id = 2
+    //         )), 0) as total_down_payment,
+    //         COALESCE(SUM((
+    //             SELECT sum(tsou.harga_total)
+    //             FROM trans_sales_order_ukuran tsou
+    //             inner join trans_sales_order tso on tsou.id_sales_order = tso.id 
+    //             inner join trans_invoice_detail tidt on tso.id = tidt.id_ref 
+    //             WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 2 and tsou.active = 1
+    //         )), 0) as nilai_so,
+    //         COALESCE(SUM((
+    //             SELECT sum(tsu.harga_total)
+    //             FROM trans_sample_ukuran tsu
+    //             inner join trans_sample ts on tsu.id_sample = ts.id 
+    //             inner join trans_invoice_detail tidt on ts.id = tidt.id_ref 
+    //             WHERE tidt.id_invoice = ti.id and tidt.tipe_id = 1 and ts.active = 1
+    //         )), 0) as nilai_sample,
+    //     ");
 
-        $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
+    //     $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
 
-        if ($id == null or $id == "") {
+    //     if ($id == null or $id == "") {
             
-            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-                $builder->groupStart();
-                    // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    $builder->where('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->groupEnd();
-            }
-            $builder->where("
-                ti.total > 
-                (
-                    COALESCE((
-                        SELECT SUM(tid.down_payment)
-                        FROM trans_invoice_detail tid
-                        WHERE tid.id_invoice = ti.id AND tid.tipe_id = 2
-                    ), 0)
-                    +
-                    COALESCE((
-                        SELECT SUM(xc.pay_item)
-                        FROM trans_customer_receipt_detail xc
-                        WHERE xc.id_invoice = ti.id
-                    ), 0)
-                )
-            ", null, false);
-             $builder->groupBy("rk.id, rk.nama");
-            if (!empty($order)) {
-                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
-            } else {
-                $builder->orderBy("rk.nama asc");
-            }
+    //         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+    //             $builder->groupStart();
+    //                 // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 $builder->where('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->groupEnd();
+    //         }
+    //         $builder->where("
+    //             ti.total > 
+    //             (
+    //                 COALESCE((
+    //                     SELECT SUM(tid.down_payment)
+    //                     FROM trans_invoice_detail tid
+    //                     WHERE tid.id_invoice = ti.id AND tid.tipe_id = 2
+    //                 ), 0)
+    //                 +
+    //                 COALESCE((
+    //                     SELECT SUM(xc.pay_item)
+    //                     FROM trans_customer_receipt_detail xc
+    //                     WHERE xc.id_invoice = ti.id
+    //                 ), 0)
+    //             )
+    //         ", null, false);
+    //          $builder->groupBy("rk.id, rk.nama");
+    //         if (!empty($order)) {
+    //             $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+    //         } else {
+    //             $builder->orderBy("rk.nama asc");
+    //         }
 
-            if (empty($offset)) $offset = 0;
-            if (empty($limit)) $limit = 10;
+    //         if (empty($offset)) $offset = 0;
+    //         if (empty($limit)) $limit = 10;
 
-            $builder->limit($limit, $offset);
+    //         $builder->limit($limit, $offset);
 
 
-            $this->_data = $builder->get()->getResult();
-        } else {
-            $builder->where("ti.id", $id);
+    //         $this->_data = $builder->get()->getResult();
+    //     } else {
+    //         $builder->where("ti.id", $id);
 
-            $this->_data = $builder->get()->getRow();
-        }
-        return $this->_data;
-    }
+    //         $this->_data = $builder->get()->getRow();
+    //     }
+    //     return $this->_data;
+    // }
 
-    function getDataInvCnt($filters = null, $params = null)
-    {
-        $builder = $this->db->table("trans_invoice ti");
+    // function getDataInvCnt($filters = null, $params = null)
+    // {
+    //     $builder = $this->db->table("trans_invoice ti");
 
-        $builder->select("COUNT(rk.id) as _cnt");
+    //     $builder->select("COUNT(rk.id) as _cnt");
 
-        $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
+    //     $builder->join("ref_konsumen rk", "rk.id = ti.id_konsumen", "left");
 
-        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-            $builder->groupStart();
-                // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
-                // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
-                // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->groupEnd();
-        }
+    //     if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+    //         $builder->groupStart();
+    //             // $builder->where('LOWER(ti.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             // $builder->orWhere('LOWER(ti.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->orWhere('LOWER(rk.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             // $builder->orWhere('LOWER(ti.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //         $builder->groupEnd();
+    //     }
 
-        $builder->where("
-                ti.total > 
-                (
-                    COALESCE((
-                        SELECT SUM(tid.down_payment)
-                        FROM trans_invoice_detail tid
-                        WHERE tid.id_invoice = ti.id AND tid.tipe_id = 2
-                    ), 0)
-                    +
-                    COALESCE((
-                        SELECT SUM(xc.pay_item)
-                        FROM trans_customer_receipt_detail xc
-                        WHERE xc.id_invoice = ti.id
-                    ), 0)
-                )
-            ", null, false);
-        $builder->groupBy("rk.id, rk.nama");
-        $this->_data = $builder->get()->getRow()->_cnt;
+    //     $builder->where("
+    //             ti.total > 
+    //             (
+    //                 COALESCE((
+    //                     SELECT SUM(tid.down_payment)
+    //                     FROM trans_invoice_detail tid
+    //                     WHERE tid.id_invoice = ti.id AND tid.tipe_id = 2
+    //                 ), 0)
+    //                 +
+    //                 COALESCE((
+    //                     SELECT SUM(xc.pay_item)
+    //                     FROM trans_customer_receipt_detail xc
+    //                     WHERE xc.id_invoice = ti.id
+    //                 ), 0)
+    //             )
+    //         ", null, false);
+    //     $builder->groupBy("rk.id, rk.nama");
+    //     $this->_data = $builder->get()->getRow()->_cnt;
 
-        return $this->_data;
-    }
+    //     return $this->_data;
+    // }
 
-    function getDataPo($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
-    {
-        $builder = $this->db->table("trans_po_header ph");
+    // function getDataPo($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    // {
+    //     $builder = $this->db->table("trans_po_header ph");
 
-        $builder->select(" ph.id, ph.po_no, ph.po_date as tgl_po, rv.nama, ph.date_exc, ph.total as total_bayar,
-                           (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id) as dibayar, COALESCE(ph.diskon, 0) as diskon, term.days");
+    //     $builder->select(" ph.id, ph.po_no, ph.po_date as tgl_po, rv.nama, ph.date_exc, ph.total as total_bayar,
+    //                        (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id) as dibayar, COALESCE(ph.diskon, 0) as diskon, term.days");
 
-        $builder->join("ref_vendor rv", "rv.id = ph.id_vendor", "left");
-        $builder->join("ref_term term", "term.id = ph.id_term", "left");
+    //     $builder->join("ref_vendor rv", "rv.id = ph.id_vendor", "left");
+    //     $builder->join("ref_term term", "term.id = ph.id_term", "left");
 
-        if ($id == null or $id == "") {
+    //     if ($id == null or $id == "") {
             
-            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-                $builder->groupStart();
-                    $builder->where('LOWER(ph.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    $builder->orWhere('LOWER(ph.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    $builder->orWhere('LOWER(rv.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
-                    $builder->orWhere('LOWER(ph.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->groupEnd();
-            }
+    //         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+    //             $builder->groupStart();
+    //                 $builder->where('LOWER(ph.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 $builder->orWhere('LOWER(ph.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 $builder->orWhere('LOWER(rv.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //                 $builder->orWhere('LOWER(ph.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->groupEnd();
+    //         }
 
-            $builder->where("ph.total > (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id)");
-            $builder->orWhere("ph.total_payment", 0); 
-            $builder->where("ph.active", 1); 
-            $builder->where("ph.approve_status", 1); 
-            // $builder->where('COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0) < ph.total');
+    //         $builder->where("ph.total > (SELECT sum(tpo.total_bayar)+sum(tpo.diskon) from trans_po_pembayaran_detail tpo where tpo.id_po = ph.id)");
+    //         $builder->orWhere("ph.total_payment", 0); 
+    //         $builder->where("ph.active", 1); 
+    //         $builder->where("ph.approve_status", 1); 
+    //         // $builder->where('COALESCE(ph.diskon, 0) + COALESCE(ph.total_payment, 0) < ph.total');
 
-            if (!empty($order)) {
-                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
-            } else {
-                $builder->orderBy("ph.date_exc asc");
-            }
+    //         if (!empty($order)) {
+    //             $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+    //         } else {
+    //             $builder->orderBy("ph.date_exc asc");
+    //         }
 
-            if (empty($offset)) $offset = 0;
-            if (empty($limit)) $limit = 10;
+    //         if (empty($offset)) $offset = 0;
+    //         if (empty($limit)) $limit = 10;
 
-            $builder->limit($limit, $offset);
+    //         $builder->limit($limit, $offset);
 
-            $this->_data = $builder->get()->getResult();
-        } else {
-            $builder->where("ph.id", $id);
+    //         $this->_data = $builder->get()->getResult();
+    //     } else {
+    //         $builder->where("ph.id", $id);
 
-            $this->_data = $builder->get()->getRow();
-        }
+    //         $this->_data = $builder->get()->getRow();
+    //     }
 
-        return $this->_data;
-    }
+    //     return $this->_data;
+    // }
+    // function getDataPoCnt($filters = null, $params = null)
+    // {
+    //     $builder = $this->db->table("trans_po_header ph");
+
+    //     $builder->select("count(1) as _cnt");
+
+    //     $builder->join("ref_vendor rv", "rv.id = ph.id_vendor", "left");
+
+    //     if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+    //         $builder->groupStart();
+    //             $builder->where('LOWER(ph.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->orWhere('LOWER(ph.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->orWhere('LOWER(rv.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //             $builder->orWhere('LOWER(ph.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
+    //         $builder->groupEnd();
+    //     }
+
+    //     $builder->where("ph.total > (SELECT sum(tpo.total_bayar) from trans_po_pembayaran_detail tpo where tpo.id_header = ph.id)"); // kondisi untuk PO yang belum lunas
+
+    //     $this->_data = $builder->get()->getRow()->_cnt;
+
+    //     return $this->_data;
+    // }
 
     function getDataPoNew($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
-        $addSQL = '';
-        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-            $data = $filters[0]['value'];
-            $addSQL = " AND rv.nama ILIKE '%{$data}%'";
-        }
-        $sql = "
-            WITH po_filtered AS (
-                SELECT 
-                    ph.id,
-                    ph.id_vendor,
-                    rv.nama AS nama_vendor,
-                    ph.po_no,
-                    ph.po_date,
-                    ph.date_exc,
-                    ph.total::int AS total_bayar,
-                    COALESCE(ph.diskon::int, 0) AS diskon,
-                    term.days,
-                    (SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
+        $builderPoFiltered = $this->db->table('trans_po_header ph')
+            ->select("
+                ph.id,
+                ph.id_vendor,
+                rv.nama AS nama_vendor,
+                ph.po_no,
+                ph.po_date,
+                ph.date_exc,
+                ph.total::int AS total_bayar,
+                COALESCE(ph.diskon::int, 0) AS diskon,
+                term.days,
+                (
+                    SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
                     FROM trans_po_pembayaran_detail tpo
-                    WHERE tpo.id_po = ph.id) AS dibayar
-                FROM trans_po_header ph
-                INNER JOIN ref_vendor rv ON rv.id = ph.id_vendor
-                INNER JOIN ref_term term ON term.id = ph.id_term
-                WHERE 
-                    (ph.total > (SELECT SUM(tpo.total_bayar) + SUM(tpo.diskon)
-                                FROM trans_po_pembayaran_detail tpo
-                                WHERE tpo.id_po = ph.id)
-                    OR ph.total_payment = 0)
-                    AND ph.active = 1 
-                    AND ph.approve_status = 1
-                    {$addSQL} 
-            )
-            SELECT 
-                id_vendor,
-                nama_vendor,
-                SUM(total_bayar) AS total_bayar,
-                SUM(COALESCE(dibayar, 0)) AS dibayar,
-                SUM(diskon) AS diskon
-            FROM po_filtered
-            GROUP BY id_vendor, nama_vendor
-            ORDER BY nama_vendor;
-            ";
-
-            $query = $this->db->query($sql);
-            $this->_data = $query->getResult();
-            return $this->_data;
-    }
-
-    function getDataPoCnt($filters = null, $params = null)
-    {
-        $builder = $this->db->table("trans_po_header ph");
-
-        $builder->select("count(1) as _cnt");
-
-        $builder->join("ref_vendor rv", "rv.id = ph.id_vendor", "left");
+                    WHERE tpo.id_po = ph.id
+                ) AS dibayar
+            ", false)
+            ->join('ref_vendor rv', 'rv.id = ph.id_vendor', 'inner')
+            ->join('ref_term term', 'term.id = ph.id_term', 'inner')
+            ->where('ph.active', 1)
+            ->where('ph.approve_status', 1)
+            ->groupStart()
+                ->where("
+                    FLOOR(ph.total) > (
+                        SELECT SUM(tpo.total_bayar) + SUM(tpo.diskon)
+                        FROM trans_po_pembayaran_detail tpo
+                        WHERE tpo.id_po = ph.id
+                    )
+                    OR FLOOR(ph.total) > ph.total_payment
+                ", null, false)
+            ->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-            $builder->groupStart();
-                $builder->where('LOWER(ph.kode_invoice) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(ph.tgl_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(rv.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(ph.tgl_jatuh_tempo) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->groupEnd();
+            $data = strtolower($filters[0]['value']);
+            $builderPoFiltered->where("rv.nama ILIKE '%{$data}%'", null, false);
         }
 
-        $builder->where("ph.total > (SELECT sum(tpo.total_bayar) from trans_po_pembayaran_detail tpo where tpo.id_header = ph.id)"); // kondisi untuk PO yang belum lunas
+        $builder = $this->db->newQuery()->fromSubquery($builderPoFiltered, 'po_filtered');
 
-        $this->_data = $builder->get()->getRow()->_cnt;
+        // Query utama (aggregate)
+        $builder->select("
+            id_vendor,
+            nama_vendor,
+            SUM(total_bayar) AS total_bayar,
+            SUM(COALESCE(dibayar, 0)) AS dibayar,
+            SUM(diskon) AS diskon
+        ", false)
+        ->groupBy('id_vendor, nama_vendor')
+        ->orderBy('nama_vendor', 'ASC');
 
+        if (empty($offset)) $offset = 0;
+        if (empty($limit)) $limit = 10;
+        $builder->limit($limit, $offset);
+
+        $query = $builder->get();
+        $this->_data = $query->getResult();
         return $this->_data;
+
     }
 
     function getDataPoCntNew($filters = null, $params = null)
     {
-        $addSQL = '';
-        $sqlOld = 'COUNT(id_vendor) as _cnt';
-        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-            $data = $filters[0]['value'];
-            $addSQL = " AND rv.nama ILIKE '%{$data}%'";
-            $sqlOld = 'COUNT(DISTINCT id_vendor) as _cnt';
-        }
-        $sql = "
-            WITH po_filtered AS (
-                SELECT 
-                    ph.id,
-                    ph.id_vendor,
-                    rv.nama AS nama_vendor,
-                    ph.po_no,
-                    ph.po_date,
-                    ph.date_exc,
-                    ph.total::int AS total_bayar,
-                    COALESCE(ph.diskon::int, 0) AS diskon,
-                    term.days,
-                    (SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
+        $builderPoFiltered = $this->db->table('trans_po_header ph')
+            ->select("
+                ph.id,
+                ph.id_vendor,
+                rv.nama AS nama_vendor,
+                ph.po_no,
+                ph.po_date,
+                ph.date_exc,
+                ph.total::int AS total_bayar,
+                COALESCE(ph.diskon::int, 0) AS diskon,
+                term.days,
+                (
+                    SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
                     FROM trans_po_pembayaran_detail tpo
-                    WHERE tpo.id_po = ph.id) AS dibayar
-                FROM trans_po_header ph
-                INNER JOIN ref_vendor rv ON rv.id = ph.id_vendor
-                INNER JOIN ref_term term ON term.id = ph.id_term
-                WHERE 
-                    (ph.total > (SELECT SUM(tpo.total_bayar) + SUM(tpo.diskon)
-                                FROM trans_po_pembayaran_detail tpo
-                                WHERE tpo.id_po = ph.id)
-                    OR ph.total_payment = 0)
-                    AND ph.active = 1 
-                    AND ph.approve_status = 1
-                    {$addSQL} 
-            )
-            SELECT 
-                {$sqlOld}
-            FROM po_filtered
-            GROUP BY id_vendor, nama_vendor
-            ORDER BY nama_vendor;
-            ";
+                    WHERE tpo.id_po = ph.id
+                ) AS dibayar
+            ", false)
+            ->join('ref_vendor rv', 'rv.id = ph.id_vendor', 'inner')
+            ->join('ref_term term', 'term.id = ph.id_term', 'inner')
+            ->where('ph.active', 1)
+            ->where('ph.approve_status', 1)
+            ->groupStart()
+                ->where("
+                    FLOOR(ph.total) > (
+                        SELECT SUM(tpo.total_bayar) + SUM(tpo.diskon)
+                        FROM trans_po_pembayaran_detail tpo
+                        WHERE tpo.id_po = ph.id
+                    )
+                    OR FLOOR(ph.total) > ph.total_payment
+                ", null, false)
+            ->groupEnd();
 
-            $query = $this->db->query($sql);
-            $this->_data = $query->getRow()->_cnt;
-            return $this->_data;
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $data = strtolower($filters[0]['value']);
+            $builderPoFiltered->where("rv.nama ILIKE '%{$data}%'", null, false);
+        }
+
+        $builder = $this->db->newQuery()->fromSubquery($builderPoFiltered, 'po_filtered');
+
+        // Query utama (aggregate)
+        $builder->select("
+            id_vendor
+        ", false)
+        ->groupBy('id_vendor, nama_vendor')
+        ->orderBy('nama_vendor', 'ASC');
+
+        $query = $builder->get();
+        $this->_data = $query->getNumRows();
+
+        return $this->_data;
     }
 
     function getDataDP($month = null, $year = null)
@@ -899,6 +914,16 @@ class Mdashboard extends Model
 
         $builder->where('LOWER(mc.kode) LIKE', '13%');
 
+        $builder->where("(
+            COALESCE((
+                SELECT SUM(mmh.saldo)
+                FROM m_mutasi_history mmh 
+                WHERE mmh.coa_id = mc.id 
+                AND mmh.month = {$params['month']}
+                AND mmh.year = {$params['year']}
+            ), 0) > 0
+        )");
+
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
         // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
         if ($id == null or $id == "") {
@@ -972,6 +997,16 @@ class Mdashboard extends Model
         $builder->select("count(1) as _cnt");
 
         $builder->where('LOWER(mc.kode) LIKE', '13%');
+
+         $builder->where("(
+            COALESCE((
+                SELECT SUM(mmh.saldo)
+                FROM m_mutasi_history mmh 
+                WHERE mmh.coa_id = mc.id 
+                AND mmh.month = {$params['month']}
+                AND mmh.year = {$params['year']}
+            ), 0) > 0
+        )");
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
              $builder->groupStart();

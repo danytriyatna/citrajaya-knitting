@@ -7,5 +7,6 @@ $routes->group('laporan/stock-card', ['namespace' => 'Modules\Laporan\Controller
 $routes->group('laporan/persediaan', ['namespace' => 'Modules\Laporan\Controllers'], static function ($routes) {
     $routes->get('/', 'LaporanPersediaan::index');
     $routes->get('list', 'LaporanPersediaan::getDataLaporanPersediaan');
+    $routes->get('print_excel_lists', 'LaporanPersediaan::print_excel_lists');
     $routes->get('update-list', 'LaporanPersediaan::getUpdateDataLaporanPersediaan');
 });

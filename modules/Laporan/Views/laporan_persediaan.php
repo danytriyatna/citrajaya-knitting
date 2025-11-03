@@ -107,13 +107,11 @@
           <br>
 
           <div class="row">
-            <div class="col-sm-6 text-right" hidden>
+            <div class="col-sm-6 text-right">
               <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
-              <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a>
+              <button id="exportExcel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Export to XLSX</button>
               <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
-              <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a>
-            </div>
-            <div class="col-sm-3 text-right">
+              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
               <a class="btn btn-info m-l-5 updateData" id="updateData">Update Data</a>
             </div>
           </div>

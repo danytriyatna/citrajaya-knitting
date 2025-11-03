@@ -103,9 +103,10 @@ class Mtrans_akun extends PrModel
         $builder = $this->db->table('trans_akun');
         $builder->select('LEFT(trans_akun_kode, 9) AS tgl,RIGHT ( trans_akun_kode, 3 ) AS kode ');
         // $builder->orderBy('sl_order_id', "DESC");
-        $builder->orderBy("created_date", "DESC");
+        $builder->orderBy("id", "DESC");
         $builder->limit(1);
         $query = $builder->get()->getRow();
+        
         if ($query != NULL) {
             if ($query->tgl == "TR." . date('Y') . date("m")) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
                 //jika tahun dan bulan ternyata sudah ada.      

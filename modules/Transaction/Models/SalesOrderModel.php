@@ -684,9 +684,14 @@ class SalesOrderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " abx");
 
-        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua, abx.qty,
+        $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua,
                           abx.uang_dp, abx.style as stylex , abx.style_cnt, abx.status,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp,
+                          COALESCE((
+                                SELECT SUM(tsou.qty)
+                                FROM trans_sales_order_ukuran tsou
+                                WHERE tsou.id_sales_order = abx.id
+                            ), 0) as qty,
                           COALESCE((
                                 SELECT SUM(tsou.harga_total)
                                 FROM trans_sales_order_ukuran tsou

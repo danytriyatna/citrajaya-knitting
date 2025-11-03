@@ -184,7 +184,21 @@ $("#btn-tampilkan").click(function () {
       return false    
     }
     getDataLaporan()
-    $(".preloader").hide().css("opacity", "1");
+  });
+
+  $("#exportExcel").click(function () {
+    if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
+      Swal.fire({
+        title: 'Warning',
+        text: 'Tahun,Bulan & Gudang harus dipilih',
+        icon: 'warning',
+      })
+      $(".preloader").hide().css("opacity", "1");
+      return false    
+    }
+
+    let url = `/laporan/persediaan/print_excel_lists?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`
+    window.open(url, '_blank');
   });
 
   $("#btn-reset").click(function () {
@@ -206,8 +220,10 @@ $("#btn-tampilkan").click(function () {
             setTimeout(() => {
                 dtList.redraw(true)
             }, 500);
+            $(".preloader").hide().css("opacity", "1");
         },
         error: function(xhr, status, error) {
+            $(".preloader").hide().css("opacity", "1");
             console.error('Error fetching data:', error);
         }
     });

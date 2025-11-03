@@ -48,6 +48,69 @@
             <div class="table-responsive">
               <div class="table-striped" id="tbl-tracking"></div>
             </div>
+            <br>
+            <div class="row">
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY PROSES PRODUKSI</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty_prod">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY HASIL PRODUKSI</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty_hasil">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY SISA PRODUKSI</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty_sisa_prod">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY PENGIRIMAN</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty_kirim">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-lg-4">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th class="bg-warning"><b>TOTAL QTY BELUM KIRIM</b></th>
+                        <th class="bg-warning text-end"><b id="total_qty_sisa_kirim">0,00</b></th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+            </div>
           </div>
         </div>
       </div>

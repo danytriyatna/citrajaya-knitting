@@ -49,15 +49,72 @@ class Dashboard extends BaseController
             $results = $this->mdashboard->getDataSample(null, $start, $limit, $order, $filters, $params);
             $totalfiltered = $this->mdashboard->getDataCntSample($filters, $params);
             $totaldata = $this->mdashboard->getDataCntSample(null, $params);
+            $params['tabel'] = "v_traking_order_sample";
         }
 
         else {
             $results = $this->mdashboard->getData(null, $start, $limit, $order, $filters, $params);
             $totalfiltered = $this->mdashboard->getDataCnt($filters, $params);
             $totaldata = $this->mdashboard->getDataCnt(null, $params);
+            $params['tabel'] = "v_traking_order_so";
+        }
+        $getSum = $this->mdashboard->getSumData(null, $start, $limit, $order, $filters, $params);
+        $total_qty = 0;
+        $total_qty_prod = 0;
+        $total_qty_hasil = 0;
+        $total_qty_sisa_prod = 0;
+        $total_qty_kirim = 0;
+        $total_qty_sisa_kirim = 0;
+        foreach ($getSum as $key => $value) {
+            $total_qty += $value->qty;
+            $total_qty_prod += $value->qty_prod;
+            $total_qty_kirim += $value->qty_kirim;
+            $parms['last_proses'] = 1;
+            $parms['id_walkorder'] = $value->id_walkorder;
+            if (!empty($value->id_walkorder)) {
+                $dataLast = $this->mProduksi->getDataProsesProd($parms);
+                $last_data = !empty($dataLast) ? $dataLast[0] : [];
+    
+                $qty_kirim = 0;
+                if(!empty($value->id_prod)){
+                    $param_dlv['id_produksi'] = $value->id_prod;
+                    $data_pengirimasn = $this->mdelivery->getData(null, 0, 9999, null, null, $param_dlv);
+    
+                    if(!empty($data_pengirimasn)){
+                        foreach ($data_pengirimasn as $rd) {
+                        $qty_kirim += $rd->qty_delv;
+                        }
+                    }
+                }
+    
+                $qty_hasil = null;
+                if (!empty($last_data)) {
+                    $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    $total_qty_hasil += $qty_hasil;
+                }
+    
+                $qty_sisa = (int) $value->qty - (int) $value->qty_prod;
+                $total_qty_sisa_prod += $qty_sisa;
+                //   $qty_sisa_kirim = (int) $value->qty_prod - (int) $value->qty_kirim;
+                $qty_sisa_kirim = (int) $value->qty - (int) $value->qty_kirim;
+                $total_qty_sisa_kirim += $qty_sisa_kirim;
+                
+            }
+            else {
+                $qty_hasil = null;
+                $qty_sisa = null;
+                $qty_sisa_kirim = null;
+
+            }
         }
         $maxpage = ceil($totalfiltered / $limit);
         $build_array = array(
+            "total_qty" => $total_qty,    
+            "total_qty_prod" => $total_qty_prod,
+            "total_qty_hasil" => $total_qty_hasil,
+            "total_qty_sisa_prod" => $total_qty_sisa_prod,
+            "total_qty_kirim" => $total_qty_kirim,
+            "total_qty_sisa_kirim" => $total_qty_sisa_kirim,
             "last_page" => $maxpage,
             "recordsTotal" => $totaldata,
             "recordsFiltered" => $totalfiltered,

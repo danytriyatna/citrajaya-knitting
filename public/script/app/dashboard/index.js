@@ -36,7 +36,7 @@ $(document).ready(function () {
 
             {
 				title: 'QTY', field: 'qty', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'right', cssClass: 'text-end'
+				width: 100, formatter : "html", hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
 
             {
@@ -46,17 +46,17 @@ $(document).ready(function () {
 
             {
 				title: 'PROSES<br>PRODUKSI', field: 'qty_prod', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end'
+				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
 
             {
 				title: 'HASIL<br>PRODUKSI', field: 'qty_hasil', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end'
+				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
 
             {
 				title: 'SISA<br>PRODUKSI', field: 'qty_sisa', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end'
+				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
 
             {
@@ -66,12 +66,12 @@ $(document).ready(function () {
 
             {
 				title: 'QTY<br>PENGIRIMAN', field: 'qty_kirim', headerSort:false, sorter: 'string',
-				width: 110, hozAlign: 'right', cssClass: 'text-end'
+				width: 110, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
 
             {
 				title: 'QTY BELUM<br>DIKIRIM ', field: 'qty_sisa_kirim', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end'
+				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 
             {
                 title: "NO. TRANSAKSI", field: "btnOrder", headerSort: false, formatter: "html",
@@ -121,6 +121,13 @@ $(document).ready(function () {
             }
             let recordsFiltered = parseInt(response.recordsFiltered);
             let recordsTotal = parseInt(response.recordsTotal);
+
+            $('#total_qty').text(response.total_qty); 
+            $('#total_qty_prod').text(response.total_qty_prod); 
+            $('#total_qty_hasil').text(response.total_qty_hasil); 
+            $('#total_qty_sisa_prod').text(response.total_qty_sisa_prod); 
+            $('#total_qty_kirim').text(response.total_qty_kirim); 
+            $('#total_qty_sisa_kirim').text(response.total_qty_sisa_kirim); 
 
             $("#table-footer .tabulator-startrow").text(startRow);
             $("#table-footer .tabulator-endrow").text(endRow);

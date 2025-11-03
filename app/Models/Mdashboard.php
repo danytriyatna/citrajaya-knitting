@@ -20,12 +20,12 @@ class Mdashboard extends Model
                           tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
-
-        $builder->where("tbl.qty > tbl.qty_kirim");
-        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
-        // $builder->groupStart();
-        //     $builder->orWhere('tbl.harga_total = tbl.uang_dp');
-        // $builder->groupEnd();
+        
+        
+        $builder->groupStart();
+            $builder->where("tbl.qty > tbl.qty_kirim");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupEnd();
 
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
         // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
@@ -67,11 +67,10 @@ class Mdashboard extends Model
 
         $builder->select("count(1) as _cnt");
 
-        $builder->where("tbl.qty > tbl.qty_kirim");
-        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
-        // $builder->groupStart();
-        //     $builder->orWhere('tbl.harga_total = tbl.uang_dp');
-        // $builder->groupEnd();
+        $builder->groupStart();
+            $builder->where("tbl.qty > tbl.qty_kirim");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
@@ -91,6 +90,46 @@ class Mdashboard extends Model
         return $this->_data;
     }
 
+    function getSumData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        
+        $builder = $this->db->table($params['tabel']." tbl");
+
+        $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
+                          tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
+                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
+        
+        $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
+        
+        
+        $builder->groupStart();
+            $builder->where("tbl.qty > tbl.qty_kirim");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupEnd();
+
+        // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
+        // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
+        if ($id == null or $id == "") {
+            
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $builder->groupStart();
+                    $builder->where('LOWER(tbl.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(tbl.trans_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(tbl.kode_dev) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(tbl.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(tbl.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->groupEnd();
+            }
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("tbl.trans_id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+        return $this->_data;
+    }
+
     function getDataSample($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         
@@ -103,8 +142,10 @@ class Mdashboard extends Model
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 
-        $builder->where("tbl.qty > tbl.qty_kirim");
-        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupStart();
+            $builder->where("tbl.qty > tbl.qty_kirim");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupEnd();
 
         if ($id == null or $id == "") {
             
@@ -145,8 +186,10 @@ class Mdashboard extends Model
 
         $builder->select("count(1) as _cnt");
 
-        $builder->where("tbl.qty > tbl.qty_kirim");
-        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupStart();
+            $builder->where("tbl.qty > tbl.qty_kirim");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();

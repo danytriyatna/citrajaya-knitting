@@ -21,8 +21,11 @@ class Mdashboard extends Model
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 
-        $builder->where("tbl.harga_total > (tbl.uang_dp + tbl.nilai_invoice)");
         $builder->where("tbl.qty > tbl.qty_kirim");
+        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        // $builder->groupStart();
+        //     $builder->orWhere('tbl.harga_total = tbl.uang_dp');
+        // $builder->groupEnd();
 
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
         // $builder->where("EXTRACT(YEAR FROM tbl.tgl_dp) = 2025"); 
@@ -64,8 +67,11 @@ class Mdashboard extends Model
 
         $builder->select("count(1) as _cnt");
 
-        $builder->where("tbl.harga_total > (tbl.uang_dp + tbl.nilai_invoice)");
         $builder->where("tbl.qty > tbl.qty_kirim");
+        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+        // $builder->groupStart();
+        //     $builder->orWhere('tbl.harga_total = tbl.uang_dp');
+        // $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
@@ -97,8 +103,8 @@ class Mdashboard extends Model
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 
-        $builder->where("tbl.harga_total > tbl.nilai_invoice");
         $builder->where("tbl.qty > tbl.qty_kirim");
+        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
 
         if ($id == null or $id == "") {
             
@@ -139,8 +145,8 @@ class Mdashboard extends Model
 
         $builder->select("count(1) as _cnt");
 
-        $builder->where("tbl.harga_total > tbl.nilai_invoice");
         $builder->where("tbl.qty > tbl.qty_kirim");
+        $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();

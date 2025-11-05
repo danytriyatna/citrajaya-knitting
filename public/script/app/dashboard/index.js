@@ -233,7 +233,7 @@ $(document).ready(function () {
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 1000,
+        minHeight: 740,
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -267,7 +267,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 20,
+        paginationSize: 15,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
@@ -412,7 +412,7 @@ $(document).ready(function () {
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 450,
+        minHeight: 200,
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -449,7 +449,7 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 15,
+        paginationSize: 5,
         paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"

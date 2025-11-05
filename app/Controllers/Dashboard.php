@@ -89,7 +89,8 @@ class Dashboard extends BaseController
     
                 $qty_hasil = null;
                 if (!empty($last_data)) {
-                    $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    // $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    $qty_hasil = $last_data->qty_prod;
                     $total_qty_hasil += $qty_hasil;
                 }
     
@@ -195,7 +196,8 @@ class Dashboard extends BaseController
     
                 $qty_hasil = null;
                 if (!empty($last_data)) {
-                    $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    // $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    $qty_hasil = $last_data->qty_prod;
                 }
     
                 $qty_sisa = (int) $row->qty - (int) $row->qty_prod;

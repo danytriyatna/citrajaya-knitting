@@ -266,7 +266,8 @@
                               </td>
                               <td style="text-align:right;">
                                 <label class="form-check-label" for="proses_ready" id="qty_ready">
-                                  <?= !empty($last_data) ? ($last_data->qty_prod - $qty_kirim) : 0; ?>
+                                  <!-- !empty($last_data) ? ($last_data->qty_prod - $qty_kirim) : 0; -->
+                                  <?= !empty($last_data) ? ($last_data->qty_prod) : 0; ?>
                                 </label>
                               </td>
                             </tr>

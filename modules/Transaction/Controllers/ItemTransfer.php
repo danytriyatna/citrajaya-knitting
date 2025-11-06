@@ -532,7 +532,7 @@ class ItemTransfer extends BaseController
 
     $dompdf->loadHtml($html);
     $dompdf->render();
-    $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
+    $dompdf->stream('rec_item.pdf', ['Attachment' => false]);
     exit;
   }
 

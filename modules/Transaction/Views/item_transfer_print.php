@@ -252,7 +252,7 @@
             </tr>
         </tfoot>
     </table>
-   <?php if(empty($data->nama_operator) ) { ?>
+   <?php if(!empty($detail) ) { ?>
 
     <br>
     <table class="table-bordered w-100">

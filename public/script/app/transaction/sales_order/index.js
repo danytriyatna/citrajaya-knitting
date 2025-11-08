@@ -1140,6 +1140,7 @@ $(document).ready(function () {
         // Query parameters
         let params = {
             ukuran : inpp_slcUkuran.val(),
+            ukuran_text : inpp_slcUkuran.find("option:selected").text(),
             qty : inpp_qty.val(),
             qtyp : inpp_qtyp.val(),
             noSample : dt_noSample,

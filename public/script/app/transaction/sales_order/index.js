@@ -44,6 +44,7 @@ $(document).ready(function () {
 
     const btnSend            = $("#btn-send");
     const brcStyle            = $("#style_input");
+    let qty_ukuran            = [];
 
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
@@ -348,11 +349,26 @@ $(document).ready(function () {
                         let row = cell.getRow();
                         let data_row = row.getData();
                         if (e.target.title === 'print-warna') {
-
+                            qty_ukuran = [];
                             const inpp_slcUkuran = $("#print_slc_ukuran");
                             const inpp_qty       = $("#print_qty");
                             const inpp_qtyp      = $("#print_qtyp");
+                            const allowed = data.key_ukuran.map(x => x.key_ukuran); // ambil semua kode_ukuran
+                            const select = document.getElementById('print_slc_ukuran');
 
+                            select.querySelectorAll('option').forEach(opt => {
+                                if (opt.value === '' || allowed.includes(opt.value)) {
+                                    opt.hidden = false; // tampilkan kalau cocok
+                                    if (opt.value == 'all') {
+                                        qty_ukuran[opt.value] = data_row["all_"]
+                                    }
+                                    else {
+                                        qty_ukuran[opt.value] = data_row[opt.value]
+                                    }
+                                } else {
+                                    opt.hidden = true; // sembunyikan kalau tidak ada di daftar
+                                }
+                            });
                             // inpp_slcUkuran
                             inpp_qty.val(1)
                             inpp_qtyp.val(1)
@@ -462,6 +478,11 @@ $(document).ready(function () {
     
         return cardHtml; // Return HTML Card
     }
+
+    $("#print_slc_ukuran").change(function() {
+        let selectedUkuran = $(this).val();
+        $("#print_qty").val(qty_ukuran[selectedUkuran])
+    });
 
     $("#btn-add").on("click", function(){
         let today = new Date().toISOString().split('T')[0];
@@ -1131,7 +1152,8 @@ $(document).ready(function () {
   
           // Buat query string
           let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/sales-order/generate?${queryString}`;
+          let fullUrl = `trans/work-order/generate?${queryString}`;
+        //   let fullUrl = `trans/sales-order/generate?${queryString}`;
   
           // Buka link di tab baru
           window.open(fullUrl, '_blank');

@@ -183,6 +183,9 @@
           <td>Size</td><td>:</td><td><?= !empty($data['ukuran_text']) ? $data['ukuran_text'] : '__________' ?></td>
           <td></td><td>Qty</td><td>:</td><td><?= !empty($data['qty']) ? $data['qty'] : '__________' ?></td>
         </tr>
+        <tr>
+          <td>Desc.</td><td>:</td><td colspan="4"><?= !empty($data['desc']) ? $data['desc'] : '__________' ?></td>
+        </tr>
       </table>
 
       <br>
@@ -205,10 +208,16 @@
         ?>
       </table>
 
-      <br><br>
+      <br>
       <table style="width: 100%; text-align: center;">
-        <tr><th>Admin</th><th>Montir Kepala</th></tr>
-        <tr><td><br><br>.....................</td><td><br><br>.....................</td></tr>
+        <tr>
+          <th><img height="115px" width="115px" src="<?= base_url(); ?>/uploads/media/qrcode/<?= $fileName; ?>" alt="QR Code" width="160px" height="160px"></th>
+        </tr>
+        <tr>
+          <th><?= $data['kode_qr'] ?></th>
+        </tr>
+        <!-- <tr><th>Admin</th><th>Montir Kepala</th></tr> -->
+        <!-- <tr><td><br><br>.....................</td><td><br><br>.....................</td></tr> -->
       </table>
     </div>
 <?php 

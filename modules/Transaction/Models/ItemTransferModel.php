@@ -224,6 +224,48 @@ class ItemTransferModel extends \App\Models\PrModel
                 // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
                 $builder->where(" upper(trim(split_part(tu.color, '~', 2)))", $prm_color2);
             }
+            if (!empty($params['color3'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color3']);
+                $prm_color3 = strtoupper($ascii);
+                $prm_color3 = rtrim($prm_color3);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 3)))", $prm_color3);
+            }
+            if (!empty($params['color4'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color4']);
+                $prm_color4 = strtoupper($ascii);
+                $prm_color4 = rtrim($prm_color4);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 4)))", $prm_color4);
+            }
+            if (!empty($params['color5'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color5']);
+                $prm_color5 = strtoupper($ascii);
+                $prm_color5 = rtrim($prm_color5);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 5)))", $prm_color5);
+            }
+            if (!empty($params['color6'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color6']);
+                $prm_color6 = strtoupper($ascii);
+                $prm_color6 = rtrim($prm_color6);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 6)))", $prm_color6);
+            }
+            if (!empty($params['color7'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color7']);
+                $prm_color7 = strtoupper($ascii);
+                $prm_color7 = rtrim($prm_color7);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 7)))", $prm_color7);
+            }
+            if (!empty($params['color8'])) {
+                $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color8']);
+                $prm_color8 = strtoupper($ascii);
+                $prm_color8 = rtrim($prm_color8);
+                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
+                $builder->where(" upper(trim(split_part(tu.color, '~', 8)))", $prm_color8);
+            }
             
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);

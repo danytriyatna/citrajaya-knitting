@@ -677,11 +677,39 @@ class ItemTransfer extends BaseController
         if (!empty($kt_exp[2])) {
             $params['color'] = trim($kt_exp[2]);
         }
-
-
         if (!empty($kt_exp[4])) {
           if($kt_exp[4] != '-'){
             $params['color2'] = trim($kt_exp[4]);
+          }
+        }
+        if (!empty($kt_exp[5])) {
+          if($kt_exp[5] != '-'){
+            $params['color3'] = trim($kt_exp[5]);
+          }
+        }
+        if (!empty($kt_exp[6])) {
+          if($kt_exp[6] != '-'){
+            $params['color4'] = trim($kt_exp[6]);
+          }
+        }
+        if (!empty($kt_exp[7])) {
+          if($kt_exp[7] != '-'){
+            $params['color5'] = trim($kt_exp[7]);
+          }
+        }
+        if (!empty($kt_exp[8])) {
+          if($kt_exp[8] != '-'){
+            $params['color6'] = trim($kt_exp[8]);
+          }
+        }
+        if (!empty($kt_exp[9])) {
+          if($kt_exp[9] != '-'){
+            $params['color7'] = trim($kt_exp[9]);
+          }
+        }
+        if (!empty($kt_exp[10])) {
+          if($kt_exp[10] != '-'){
+            $params['color8'] = trim($kt_exp[10]);
           }
         }
 

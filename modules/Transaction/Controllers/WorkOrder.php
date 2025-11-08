@@ -679,9 +679,10 @@ class WorkOrder extends BaseController
         }
     }
     else {
+      $pr_warna['id_sample_det'] = $trans;
       $data_warna = $this->mSample->getDataDetailSalesOrderUkuranById($pr_warna);
       if (!empty($data_warna)) {
-        $data_so = $this->mSample->getData($data_warna[0]->id_sales_order);
+        $data_so = $this->mSample->getData($data_warna[0]->id_sample);
       }
         
     }
@@ -697,6 +698,24 @@ class WorkOrder extends BaseController
       }
     }
 
+    $warnaNew = str_replace('/', '_', $warna);
+    $save_name  = $warnaNew . '-' . $noSample .'-'. time() . '.png';
+
+    /* QR Code File Directory Initialize */
+    $dir = 'uploads/media/qrcode/';
+    if (!file_exists($dir)) {
+      mkdir($dir, 0775, true);
+    }
+
+    /* QR Configuration  */
+    $config['cacheable']    = true;
+    $config['imagedir']     = $dir;
+    $config['quality']      = true;
+    $config['size']         = '1024';
+    $config['black']        = [255, 255, 255];
+    $config['white']        = [255, 255, 255];
+    $this->ciqrcode->initialize($config);
+
     $data = [
       'ukuran' => $ukuran,
       'ukuran_text' => $ukuran_text,
@@ -708,15 +727,39 @@ class WorkOrder extends BaseController
       'warna' => $warna,
       'data_warna' => $warna_array,
       'stylex' => $style,
-      'style' => !empty($data_so) ? $data_so->stylex : null,
-      'warna_2' => ''
+      'stylex' => $style,
+      'style' => !empty($data_so->stylex) ? $data_so->stylex : $data_so->style,
+      'desc' => !empty($data_so) ? $data_so->deskripsi : null,
+      'kode_qr' => !empty($data_so->kode_sales_order) ? $data_so->kode_sales_order : $data_so->kode_sample,
     ];
 
+    
+    if (count($warna_array) > 1) {
+        $ururan_warna = '';
+        for ($i=0; $i < count($warna_array) ; $i++) { 
+          if ($i != 0) {
+            $index = $i + 1;
+            $data['warna_' . $index] = !empty($warna_array[$i]) ? trim($warna_array[$i]) : '-';
+            $ururan_warna .= !empty($warna_array[$i]) ? ";".trim($warna_array[$i]) : ';-';
+          }
+        }
+        $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty . $ururan_warna;
+    }
+    else {
+      $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty;
+    }
     /* QR Data  */
     $params['level']    = 'L';
-    $params['size']     = 10;
+    $params['size']     = 5;
+    $params['savename'] = FCPATH . $config['imagedir'] . $save_name;
+    
+    $oks = $this->ciqrcode->generate($params);
+    
+    /* Return Data */
+    $url = base_url() . "/uploads/media/qrcode/" . $save_name;
 
     $this->data["data"] = $data;
+    $this->data["fileName"] = $save_name;
     return view($this->views . '\vprint_kartu_produksi', $this->data);
   }
 }

@@ -892,12 +892,24 @@ class SalesOrder extends BaseController
       'buyer' => $buyer,
       'warna' => $warna,
       'style' => $style,
-      'warna_2' => ''
+      'warna_2' => '',
+      'warna_3' => '',
+      'warna_4' => '',
+      'warna_5' => '',
+      'warna_6' => '',
+      'warna_7' => '',
+      'warna_8' => '',
     ];
 
     if (!empty($data_warna)) {
       $data['warna_2'] = !empty($data_warna[0]->warna_2) ? trim($data_warna[0]->warna_2) : '-';
-      $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty . ';' . $data['warna_2']; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
+      $data['warna_3'] = !empty($data_warna[0]->warna_3) ? trim($data_warna[0]->warna_3) : '-';
+      $data['warna_4'] = !empty($data_warna[0]->warna_4) ? trim($data_warna[0]->warna_4) : '-';
+      $data['warna_5'] = !empty($data_warna[0]->warna_5) ? trim($data_warna[0]->warna_5) : '-';
+      $data['warna_6'] = !empty($data_warna[0]->warna_6) ? trim($data_warna[0]->warna_6) : '-';
+      $data['warna_7'] = !empty($data_warna[0]->warna_7) ? trim($data_warna[0]->warna_7) : '-';
+      $data['warna_8'] = !empty($data_warna[0]->warna_8) ? trim($data_warna[0]->warna_8) : '-';
+      $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty . ';' . $data['warna_2'] . ';' . $data['warna_3'] . ';' . $data['warna_4'] . ';' . $data['warna_5'] . ';' . $data['warna_6'] . ';' . $data['warna_7'] . ';' . $data['warna_8']; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
     }else{
       $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty; //json_encode($data) ;//base_url() . "/produk/edit/" . encrypt($id);
     }

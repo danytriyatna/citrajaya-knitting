@@ -6,7 +6,7 @@
 <title>Kartu Produksi Citra Knitt</title>
 <style>
   body {
-    font-family: "Times New Roman", serif;
+    font-family: "Courier New", monospace;
     background: #fff; /* putih polos */
     display: flex;
     justify-content: center;
@@ -23,7 +23,7 @@
   }
 
   .card {
-    width: 300px;
+    width: 350px;
     border: 1px solid #000;
     padding: 10px 15px;
     background: #fff; /* putih juga */
@@ -89,49 +89,49 @@
 
   /* Print-specific styles */
     @media print {
-  @page {
-    size: A4 portrait;
-    margin: 6mm;
-  }
+      @page {
+        size: A4 portrait;
+        margin: 6mm;
+      }
 
-  body {
-    margin: 0;
-    padding: 0;
-  }
+      body {
+        margin: 0;
+        padding: 0;
+      }
 
-  .container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    max-width: 1000px;
-  }
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        max-width: 1000px;
+      }
 
-  .card {
-    width: 300px;
-    border: 1px solid #000;
-    padding: 10px 15px;
-    background: #fff;
-    box-sizing: border-box;
-    page-break-inside: avoid; /* ⛔ Cegah kartu terpotong */
-    break-inside: avoid;       /* untuk browser modern */
-  }
+      .card {
+        width: 350px;
+        border: 1px solid #000;
+        padding: 10px 15px;
+        background: #fff;
+        box-sizing: border-box;
+        page-break-inside: avoid; /* ⛔ Cegah kartu terpotong */
+        break-inside: avoid;       /* untuk browser modern */
+      }
 
-  /* Setiap 3 kartu per baris, pastikan baris utuh di satu halaman */
-  .card:nth-child(3n+1) {
-    page-break-before: auto;
-  }
+      /* Setiap 3 kartu per baris, pastikan baris utuh di satu halaman */
+      .card:nth-child(3n+1) {
+        page-break-before: auto;
+      }
 
-  .card:nth-child(3n+3) {
-    page-break-after: auto;
-  }
+      .card:nth-child(3n+3) {
+        page-break-after: auto;
+      }
 
-  /* Jika mau pastikan tidak pecah di tengah baris */
-  .container {
-    page-break-inside: avoid;
-    break-inside: avoid;
+      /* Jika mau pastikan tidak pecah di tengah baris */
+      .container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
   }
-}
 
 </style>
 </head>
@@ -151,8 +151,8 @@
                     </td>
                     <td style=" width: 60%; text-align: center;">
                         <strong>
-                          <span style="font-size: 20px;">Kartu Produksi</span><br>
-                          <span style="font-size: 19px;">Citra Knitt</span>
+                          <span style="font-size: 21px;">Kartu Produksi</span><br>
+                          <span style="font-size: 18px;">Citra Knitt</span>
                         </strong>
                     </td>
                     <td style="text-align: center;  width: 20%;">
@@ -196,11 +196,11 @@
           $huruf = chr(65 + $key);
         ?>
             <tr>
-              <td style=" width: 5%;"></td>
-              <td style="font-weight: 800; width: 5%; font-size: 14px;"><?= !empty($huruf) ? $huruf.". " : null ?></td>
+              <td style=" width: 1%;"></td>
+              <td style="font-weight: 800; width: 5%; font-size: 16px;"><?= !empty($huruf) ? $huruf.". " : null ?></td>
               <td style="font-weight: 800; width: 50%; font-size: 12px;"><?= !empty($value) ? $value : '__________' ?></td>
 
-              <td style="font-weight: 800; width: 2%; font-size: 14px;">Lot.</td>
+              <td style="font-weight: 800; width: 2%; font-size: 16px;">Lot.</td>
               <td style="font-weight: 800; width: 10%;">________</td>
             </tr>
         <?php 

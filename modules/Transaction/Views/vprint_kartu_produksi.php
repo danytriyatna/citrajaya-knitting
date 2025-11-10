@@ -171,20 +171,20 @@
 
       <table style="width: 100%;">
         <tr>
-          <td style=" width: 10%;">No.</td>
-          <td style=" width: 5%;">:</td>
-          <td style=" width: 10%;">__________</td>
-          <td style=" width: 10%;"></td>
-          <td style=" width: 10%;">Style</td>
-          <td style=" width: 5%;">:</td>
-          <td style=" width: 60%;"><?= !empty($data['style']) ? $data['style'] : '__________' ?></td>
+          <td style=" font-weight: 800; width: 10%;">No.</td>
+          <td style=" font-weight: 800; width: 5%;">:</td>
+          <td style=" font-weight: 800; width: 10%;">__________</td>
+          <td style=" font-weight: 800; width: 10%;"></td>
+          <td style=" font-weight: 800; width: 10%;">Style</td>
+          <td style=" font-weight: 800; width: 5%;">:</td>
+          <td style=" font-weight: 800; width: 60%;"><?= !empty($data['style']) ? $data['style'] : '__________' ?></td>
         </tr>
         <tr>
-          <td>Size</td><td>:</td><td><?= !empty($data['ukuran_text']) ? $data['ukuran_text'] : '__________' ?></td>
-          <td></td><td>Qty</td><td>:</td><td><?= !empty($data['qty']) ? $data['qty'] : '__________' ?></td>
+          <td style="font-weight: 800;">Size</td><td style="font-weight: 800;">:</td><td style="font-weight: 800;"><?= !empty($data['ukuran_text']) ? $data['ukuran_text'] : '__________' ?></td>
+          <td></td><td style="font-weight: 800;">Qty</td><td>:</td><td style="font-weight: 800;"><?= !empty($data['qty']) ? $data['qty'] : '__________' ?></td>
         </tr>
         <tr>
-          <td>Desc.</td><td>:</td><td colspan="4"><?= !empty($data['desc']) ? $data['desc'] : '__________' ?></td>
+          <td style="font-weight: 800;">Desc.</td><td style="font-weight: 800;">:</td><td colspan="4" style="font-weight: 800;"><?= !empty($data['desc']) ? $data['desc'] : '__________' ?></td>
         </tr>
       </table>
 
@@ -197,11 +197,11 @@
         ?>
             <tr>
               <td style=" width: 5%;"></td>
-              <td style=" width: 5%; font-size: 14px;"><?= !empty($huruf) ? $huruf.". " : null ?></td>
-              <td style=" width: 50%; font-size: 12px;"><?= !empty($value) ? $value : '__________' ?></td>
+              <td style="font-weight: 800; width: 5%; font-size: 14px;"><?= !empty($huruf) ? $huruf.". " : null ?></td>
+              <td style="font-weight: 800; width: 50%; font-size: 12px;"><?= !empty($value) ? $value : '__________' ?></td>
 
-              <td style=" width: 2%; font-size: 14px;">Lot.</td>
-              <td style=" width: 10%;">________</td>
+              <td style="font-weight: 800; width: 2%; font-size: 14px;">Lot.</td>
+              <td style="font-weight: 800; width: 10%;">________</td>
             </tr>
         <?php 
             }

@@ -8,7 +8,7 @@
   <style>
     html {
       margin: 10px 32px;
-      font-size: 13px;
+      font-size: 15px;
     }
 
     body * {
@@ -82,15 +82,15 @@
     }
 
     .text-sm {
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .text-md {
-      font-size: 16px;
+      font-size: 18px;
     }
 
     .text-lg {
-      font-size: 22px;
+      font-size: 24px;
     }
 
     .break-word {
@@ -111,7 +111,7 @@
     .table-bordered > tbody > tr > td {
       border: 1px solid #333;
       padding: 1px 6px;
-      font-size: 12px;
+      font-size: 14px;
     }
 
     .kop-surat img {
@@ -122,7 +122,7 @@
       text-transform: uppercase;
       margin-bottom: 10px;
       margin-top: 10px;
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .kop-surat div p {
@@ -156,12 +156,48 @@
   </div>
 
   <hr>
-  <br>
 
   <table class="w-100">
     <tbody>
       <tr>
-        <td style="width: 50%; vertical-align: top;">
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Nama</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 55%; vertical-align: top;"><p class="text-sm my-0"><?= !empty($detail) ? $detail[0]->full_name : ''?></p></td>
+        <td style="width: 35%; vertical-align: top;">
+          <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Tanggal</span> : <?= !empty($row) ? ($row->periode_awal) : ''?></p>
+          <!-- <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Kode Karyawan</span> : .......................</p> -->
+        </td>
+      </tr>
+      <tr>
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">NIP</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 60%; vertical-align: top;" colspan="2"><p class="text-sm my-0"><?= !empty($detail) ? $detail[0]->nip : ''?></p></td>
+      </tr>
+      <tr>
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Jabatan</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 60%; vertical-align: top;" colspan="2"><p class="text-sm my-0"><?= !empty($detail) ? $detail[0]->posisi : ''?></p></td>
+      </tr>
+      <tr>
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Status</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 60%; vertical-align: top;" colspan="2"><p class="text-sm my-0">.......................</p></td>
+      </tr>
+      <tr>
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Alamat</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 55%; vertical-align: top;"><p class="text-sm my-0"><?= !empty($detail) ? $detail[0]->alamat : ''?></p></td>
+        <td style="width: 35%; vertical-align: top;">
+        </td>
+      </tr>
+      <tr>
+        <td style="width: 5%; vertical-align: top;"><p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Telepon</span></p></td>
+        <td style="width: 2%; vertical-align: top;"><p class="text-sm my-0">:</td>
+        <td style="width: 60%; vertical-align: top;" colspan="2"><p class="text-sm my-0"><?= !empty($detail) ? $detail[0]->no_hp : ''?></p></td>
+        
+      </tr>
+      <!-- <tr>
+        <td style="width: 75%; vertical-align: top;">
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Nama</span> : <?= !empty($detail) ? $detail[0]->full_name : ''?></p>
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">NIP</span> : <?= !empty($detail) ? $detail[0]->nip : ''?></p>
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Jabatan</span> : <?= !empty($detail) ? $detail[0]->posisi : ''?></p>
@@ -169,17 +205,14 @@
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Alamat</span> : <?= !empty($detail) ? $detail[0]->alamat : ''?></p>
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Telepon</span> : <?= !empty($detail) ? $detail[0]->no_hp : ''?></p>
         </td>
-        <td style="width: 50%; vertical-align: top;">
+        <td style="width: 25%; vertical-align: top;">
           <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Tanggal</span> : <?= !empty($row) ? ($row->periode_awal) : ''?></p>
-          <!-- <p class="text-sm my-0"><span class="d-inline-block" style="width: 95px;">Kode Karyawan</span> : .......................</p> -->
         </td>
-      </tr>
+      </tr> -->
     </tbody>
   </table>
-
-  <br>
+  
   <hr>
-  <br>
 
   <table class="w-100">
     <thead>
@@ -250,20 +283,14 @@
     </tbody>
   </table>
 
-  <br>
-
   <table class="w-100">
     <tbody>
       <tr>
-        <td class="text-center" style="width: 60%;">&nbsp;</td>
-        <td class="text-center" style="width: 40%;">&nbsp;</td>
-      </tr>
-      <tr>
-        <td class="text-center">
+        <td class="text-center" style="width: 25%">
           <p><b>Mengetahui</b></p><br>
           <p>( HRD )</p>
         </td>
-        <td class="text-left">
+        <td class="text-left" style="width: 55%" colspan="3">
           <p>
             Pembayaran gaji dilakukan<br>
             melalui transfer ke rekening karyawan BNI terdaftar.<br>
@@ -277,18 +304,29 @@
             bisa dilkaukan pembayaran Cash -->
           </p>
         </td>
+        <td class="text-left" style="width: 20%"></td>
+      </tr>
+      <tr>
+        <td class="text-center text-sm">
+          <p><b>Karyawan</b></p><br>
+          <p>( <?= !empty($detail) ? $detail[0]->full_name : '.......................'?> )</p>
+        </td>
+        <td class="text-left text-sm" style="width: 20%"></td>
+        <td class="text-center text-sm">
+          <p><b>Menyetujui</b></p><br>
+          <p>( Pimpinan )</p>
+        </td>
+        <td class="text-left text-sm" style="width: 20%"></td>
+        <td class="text-center text-sm">
+          <p><b>Bagian Keuangan</b></p><br>
+          <p>(...................)</p>
+        </td>
       </tr>
     </tbody>
   </table>
 
-  <br>
-
-  <table class="w-100">
+  <!-- <table class="w-100">
     <tbody>
-      <tr>
-        <td class="text-center" style="width: 60%;">&nbsp;</td>
-        <td class="text-center" style="width: 40%;">&nbsp;</td>
-      </tr>
       <tr>
         <td class="text-center">
           <p><b>Karyawan</b></p><br>
@@ -304,7 +342,7 @@
         </td>
       </tr>
     </tbody>
-  </table>
+  </table> -->
 
   <script>
     window.print()

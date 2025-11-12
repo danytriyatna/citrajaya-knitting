@@ -855,6 +855,7 @@ class Mdashboard extends Model
         $builder->join("trans_barang_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
         $builder->where('bbx.active = 1');
         $builder->where('bbx.jenis_transaksi', 2);
+        $builder->where('bbx.id_kategori !=', 13);
 
         $builder->where("EXTRACT(MONTH FROM bbx.tanggal) = $month");
         $builder->where("EXTRACT(YEAR FROM bbx.tanggal) = $year");    

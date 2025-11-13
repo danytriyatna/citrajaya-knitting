@@ -95,8 +95,8 @@
                 <div class="col-md-9">
                   <select id="select_payment_type" name="select_payment_type" class="form-select select2" data-placeholder="-- Pilih Payment Type --">
                     <?php foreach ($rekening_list as $item) : ?>
-                      <?php if (!empty($resData->id_rek) && $resData->id_rek != $item->id) { ?>
-                        <option checked value="<?= $item->id; ?>"><?= $item->rekening_no; ?> - <?= $item->rekening_bank; ?></option>
+                      <?php if (!empty($resData->id_rek) && $resData->id_rek == $item->id) { ?>
+                        <option selected value="<?= $item->id; ?>"><?= $item->rekening_no; ?> - <?= $item->rekening_bank; ?></option>
                       <?php } else { ?>
                         <option value="<?= $item->id; ?>"><?= $item->rekening_no; ?> - <?= $item->rekening_bank; ?></option>
                     <?php }

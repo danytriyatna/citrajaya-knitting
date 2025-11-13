@@ -27,12 +27,36 @@ class PurchaseModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
-        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, uk.qty, uk.qty_payment, uk.total, uk.total_payment, uk.approve_status, uk.keterangan");
+        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, 
+        COALESCE((
+                        SELECT SUM(tpd.qty)
+                        FROM trans_po_detail tpd
+                        WHERE CAST(tpd.id_header AS INTEGER) = uk.id 
+                    ), 0) as qty, 
+        COALESCE((
+                        SELECT SUM(trd.qty)
+                        FROM trans_receive_detail trd
+                        inner join trans_receive_header trh on trh.id = CAST(trd.id_header AS INTEGER)
+                        WHERE CAST(trh.id_po AS INTEGER) = uk.id 
+                        AND trh.status = 1
+                    ), 0) as qty_payment, uk.total, uk.total_payment, uk.approve_status, uk.keterangan");
 
         if (!empty($params['isReceive']) && $params['isReceive']) {
             $builder->groupStart();
-            $builder->where("qty_payment < qty");
-            $builder->orWhere("qty_payment IS NULL");
+            $builder->where("COALESCE((
+                        SELECT SUM(trd.qty)
+                        FROM trans_receive_detail trd
+                        inner join trans_receive_header trh on trh.id = CAST(trd.id_header AS INTEGER)
+                        WHERE CAST(trh.id_po AS INTEGER) = uk.id 
+                        AND trh.status = 1
+                    ), 0) < qty");
+            $builder->orWhere("COALESCE((
+                        SELECT SUM(trd.qty)
+                        FROM trans_receive_detail trd
+                        inner join trans_receive_header trh on trh.id = CAST(trd.id_header AS INTEGER)
+                        WHERE CAST(trh.id_po AS INTEGER) = uk.id 
+                        AND trh.status = 1
+                    ), 0) IS NULL");
             $builder->groupEnd();
         }
 

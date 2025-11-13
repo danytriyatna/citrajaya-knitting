@@ -305,7 +305,7 @@ $(document).ready(function () {
 				
 			{
 				title: 'SUPPLIER', field: 'nama', headerSort:false, sorter: 'string', formatter : "textarea",
-				width: 185
+				width: "25%"
 			}, 
 
             // {
@@ -319,17 +319,17 @@ $(document).ready(function () {
 
             {
 				title: 'NILAI PO', field: 'total_bayar', headerSort:false, sorter: 'string',
-				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: "25%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             {
 				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string',
-				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: "25%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             {
 				title: 'SISA', field: 'sisa_bayar', headerSort:false, sorter: 'string',
-				width: 230, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
+				width: "25%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
 			}, 
 
             

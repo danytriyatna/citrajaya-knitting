@@ -806,7 +806,7 @@ class BarangMasuk extends BaseController
             }
 
             $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('A'.$ix, !empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-")
+                    ->setCellValue('A'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-")
                     ->setCellValue('B'.$ix, !empty($r->kode_transaksi) ? $r->kode_transaksi : "-")
                     ->setCellValue('C'.$ix, !empty($r->jenis_transaksi) ? $r->jenis_transaksi : "-")
                     ->setCellValue('D'.$ix, !empty($r->no_ref_trf) ? $r->no_ref_trf : '-')

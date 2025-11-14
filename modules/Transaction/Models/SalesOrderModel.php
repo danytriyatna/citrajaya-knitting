@@ -684,6 +684,20 @@ class SalesOrderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " abx");
 
+        $lwoSub = "
+            (
+                SELECT DISTINCT ON (tso_1.id)
+                    tso_1.id AS order_id,
+                    wp.id_walkorder
+                FROM trans_walkorder_proses_ukuran xk
+                JOIN trans_walkorder_proses wp ON wp.id = xk.id_walkorder_proses
+                JOIN trans_walkorder xp ON xp.id = wp.id_walkorder
+                JOIN trans_sales_order tso_1 ON xp.ref_id = tso_1.id
+                WHERE xp.tipe_id = 2
+                ORDER BY tso_1.id, wp.id_walkorder DESC
+            ) as lwo
+            ";
+
         $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua,
                           abx.uang_dp, abx.style as stylex , abx.style_cnt, abx.status,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp,
@@ -692,6 +706,36 @@ class SalesOrderModel extends \App\Models\PrModel
                                 FROM trans_sales_order_ukuran tsou
                                 WHERE tsou.id_sales_order = abx.id
                             ), 0) as qty,
+                            ( SELECT tp.id
+                                FROM trans_produksi tp
+                                WHERE tp.id_walkorder = lwo.id_walkorder
+                                ORDER BY tp.id DESC
+                            LIMIT 1) AS id_prod,
+                            (
+                                SELECT tp.id_walkorder
+                                FROM trans_produksi tp
+                                WHERE tp.id_walkorder = lwo.id_walkorder
+                                ORDER BY tp.id DESC
+                                LIMIT 1
+                            ) AS id_walkorder_prod,
+                            COALESCE((
+                                SELECT sum(xk.qty_prod)
+                                FROM trans_walkorder_proses_ukuran xk
+                                INNER JOIN trans_walkorder_proses wp ON wp.id = xk.id_walkorder_proses
+                                INNER JOIN trans_walkorder xp ON xp.id = wp.id_walkorder
+                                WHERE xp.ref_id = abx.id AND xp.tipe_id = 2
+                                AND wp.id_proses = (( SELECT min(wp2.id_proses) AS min
+                                    FROM trans_walkorder_proses wp2
+                                    WHERE wp2.id_walkorder = xp.id))
+                            ), 0) as qty_prod,
+                            COALESCE((
+                                SELECT SUM(tdd.qty)
+                                FROM trans_delivery_detail tdd
+                                INNER JOIN trans_delivery td on tdd.id_delivery = td.id
+                                INNER JOIN trans_walkorder tw on td.id_walkorder = tw.id
+                                WHERE tw.ref_id = abx.id and tw.tipe_id = 2
+                                AND td.active = 1
+                            ), 0) as qty_do,
                           COALESCE((
                                 SELECT SUM(tsou.harga_total)
                                 FROM trans_sales_order_ukuran tsou
@@ -715,6 +759,7 @@ class SalesOrderModel extends \App\Models\PrModel
                             ), 0) as pembayaran
                             ");
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->join($lwoSub, "lwo.order_id = abx.id", "left");
        
         $builder->where('abx.active = 1');
         $builder->where('abx.status = 2');
@@ -741,7 +786,6 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder->orderBy("abx.tgl_transaksi", 'desc');
         
         $this->_data = $builder->get()->getResult();
-
         return $this->_data;
     }
 }

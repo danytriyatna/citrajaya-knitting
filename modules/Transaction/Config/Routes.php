@@ -43,6 +43,7 @@ $routes->group('trans/delivery-order', ['namespace' => 'Modules\Transaction\Cont
   $routes->post('det_produksi', 'DeliveryOrder::getDataProduksi');
   $routes->post('cari_produk', 'DeliveryOrder::getDataProduksiItem');
   $routes->get('print/(:any)', 'DeliveryOrder::print/$1');
+  $routes->get('print_excel_lists/(:any)/(:any)/(:any)', 'DeliveryOrder::print_excel_lists/$1/$2/$3');
 });
 
 $routes->group('trans/work-order', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

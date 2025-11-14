@@ -24,6 +24,7 @@ use Modules\Referensi\Models\RekeningModel;
 use Modules\Transaction\Models\SampleModel;
 use Endroid\QrCode\Writer\ValidationException;
 use Modules\Transaction\Models\WalkorderModel;
+use Modules\Transaction\Models\ProductionModel;
 use Modules\Transaction\Models\SalesOrderModel;
 
 class SalesOrder extends BaseController
@@ -36,6 +37,7 @@ class SalesOrder extends BaseController
   protected $mWarna;
   protected $mworkOrder;
   protected $mRekening;
+  protected $mProduksi;
 
   protected $views = '\Modules\Transaction\Views';
   protected $urlv  = 'trans/sales_order';
@@ -52,6 +54,7 @@ class SalesOrder extends BaseController
     $this->mSample = new SampleModel();
     $this->mworkOrder = new WalkorderModel();
     $this->mRekening   = new RekeningModel();
+    $this->mProduksi = new ProductionModel();
   }
 
 
@@ -1003,12 +1006,15 @@ class SalesOrder extends BaseController
                ->setCellValue('F4', 'DESKRIPSI')
                ->setCellValue('G4', 'NOMOR INVOICE')
                ->setCellValue('H4', 'QTY')
-               ->setCellValue('I4', 'NILAI SO')
-               ->setCellValue('J4', 'NILAI DP')
-               ->setCellValue('K4', 'NILAI INVOICE')
-               ->setCellValue('L4', 'SISA TAGIHAN')
-               ->setCellValue('M4', 'PEMBAYARAN')
-               ->setCellValue('N4', 'SISA PEMBAYARAN');
+               ->setCellValue('I4', 'PROSES PRODUKSI')
+               ->setCellValue('J4', 'HASIL PRODUKSI')
+               ->setCellValue('K4', 'QTY DO')
+               ->setCellValue('L4', 'NILAI SO')
+               ->setCellValue('M4', 'NILAI DP')
+               ->setCellValue('N4', 'NILAI INVOICE')
+               ->setCellValue('O4', 'SISA TAGIHAN')
+               ->setCellValue('P4', 'PEMBAYARAN')
+               ->setCellValue('Q4', 'SISA PEMBAYARAN');
 
             $styleArray = [
                 'borders' => [
@@ -1129,13 +1135,13 @@ class SalesOrder extends BaseController
             ];
             
         $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:N4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:N3')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:Q4')->applyFromArray($styleArray_header);
+        // $gets->getStyle('A3:Q3')->applyFromArray($styleArray_header);
         
         // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:N2');
-        $sheets->getActiveSheet()->mergeCells('A2:N2');
-        // $sheets->getActiveSheet()->mergeCells('A4:N4');
+        // $sheets->getActiveSheet()->mergeCells('A2:Q2');
+        $sheets->getActiveSheet()->mergeCells('A2:Q2');
+        // $sheets->getActiveSheet()->mergeCells('A4:Q4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
         // set Center title
@@ -1152,23 +1158,26 @@ class SalesOrder extends BaseController
         $gets->getColumnDimension('F')->setWidth(40);
         $gets->getColumnDimension('G')->setWidth(30);
         $gets->getColumnDimension('H')->setWidth(20);
-        $gets->getColumnDimension('I')->setWidth(35);
-        $gets->getColumnDimension('J')->setWidth(35);
-        $gets->getColumnDimension('K')->setWidth(35);
+        $gets->getColumnDimension('I')->setWidth(20);
+        $gets->getColumnDimension('J')->setWidth(20);
+        $gets->getColumnDimension('K')->setWidth(20);
         $gets->getColumnDimension('L')->setWidth(35);
         $gets->getColumnDimension('M')->setWidth(35);
         $gets->getColumnDimension('N')->setWidth(35);
+        $gets->getColumnDimension('O')->setWidth(35);
+        $gets->getColumnDimension('P')->setWidth(35);
+        $gets->getColumnDimension('Q')->setWidth(35);
 
-        $gets->getStyle('A4:N4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-        $gets->getStyle('A4:N4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:Q4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+        $gets->getStyle('A4:Q4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I', 'J','K', 'L', 'M', 'N'
+            'A','B','C','D', 'E','F','G', 'H','I', 'J','K', 'L', 'M', 'N', 'O', 'P', 'Q'
         );
 
-        for ($i=0; $i < 14 ; $i++) { 
+        for ($i=0; $i < 17 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -1202,6 +1211,9 @@ class SalesOrder extends BaseController
         $total_sisa = 0;
         $total_pembayaran = 0;
         $total_sisa_pembayaran = 0;
+        $total_qty_prod = 0;
+        $total_qty_hasil = 0;
+        $total_qty_do = 0;
 
         $startRow = $ix;
         for ($xx = 0; $xx < count($results) ; $xx++) { 
@@ -1209,6 +1221,8 @@ class SalesOrder extends BaseController
             $r = $results[$xx];
 
             $qty = !empty($r->qty) ? $r->qty : 0;
+            $qty_prod = !empty($r->qty_prod) ? $r->qty_prod : 0;
+            $qty_do = !empty($r->qty_do) ? $r->qty_do : 0;
             $nilai_so = !empty($r->harga_total) ? $r->harga_total : 0;
             $nilai_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
             $nilai_invoice = !empty($r->nilai_invoice) ? $r->nilai_invoice : 0;
@@ -1217,12 +1231,33 @@ class SalesOrder extends BaseController
             $sisa_pembayaran = $nilai_so - ($nilai_dp + $pembayaran);
 
             $total_qty += $qty; 
+            $total_qty_prod += $qty_prod; 
+            $total_qty_do += $qty_do; 
             $total_so += $nilai_so; 
             $total_dp += $nilai_dp ; 
             $total_invoice += $nilai_invoice; 
             $total_sisa += $sisa;
             $total_pembayaran += $pembayaran;
             $total_sisa_pembayaran += $sisa_pembayaran;
+
+            $parms['last_proses'] = 1;
+            $parms['id_walkorder'] = $r->id_walkorder_prod;
+            if (!empty($r->id_walkorder_prod)) {
+                $dataLast = $this->mProduksi->getDataProsesProd($parms);
+                $last_data = !empty($dataLast) ? $dataLast[0] : [];
+    
+                $qty_hasil = 0;
+                if (!empty($last_data)) {
+                    // $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    $qty_hasil = $last_data->qty_prod;
+                }
+                
+            }
+            else {
+                $qty_hasil = 0;
+            }
+
+            !empty($qty_hasil) ? $total_qty_hasil += $qty_hasil : $total_qty_hasil += 0; 
 
             $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
@@ -1233,21 +1268,24 @@ class SalesOrder extends BaseController
                     ->setCellValue('F'.$ix, !empty($r->deskripsi) ? $r->deskripsi : '-')
                     ->setCellValue('G'.$ix, !empty($r->kode_invoice) ? $r->kode_invoice : '-')
                     ->setCellValue('H'.$ix, $qty)
-                    ->setCellValue('I'.$ix, $nilai_so)
-                    ->setCellValue('J'.$ix, $nilai_dp)
-                    ->setCellValue('K'.$ix, $nilai_invoice)
-                    ->setCellValue('L'.$ix, $sisa)
-                    ->setCellValue('M'.$ix, $pembayaran)
-                    ->setCellValue('N'.$ix, $sisa_pembayaran);
+                    ->setCellValue('I'.$ix, $qty_prod)
+                    ->setCellValue('J'.$ix, $qty_hasil)
+                    ->setCellValue('K'.$ix, $qty_do)
+                    ->setCellValue('L'.$ix, $nilai_so)
+                    ->setCellValue('M'.$ix, $nilai_dp)
+                    ->setCellValue('N'.$ix, $nilai_invoice)
+                    ->setCellValue('O'.$ix, $sisa)
+                    ->setCellValue('P'.$ix, $pembayaran)
+                    ->setCellValue('Q'.$ix, $sisa_pembayaran);
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':Q'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("H" . $ix .":N" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("L" . $ix .":Q" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
           $ix++;
@@ -1257,7 +1295,7 @@ class SalesOrder extends BaseController
 
         $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
         
-        $gets->getStyle('A'.$length.':N'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':Q'.$length)->applyFromArray($stylexArrayFooter);
         
         $sheets->setActiveSheetIndex(0)
                       ->setCellValue('H' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
@@ -1280,7 +1318,16 @@ class SalesOrder extends BaseController
         $sheets->setActiveSheetIndex(0)
                       ->setCellValue('N' . $length, '=SUM(N' . $startRow . ':N' . $length-1 . ')');
 
-        $gets->getStyle('I'. $length .':N'. $length)->getNumberFormat()
+        $sheets->setActiveSheetIndex(0)
+                      ->setCellValue('O' . $length, '=SUM(O' . $startRow . ':O' . $length-1 . ')');
+
+        $sheets->setActiveSheetIndex(0)
+                      ->setCellValue('P' . $length, '=SUM(P' . $startRow . ':P' . $length-1 . ')');
+
+        $sheets->setActiveSheetIndex(0)
+                      ->setCellValue('Q' . $length, '=SUM(Q' . $startRow . ':Q' . $length-1 . ')');
+
+        $gets->getStyle('L'. $length .':Q'. $length)->getNumberFormat()
                 ->setFormatCode('#,##0.00');
         
         $sheets->setActiveSheetIndex(0);

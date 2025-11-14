@@ -176,4 +176,69 @@ class DeliveryModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
+
+    function get_export($from_date = null, $to_date = null, $buyer = null)
+    {
+        $builder = $this->db->table($this->table2 . " tdd");
+
+        $builder->select("tdd.id, td.delivery_kode, td.tgl_transaksi, tso.kode_sales_order, rk.nama, tso.style, 
+                            TRIM ( BOTH ' - ' FROM
+                                COALESCE(rw1.kode_warna, '') ||
+                                CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                                CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                                CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                                CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                                CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                                CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                                CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+                            ) AS kode_warna,
+                            tso.id as id_so,
+                            tsod.id as id_so_det,
+                            ru.id as id_ukuran,
+                            ru.kode_ukuran,
+                            tsou.qty as qty_so,
+                            tdd.qty as qty_do
+                            ");
+        $builder->join("trans_delivery td", "td.id = tdd.id_delivery", "inner");
+        $builder->join("ref_konsumen rk", "rk.id = td.id_konsumen", "inner");
+        $builder->join("ref_ukuran ru", "ru.id = tdd.id_ukuran", "inner");
+        $builder->join("trans_walkorder tw", "tw.id = td.id_walkorder", "inner");
+        $builder->join("trans_sales_order_ukuran tsou", "tsou.id_sales_order_det = tdd.ref_detail_id and tsou.id_ukuran = tdd.id_ukuran", "inner");
+        $builder->join("trans_sales_order_det tsod", "tsod.id = tdd.ref_detail_id", "inner");
+        $builder->join("trans_sales_order tso", "tso.id = tsod.id_sales_order", "inner");
+        $builder->join("ref_warna rw1", "rw1.id = tsod.id_warna_1", "left");
+        $builder->join("ref_warna rw2", "rw2.id = tsod.id_warna_2", "left");
+        $builder->join("ref_warna rw3", "rw3.id = tsod.id_warna_3", "left");
+        $builder->join("ref_warna rw4", "rw4.id = tsod.id_warna_4", "left");
+        $builder->join("ref_warna rw5", "rw5.id = tsod.id_warna_5", "left");
+        $builder->join("ref_warna rw6", "rw6.id = tsod.id_warna_6", "left");
+        $builder->join("ref_warna rw7", "rw7.id = tsod.id_warna_7", "left");
+        $builder->join("ref_warna rw8", "rw8.id = tsod.id_warna_8", "left");
+       
+        $builder->where('tw.tipe_id = 2');
+        $builder->where("td.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+        // $builder->where("
+        //     COALESCE((
+        //         SELECT SUM(tsou.harga_total)
+        //         FROM trans_sales_order_ukuran tsou
+        //         WHERE tsou.id_sales_order = td.id
+        //     ), 0)
+        //     >
+        //     (
+        //         td.uang_dp +
+        //         COALESCE((
+        //             SELECT SUM(tidd.grand_total)
+        //             FROM trans_invoice_detail tidd
+        //             WHERE tidd.id_ref = td.id AND tidd.tipe_id = 2 AND tidd.payment_status = 1
+        //         ), 0)
+        //     )
+        // ");
+        if (!empty($buyer)) {
+            $builder->where("td.id_konsumen", $buyer);
+        }
+        $builder->orderBy("td.tgl_transaksi", 'desc');
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
 }

@@ -124,7 +124,9 @@ class Dashboard extends BaseController
         // $total = 0;
         foreach ($results as $key => $row) {
             $id = encrypt($row->trans_id);
-
+            // if ($row->trans_id == "873") {
+            //     dd($row->trans_kode, $row->id_prod, $row->id_walkorder);
+            // }
             $btnOrder = "";
             $btnProd = "";
             $btnDev = "";

@@ -754,7 +754,7 @@ class Mdashboard extends Model
             SUM(COALESCE(dibayar, 0)) AS dibayar,
             SUM(diskon) AS diskon
         ", false)
-        ->groupBy('id_vendor, nama_vendor, po_date_exp')
+        ->groupBy(['id_vendor', 'nama_vendor', 'po_date_exp'])
         ->orderBy('nama_vendor', 'ASC');
 
         if (empty($offset)) $offset = 0;

@@ -609,7 +609,7 @@ $(document).ready(function () {
                             inpSample.attr('value', data.id_sample);
                             inpSample.val(data.id_sample).trigger("change");
                             inpUangDP.val(data.uang_dp).trigger("change");
-                            inpTglDP.val(formatterDate(data.tgl_dp));
+                            inpTglDP.val(data.tgl_dp != null ? formatterDate(data.tgl_dp) : null);
                             inpTypeDP.val(data.type_dp).trigger("change");
                         }, 1000);
                     }, 2000);
@@ -807,6 +807,7 @@ $(document).ready(function () {
     
         if(validation){
             var formData = new FormData();
+            console.log(inpTglDP.val(), inpTglDP.val() != null, inpTglDP.val() != '', inpTglDP.val() != undefined, inpTglDP.val() != " ");
             formData.append("id",inpData.val());
             formData.append("noSalesOrder",inpNoSalesOrder.val());
             formData.append("deskripsi",inpDeskripsi.val());
@@ -819,7 +820,7 @@ $(document).ready(function () {
             formData.append("keterangan",inpKetSalesOrder.val());
             formData.append("samples", inpSample.val())
             formData.append("uang_dp", inpUangDP.val());
-            formData.append("tgl_dp", formatLocaleDate(inpTglDP.val()));
+            formData.append("tgl_dp", inpTglDP.val() != '' ? formatLocaleDate(inpTglDP.val()) : '');
             formData.append("type_dp", inpTypeDP.val());
             formData.append("style", inpStyle.val());
             formData.append("repeat", inprepeat.val());

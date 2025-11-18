@@ -22,7 +22,7 @@ $(document).ready(function () {
 			}, 
 
             {
-				title: 'EXPIRED DATE', field: 'po_date_exp', formatter : "html", align: "center", hozAlign:"left", headerSort:false,
+				title: 'DUE DATE', field: 'po_date_exp', formatter : "html", align: "center", hozAlign:"left", headerSort:false,
                 width: "10%",
 			} ,
 

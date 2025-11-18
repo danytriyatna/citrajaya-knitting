@@ -300,7 +300,7 @@
                 </tr>
                 <tr>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 3 ?>">
-                        DP ( <?= !empty($data->tgl_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> )
+                        DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> )
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
                          <?= !empty($data->uang_dp) ? "Rp." . number_format(round($data->uang_dp)) : "-" ?>

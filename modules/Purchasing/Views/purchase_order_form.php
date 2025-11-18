@@ -186,8 +186,8 @@
                     <div class="col-md-8">
                       <select id="select_term" name="select_term" class="form-select select2" data-placeholder="-- Pilih Term --">
                         <?php foreach ($term as $row) : ?>
-                          <?php if (!empty($data->id_term) && $data->id_term == $row['id']) { ?>
-                            <option checked value="<?= $row['id'] ?>"><?= $row['name'] ?></option>
+                          <?php if (!empty($resData->id_term) && $resData->id_term == $row['id']) { ?>
+                            <option selected value="<?= $row['id'] ?>"><?= $row['name'] ?></option>
                           <?php } else { ?>
                             <option value="<?= $row['id'] ?>"><?= $row['name'] ?></option>
                         <?php }

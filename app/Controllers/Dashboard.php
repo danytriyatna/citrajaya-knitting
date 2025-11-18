@@ -339,7 +339,7 @@ class Dashboard extends BaseController
                 // 'btnPo' => $btnPo,
                 // 'po_date' => $po_date,
                 'nama' => $row->nama_vendor,
-                // 'date_exc' => $date_exc,
+                'term' => $row->term,
                 'total_bayar' => $row->total_bayar,
                 'dibayar' => $row->dibayar,
                 'sisa_bayar' => $sisa_bayar,

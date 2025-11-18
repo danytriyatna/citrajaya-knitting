@@ -715,6 +715,7 @@ class Mdashboard extends Model
                 ph.total::int AS total_bayar,
                 COALESCE(ph.diskon::int, 0) AS diskon,
                 term.days,
+                term.name as name_term,
                 (
                     SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
                     FROM trans_po_pembayaran_detail tpo
@@ -747,11 +748,12 @@ class Mdashboard extends Model
         $builder->select("
             id_vendor,
             nama_vendor,
+            name_term as term,
             SUM(total_bayar) AS total_bayar,
             SUM(COALESCE(dibayar, 0)) AS dibayar,
             SUM(diskon) AS diskon
         ", false)
-        ->groupBy('id_vendor, nama_vendor')
+        ->groupBy('id_vendor, nama_vendor, name_term')
         ->orderBy('nama_vendor', 'ASC');
 
         if (empty($offset)) $offset = 0;

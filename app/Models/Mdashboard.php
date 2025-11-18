@@ -715,8 +715,6 @@ class Mdashboard extends Model
                 ph.date_exc,
                 ph.total::int AS total_bayar,
                 COALESCE(ph.diskon::int, 0) AS diskon,
-                --term.days,
-                --term.name as name_term,
                 (
                     SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
                     FROM trans_po_pembayaran_detail tpo
@@ -760,7 +758,6 @@ class Mdashboard extends Model
         if (empty($offset)) $offset = 0;
         if (empty($limit)) $limit = 10;
         $builder->limit($limit, $offset);
-        dd($builder->getCompiledSelect());
 
         $query = $builder->get();
         $this->_data = $query->getResult();

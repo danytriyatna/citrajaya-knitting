@@ -26,8 +26,8 @@ class PurchaseModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
-        $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
-        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, ebx.name as term, uk.po_date, uk.date_exc, uk.ship_to, 
+        // $builder->join($this->tblTerm . " ebx", "uk.id_term = ebx.id", "inner");
+        $builder->select("uk.id, uk.status, uk.id_vendor, uk.id_term, uk.po_no,dbx.nama as nama_vendor, uk.po_date_exp, uk.po_date, uk.date_exc, uk.ship_to, 
         COALESCE((
                         SELECT SUM(tpd.qty)
                         FROM trans_po_detail tpd

@@ -180,7 +180,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-sm-6">
+                <!-- <div class="col-sm-6">
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_term">Term</label>
                     <div class="col-md-8">
@@ -193,6 +193,14 @@
                         <?php }
                         endforeach ?>
                       </select>
+                    </div>
+                  </div>
+                </div> -->
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="po_date_exp">Expired PO Date</label>
+                    <div class="col-md-8">
+                      <input type="text" id="po_date_exp" name="po_date_exp" class="form-control datepicker" placeholder="Pilih tanggal Expired" value="<?= !empty($resData->po_date_exp) ? $resData->po_date_exp : date("d F Y", now()) ?>">
                     </div>
                   </div>
                 </div>

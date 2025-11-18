@@ -711,11 +711,12 @@ class Mdashboard extends Model
                 rv.nama AS nama_vendor,
                 ph.po_no,
                 ph.po_date,
+                ph.po_date_exp,
                 ph.date_exc,
                 ph.total::int AS total_bayar,
                 COALESCE(ph.diskon::int, 0) AS diskon,
-                term.days,
-                term.name as name_term,
+                --term.days,
+                --term.name as name_term,
                 (
                     SELECT SUM(tpo.total_bayar::int) + SUM(tpo.diskon::int)
                     FROM trans_po_pembayaran_detail tpo
@@ -723,7 +724,7 @@ class Mdashboard extends Model
                 ) AS dibayar
             ", false)
             ->join('ref_vendor rv', 'rv.id = ph.id_vendor', 'inner')
-            ->join('ref_term term', 'term.id = ph.id_term', 'inner')
+            // ->join('ref_term term', 'term.id = ph.id_term', 'inner')
             ->where('ph.active', 1)
             ->where('ph.approve_status', 1)
             ->groupStart()
@@ -748,12 +749,12 @@ class Mdashboard extends Model
         $builder->select("
             id_vendor,
             nama_vendor,
-            name_term as term,
+            po_date_exp,
             SUM(total_bayar) AS total_bayar,
             SUM(COALESCE(dibayar, 0)) AS dibayar,
             SUM(diskon) AS diskon
         ", false)
-        ->groupBy('id_vendor, nama_vendor, name_term')
+        ->groupBy('id_vendor, nama_vendor, po_date_exp')
         ->orderBy('nama_vendor', 'ASC');
 
         if (empty($offset)) $offset = 0;

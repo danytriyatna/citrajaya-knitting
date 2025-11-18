@@ -308,7 +308,7 @@ $(document).ready(function () {
 				width: "25%"
 			}, 
 			{
-				title: 'JATUH TEMPO', field: 'term', headerSort:false, sorter: 'string', formatter : "textarea",
+				title: 'JATUH TEMPO', field: 'po_date_exp', headerSort:false, sorter: 'string', formatter : "textarea",
 				width: "15%"
 			}, 
 

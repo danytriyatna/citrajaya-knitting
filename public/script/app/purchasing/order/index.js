@@ -22,7 +22,7 @@ $(document).ready(function () {
 			}, 
 
             {
-				title: 'TERM', field: 'term', formatter : "html", align: "center", hozAlign:"left", headerSort:false,
+				title: 'EXPIRED DATE', field: 'po_date_exp', formatter : "html", align: "center", hozAlign:"left", headerSort:false,
                 width: "10%",
 			} ,
 

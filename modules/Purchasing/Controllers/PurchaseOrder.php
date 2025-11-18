@@ -111,8 +111,9 @@ class PurchaseOrder extends BaseController
           "id"   => ($id),
           "nama_vendor" => $row->nama_vendor,
           "po_no" => $row->po_no,
-          "term" => $row->term,
+          // "term" => $row->term,
           "po_date" => fdate_eng_to_ind($row->po_date),
+          "po_date_exp" => !empty($row->po_date_exp) ? fdate_eng_to_ind($row->po_date_exp) : null,
           "date_exc" => $row->date_exc,
           "qty" => $this->formatAngka($row->qty_payment) . "/" . $this->formatAngka($row->qty),
           "total" => $row->total,
@@ -143,8 +144,10 @@ class PurchaseOrder extends BaseController
       $resData = $this->mPO->getData($id);
       $resData->id_vendor = encrypt($resData->id_vendor);
       $poDate = date("d F Y", strtotime($resData->po_date));
+      $poDateExp = !empty($resData->po_date_exp) ? date("d F Y", strtotime($resData->po_date_exp)) : null;
       $dateExc = date("d F Y", strtotime($resData->date_exc));
       $resData->po_date = $poDate;
+      $resData->po_date_exp = $poDateExp;
       $resData->date_exc = $dateExc;
 
       $sort = [
@@ -183,6 +186,7 @@ class PurchaseOrder extends BaseController
     $id = $this->request->getPost('id');
     $id_vendor = $this->request->getPost('id_vendor');
     $po_date = $this->request->getPost('po_date');
+    $po_date_exp = $this->request->getPost('po_date_exp');
     $date_exc = $this->request->getPost('date_exc');
     $id_term = $this->request->getPost('id_term');
     $ship_to = $this->request->getPost('ship_to');
@@ -204,6 +208,7 @@ class PurchaseOrder extends BaseController
     $dataHeader = [
       "id_vendor" => $id_vendor,
       "po_date" => $po_date,
+      "po_date_exp" => $po_date_exp,
       "date_exc" => $date_exc,
       "id_term" => $id_term,
       "ship_to" => $ship_to,

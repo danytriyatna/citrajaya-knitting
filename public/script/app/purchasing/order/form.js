@@ -6,6 +6,7 @@ let inpIdBarang = $('#idBarang');
 let inpKodeBarang = $('#kodeBarang');
 let inpTglExpec = $('#tgl_expected');
 let inpTglPO = $('#tgl_po');
+let inpTglPOExp = $('#po_date_exp');
 let inpShipTo = $('#ship_to');
 let inpKeterangan = $('#keterangan');
 let inpIdHeader = $('#id_header');
@@ -543,6 +544,14 @@ btnSimpan.on("click",function(e){
             timer: 2000
         });
     }
+    if(inpTglPOExp.val().length == 0){
+        return Swal.fire({
+            text: "Expired PO Date harus diisi",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     if(inpTglExpec.val().length == 0){
         return Swal.fire({
             text: "Expected Date harus diisi",
@@ -588,6 +597,14 @@ btnApprove.on("click",function(e){
     if(inpTglPO.val().length == 0){
         return Swal.fire({
             text: "PO Date harus diisi",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(inpTglPOExp.val().length == 0){
+        return Swal.fire({
+            text: "Expired PO Date harus diisi",
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
@@ -643,6 +660,7 @@ function simpanData(stringButton) {
             id:inpIdHeader.val(),
             id_vendor:inpIdVendor.val(),
             po_date:formatLocaleDate(inpTglPO.val()),
+            po_date_exp:formatLocaleDate(inpTglPOExp.val()),
             date_exc:formatLocaleDate(inpTglExpec.val()),
             id_term:selectTerm.val(),
             ship_to:inpShipTo.val(),

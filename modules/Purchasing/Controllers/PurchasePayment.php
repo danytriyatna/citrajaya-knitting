@@ -139,8 +139,10 @@ class PurchasePayment extends BaseController
       $resData = $this->mRefDet->getDataPO($id_vendor);
       $new = true;
     }
-    foreach ($resData as &$rowData) {
-      $rowData->do_date = date('d-m-Y', strtotime($rowData->do_date));
+    foreach ($resData as $key => &$rowData) {
+      if (!empty($rowData->do_date)) {
+        $rowData->do_date = date('d-m-Y', strtotime($rowData->do_date));
+      }
       $rowData->po_date = date('d-m-Y', strtotime($rowData->po_date));
       if ($new) {
         $getRemaining =  $this->mRefDet->getDataDetailRemaining($rowData->id_header);

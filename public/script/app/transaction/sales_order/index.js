@@ -338,7 +338,7 @@ $(document).ready(function () {
             });
             document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
                 if (confirm("Anda yakin akan menghapus data?")) {
-                    window.location.replace(baseUrl + "/trans/sales-order/delete/list" + data.id);
+                    window.location.replace(baseUrl + "/trans/sales-order/delete/list/" + data.id);
                 }
             });
             
@@ -896,7 +896,7 @@ $(document).ready(function () {
             });
         }
 
-        let dataUkuran = dtListDetailQty.getData().filter(x => x.qty && x.harga_satuan);
+        let dataUkuran = dtListDetailQty.getData().filter(x => x.qty && (x.harga_satuan || x.harga_satuan === 0 ));
         if(dataUkuran.length ==0)
             {
                 return Swal.fire({
@@ -948,10 +948,10 @@ $(document).ready(function () {
                         isModalPO.modal("hide");
                     }else{
                         Swal.fire({
-                            text: response.message,
+                            html: response.message,
                             icon: 'error',
                             showConfirmButton: false,
-                            timer: 2000
+                            timer: 4000
                         });
                     }
                 },
@@ -960,10 +960,10 @@ $(document).ready(function () {
                     Swal.close();
         
                     Swal.fire({
-                        text: msg,
+                        html: msg,
                         icon: 'error',
                         showConfirmButton: false,
-                        timer: 2000
+                        timer: 4000
                     });
                 },
             });

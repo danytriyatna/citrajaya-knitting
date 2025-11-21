@@ -130,6 +130,7 @@ class DeliveryOrder extends BaseController
           "produksi_kode"     => $row->produksi_kode,
           "konsumen_nama"     => $row->konsumen_nama,
           "alamat"            => $row->alamat,
+          "kode_so"              => $row->kode_so,
           "qty"               => $qty,
           "qty_delv"          => $qty_delv,
           "qty_remain"        => $qty - $qty_delv,
@@ -211,6 +212,7 @@ class DeliveryOrder extends BaseController
         $qty_prod = [];
         foreach ($rs_prod as $xitem) {
           $xisi = [];
+          $xisi['id'] = $xitem->id;
           $xisi['id_ukuran'] = $xitem->id_ukuran;
           $xisi['ref_detail_id'] = $xitem->ref_detail_id;
           $xisi['kode_warna'] = $xitem->kode_warna;
@@ -263,18 +265,20 @@ class DeliveryOrder extends BaseController
             $indx      = $keyUkuran;
             $indxKey      = $keyUkuran."_key";
             $xharga    = $keyUkuran . '_hrg';
-
-            $isi[$indx] = $item->$keyUkuran;
+            $getQtyBefore = $this->mDelivery->getTotalQtyBefore($stdData->id_produksi, $id, $iu->id, $item->ref_detail_id);
+            $qtyBeforeOn = !empty($getQtyBefore) ? $getQtyBefore : 0;
+            $isi[$indx] = $item->$keyUkuran - $qtyBeforeOn;
             foreach ($getdProd as $key => $valueProd) {
               if ($valueProd->id_ukuran == $iu->id) {
-                # code...
+                $isi['id'] = $valueProd->id;
                 $isi[$indxKey] = $valueProd->qty_do;
               }
             }
             $isi[$xharga] = $item->$xharga;
-
-            $qty = $qty +  $item->$keyUkuran;
+            
+            $qty = $qty +  $item->$keyUkuran - $qtyBeforeOn;
           }
+          
           $isi['qty'] = $qty;
           $isi['qty_prod'] = !empty($arr_qty[$item->ref_detail_id]) ? $arr_qty[$item->ref_detail_id] : 0;
           $isi['qty_remain'] = $qty -  $isi['qty_prod'];
@@ -285,7 +289,7 @@ class DeliveryOrder extends BaseController
         }
       }
       $dt_details  = $dataProd;
-
+      
       $dt_details = json_encode($dt_details, true);
       $dt_prods = json_encode($dt_prods, true);
     }
@@ -329,7 +333,6 @@ class DeliveryOrder extends BaseController
           $data['delivery_kode'] = $this->mSample->generateNo("DO", "trans_delivery", "delivery_kode", "DO");
           $data['created_at'] = date('Y-m-d H:i:s');
           $data['created_by'] = $this->get_userid();
-          // dd($data);
           $inUp = $this->insert($data, $dt_details, $dt_prods);
         }
 
@@ -363,7 +366,6 @@ class DeliveryOrder extends BaseController
   {
     $tgl = date('Y-m-d H:i:s');
     $userId = $this->get_userid();
-    // dd($dataIn);
     $this->db->transBegin();
 
     $id = $this->mDelivery->insertRecordGetid($this->mDelivery->table, $dataIn);
@@ -455,7 +457,6 @@ class DeliveryOrder extends BaseController
     $this->mDelivery->updateRecord($this->mDelivery->table, $dataIn, 'id', $id);
 
     $qty = 0;
-
     $id_walkorder = $dataIn['id_walkorder'];
     $dtWalkorder = $this->mWalkorder->getData($id_walkorder);
     // / $data_ukuran = $this->mUkuran->getData(0, 0, 999);
@@ -468,21 +469,27 @@ class DeliveryOrder extends BaseController
       $pru['id_sales_order'] = $dtWalkorder->ref_id;
       $data_ukuran = $this->mSalesOrder->getUkuranTrans($pru);
     }
-
     if (!empty($detail)) {
-      $builderx = $this->db->table($this->mDelivery->table2);
-      $builderx->where("id_delivery", $id);
-      $builderx->delete();
-
+      // $builderx = $this->db->table($this->mDelivery->table2);
+      // $builderx->where("id_delivery", $id);
+      // $builderx->delete();
+      
       foreach ($detail as $item) {
         $ddata = [];
         $ddata['id_delivery'] = $id;
         $ddata['ref_detail_id'] = $item['ref_detail_id'];
         $ddata['id_ukuran'] = $item['id_ukuran'];
         $ddata['qty'] = $item['qty'];
-        $ddata['created_at'] = $tgl;
-        $ddata['created_by'] = $userId;
-        $this->mDelivery->insertRecordGetid($this->mDelivery->table2, $ddata);
+        $rs_prod = $this->mDelivery->getDataProduksi(null, $item['id']);
+        if (!empty($rs_prod)) {
+          $ddata['updated_at'] = $tgl;
+          $this->mDelivery->updateRecord("trans_delivery_detail", $ddata, 'id', $item['id']);
+        }
+        else {
+          $ddata['created_at'] = $tgl;
+          $ddata['created_by'] = $userId;
+          $this->mDelivery->insertRecordGetid($this->mDelivery->table2, $ddata);
+        }
 
         $qty = $qty + $item['qty'];
 
@@ -493,7 +500,6 @@ class DeliveryOrder extends BaseController
 
           $params_b['nama_barang'] = $dtWo->keterangan_style;
           $dtBarang = $this->mBarang->getData(null, 0, 1, null, null, $params_b);
-          // dd($dtBarang);
           if(!empty($dtBarang)){
             $id_gudang = $dtWo->id_gudang;
             $id_barang = $dtBarang[0]->id;
@@ -559,9 +565,10 @@ class DeliveryOrder extends BaseController
 
       // $rukuran = $this->mUkuran->getData(0, 0, 999);
 
-      $builderv = $this->mDelivery->table($this->mDelivery->table3);
-      $builderv->where("id_delivery", $id);
-      $builderv->delete();
+      // $builderv = $this->mDelivery->table($this->mDelivery->table3);
+      // $builderv->where("id_delivery", $id);
+      // $builderv->delete();
+
       foreach ($produksi as $itemx) {
         $xdata = [];
         $xdata['id_delivery']   = $id;
@@ -575,13 +582,17 @@ class DeliveryOrder extends BaseController
 
           if ($iu->key_ukuran == 'all') $keyUkuran = 'all_';
           $xdata['qty']          = $itemx[$keyUkuran];
-          $xdata['qty_do']          = $itemx[$keyUkuran."_key"];
+          $xdata['qty_do']          = (!empty($itemx[$keyUkuran."_key"])) ? $itemx[$keyUkuran."_key"] : 0;
           $xharga    = $keyUkuran . '_hrg';
 
           $xdata['id_ukuran']    = $iu->id_ukuran;
           $xdata['harga_satuan'] = $itemx[$xharga];
-
-          $this->mDelivery->updateRecord($this->mDelivery->table3, $xdata, "id", $id);
+          if (!empty($itemx['id'])) {
+            $this->mDelivery->updateRecord($this->mDelivery->table3, $xdata, "id", $itemx['id']);
+          }
+          else {
+            $this->mDelivery->insertRecordGetid($this->mDelivery->table3, $xdata);
+          }
         }
       }
     }
@@ -608,7 +619,7 @@ class DeliveryOrder extends BaseController
     $filters     = $this->request->getPost('filter');
     $order       = $this->request->getPost('sort');
     $id_konsumen = $this->request->getPost('id_konsumen');
-
+    
     $params = [];
     $params['id_konsumen'] = $id_konsumen;
 
@@ -630,8 +641,36 @@ class DeliveryOrder extends BaseController
       $status = $row->status == 1 ? "Draft" : "Approved";
       $tipe = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
-      $qty = $row->qty;
+      // $qty = $row->qty;
+      $qty = 0;
       $qty_prod = 0;
+
+      if($row->tipe_id == 1){
+        $ref_data = $this->mSample->getData($row->id_walkorder_ref);
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sample'] = $row->id_walkorder_ref;
+        $dtUkuran = $this->mSample->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($row->id_walkorder_ref) : [];
+        if (!empty($detail)) {
+          for ($i = 0; $i < count($detail); $i++) {
+            $drow = $detail[$i];
+            $allQty = $this->mSample->getTotal_qty($drow->id, 2);
+            $qty    += $allQty;
+          }
+        }
+      }else{
+        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+        $pru['id_sales_order'] = $row->id_walkorder_ref;
+        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id_walkorder_ref) : [];
+        if (!empty($detail)) {
+          for ($i = 0; $i < count($detail); $i++) {
+            $drow = $detail[$i];
+            $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
+            $qty    += $allQty;
+          }
+        }
+      }
 
       array_push(
         $build_array["data"],
@@ -642,7 +681,8 @@ class DeliveryOrder extends BaseController
           "konsumen_nama"     => $row->konsumen_nama,
           "kode_walkorder_ref"         => $row->kode_walkorder_ref,
           "kode_prod"         => $row->kode_prod,
-          "qty"               => $row->qty,
+          // "qty"               => $row->qty,
+          "qty"               => $qty,
           "tipe"              => $tipe,
           "qty_prod"          => $qty_prod,
           "qty_remain"        => $qty - $qty_prod,
@@ -698,7 +738,6 @@ class DeliveryOrder extends BaseController
       // print_r($prm);exit;
       $dataProd = [];
       $rsProd = $this->mProduksi->getProduksilastV1($prm);
-
       if (!empty($rsProd)) {
         foreach ($rsProd as $item) {
           $isi = array(
@@ -738,7 +777,7 @@ class DeliveryOrder extends BaseController
           );
         }
       }
-
+      
       $data['detail_produksi']  = $dataProd;
 
       $status = true;
@@ -824,8 +863,6 @@ class DeliveryOrder extends BaseController
     $this->data['data'] = [];
     if ($id != "") {
       $id = decrypt($id);
-      // dd($id);
-      // die;
       $resData = $this->mDelivery->getData($id);
       $arr_qty = [];
 
@@ -849,7 +886,6 @@ class DeliveryOrder extends BaseController
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['detail'] = !empty($dt_prods) ? $dt_prods : [];
       $this->data['ukuran'] = !empty($ukuranSize) ? $ukuranSize : [];
-      // dd($dt_prods, $ukuranSize);
     }
     $html = view($this->views . '\delivery_order_print', $this->data);
 

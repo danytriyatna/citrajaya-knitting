@@ -132,9 +132,9 @@ class DeliveryModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataProduksi($params){
+    function getDataProduksi($params = null, $id = null){
         $builder = $this->db->table("trans_delivery_detail tdd");
-        $builder->select("tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
+        $builder->select("tdd.id, tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
                           rk.kode_ukuran, rk.key_ukuran, TRIM ( BOTH ' - ' FROM
                         COALESCE(rw1.kode_warna, '') ||
                         CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
@@ -171,9 +171,15 @@ class DeliveryModel extends \App\Models\PrModel
 
         if(!empty($params['id_delivery'])){
             $builder->where('id_delivery', $params['id_delivery']);
+            $builder->orderBy('rk.seq asc');
+            $this->_data = $builder->get()->getResult();
         }
-        $builder->orderBy('rk.seq asc');
-        $this->_data = $builder->get()->getResult();
+        else if(!empty($id)){
+            $builder->where('tdd.id', $id);
+            $builder->orderBy('rk.seq asc');
+            $this->_data = $builder->get()->getRow();
+        }
+        
         return $this->_data;
     }
 
@@ -239,6 +245,20 @@ class DeliveryModel extends \App\Models\PrModel
         $builder->orderBy("td.tgl_transaksi", 'desc');
         
         $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getTotalQtyBefore($id_produksi, $id, $id_ukuran, $ref_id) {
+        $builder = $this->db->table($this->table3 . " tdp");
+        $builder->select("coalesce(sum(tdp.qty_do), 0) as total_qty_do");
+        $builder->join("trans_delivery td", "td.id = tdp.id_delivery", "inner");
+        $builder->where('td.active = 1');
+        $builder->where('td.id_produksi', $id_produksi);
+        $builder->where('tdp.id_ukuran', $id_ukuran);
+        $builder->where('tdp.ref_detail_id', $ref_id);
+        $builder->where('td.id <', $id);
+
+        $this->_data = $builder->get()->getRow()->total_qty_do;
         return $this->_data;
     }
 }

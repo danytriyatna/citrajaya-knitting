@@ -58,6 +58,12 @@ class ProductionModel extends \App\Models\PrModel
                 $builder->where('abx.id_konsumen', $params['id_konsumen']);
             }
 
+            if (!empty($params['id_walkorder'])) {
+                $builder->where('abx.id_walkorder', $params['id_walkorder']);
+                $builder->where('abx.tipe_id', $params['tipe_id']);
+                $builder->where('abx.active', 1);
+            }
+
             if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
 
             if (!empty($order)) {

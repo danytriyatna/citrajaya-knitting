@@ -56,7 +56,11 @@ $(document).ready(function () {
         return s.join(dec);
     }
 
-    let setColum = [{
+    let setColum = [
+                    {
+                        title: "ID", field: "id",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left", visible:false
+                    },
+                    {
                         title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
                     },
                     {
@@ -154,6 +158,10 @@ $(document).ready(function () {
                         }
                     }  
                 }
+            }, 
+            {
+                title: 'ID', field: 'id', headerSort:false, formatter: "html", sorter: 'string', visible:false
+                // width: '40%',
             }, 
             {
                 title: 'Colour', field: 'kode_warna', headerSort:false, formatter: "html", sorter: 'string',
@@ -393,7 +401,11 @@ $(document).ready(function () {
     });
 
     function setColumn(data, ukuran){
-        let newColum =  [{
+        let newColum =  [
+                        {
+                            title: "ID", field: "id",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left", width: "8%", visible:false
+                        },
+                        {
                             title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
                         },];
         const dt_Ukuran = ukuran;

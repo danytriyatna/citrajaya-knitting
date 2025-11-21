@@ -2,6 +2,8 @@
 
 namespace Modules\Transaction\Models;
 
+use Modules\Referensi\Models\BarangModel;
+
 class SalesOrderModel extends \App\Models\PrModel
 {
 
@@ -17,7 +19,7 @@ class SalesOrderModel extends \App\Models\PrModel
     function getData($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $builder = $this->db->table($this->table . " abx");
-
+        
         $builder->select("abx.id, abx.kode_sales_order, abx.deskripsi, bbx.nama, bbx.alamat, abx.id_konsumen, abx.keterangan, abx.tgl_transaksi, abx.tgl_deadline, abx.tgl_deadline_dua, abx.status, 
                           abx.gambar_id,cbx.file_name, abx.id_sample, abx.uang_dp, abx.style as stylex , abx.style_cnt,
                           concat(abx.style,' - ', abx.style_cnt) as style, concat(abx.style, '  (', abx.style_cnt, ')') as style_print, abx.tgl_dp, abx.type_dp");
@@ -129,7 +131,6 @@ class SalesOrderModel extends \App\Models\PrModel
             $this->_data = $builder->get()->getResult();
         } else {
             $builder->where("abx.id", $id);
-
             $this->_data = $builder->get()->getRow();
         }
 
@@ -270,8 +271,7 @@ class SalesOrderModel extends \App\Models\PrModel
 
             $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
             //  $col22 .= ($col22 == "") ? "$hrg Float" : ",$hrg Float";
-        }
-
+            }
         $sql = "
             SELECT 
                 tbl.id,
@@ -522,6 +522,147 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getTotalUkuranSO($id_sales_order = null)
+    {
+        $builder = $this->db->table("trans_sales_order_ukuran abx");
+
+        $builder->select("COALESCE(SUM(abx.qty), 0) as qty, COALESCE(SUM(abx.harga_total), 0) as harga_total");
+
+
+        $builder->where("abx.id_sales_order", $id_sales_order);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getDataUkuranSO($id = null)
+    {
+        $builder = $this->db->table("trans_sales_order_ukuran abx");
+
+        $builder->select("abx.id, abx.qty, abx.id_ukuran, abx.harga_satuan, abx.id_sales_order, abx.id_sales_order_det, abx.harga_total");
+
+        
+        $builder->where("abx.id", $id);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getDataDODetail($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_detail abx");
+
+        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty, td.status, abx.id_delivery");
+
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        $builder->where("td.id_invoice $type", null);
+        
+
+        $builder->orderBy("td.id", 'desc');
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getDODetailSUM($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_detail abx");
+
+        $builder->select("COALESCE(SUM(abx.qty),0) as qty");
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        $builder->where("td.id_invoice $type", null);
+        $builder->where("td.active", 1);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getDataDOProd($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_prod abx");
+
+        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty,  abx.qty_do, td.status, abx.id_delivery");
+
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        $builder->where("td.id_invoice $type", null);
+        $builder->where("td.active", 1);
+        $builder->orderBy("td.id", 'desc');
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getDO($id = null)
+    {
+        $builder = $this->db->table("trans_delivery abx");
+
+        $builder->select("abx.id, abx.id_produksi, abx.id_konsumen, abx.qty,  abx.id_walkorder, abx.status, abx.id_invoice");
+
+
+        $builder->where("abx.id", $id);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    // function updateBarang($id_delivery = null, $item = null) {
+    //     $getDOHead = $this->getDO($id_delivery);
+
+    //     if (!empty($getDOHead)) {
+    //         $mWalkorder = new WalkorderModel();
+    //         $mBarang = new BarangModel();
+    //         $dtWo = $mWalkorder->getData($getDOHead->id_walkorder);
+    //         $params_b['nama_barang'] = $dtWo->keterangan_style;
+    //         $dtBarang = $mBarang->getData(null, 0, 1, null, null, $params_b);
+    //         if(!empty($dtBarang)){
+    //             $id_gudang = $dtWo->id_gudang;
+    //             $id_barang = $dtBarang[0]->id;
+
+    //             $mBarangMasuk = new IncomingGoodsModel();
+    //             $mBarangKeluar = new BarangKeluarModel();
+    //             $arrParam =  [
+    //                 "id_barang" => $id_barang,
+    //                 "id_gudang" => $id_gudang,
+    //             ];
+
+    //             $resLotNo = $mBarangMasuk->getLotNo(null, $id_barang, null, $id_gudang);
+
+    //             if (!empty($resLotNo)) {
+    //                 $idLots = $resLotNo->id;
+    //                 $mBarangKeluar->updateRecords('trans_lots', array("qty" => $resLotNo->qty - $item['qty']), array("id" => $idLots));
+    //             } else {
+    //                 $idLots = 0;
+    //             }
+
+    //             $resData = $mBarangMasuk->getLastStokBarangBalances($id_barang, $id_gudang, $idLots);
+
+    //             // $stokAwal = !empty($resData) ? $resData->stok : 0;
+    //             $dataBarang = [
+    //                 "id_barang" => $id_barang,
+    //                 "jenis_transaksi" => 2,
+    //                 "jumlah" =>  $item['qty'],
+    //                 "id_gudang_asal" =>  !empty($id_gudang) ? $id_gudang : null,
+    //                 "nama" => 'Delivery',
+    //                 "id_kategori" => 11,
+    //                 "keterangan" => "Barang Keluar Produksi lewat delivery",
+    //                 "active" => 1,
+    //                 "tipe" => 1,
+    //                 "lot_id" => $idLots,
+    //                 "kode_transaksi" => $mBarangKeluar->generateKodePersediaan(),
+    //             ];
+    //             $mBarangKeluar->insertRecordGetid('trans_barang', $dataBarang);
+                
+    //             if (!empty($resData)) {
+    //                 $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] + $rowData->qty : 0;
+    //                 $mBarangKeluar->updateRecords('trans_barang_balances', array("saldo_akhir" => $stock), array("id" => $resData->id));
+    //             }
+    //         }
+    //     }
+    // }
+
     function trxInsertUpdateRecord($dataWarna, $dataUkuran)
     {
         $this->db->transStart();
@@ -535,16 +676,17 @@ class SalesOrderModel extends \App\Models\PrModel
                 $dataWarna['created_at'] = date("Y-m-d H:i:s");
                 $idSampleDet = $this->insertRecordGetid("trans_sales_order_det", $dataWarna);
             }
-            if (!empty($dataWarna['id']) && ($dataWarna['id_sales_order'])) {
-                $arrDelete = [
-                    "id_sales_order" => $dataWarna['id_sales_order'],
-                    "id_sales_order_det" => $dataWarna['id']
-                ];
-                $this->deleteRecordMultipleColumn("trans_sales_order_ukuran", $arrDelete);
-            }
+            // if (!empty($dataWarna['id']) && ($dataWarna['id_sales_order'])) {
+            //     $arrDelete = [
+            //         "id_sales_order" => $dataWarna['id_sales_order'],
+            //         "id_sales_order_det" => $dataWarna['id']
+            //     ];
+            //     $this->deleteRecordMultipleColumn("trans_sales_order_ukuran", $arrDelete);
+            // }
 
             $head_qty = 0;
             $head_total = 0;
+            $queryStatus = true;
             foreach ($dataUkuran as $rowData) {
 
                 $harga_total = (!empty($rowData['qty']) && !empty($rowData['harga_satuan'])) ? $rowData['qty'] * $rowData['harga_satuan'] : 0;
@@ -561,16 +703,125 @@ class SalesOrderModel extends \App\Models\PrModel
                 ];
                 $head_qty = $head_qty + (!empty($rowData['qty'])) ? (int) $rowData['qty'] : 0;
                 $head_total = $head_total + (!empty($harga_total)) ? (float) $harga_total : 0;
-                $this->insertRecordGetid("trans_sales_order_ukuran", $arrDataUkuran);
+
+                $ukuranId = !empty($rowData['id']) ? $rowData['id'] : null;
+                $getSOUkuran = $this->getDataUkuranSO($ukuranId);
+                if (!empty($getSOUkuran)) {
+                    $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                    
+                    if (count($getDODet) > 0) {
+                        $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        if ((float)$getSOUkuran->harga_satuan != (float) $rowData['harga_satuan']) {
+                            $queryStatus = false;
+                            $msgError = 'Invoice sudah dibuat, Tidak dapat merubah HARGA!';
+                            break;
+                        }
+                        else if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < (int)$getDODetSUM->qty)) {
+                            $queryStatus = false;
+                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.$getDODetSUM->qty.'</strong>! Total QTY Invoice pada item ini sudah mencapai batas minimal!';
+                            break;
+                        }
+                    }
+
+                    if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && $queryStatus) {
+                        $remain_qty = (int)$rowData['qty'];
+                        $getDODetSUMInvoice = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
+                        if ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty)) {
+                            $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
+                            $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "=");
+                            $id_delivery = null;
+                            foreach ($getDODet as $keyDODET => $valueDODET) {
+                                $id_delivery = $valueDODET->id_delivery;
+                                if ($selisih_total == 0) {
+                                    break;
+                                }
+                                else if ($selisih_total < (int)$valueDODET->qty) {
+                                    $arr_do_det = [
+                                        "qty" => (int)$valueDODET->qty - 1,
+                                    ];
+                                    $selisih_total--;
+                                    $this->updateRecord("trans_delivery_detail", $arr_do_det, 'id', $valueDODET->id);
+                                }
+                                else {
+                                    $selisih_total--;
+                                    $this->deleteRecord("trans_delivery_detail", 'id', $valueDODET->id);
+                                }
+                            }
+                            
+                            $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
+                            $getDOPROD = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran'], "=");
+                            foreach ($getDOPROD as $keyDOPROD => $valueDOPROD) {
+                                if ($selisih_total == 0) {
+                                    break;
+                                }
+                                else if ((int)$valueDOPROD->qty_do == 0) {
+                                    continue;
+                                }
+                                else if ($selisih_total < (int)$valueDOPROD->qty_do && (int)$valueDOPROD->qty_do > 1) {
+                                    $arr_do_produksi = [
+                                        "qty_do" => (int)$valueDOPROD->qty_do - 1,
+                                    ];
+                                    $selisih_total--;
+                                    $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
+                                }
+                                else if ($selisih_total >= (int)$valueDOPROD->qty_do && $selisih_total > 0) {
+                                    $arr_do_produksi = [
+                                        "qty_do" => 0,
+                                        "harga_satuan" => 0,
+                                    ];
+                                    $selisih_total--;
+                                    $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
+                                }
+                            }
+
+                            if ($id_delivery) {
+                                $sumQtyDo = $this->db->table('trans_delivery_detail')
+                                    ->selectSum('qty')
+                                    ->where('id_delivery', $id_delivery)
+                                    ->get()
+                                    ->getRow();
+
+                                $parentUpdate = [
+                                    'qty' => (int)$sumQtyDo->qty
+                                ];
+
+                                $this->updateRecord("trans_delivery", $parentUpdate, 'id', $id_delivery);
+                                
+                            }
+                            
+                        }
+                    }
+                    $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
+                    foreach ($getDOProd as $key => $value) {
+                        $arr_do_prod = [
+                            "harga_satuan" => (float)$rowData['harga_satuan'],
+                            "qty" => $rowData['qty'],
+                        ];
+                        $this->updateRecord("trans_delivery_prod", $arr_do_prod, 'id', $value->id);
+                    }
+                    
+                    $this->updateRecord("trans_sales_order_ukuran", $arrDataUkuran, 'id', $getSOUkuran->id);
+                }
+                else {
+                    $this->insertRecordGetid("trans_sales_order_ukuran", $arrDataUkuran);
+                }
             }
 
+            if ($queryStatus == false) {
+                $this->db->transRollback();
+                return $msgError;
+            }
             // update data qty dan total harga 
-            $head_up['qty'] = $head_qty;
-            $head_up['total_harga'] = $head_total;
-            $this->updateRecord($this->table, $head_up, 'id', $dataWarna['id_sales_order']);
+            // $head_up['qty'] = $head_qty;
+            // $head_up['total_harga'] = $head_total;
+            // $this->updateRecord($this->table, $head_up, 'id', $dataWarna['id_sales_order']);
 
+            // $head_up_wo['qty'] = $head_qty;
+            // $this->updateRecord("trans_walkorder", $head_up_wo, 'ref_id', $dataWarna['id_sales_order']);
+
+            
             $this->db->transComplete();
-
             if ($this->db->transStatus() === TRUE) {
                 return true;
             } else {

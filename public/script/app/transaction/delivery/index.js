@@ -17,7 +17,7 @@ $(document).ready(function () {
 			}, 
 				
 			{
-				title: 'No. Produksi', field: 'produksi_kode', headerSort:false, sorter: 'string',
+				title: 'No. SO', field: 'kode_so', headerSort:false, sorter: 'string',
 				width: 140, 
 			}, 
 

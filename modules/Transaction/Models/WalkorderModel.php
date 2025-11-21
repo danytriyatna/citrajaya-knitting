@@ -228,6 +228,10 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->where('abx.ref_detail_id', $params['ref_detail_id']);
             }
 
+            if (!empty($params['tipe_id'])) {
+                $builder->where('abx.tipe_id', $params['tipe_id']);
+            }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -371,6 +375,14 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->where('abx.id_walkorder_proses', $params['id_walkorder_proses']);
             }
 
+            if (!empty($params['id_ukuran'])) {
+                $builder->where('abx.id_ukuran', $params['id_ukuran']);
+            }
+
+            if (!empty($params['ref_detail_id'])) {
+                $builder->where('abx.ref_detail_id', $params['ref_detail_id']);
+            }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -406,6 +418,18 @@ class WalkorderModel extends \App\Models\PrModel
             $builder->where('LOWER(rk.kode_ukuran) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(rk.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+        }
+
+         if (!empty($params['id_walkorder_proses'])) {
+            $builder->where('abx.id_walkorder_proses', $params['id_walkorder_proses']);
+        }
+
+        if (!empty($params['id_ukuran'])) {
+            $builder->where('abx.id_ukuran', $params['id_ukuran']);
+        }
+
+        if (!empty($params['ref_detail_id'])) {
+            $builder->where('abx.ref_detail_id', $params['ref_detail_id']);
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

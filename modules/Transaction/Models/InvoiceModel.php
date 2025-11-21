@@ -294,12 +294,12 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.qty, 0)) as qty,
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
-                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id and sd.invoice_status = false ),0) as qty_dlv,
+                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id and sd.invoice_status = false and sd.status = 2 ),0) as qty_dlv,
                     coalesce((
     select sum(tdp.qty_do * tdp.harga_satuan)
     from trans_delivery td
     inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = false
+    where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
 ),0) as total_harga_delivery,
 (
             select string_agg(sd.id::text, ',')
@@ -307,7 +307,7 @@ class InvoiceModel extends \App\Models\PrModel
             inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
             where tw2.tipe_id = 2 
               and tw2.ref_id = tso.id 
-              and sd.invoice_status = false
+              and sd.invoice_status = false and sd.status = 2
         ) as list_delivery,
                     tw.id as id_walkorder
                 FROM
@@ -329,12 +329,13 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsu.qty, 0)) as qty,
                     sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
-                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id and sd.invoice_status = false),0) as qty_dlv,
+                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
+                    and sd.invoice_status = false and sd.status = 2),0) as qty_dlv,
                     coalesce((
     select sum(tdp.qty_do * tdp.harga_satuan)
     from trans_delivery td
     inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = false
+    where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
 ),0) as total_harga_delivery,
 (
             select string_agg(sd.id::text, ',')
@@ -342,7 +343,7 @@ class InvoiceModel extends \App\Models\PrModel
             inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
             where tw2.tipe_id = 1 
               and tw2.ref_id = ts.id 
-              and sd.invoice_status = false
+              and sd.invoice_status = false and sd.status = 2
         ) as list_delivery,
                     tw.id as id_walkorder
                 from 

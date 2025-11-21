@@ -260,7 +260,6 @@ class WorkOrder extends BaseController
         }
       }
     }
-    // dd($proces_data);
     $sortGudang = [
         [
             'field' => 'nama_gudang',
@@ -435,8 +434,7 @@ class WorkOrder extends BaseController
     
     $data_ukuran_input = json_decode($data_ukuran_input, true);
     $data_ukuran_warna = json_decode($data_ukuran_warna, true);
-    // print_r($data_ukuran_warna);
-    // exit;
+
     $this->db->transBegin();
 
     $update_stat['id_gudang'] = $id_gudang;
@@ -473,7 +471,6 @@ class WorkOrder extends BaseController
       
       if(!empty($status_data) || $data->status == 2){
         $isiProses['approved_int'] = 1;
-
         $prm_proses['id_walkorder'] = $dataid;
         $prm_proses['id_proses'] = $item['proses'];
         $data_proses = $this->mWalkorder->getData_proses(null, 0, 1, null, null, $prm_proses);
@@ -483,6 +480,33 @@ class WorkOrder extends BaseController
           $updates = $this->mWalkorder->updateRecord($this->mWalkorder->table3, $isiProses, 'id', $proses_id);
           
           $proses_arr[] = $proses_id; 
+
+          foreach ($data_ukuran_warna as $xuk) {
+            foreach ($data_ukuran as $x) {
+              $isiProses_det = [
+                'id_walkorder_proses' => $proses_id,
+                'id_ukuran'           => $x->id_ukuran,
+                'ref_detail_id'       => $xuk['id'],
+                'created_at'          => date('Y-m-d H:i:s')
+              ];
+              
+              $key_ukuran = $x->key_ukuran == 'all' ? 'all_' : $x->key_ukuran;
+              if ($i == 1) {
+                // $isiProses_det['qty'] = !empty($data_ukuran_input['bottom'][$x->key_ukuran]) ? $data_ukuran_input['bottom'][$x->key_ukuran] : 0;
+                $isiProses_det['qty'] = !empty($xuk[$key_ukuran]) ? $xuk[$key_ukuran] : 0;
+              } else {
+                $isiProses_det['qty'] = 0;
+              }
+
+              $prsUkuran['id_walkorder_proses'] = $proses_id;
+              $prsUkuran['id_ukuran'] = $x->id_ukuran;
+              $prsUkuran['ref_detail_id'] = $xuk['id'];
+              $getProsesUkuran =  $this->mWalkorder->getData_proses_ukuran(null, 0, 1, null, null, $prsUkuran);
+              if (empty($getProsesUkuran)) {
+                $this->mWalkorder->insertRecordGetid($this->mWalkorder->table4, $isiProses_det);
+              }
+            }
+          }
         }else{
           $proses_id = $this->mWalkorder->insertRecordGetid($this->mWalkorder->table3, $isiProses);  
           $proses_arr[] = $proses_id;
@@ -608,8 +632,6 @@ class WorkOrder extends BaseController
     $this->data['data'] = [];
     if ($id != "") {
       $id = decrypt($id);
-      // dd($id);
-      // die;
       $resData = $this->mWalkorder->getData($id);
       $salesOrder = $this->mSalesOrder->getData($resData->ref_id);
       $ukuran = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
@@ -623,8 +645,6 @@ class WorkOrder extends BaseController
         $salesOrderDet = $this->mSample->getDataDetailSample_crostab($resData->ref_id);
         $walkOrderDet = $this->mWalkorder->getData_warna_print($id);
       }
-      // dd($salesOrderDet);
-      // dd($salesOrderDet);
       // $pru['use'] = 1; // ambil ukuran yang digunnakan order 
       // $pru['id_sales_order'] = $id;
       // $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);

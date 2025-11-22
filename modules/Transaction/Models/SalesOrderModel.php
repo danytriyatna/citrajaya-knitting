@@ -711,87 +711,88 @@ class SalesOrderModel extends \App\Models\PrModel
                     
                     if (count($getDODet) > 0) {
                         $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
                         if ((float)$getSOUkuran->harga_satuan != (float) $rowData['harga_satuan']) {
                             $queryStatus = false;
                             $msgError = 'Invoice sudah dibuat, Tidak dapat merubah HARGA!';
                             break;
                         }
-                        else if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < (int)$getDODetSUM->qty)) {
+                        else if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
                             $queryStatus = false;
-                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.$getDODetSUM->qty.'</strong>! Total QTY Invoice pada item ini sudah mencapai batas minimal!';
+                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';
                             break;
                         }
                     }
 
-                    if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && $queryStatus) {
-                        $remain_qty = (int)$rowData['qty'];
-                        $getDODetSUMInvoice = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
-                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
-                        if ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty)) {
-                            $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
-                            $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "=");
-                            $id_delivery = null;
-                            foreach ($getDODet as $keyDODET => $valueDODET) {
-                                $id_delivery = $valueDODET->id_delivery;
-                                if ($selisih_total == 0) {
-                                    break;
-                                }
-                                else if ($selisih_total < (int)$valueDODET->qty) {
-                                    $arr_do_det = [
-                                        "qty" => (int)$valueDODET->qty - 1,
-                                    ];
-                                    $selisih_total--;
-                                    $this->updateRecord("trans_delivery_detail", $arr_do_det, 'id', $valueDODET->id);
-                                }
-                                else {
-                                    $selisih_total--;
-                                    $this->deleteRecord("trans_delivery_detail", 'id', $valueDODET->id);
-                                }
-                            }
+                    // if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && $queryStatus) {
+                    //     $getDODetSUMInvoice = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                    //     $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
+                    //     if ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty)) {
+                    //         $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
+                    //         $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "=");
+                    //         $id_delivery = null;
+                    //         foreach ($getDODet as $keyDODET => $valueDODET) {
+                    //             $id_delivery = $valueDODET->id_delivery;
+                    //             if ($selisih_total == 0) {
+                    //                 break;
+                    //             }
+                    //             else if ($selisih_total < (int)$valueDODET->qty) {
+                    //                 $arr_do_det = [
+                    //                     "qty" => (int)$valueDODET->qty - 1,
+                    //                 ];
+                    //                 $selisih_total--;
+                    //                 $this->updateRecord("trans_delivery_detail", $arr_do_det, 'id', $valueDODET->id);
+                    //             }
+                    //             else {
+                    //                 $selisih_total--;
+                    //                 $this->deleteRecord("trans_delivery_detail", 'id', $valueDODET->id);
+                    //             }
+                    //         }
                             
-                            $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
-                            $getDOPROD = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran'], "=");
-                            foreach ($getDOPROD as $keyDOPROD => $valueDOPROD) {
-                                if ($selisih_total == 0) {
-                                    break;
-                                }
-                                else if ((int)$valueDOPROD->qty_do == 0) {
-                                    continue;
-                                }
-                                else if ($selisih_total < (int)$valueDOPROD->qty_do && (int)$valueDOPROD->qty_do > 1) {
-                                    $arr_do_produksi = [
-                                        "qty_do" => (int)$valueDOPROD->qty_do - 1,
-                                    ];
-                                    $selisih_total--;
-                                    $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
-                                }
-                                else if ($selisih_total >= (int)$valueDOPROD->qty_do && $selisih_total > 0) {
-                                    $arr_do_produksi = [
-                                        "qty_do" => 0,
-                                        "harga_satuan" => 0,
-                                    ];
-                                    $selisih_total--;
-                                    $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
-                                }
-                            }
+                    //         $selisih_total = ((int)$getDODetSUMDO->qty  + (int)$getDODetSUMInvoice->qty) - (int)$rowData['qty'];
+                    //         $getDOPROD = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran'], "=");
+                    //         foreach ($getDOPROD as $keyDOPROD => $valueDOPROD) {
+                    //             if ($selisih_total == 0) {
+                    //                 break;
+                    //             }
+                    //             else if ((int)$valueDOPROD->qty_do == 0) {
+                    //                 continue;
+                    //             }
+                    //             else if ($selisih_total < (int)$valueDOPROD->qty_do && (int)$valueDOPROD->qty_do > 1) {
+                    //                 $arr_do_produksi = [
+                    //                     "qty_do" => (int)$valueDOPROD->qty_do - 1,
+                    //                 ];
+                    //                 $selisih_total--;
+                    //                 $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
+                    //             }
+                    //             else if ($selisih_total >= (int)$valueDOPROD->qty_do && $selisih_total > 0) {
+                    //                 $arr_do_produksi = [
+                    //                     "qty_do" => 0,
+                    //                     "harga_satuan" => 0,
+                    //                 ];
+                    //                 $selisih_total--;
+                    //                 $this->updateRecord("trans_delivery_prod", $arr_do_produksi, 'id', $valueDOPROD->id);
+                    //             }
+                    //         }
 
-                            if ($id_delivery) {
-                                $sumQtyDo = $this->db->table('trans_delivery_detail')
-                                    ->selectSum('qty')
-                                    ->where('id_delivery', $id_delivery)
-                                    ->get()
-                                    ->getRow();
+                    //         if ($id_delivery) {
+                    //             $sumQtyDo = $this->db->table('trans_delivery_detail')
+                    //                 ->selectSum('qty')
+                    //                 ->where('id_delivery', $id_delivery)
+                    //                 ->get()
+                    //                 ->getRow();
 
-                                $parentUpdate = [
-                                    'qty' => (int)$sumQtyDo->qty
-                                ];
+                    //             $parentUpdate = [
+                    //                 'qty' => (int)$sumQtyDo->qty
+                    //             ];
 
-                                $this->updateRecord("trans_delivery", $parentUpdate, 'id', $id_delivery);
+                    //             $this->updateRecord("trans_delivery", $parentUpdate, 'id', $id_delivery);
                                 
-                            }
+                    //         }
                             
-                        }
-                    }
+                    //     }
+                    // }
+
                     $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
                     foreach ($getDOProd as $key => $value) {
                         $arr_do_prod = [

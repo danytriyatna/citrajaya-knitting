@@ -296,7 +296,10 @@ class DeliveryOrder extends BaseController
     $this->data['row']    = $stdData;
     if (!empty($_POST)) {
       if (true) {
-
+        if (!empty($stdData->id_invoice)) {
+          $this->session->setFlashdata('err', "DO Sudah ada Invoice tidak dapat update!");
+          return redirect()->back();
+        }
         $stdData->do_no = trim($this->request->getPost('do_no'));
         $stdData->id_produksi = trim($this->request->getPost('id_produksi'));
         $stdData->id_walkorder = trim($this->request->getPost('id_walkorder'));
@@ -702,7 +705,6 @@ class DeliveryOrder extends BaseController
   {
     $id_walkorder = $this->request->getPost("id_walkorder");
     $id_produksi  = $this->request->getPost("produkds");
-
     $status = false;
     $msg    = "Gagal mengambil data produksi !";
     $data   = [];

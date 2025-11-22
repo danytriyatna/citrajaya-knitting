@@ -227,10 +227,10 @@
                     <a href="trans/delivery-order" class="btn btn-default m-e-5">
                       <span class="fa fa-arrow-left"></span> Kembali
                     </a>
+                    <button type="button" id="btn-save" class='btn btn-success'>
+                      <span class="fa fa-save"></span> Simpan
+                    </button>
                     <?php if($status == 1) { ?>
-                      <button type="button" id="btn-save" class='btn btn-success'>
-                        <span class="fa fa-save"></span> Simpan
-                      </button>
                       <?php if(!empty($id)) { ?>
                       <button type="button" id="btn-send" class='btn btn-info'>
                         <span class="fa fa-paper-plane"></span> Approval
@@ -257,4 +257,23 @@
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
 <script src="script/app/transaction/delivery/form.js"></script>
+<?php if (isset($_SESSION['message'])) { ?>
+  <script type="text/javascript">
+    window.setTimeout(function() {
+      $(".alert").alert('close');
+    }, 3000);
+  </script>
+<?php } ?>
+<?php if (isset($_SESSION['err'])) { ?>
+  <script type="text/javascript">
+    window.setTimeout(function() {
+      Swal.fire({
+          text: "<?php echo $_SESSION['err']; ?>",
+          icon: 'warning',
+          showConfirmButton: false,
+          timer: 3000
+      });
+    }, 500);
+  </script>
+<?php } ?>
 <?= $this->endSection('script'); ?>

@@ -570,7 +570,7 @@ class SalesOrder extends BaseController
 
                     } else {
                       $detail_wo = [
-                        'id_walkorder' => $wo_id,
+                        'id_walkorder' => $valueWO->id,
                         'ref_detail_id' => $xrow->id,
                         'qty' => $this->mSalesOrder->getTotal_qty($xrow->id, 2),
                         'tipe_id' => 2,

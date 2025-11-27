@@ -201,8 +201,6 @@ class DeliveryOrder extends BaseController
       
       // $this->data['row']    = $stdData;
       // $this->data['detail'] = json_encode($list_detail);
-
-      $status = $stdData->status;
       
       $arr_qty = [];
       
@@ -325,6 +323,9 @@ class DeliveryOrder extends BaseController
         $data['id_konsumen'] = $stdData->select_buyer;
         $data['id_walkorder'] = $stdData->id_walkorder;
         $data['status'] =  $action == "kirim" ? 2 : 1;
+        if (!empty($status) && $status == 2) {
+           $data['status'] = 2;
+        }
 
         if (!empty($id)) {
           $data['updated_at'] = date('Y-m-d H:i:s');
@@ -567,11 +568,8 @@ class DeliveryOrder extends BaseController
     if (!empty($produksi)) {
 
       // $rukuran = $this->mUkuran->getData(0, 0, 999);
-
-      // $builderv = $this->mDelivery->table($this->mDelivery->table3);
-      // $builderv->where("id_delivery", $id);
-      // $builderv->delete();
-
+      $builderv = $this->mDelivery->deleteRecord($this->mDelivery->table3, 'id_delivery', $id);
+      
       foreach ($produksi as $itemx) {
         $xdata = [];
         $xdata['id_delivery']   = $id;
@@ -590,13 +588,25 @@ class DeliveryOrder extends BaseController
 
           $xdata['id_ukuran']    = $iu->id_ukuran;
           $xdata['harga_satuan'] = $itemx[$xharga];
-          if (!empty($itemx['id'])) {
-            $this->mDelivery->updateRecord($this->mDelivery->table3, $xdata, "id", $itemx['id']);
-          }
-          else {
-            $this->mDelivery->insertRecordGetid($this->mDelivery->table3, $xdata);
-          }
+          // if (!empty($value->id)) {
+          //   $this->mDelivery->updateRecord($this->mDelivery->table3, $xdata, "id", $value->id);
+          // } 
+          // else {
+          //   $xdataRef['id_delivery']   = $id;
+          //   $xdataRef['ref_detail_id'] = $itemx['ref_detail_id'];
+          //   $xdataRef['id_ukuran']    = $iu->id_ukuran;
+          //   $getPRODOLD = $this->mDelivery->getDataDetailProd($xdataRef);
+          // }
+          $this->mDelivery->insertRecordGetid($this->mDelivery->table3, $xdata);
         }
+
+        // $getPRODOLD = $this->mDelivery->getDataDetailProd($xdata);
+        // if (!empty($getPRODOLD) && count($getPRODOLD) > 0) {
+        //   foreach ($getPRODOLD as $key => $value) {
+            
+        //   }
+          
+        // }
       }
     }
 

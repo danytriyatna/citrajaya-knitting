@@ -44,6 +44,7 @@ class DeliveryModel extends \App\Models\PrModel
                 $builder->groupStart();
                     $builder->where('LOWER(abx.delivery_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
                     $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                    $builder->orWhere('LOWER(twx.ref_kode) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
             }
 
@@ -113,6 +114,10 @@ class DeliveryModel extends \App\Models\PrModel
         
         if (!empty($params['ref_detail_id'])) {
             $builder->where('abx.ref_detail_id', $params['ref_detail_id']);
+        }
+
+        if (!empty($params['except_id'])) {
+            $builder->where('abx.id <>', $params['except_id']);
         }
 
         $this->_data = $builder->get()->getResult();

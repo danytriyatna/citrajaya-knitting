@@ -243,7 +243,13 @@ class WalkorderModel extends \App\Models\PrModel
 
             $builder->limit($limit, $offset);
 
-            $this->_data = $builder->get()->getResult();
+            if (!empty($params['single'])) {
+               $this->_data = $builder->get()->getRow();
+            }
+
+            else {
+                $this->_data = $builder->get()->getResult();
+            }
         } else {
             $builder->where("abx.id", $id);
 
@@ -320,7 +326,13 @@ class WalkorderModel extends \App\Models\PrModel
 
             $builder->limit($limit, $offset);
 
-            $this->_data = $builder->get()->getResult();
+            if (!empty($params['single'])) {
+               $this->_data = $builder->get()->getRow();
+            }
+
+            else {
+                $this->_data = $builder->get()->getResult();
+            }
         } else {
             $builder->where("abx.id", $id);
 
@@ -590,7 +602,14 @@ class WalkorderModel extends \App\Models\PrModel
 
             $builder->limit($limit, $offset);
 
-            $this->_data = $builder->get()->getResult();
+            if (!empty($params['single'])) {
+               $this->_data = $builder->get()->getRow();
+            }
+
+            else {
+                $this->_data = $builder->get()->getResult();
+            }
+
         } else {
             $builder->where("abx.id", $id);
 

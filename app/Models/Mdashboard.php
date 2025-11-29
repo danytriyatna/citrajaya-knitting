@@ -1019,18 +1019,19 @@ class Mdashboard extends Model
             ), 0)
         ";
 
-        // 1) Ambil data (dengan pagination)
-        $builder = $this->db->table("m_coa mc");
-        $builder->select("mc.id, mc.kode, mc.nama, {$sub} AS saldo", FALSE);
-        $builder->where("LOWER(mc.kode) LIKE", "13%");
-        $builder->orderBy("mc.kode", "asc", TRUE);
-        $builder->limit($limit ?: 10, $offset ?: 0);
-        $rows = $builder->get()->getResult();
-
         // 2) Ambil total semua saldo (tanpa limit)
         $builder2 = $this->db->table("m_coa mc");
         $builder2->select("SUM({$sub}) AS total_saldo", FALSE);
         $builder2->where("LOWER(mc.kode) LIKE", "13%");
+        $builder2->where("(
+            COALESCE((
+                SELECT SUM(mmh.saldo)
+                FROM m_mutasi_history mmh 
+                WHERE mmh.coa_id = mc.id 
+                AND mmh.month = {$params['month']}
+                AND mmh.year = {$params['year']}
+            ), 0) > 0
+        )");
         if (!empty($filters) && is_array($filters)) {
             $builder2->groupStart();
             $builder2->where('LOWER(mc.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -1038,7 +1039,7 @@ class Mdashboard extends Model
         }
         $totalRow = $builder2->get()->getRow();
         $totalSaldo = $totalRow ? (float)$totalRow->total_saldo : 0;
-
+        
         return $totalSaldo;
     }
 

@@ -537,9 +537,7 @@ class SalesOrderModel extends \App\Models\PrModel
     function getDataUkuranSO($id = null)
     {
         $builder = $this->db->table("trans_sales_order_ukuran abx");
-
         $builder->select("abx.id, abx.qty, abx.id_ukuran, abx.harga_satuan, abx.id_sales_order, abx.id_sales_order_det, abx.harga_total");
-
         
         $builder->where("abx.id", $id);
         $this->_data = $builder->get()->getRow();
@@ -606,6 +604,21 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder->where("abx.id", $id);
         $this->_data = $builder->get()->getRow();
         return $this->_data;
+    }
+
+    function deleteDataWOProsesUkuran($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $sql = "
+        DELETE FROM trans_walkorder_proses_ukuran abx
+        USING trans_walkorder_proses twd, trans_walkorder tw
+        WHERE abx.id_walkorder_proses = twd.id
+        AND twd.id_walkorder = tw.id
+        AND abx.ref_detail_id = ?
+        AND abx.id_ukuran = ?
+        AND tw.tipe_id = 2;
+        ";
+
+        return $this->db->query($sql, [$ref_detail_id, $id_ukuran]);
     }
 
     // function updateBarang($id_delivery = null, $item = null) {
@@ -687,8 +700,7 @@ class SalesOrderModel extends \App\Models\PrModel
             $head_qty = 0;
             $head_total = 0;
             $queryStatus = true;
-            foreach ($dataUkuran as $rowData) {
-
+            foreach ($dataUkuran as $key => $rowData) {
                 $harga_total = (!empty($rowData['qty']) && !empty($rowData['harga_satuan'])) ? $rowData['qty'] * $rowData['harga_satuan'] : 0;
                 $arrDataUkuran = [
                     "id_sales_order" => $dataWarna['id_sales_order'],
@@ -793,16 +805,30 @@ class SalesOrderModel extends \App\Models\PrModel
                     //     }
                     // }
 
-                    $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
-                    foreach ($getDOProd as $key => $value) {
+                    if ($rowData['qty'] == 0) {
                         $arr_do_prod = [
-                            "harga_satuan" => (float)$rowData['harga_satuan'],
-                            "qty" => $rowData['qty'],
+                            "id_ukuran" => $rowData['id_ukuran'],
+                            "ref_detail_id" => $arrDataUkuran['id_sales_order_det'],
                         ];
-                        $this->updateRecord("trans_delivery_prod", $arr_do_prod, 'id', $value->id);
+                        $this->deleteRecordMultipleColumn("trans_delivery_prod", $arr_do_prod);
+                        $this->deleteRecordMultipleColumn("trans_delivery_detail", $arr_do_prod);
+
+                        $deleteWOProsesUkuran = $this->deleteDataWOProsesUkuran($dataWarna['id'], $rowData['id_ukuran']);
+
+                        $this->deleteRecord("trans_sales_order_ukuran", "id", $rowData['id']);
                     }
-                    
-                    $this->updateRecord("trans_sales_order_ukuran", $arrDataUkuran, 'id', $getSOUkuran->id);
+                    else {
+                        $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
+                        foreach ($getDOProd as $keyDO => $value) {
+                            $arr_do_prod = [
+                                "harga_satuan" => (float)$rowData['harga_satuan'],
+                                "qty" => $rowData['qty'],
+                            ];
+                            $this->updateRecord("trans_delivery_prod", $arr_do_prod, 'id', $value->id);
+                        }
+                        
+                        $this->updateRecord("trans_sales_order_ukuran", $arrDataUkuran, 'id', $getSOUkuran->id);
+                    }
                 }
                 else {
                     $this->insertRecordGetid("trans_sales_order_ukuran", $arrDataUkuran);

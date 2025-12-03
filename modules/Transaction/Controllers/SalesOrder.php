@@ -405,6 +405,14 @@ class SalesOrder extends BaseController
       $id = decrypt($id);
       if (!empty($submit_data)) {
         $arr_isi['status'] = 2;
+        $checkSampleStatus = $this->mSample->getData($sampleId);
+        if (!empty($checkSampleStatus) && $checkSampleStatus->status == 0) {
+          $this->db->transRollback();
+          $msg    = "Sample Belum Approved, tidak dapat approve Sales Order!";
+          $build_array['message'] = $msg;
+          $build_array['status']  = false;
+          return $this->response->setJSON($build_array);
+        }
       }
       $getTotalSO = $this->mSalesOrder->getTotalUkuranSO($id);
       if (!empty($getTotalSO)) {

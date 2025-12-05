@@ -895,7 +895,7 @@ $(document).ready(function () {
                 timer: 2000
             });
         }
-        let dataUkuran = dtListDetailQty.getData().filter(x => (x.qty && (x.harga_satuan || x.harga_satuan === 0 )) || x.id);
+        let dataUkuran = dtListDetailQty.getData().filter(x => (x.qty && (x.harga_satuan || x.harga_satuan === 0 )) || (x.qty == 0 || x.qty == '0'));
         if(dataUkuran.length ==0)
             {
                 return Swal.fire({

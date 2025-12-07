@@ -108,6 +108,7 @@ $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('edit/(:any)', 'ItemTransfer::form_static/$1');
   $routes->post('save', 'ItemTransfer::save');
   $routes->post('list-barang', 'ItemTransfer::lists_persediaan');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'ItemTransfer::print_excel_lists/$1/$2');
 
    $routes->post('cari_produk', 'ItemTransfer::getDataProduksiItem');
   $routes->post('src_produk', 'ItemTransfer::getCariProduk');

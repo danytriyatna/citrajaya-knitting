@@ -596,4 +596,37 @@ class ItemTransferModel extends \App\Models\PrModel
             throw $e;
         }
     }
+
+    function get_export($from_date = null, $to_date = null){
+        $builder = $this->db->table("trans_barang_trf_so_det tbtsd");
+        $builder->join($this->table . " tbth", "tbth.id = tbtsd.id_header", "inner");
+        $builder->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left');
+        $builder->join('ref_operator rp', 'rp.id = tbth.id_cmt', 'left');
+        $builder->join('trans_sales_order tso', 'tso.kode_sales_order  = tbtsd.kode_sales_order', 'left');
+        $builder->join('trans_sample ts', 'ts.kode_sample  = tbtsd.kode_sales_order', 'left');
+        $builder->join($this->tblBuyer . " rk", "rk.id = tbtsd.id_konsumen", "inner");
+
+        $builder->select("rk.nama as buyer, tbtsd.style, jp.nama as proses, rp.nama_operator, tbtsd.color, tbtsd.kode_ukuran, 
+                            tbtsd.qty,
+                            (case when tso.kode_sales_order IS NOT NULL then tso.kode_sales_order else ts.kode_sample end) as kode,
+                            (case when tso.kode_sales_order IS NOT NULL then tso.tgl_transaksi else ts.tgl_transaksi end) as tgl_transaksi,
+                            coalesce ((select sum(tbmp.qty) from trans_barang_masuk_produksi tbmp inner join trans_barang_header tbh on tbh.id = tbmp.id_header
+                            where tbmp.kode_sales_order = tbtsd.kode_sales_order 
+                            and tbh.id_proses = tbth.id_proses 
+                            and tbh.id_cmt = tbth.id_cmt 
+                            and tbh.no_ref_trf = tbth.kode_transaksi 
+                            and tbmp.kode_ukuran = tbtsd.kode_ukuran
+                            and tbmp.color = tbtsd.color
+                            AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                            and tbh.active = 1), 0) as qty_terima");
+        $builder->where('tbth.active = 1');
+        $builder->groupStart();
+         $builder->where("tso.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+         $builder->orWhere("ts.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
+        $builder->groupEnd();
+        $builder->orderBy("tgl_transaksi", "desc");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
 }

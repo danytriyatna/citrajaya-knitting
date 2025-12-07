@@ -92,4 +92,51 @@ $(document).ready(function () {
             }, 600);
         });
     }
+
+    let btnExcel = $("#btn_excel");
+    btnExcel.on("click", function(){
+        let from_date = $("#from_date").val();
+        let to_date = $("#to_date").val();
+        
+
+        if (from_date == null || from_date == "" || from_date == undefined) {
+            Swal.fire({
+                text: "From Date Export Harus Diisi!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            return false;
+        }
+        else if (to_date == null || to_date == "" || to_date == undefined) {
+            Swal.fire({
+                text: "To Date Export Harus Diisi!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            return false;
+        }
+        else if (parseDate(from_date) > parseDate(to_date)) {
+            Swal.fire({
+                text: "From Date tidak boleh lebih besar dari To Date!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            return false;
+        }
+
+        else {
+            let url = "/trans/item-transfer/print_excel_lists/" + from_date + "/" + to_date;
+            window.open(url, '_blank');
+        }
+    });
+
+    function parseDate(str) {
+        // format dd-mm-yyyy
+        let parts = str.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]); 
+        // year, monthIndex (0=Jan), day
+    }
 });

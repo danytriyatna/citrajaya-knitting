@@ -204,23 +204,28 @@ $(document).ready(function () {
 
             {
 				title: 'NILAI SO', field: 'nilai_so', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
 			}, 
             {
 				title: 'NILAI<br>INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
 			}, 
             {
 				title: 'SISA <br>TAGIHAN', field: 'sisa_tagihan', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
 			}, 
             {
 				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
-				width: "16%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+				width: "16%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
 			}, 
             {
 				title: 'SISA <br> PEMBAYARAN', field: 'sisa_pembayaran', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle'
+				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+                bottomCalcParams: { allRows: true }
 			}, 
 
             
@@ -233,7 +238,7 @@ $(document).ready(function () {
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 740,
+        minHeight: 700,
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;

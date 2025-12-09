@@ -110,7 +110,7 @@
         .table-bordered>tfoot>tr>td
         {
             border: 1px solid #333;
-            padding: 1px 6px;
+            padding: 5px 6px;
             font-size: 12px;
         }
 
@@ -195,37 +195,7 @@
             </tr>
         </tbody>
     </table>
-    <br>
-
-    <!-- <table class="table-bordered w-100">
-        <thead>
-            <tr>
-                <th class="text-center" style="width: 40px;">No.</th>
-                <th class="text-center" style="width: 45%;">NAMA BARANG</th>
-                <th class="text-center" style="width: 20%;">BANYAKNYA</th>
-                <th class="text-center" style="width: 20%;">SATUAN</th>
-                <th class="text-center" style="width: 20%;">NO LOT</th>
-                <th class="text-center" style="width: 20%;">KETERANGAN</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $i = 1;
-            foreach ($detail as $row) : ?>
-                <tr>
-                    <td><?= $i++ ?></td>
-                    <td><?= $row->nama_barang ?></td>
-                    <td class="text-right"><?= $row->qty ?></td>
-                    <td><?= $row->nama_unit ?></td>
-                    <td><?= $row->lot_no ?></td>
-                    <td><?= $row->keterangan ?></td>
-                </tr>
-            <?php endforeach ?>
-
-        </tbody>
-    </table> -->
-
-    <br>
-
+    <p style='padding-left: 10px'>Kami Kirim Barang Sebagai berikut: </p>
     <table class="table-bordered w-100">
         <thead>
             <tr>

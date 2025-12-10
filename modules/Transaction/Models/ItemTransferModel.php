@@ -193,7 +193,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(tu.color) LIKE', strtolower("%{$params['kata_kunci']}%"));
                 $builder->groupEnd();
             }
-
+            $builder->where('tu.qty IS NOT NULL');
             // Filter per item
             if (!empty($params['kode_transaksi'])) {
                 $builder->where('tu.kode_transaksi', $params['kode_transaksi']);

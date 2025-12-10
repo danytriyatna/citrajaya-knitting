@@ -151,10 +151,10 @@
         <thead>
             <tr>
                 <td colspan="4" style="text-align: center;">
-                    <h1 class="uppercase text-xl mb-0 mt-0 text-left">TRANSFER ITEM</h1>
+                    <h1 class="uppercase text-md mb-0 mt-0 text-left">TRANSFER ITEM</h1>
                 </td>
                 <td colspan="2" style="text-align: center;">
-                    <h1 class="uppercase text-md mb-0 mt-0">TGL <?= !empty($data->tanggal) ? formatTanggalIndonesia($data->tanggal) : "-T" ?></h1>
+                    <h1 class="uppercase text-md mb-0 mt-0">TGL: <?= !empty($data->tanggal) ? formatTanggalIndonesia($data->tanggal) : "-T" ?></h1>
                 </td>
             </tr>
         </thead>

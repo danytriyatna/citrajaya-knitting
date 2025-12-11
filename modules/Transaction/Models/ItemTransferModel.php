@@ -171,7 +171,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             tu.id_ukuran, tu.key_ukuran, tu.kode_ukuran, tu.id_header,
                             tu.kode_transaksi,tu.id_konsumen,tu.deskripsi,tu.style,tu.amount, 
                             tu.qty, tu.color,
-                            tu.buyer");
+                            tu.buyer, tu.ref_detail_id");
         
         if ($id == null or $id == "") {
             
@@ -420,6 +420,8 @@ class ItemTransferModel extends \App\Models\PrModel
                     // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
                     "id_header" => $id,
                     "color" => $rowData['color'],
+                    "tipe" => $rowData['tipe'],
+                    "ref_detail_id" => $rowData['ref_detail_id'],
                     "deskripsi" => $rowData['deskripsi'],
                     "style" => !empty($rowData['style']) ? $rowData['style'] : null,
                     "qty" => !empty($rowData['qty']) ? $rowData['qty'] : null,

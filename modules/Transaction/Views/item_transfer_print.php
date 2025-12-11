@@ -222,7 +222,7 @@
                     <td>
                         <?= !empty($row->style) ? $row->style : $row->deskripsi ?>
                     </td>
-                    <td class="text-left"><?= $row->color ?></td>
+                    <td class="text-left"><?= !empty($row->deskripsi) ? $row->deskripsi : $row->color ?></td>
                     <td class="text-right"><?= $row->qty ?></td>
                     <!-- <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td> -->
                     <td class="text-left"><?= $row->kode_ukuran ?></td>
@@ -245,13 +245,13 @@
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" style="width: 40px;">No.</th>
-                <th class="text-center" style="width: 25%;">Item Code</th>
-                <th class="text-center" style="width: 25%;">Item Description</th>
-                <th class="text-center" style="width: 25%;">Lot No</th>
-                <th class="text-center" style="width: 15%;">Qty</th>
-                <th class="text-center" style="width: 10%;">Unit</th>
-                <th class="text-center" style="width: 30%;">Keterangan</th>
+                <th class="text-center" style="width: 5%;">No.</th>
+                <th class="text-center" style="width: 20%;">Item Code</th>
+                <th class="text-center" style="width: 35%;">Item Description</th>
+                <th class="text-center" style="width: 15%;">Lot No</th>
+                <th class="text-center" style="width: 16%;">Qty</th>
+                <th class="text-center" style="width: 14%;">Unit</th>
+                <th class="text-center" style="width: 25%;">Keterangan</th>
             </tr>
         </thead>
         <tbody>

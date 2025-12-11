@@ -261,6 +261,7 @@ class ItemTransfer extends BaseController
         $build_array["data"],
         array(
           "tipe" => $row->tipe,
+          "ref_detail_id" => $row->ref_detail_id,
           "tipe_text" => $row->tipe_text,
           "id_konsumen" => $row->id_konsumen,
           "kode_sales_order" => $row->kode_transaksi,

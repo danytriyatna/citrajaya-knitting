@@ -388,6 +388,8 @@ let dtList = new Tabulator("#dt-list", {
             }
         },
         {title: "No.SO", field: "kode_sales_order", width: "15%"},
+        {title: "Ref Detail ID", field: "ref_detail_id", visible:false},
+        {title: "Tipe", field: "tipe", visible:false},
         {title: "Style", field: "style", width: "10%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         // {title: "Buyer", field: "buyer", width: "20%"},

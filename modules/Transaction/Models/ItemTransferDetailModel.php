@@ -110,11 +110,54 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
-        $builder->select("abx.qty, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran, trfhead.id_proses");
+        $builder->select("abx.qty, abx.tipe, abx.ref_detail_id, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
+                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran, trfhead.id_proses,
+                          (
+                            CASE 
+                                WHEN abx.tipe = 1 THEN 
+                                    TRIM(BOTH ' ~ ' FROM COALESCE(rwtsd1.keterangan, '') ||
+                                        CASE WHEN rwtsd2.keterangan IS NOT NULL THEN ' ~ ' || rwtsd2.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd3.keterangan IS NOT NULL THEN ' ~ ' || rwtsd3.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd4.keterangan IS NOT NULL THEN ' ~ ' || rwtsd4.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd5.keterangan IS NOT NULL THEN ' ~ ' || rwtsd5.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd6.keterangan IS NOT NULL THEN ' ~ ' || rwtsd6.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd7.keterangan IS NOT NULL THEN ' ~ ' || rwtsd7.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsd8.keterangan IS NOT NULL THEN ' ~ ' || rwtsd8.keterangan ELSE '' END 
+                                    )
+
+                                ELSE 
+                                    TRIM(BOTH ' ~ ' FROM COALESCE(rwtsod1.keterangan, '') ||
+                                        CASE WHEN rwtsod2.keterangan IS NOT NULL THEN ' ~ ' || rwtsod2.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod3.keterangan IS NOT NULL THEN ' ~ ' || rwtsod3.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod4.keterangan IS NOT NULL THEN ' ~ ' || rwtsod4.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod5.keterangan IS NOT NULL THEN ' ~ ' || rwtsod5.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod6.keterangan IS NOT NULL THEN ' ~ ' || rwtsod6.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod7.keterangan IS NOT NULL THEN ' ~ ' || rwtsod7.keterangan ELSE '' END ||
+                                        CASE WHEN rwtsod8.keterangan IS NOT NULL THEN ' ~ ' || rwtsod8.keterangan ELSE '' END 
+                                    )
+                            END
+                        ) AS deskripsi");
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
         $builder->join("ref_ukuran rk", "abx.kode_ukuran = rk.kode_ukuran", "left");
         $builder->join("trans_barang_trf_header trfhead", "abx.id_header = trfhead.id", "left");
+        $builder->join("trans_sample_det tsd", "tsd.id = abx.ref_detail_id and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd1", "rwtsd1.id = tsd.id_warna_1 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd2", "rwtsd2.id = tsd.id_warna_2 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd3", "rwtsd3.id = tsd.id_warna_3 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd4", "rwtsd4.id = tsd.id_warna_4 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd5", "rwtsd5.id = tsd.id_warna_5 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd6", "rwtsd6.id = tsd.id_warna_6 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd7", "rwtsd7.id = tsd.id_warna_7 and abx.tipe = 1", "left");
+        $builder->join("ref_warna rwtsd8", "rwtsd8.id = tsd.id_warna_8 and abx.tipe = 1", "left");
+        $builder->join("trans_sales_order_det tsod", "tsod.id = abx.ref_detail_id and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod1", "rwtsod1.id = tsod.id_warna_1 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod2", "rwtsod2.id = tsod.id_warna_2 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod3", "rwtsod3.id = tsod.id_warna_3 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod4", "rwtsod4.id = tsod.id_warna_4 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod5", "rwtsod5.id = tsod.id_warna_5 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod6", "rwtsod6.id = tsod.id_warna_6 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod7", "rwtsod7.id = tsod.id_warna_7 and abx.tipe = 2", "left");
+        $builder->join("ref_warna rwtsod8", "rwtsod8.id = tsod.id_warna_8 and abx.tipe = 2", "left");
 
         $subQuery = '(SELECT wop.harga FROM trans_walkorder_proses wop 
                         left join trans_walkorder wo on wop.id_walkorder = wo.id 

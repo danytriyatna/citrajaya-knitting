@@ -296,6 +296,13 @@ class SalesOrderModel extends \App\Models\PrModel
                     CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
                 ) AS keterangan,
                 {$col11},
+                (
+                    SELECT 
+                        COALESCE(SUM(x.harga_satuan), 0) 
+                        / NULLIF(COUNT(CASE WHEN x.qty IS NOT NULL THEN 1 END), 0)
+                    FROM trans_sales_order_ukuran x
+                    WHERE x.id_sales_order_det = tbl.id
+                ) AS total_satuan,
                 COALESCE((
                     SELECT SUM(x.harga_total)
                     FROM trans_sales_order_ukuran x

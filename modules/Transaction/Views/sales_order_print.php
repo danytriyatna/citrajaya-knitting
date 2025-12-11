@@ -236,10 +236,11 @@
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" style="width: 10px;" rowspan="2">No.</th>
+                <th class="text-center" style="width: 5%;" rowspan="2">No.</th>
                 <th class="text-center" style="width: 35%;" rowspan="2">COLOUR</th>
                 <th class="text-center" colspan="<?= count($ukuran) ?>">SIZE</th>
                 <th class="text-center" style="width: 10%;" rowspan="2">TOTAL QTY</th>
+                <th class="text-center" style="width: 13%;" rowspan="2">HARGA /PCS</th>
                 <th class="text-center" style="width: 20%;" rowspan="2">AMOUNT</th>
             </tr>
             <tr>
@@ -276,6 +277,7 @@
                         <td class="text-center"><?= $row->$u ?></td>
                     <?php $total_qty += $row->$u; endforeach; $sub_total_qty += $total_qty; ?>
                     <td class="text-center"><?= $total_qty ?></td>
+                    <td class="text-right"><?= !empty($row->total_satuan) ? "Rp." . number_format(round($row->total_satuan)) : "" ?></td>
                     <td class="text-right"><?= !empty($row->total_harga) ? "Rp." . number_format(round($row->total_harga)) : "" ?></td>
                     <?php 
                         $sub_total_jumlah += !empty($row->total_harga) ? round($row->total_harga) : 0; 
@@ -294,12 +296,14 @@
                     <th style="font-size: 12px; text-align: center; border:1px solid #000;">
                         <?= $sub_total_qty ?>
                     </th>
+                    <th style="font-size: 12px; text-align: center; border:1px solid #000;">
+                    </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
                          <?= "Rp." . number_format(round($sub_total_jumlah)) ?>
                     </th>
                 </tr>
                 <tr>
-                    <th style="font-size: 12px; text-align: right; padding-right: 6px; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 3 ?>">
+                    <th style="font-size: 12px; text-align: right; padding-right: 6px; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 4 ?>">
                         DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> )
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
@@ -307,7 +311,7 @@
                     </th>
                 </tr>
                 <tr>
-                    <th style="font-size: 12px; text-align: right; padding-right: 6px; border-bottom:1px solid #000; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 3 ?>">
+                    <th style="font-size: 12px; text-align: right; padding-right: 6px; border-bottom:1px solid #000; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 4?>">
                         SISA PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">

@@ -387,19 +387,19 @@ class ItemTransferModel extends \App\Models\PrModel
         } else {
             $kode = 1;
         }
-
+        
         $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
         $kodejadi = $kd . date('y') . date('m') . $kodemax;
-
+        
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }
-
+    
     function trxInsertUpdateRecord($data, $id, $detail, $dataSO)
     {
         $this->db->transStart();
         try {
-
+            
             if (!empty($id)) {
                 $arrDelete =  [
                     "id_header" => $id,
@@ -414,7 +414,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $data['kode_transaksi'] = $this->generateKodePersediaan();
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
-
+            
             foreach ($dataSO as $rowData) {
                 $dataDetail = [
                     // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
@@ -431,17 +431,16 @@ class ItemTransferModel extends \App\Models\PrModel
                     "kode_ukuran" => $rowData['kode_ukuran'],
                     "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
                 ];
-
                 $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
             }
-
+            
             if(!empty($detail)){
-                foreach ($detail as $rowData) {
+                foreach ($detail as $key => $rowData) {
                     if ($rowData['id_barang'] != "") {
                         // $idBarang = decrypt($rowData['id_barang']);
                         $idBarang = $rowData['id_barang'];
                     }
-    
+                
                     $dataDetail = [
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
@@ -449,13 +448,12 @@ class ItemTransferModel extends \App\Models\PrModel
                         "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
                         "id_header" => $id,
                         "qty" => $rowData['qty'],
-                        "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
+                        "price" => !empty($rowData['price'])
+                            ? (int) preg_replace('/[^0-9]/', '', $rowData['price'])
+                            : 0,
                     ];
-                    // print_r($this->tblDet);exit;
                     $this->insertRecordGetid($this->tblDet, $dataDetail);
-                    
                     if ($data['status'] == 1) {
-    
                         $mBarangMasuk = new IncomingGoodsModel();
                         $arrParam =  [
                             "id_barang" => $idBarang,
@@ -562,6 +560,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
 
                     }
+                    
                 }
             }
 

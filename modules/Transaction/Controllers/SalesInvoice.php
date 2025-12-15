@@ -897,11 +897,15 @@ class SalesInvoice extends BaseController
       $warna = [];
       $ukuranAll = [];
       $total_dp = 0;
+      $total_pengiriman = 0;
       $sub_total = 0;
       if (!empty($dtails)) {
         foreach ($dtails as $key_det => $value_det) {
           if (!empty($value_det->uang_dp) && $value_det->uang_dp > 0) {
             $total_dp += (float)$value_det->uang_dp;
+          }
+          if (!empty($value_det->pengiriman) && $value_det->pengiriman > 0) {
+            $total_pengiriman += (float)$value_det->pengiriman;
           }
           if ($value_det->tipe_id == 1) {
             $dtails_so = $this->mSample->getDataDetailSample_crostab_si($value_det->id_ref, $id);
@@ -1075,6 +1079,7 @@ class SalesInvoice extends BaseController
       $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
       $this->data['data_detail'] = !empty($warna) ? $warna : [];
       $this->data['total_dp'] = !empty($total_dp) ? $total_dp : 0;
+      $this->data['total_pengiriman'] = !empty($total_pengiriman) ? $total_pengiriman : 0;
       $this->data['sub_total'] = !empty($sub_total) ? $sub_total : 0;
       // dd($this->data['detail']);
     }

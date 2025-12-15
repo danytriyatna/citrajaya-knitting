@@ -254,6 +254,11 @@
                 <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
             </tr>
             <tr>
+                <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'></td>
+                <td style="border:1px solid #808080;"><strong>PENGIRIMAN</strong></td>
+                <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_pengiriman) ? number_format($total_pengiriman, 0, ',', '.') : 0 ?></td>
+            </tr>
+            <tr>
                 <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080; border-bottom:1px solid #808080;'></td>
                 <td style="border:1px solid #808080;"><strong>TOTAL</strong></td>
                 <td style="text-align: right; border:1px solid #808080;"><?= $formatTotal ?></td>

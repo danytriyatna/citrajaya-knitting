@@ -115,7 +115,7 @@
                  placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
                  data-politespace-reverse="" data-politespace-decimal-mark=".">
             <div class="invalid-feedback">
-              Deadline tidak valid
+              DownPayment tidak valid
             </div>
           </div>
           <label class="control-label text-start text-md-end col-md-1 col-form-label" for="tgl_dp">Tanggal</label>
@@ -137,6 +137,18 @@
             <div class="invalid-feedback">
               Deadline tidak valid
             </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pengiriman">Pengiriman</label>
+          <div class="col-md-9">
+            <input type="number" name="pengiriman" value="" id="pengiriman" min="0" step="1" pattern="[0-9]*" class="form-control" 
+                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
+                 data-politespace-reverse="" data-politespace-decimal-mark=".">
+                 <div class="invalid-feedback">
+                  Pengiriman tidak valid
+                </div>
           </div>
         </div>
 

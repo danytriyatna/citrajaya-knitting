@@ -149,6 +149,7 @@ class SalesOrder extends BaseController
           "style" => $row->style,
           "style_cnt_order" => $row->style_cnt,
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,
+          "pengiriman" => !empty($row->pengiriman) ? \format_angka($row->pengiriman) : 0,
           "status"  => $status,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
           // "detail" => $this->mSalesOrder->getDataDetailSalesOrder($row->id)
@@ -218,6 +219,7 @@ class SalesOrder extends BaseController
       "id_sample" => $results->id_sample,
       "status" => $status,
       "uang_dp" =>  !empty($results->uang_dp) ? $results->uang_dp : 0,
+      "pengiriman" =>  !empty($results->pengiriman) ? $results->pengiriman : 0,
       "tgl_dp" => $results->tgl_dp,
       "type_dp" => $results->type_dp,
       "detail" => $detail,
@@ -262,6 +264,7 @@ class SalesOrder extends BaseController
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
     $uang_dp = $this->request->getPost('uang_dp');
+    $pengiriman = $this->request->getPost('pengiriman');
     $tgl_dp = $this->request->getPost('tgl_dp');
     $type_dp = $this->request->getPost('type_dp');
     $style = $this->request->getPost('style');
@@ -329,6 +332,7 @@ class SalesOrder extends BaseController
       'tgl_deadline' => $tglDeadline,
       'tgl_deadline_dua' => $tglDeadlineDua,
       'uang_dp' => $uang_dp,
+      'pengiriman' => $pengiriman,
       'tgl_dp' => $tgl_dp,
       'type_dp' => $type_dp,
       'style' => $style,

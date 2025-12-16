@@ -241,6 +241,7 @@
             $colspan = count($ukuran) + 3; // 4 for No, Deskripsi, Warna, Harga Unit
             $formatSubTotal = number_format($sub_total, 0, ',', '.');
             $total = !empty($total_dp) ? $sub_total - $total_dp : $sub_total;
+            $total = !empty($total_pengiriman) ? $total + $total_pengiriman : $total;
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
             <tr>

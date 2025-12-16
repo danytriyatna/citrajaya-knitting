@@ -119,9 +119,11 @@ class SalesInvoice extends BaseController
 
       $total       = $row->total;
       $total_down_payment = !empty($row->total_down_payment)? $row->total_down_payment : 0;
+      $pengiriman = !empty($row->pengiriman)? $row->pengiriman : 0;
       $pay_item = !empty($row->pay_item)? $row->pay_item : 0;
       $pay_item =  $pay_item < 0 ? 0 - $pay_item : $pay_item;
       $pay_item       = $pay_item+ $total_down_payment;
+      $pay_item       = $pay_item- $pengiriman;
       $diskon      = $row->diskon;
       $pph         = $row->pph;
       $pph_total   = $row->pph_total;
@@ -141,6 +143,7 @@ class SalesInvoice extends BaseController
           "grand_total"       => $grand_total,
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),
           "bayar"             => $pay_item,
+          "pengiriman"        => $pengiriman,
           "sisa_bayar"        => $sisa_bayar,
           "status"            => $status,
           "aksi"              => $btnAction

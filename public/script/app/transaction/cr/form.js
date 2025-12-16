@@ -150,6 +150,10 @@ $(document).ready(function () {
             , {
 				title: "DP", field: "dp",
 				width: 200, headerSort:false, align: "right", cssClass: 'text-end', formatter : "money" //, editor:!disabled_input ,  cellEdited: harga_pph23
+			}
+            , {
+				title: "Pengiriman", field: "pengiriman",
+				width: 200, headerSort:false, align: "right", cssClass: 'text-end', formatter : "money" //, editor:!disabled_input ,  cellEdited: harga_pph23
 			},
 			
             // {
@@ -157,7 +161,7 @@ $(document).ready(function () {
 			// 	width: 130, align: "right", cssClass: 'text-end', formatter : "money"
 			// }
             , {
-				title: "Sisa", field: "remain_item",
+				title: "Sisa", field: "remain_item", visible:false,
 				width: 200, headerSort:false, align: "right", cssClass: 'text-end', formatter : "money"
 			}, {
 				title: "Jumlah Pembayaran", field: "pay_item", formatter: "money",

@@ -28,7 +28,13 @@ class InvoiceModel extends \App\Models\PrModel
                                 SELECT SUM(tid.down_payment)
                                 FROM trans_invoice_detail tid
                                 WHERE tid.id_invoice = abx.id
-                            ),0) as total_down_payment");
+                            ),0) as total_down_payment,
+                            COALESCE((
+                                SELECT SUM(tso.pengiriman)
+                                FROM trans_invoice_detail tid
+                                INNER JOIN trans_sales_order tso on tso.id = tid.id_ref
+                                WHERE tid.id_invoice = abx.id
+                            ),0) as pengiriman");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");

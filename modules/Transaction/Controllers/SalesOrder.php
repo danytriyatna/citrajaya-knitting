@@ -267,6 +267,9 @@ class SalesOrder extends BaseController
     $pengiriman = $this->request->getPost('pengiriman');
     $tgl_dp = $this->request->getPost('tgl_dp');
     $type_dp = $this->request->getPost('type_dp');
+    if ($type_dp == 'null') {
+      $type_dp = null;
+    }
     $style = $this->request->getPost('style');
     $repeat = $this->request->getPost('repeat');
     if (strpos($tgl_dp, 'undefined') !== false || empty($tgl_dp))  {
@@ -323,7 +326,6 @@ class SalesOrder extends BaseController
 
     $msg    = "Data gagal ditambahkan !";
     $status = false;
-
     $arr_isi = [
       'id_konsumen' => $idKonsumen,
       'keterangan' => $keterangan,

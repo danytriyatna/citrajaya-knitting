@@ -188,6 +188,7 @@ class CustomerReceipt extends BaseController
 
                 $isi["total_item"] = $r->total_item;
                 $isi["dp"] = $r->dp;
+                $isi["pengiriman"] = $r->pengiriman;
                 $isi["remain_item"] = !empty($r->remain_item) ? $r->remain_item : $r->grand_total;
                 $isi["pph"] = $r->pph;
                 $isi["pay_item"] = $r->pay_item;
@@ -491,9 +492,11 @@ class CustomerReceipt extends BaseController
                         }
                     }
                     $remain = $remain;
+                    $remain = !empty($r->pengiriman) ? $remain + $r->pengiriman : $remain;
                     $isi["remain_item"] = $remain;
                     $isi["pph"] = $r->pph_total;
                     $isi["dp"] = $r->total_down_payment;
+                    $isi["pengiriman"] = $r->pengiriman;
                     $isi["total"] = $r->grand_total;
                     $isi["pay_item"] = $remain;
 

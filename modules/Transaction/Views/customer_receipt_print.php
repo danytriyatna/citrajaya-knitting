@@ -181,12 +181,13 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 10px;">No.</th>
-                <th class="text-center" style="width: 25%;">NO. INVOICE</th>
-                <th class="text-center" style="width: 15%;">TGL INVOICE</th>
-                <th class="text-center" style="width: 25%;">NILAI INVOICE</th>
-                <!-- <th class="text-center" style="width: 20%;">PPH NILAI</th> -->
-                <th class="text-center" style="width: 25%;">SISA PEMBAYARAN</th>
-                <th class="text-center" style="width: 25%;">JUMLAH PEMBAYARAN</th>
+                <th class="text-center" style="width: 13%;">NO. INVOICE</th>
+                <th class="text-center" style="width: 12%;">TGL INVOICE</th>
+                <th class="text-center" style="width: 15%;">NILAI INVOICE</th>
+                <th class="text-center" style="width: 15%;">DOWN PAYMENT</th>
+                <th class="text-center" style="width: 12%;">PENGIRIMAN</th>
+                <!-- <th class="text-center" style="width: 15%;">SISA PEMBAYARAN</th> -->
+                <th class="text-center" style="width: 18%;">JUMLAH PEMBAYARAN</th>
             </tr>
         </thead>
         <tbody>
@@ -198,6 +199,7 @@
             foreach ($detail as $row) : ?>
                 <?php 
                     $dp = !empty($row->dp) ? round($row->dp) : 0;   
+                    $pengiriman = !empty($row->pengiriman) ? round($row->pengiriman) : 0;   
                     $sisa = !empty($row->remain_item) ? round($row->remain_item) : 0;
                     $bayar = !empty($row->pay_item) ? round($row->pay_item) : 0;
                 ?>
@@ -206,7 +208,9 @@
                     <td><?= $row->kode_invoice ?></td>
                     <td><?= fdate_eng_to_ind($row->tgl_transaksi) ?></td>
                     <td class="text-right"><?= !empty($row->total_item) ? "Rp." . number_format(round($row->total_item)) : "" ?></td>
-                    <td class="text-right"><?= !empty($row->remain_item) ? "Rp." . number_format(round($row->remain_item)) : "" ?></td>
+                    <td class="text-right"><?= !empty($row->dp) ? "Rp." . number_format(round($row->dp)) : "" ?></td>
+                    <td class="text-right"><?= !empty($row->pengiriman) ? "Rp." . number_format(round($row->pengiriman)) : "" ?></td>
+                    <!-- <td class="text-right"><?= !empty($row->remain_item) ? "Rp." . number_format(round($row->remain_item)) : "" ?></td> -->
                     <td class="text-right"><?= "Rp." . number_format($bayar) ?></td>
                     
 
@@ -222,7 +226,7 @@
         </tbody>
         <tfoot>
                 <tr>
-                    <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="5">
+                    <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="6">
                         TOTAL INVOICE
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000;">
@@ -230,7 +234,7 @@
                     </th>
                 </tr>
                 <tr>
-                    <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="5">
+                    <th style="font-size: 12px; text-align: right; border-left:1px solid #000; padding-right: 6px;" colspan="6">
                         TOTAL PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000;">
@@ -238,7 +242,7 @@
                     </th>
                 </tr>
                 <tr>
-                    <th style="font-size: 12px; text-align: right; border-bottom:1px solid #000; border-left:1px solid #000; padding-right: 6px;" colspan="5">
+                    <th style="font-size: 12px; text-align: right; border-bottom:1px solid #000; border-left:1px solid #000; padding-right: 6px;" colspan="6">
                         SISA PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border:1px solid #000">

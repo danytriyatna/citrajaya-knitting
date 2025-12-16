@@ -44,6 +44,7 @@ $RECYCLE.BIN/
 .env
 .vagrant
 Vagrantfile
+public/ci_sessions
 
 #-------------------------
 # Config Email 

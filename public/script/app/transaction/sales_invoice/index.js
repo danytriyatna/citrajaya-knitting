@@ -25,13 +25,14 @@ $(document).ready(function () {
 				title: 'SI Amount', field: 'grand_total', headerSort:false, sorter: 'string',
 				width: 160, formatter : "money", align:'center', cssClass:'text-end'
 			},
-
+            {
+				title: 'Pengiriman', field: 'pengiriman', formatter : "money", headerSort:false, sorter: 'string',
+				width: 160, align:'center', cssClass:'text-end'
+			} ,
             {
 				title: 'Paid Amount', field: 'bayar', formatter : "money", headerSort:false, sorter: 'string',
 				width: 160, align:'center', cssClass:'text-end'
 			} ,
-
-            
             {
 				title: 'Remain Amount', field: 'sisa_bayar', headerSort:false, sorter: 'string', align: "center",
                 width: 160, formatter : "money", align:'center', cssClass:'text-end'

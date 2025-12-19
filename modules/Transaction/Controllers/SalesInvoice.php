@@ -123,12 +123,12 @@ class SalesInvoice extends BaseController
       $pay_item = !empty($row->pay_item)? $row->pay_item : 0;
       $pay_item =  $pay_item < 0 ? 0 - $pay_item : $pay_item;
       $pay_item       = $pay_item+ $total_down_payment;
-      $pay_item       = $pay_item- $pengiriman;
+      // $pay_item       = $pay_item- $pengiriman;
       $diskon      = $row->diskon;
       $pph         = $row->pph;
       $pph_total   = $row->pph_total;
       $grand_total = $row->total;
-      $sisa_bayar = $grand_total - $pay_item;
+      $sisa_bayar = $grand_total + $pengiriman - $pay_item;
 
       array_push(
         $build_array["data"],

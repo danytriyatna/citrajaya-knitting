@@ -186,12 +186,13 @@ class InvoiceModel extends \App\Models\PrModel
                             (case when abx.tipe_id = 1 then kons.alamat else kon.alamat end) as alamat_buyer,
                             (case when abx.tipe_id = 1 then kons.no_hp else kon.no_hp end) as no_hp_buyer,
                             (case when abx.tipe_id = 1 then ts.style else tso.style end) as style,
-                            tso.uang_dp, tso.tgl_dp, tso.pengiriman, tso.type_dp, rek.rekening_no, rek.rekening_bank
+                            tso.uang_dp, tso.uang_dp_2, tso.tgl_dp, tso.tgl_dp_2, tso.pengiriman, tso.type_dp, tso.type_dp_2, rek.rekening_no, rek.rekening_bank, rek_2.rekening_no as rekening_no_2, rek_2.rekening_bank as rekening_bank_2
                             ");
 
         $builder->join("trans_sample ts", "ts.id = abx.id_ref and abx.tipe_id = 1", "left");
         $builder->join("trans_sales_order tso", "tso.id = abx.id_ref and abx.tipe_id = 2", "left");
         $builder->join("ref_rekening rek", "rek.id = tso.type_dp", "left");
+        $builder->join("ref_rekening rek_2", "rek_2.id = tso.type_dp_2", "left");
         $builder->join("ref_konsumen kon", "kon.id = tso.id_konsumen", "left");
         $builder->join("ref_konsumen kons", "kons.id = ts.id_konsumen", "left");
 
@@ -300,6 +301,7 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.qty, 0)) as qty,
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
+                    coalesce(tso.uang_dp_2, 0) as uang_dp_2, 
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id and sd.invoice_status = false and sd.status = 2 ),0) as qty_dlv,
                     coalesce((
     select sum(tdp.qty_do * tdp.harga_satuan)
@@ -323,7 +325,7 @@ class InvoiceModel extends \App\Models\PrModel
                     group by 
                         tso.id, tso.kode_sales_order,
                         tso.id_konsumen, tso.style,  tso.tgl_transaksi,
-                        tso.uang_dp, tw.id 
+                        tso.uang_dp, tso.uang_dp_2, tw.id 
                 union all 
                 select 
                     1 as tipe_id,
@@ -335,6 +337,7 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsu.qty, 0)) as qty,
                     sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
+                    coalesce(ts.uang_dp_2, 0) as uang_dp_2,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
                     and sd.invoice_status = false and sd.status = 2),0) as qty_dlv,
                     coalesce((
@@ -362,7 +365,7 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.id_konsumen, 
                     ts.style,
                     ts.tgl_transaksi,
-                    ts.uang_dp, tw.id 
+                    ts.uang_dp, ts.uang_dp_2, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
             where xtb.id_konsumen = {$params['id_konsumen']} 
@@ -393,6 +396,7 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.qty, 0)) as qty,
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
+                    coalesce(tso.uang_dp_2, 0) as uang_dp_2, 
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id 
                     and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']} ),0) as qty_dlv,
                     coalesce((
@@ -417,7 +421,7 @@ class InvoiceModel extends \App\Models\PrModel
                     group by 
                         tso.id, tso.kode_sales_order,
                         tso.id_konsumen, tso.style,  tso.tgl_transaksi,
-                        tso.uang_dp, tw.id 
+                        tso.uang_dp, tso.uang_dp_2, tw.id 
                 union all 
                 select 
                     1 as tipe_id,
@@ -429,6 +433,7 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsu.qty, 0)) as qty,
                     sum(coalesce(tsu.harga_total, 0)) as total_harga,
                     coalesce(ts.uang_dp, 0) as uang_dp,
+                    coalesce(ts.uang_dp_2, 0) as uang_dp_2,
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
                     and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}),0) as qty_dlv,
                     coalesce((
@@ -456,7 +461,7 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.id_konsumen, 
                     ts.style,
                     ts.tgl_transaksi,
-                    ts.uang_dp, tw.id 
+                    ts.uang_dp, ts.uang_dp_2, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
             where xtb.id_konsumen = {$params['id_konsumen']}

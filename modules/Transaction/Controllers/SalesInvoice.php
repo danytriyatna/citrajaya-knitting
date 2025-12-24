@@ -216,6 +216,7 @@ class SalesInvoice extends BaseController
         foreach ($dt as $x) {
 
           $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
+          $uang_dp +=  ($x->tipe_id == 1) ? $x->uang_dp_2 : $x->uang_dp_2;
           $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
 
           $total = ($x->tipe_id == 1) ? $x->total_harga_delivery : $x->total_harga_delivery;
@@ -655,6 +656,7 @@ class SalesInvoice extends BaseController
       foreach ($dt as $x) {
 
         $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
+        $uang_dp +=  ($x->tipe_id == 1) ? $x->uang_dp_2 : $x->uang_dp_2;
         $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
 
         $total = ($x->tipe_id == 1) ? $x->total_harga_delivery : $x->total_harga_delivery;
@@ -900,12 +902,16 @@ class SalesInvoice extends BaseController
       $warna = [];
       $ukuranAll = [];
       $total_dp = 0;
+      $total_dp_2 = 0;
       $total_pengiriman = 0;
       $sub_total = 0;
       if (!empty($dtails)) {
         foreach ($dtails as $key_det => $value_det) {
           if (!empty($value_det->uang_dp) && $value_det->uang_dp > 0) {
             $total_dp += (float)$value_det->uang_dp;
+          }
+          if (!empty($value_det->uang_dp_2) && $value_det->uang_dp_2 > 0) {
+            $total_dp_2 += (float)$value_det->uang_dp_2;
           }
           if (!empty($value_det->pengiriman) && $value_det->pengiriman > 0) {
             $total_pengiriman += (float)$value_det->pengiriman;
@@ -995,6 +1001,7 @@ class SalesInvoice extends BaseController
         foreach ($dt as $x) {
 
           $uang_dp =  ($x->tipe_id == 1) ? $x->uang_dp : $x->uang_dp;
+          $uang_dp +=  ($x->tipe_id == 1) ? $x->uang_dp_2 : $x->uang_dp_2;
           $uang_dp = !empty($uang_dp) ? (float) $uang_dp : 0;
 
           $total = ($x->tipe_id == 1) ? $x->total_harga : $x->total_harga;
@@ -1082,6 +1089,7 @@ class SalesInvoice extends BaseController
       $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
       $this->data['data_detail'] = !empty($warna) ? $warna : [];
       $this->data['total_dp'] = !empty($total_dp) ? $total_dp : 0;
+      $this->data['total_dp_2'] = !empty($total_dp_2) ? $total_dp_2 : 0;
       $this->data['total_pengiriman'] = !empty($total_pengiriman) ? $total_pengiriman : 0;
       $this->data['sub_total'] = !empty($sub_total) ? $sub_total : 0;
       // dd($this->data['detail']);

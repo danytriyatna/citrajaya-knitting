@@ -172,9 +172,9 @@
             <tr>
                 <th rowspan="2" style="border: 1px solid #808080;">NO</th>
                 <th rowspan="2" style="border: 1px solid #808080;">DESKRIPSI</th>
-                <th rowspan="2" style="width: 25%; border: 1px solid #808080;">WARNA</th>
+                <th rowspan="2" style="width: 24%; border: 1px solid #808080;">WARNA</th>
                 <th colspan="<?= count($ukuran) ?>" style="border: 1px solid #808080;">SIZE</th>
-                <th rowspan="2" style="width: 15%; border: 1px solid #808080;">HARGA UNI/PCS (Rp)</th>
+                <th rowspan="2" style="width: 16%; border: 1px solid #808080;">HARGA UNI/PCS (Rp)</th>
                 <th rowspan="2" style="border: 1px solid #808080;">TOTAL (Rp)</th>
             </tr>
             <tr>
@@ -241,6 +241,7 @@
             $colspan = count($ukuran) + 3; // 4 for No, Deskripsi, Warna, Harga Unit
             $formatSubTotal = number_format($sub_total, 0, ',', '.');
             $total = !empty($total_dp) ? $sub_total - $total_dp : $sub_total;
+            $total = !empty($total_dp_2) ? $total - $total_dp_2 : $total;
             $total = !empty($total_pengiriman) ? $total + $total_pengiriman : $total;
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
@@ -253,6 +254,11 @@
                 <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'><?= $data->keterangan ?></td>
                 <td style="border:1px solid #808080;"><strong>DP (<?= !empty($detail[0]->tgl_dp) ? date('d/m/Y', strtotime($detail[0]->tgl_dp)) : "-" ?>)</strong></td>
                 <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_dp) ? number_format($total_dp, 0, ',', '.') : 0 ?></td>
+            </tr>
+            <tr>
+                <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'></td>
+                <td style="border:1px solid #808080;"><strong>DP 2 (<?= !empty($detail[0]->tgl_dp_2) ? date('d/m/Y', strtotime($detail[0]->tgl_dp_2)) : "-" ?>)</strong></td>
+                <td style="text-align: right; border:1px solid #808080;"><?= !empty($total_dp_2) ? number_format($total_dp_2, 0, ',', '.') : 0 ?></td>
             </tr>
             <tr>
                 <td colspan="<?= $colspan ?>" style='border-top:none; border-left:1px solid #808080; border-right:1px solid #808080;'></td>

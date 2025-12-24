@@ -270,11 +270,17 @@
             <tr>
                 <td class="w-50 text-center">&nbsp;</td>
                 <td class="w-50 text-center">&nbsp;</td>
+                <td class="w-50 text-center">&nbsp;</td>
             </tr>
             <tr>
                 <td class="text-center">
                     <br>
                     <p><b>Pembuat,</b></p><br><br>
+                    <p>( ....................... )</p>
+                </td>
+                <td class="text-center">
+                    <br>
+                    <p><b>Penerima,</b></p><br><br>
                     <p>( ....................... )</p>
                 </td>
                 <td class="text-center">

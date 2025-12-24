@@ -216,6 +216,7 @@ class Dashboard extends BaseController
 
             $pembayaran = !empty($row->nilai_pembayaran) ? $row->nilai_pembayaran : 0;
             $dp = !empty($row->uang_dp) ? $row->uang_dp : 0;
+            $dp += !empty($row->uang_dp_2) ? $row->uang_dp_2 : 0;
 
             // $total += ($row->uang_dp + $row->nilai_invoice);
             

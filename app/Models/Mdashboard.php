@@ -17,14 +17,14 @@ class Mdashboard extends Model
 
         $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
                           tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
-                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
+                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.uang_dp_2, tbl.harga_total, tbl.nilai_invoice");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
         
         
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
         $builder->groupEnd();
 
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
@@ -69,7 +69,7 @@ class Mdashboard extends Model
 
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
         $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -97,14 +97,14 @@ class Mdashboard extends Model
 
         $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
                           tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
-                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
+                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.uang_dp_2, tbl.harga_total, tbl.nilai_invoice");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
         
         
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
         $builder->groupEnd();
 
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
@@ -138,13 +138,13 @@ class Mdashboard extends Model
 
         $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
                           tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
-                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.harga_total, tbl.nilai_invoice");
+                          tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.uang_dp_2, tbl.harga_total, tbl.nilai_invoice");
         
         $builder->join("trans_produksi rk", "rk.id = tbl.id_prod", "left");
 
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
         $builder->groupEnd();
 
         if ($id == null or $id == "") {
@@ -188,7 +188,7 @@ class Mdashboard extends Model
 
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
         $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -248,7 +248,10 @@ class Mdashboard extends Model
                         WHERE tid.id_ref = abx.id AND tid.tipe_id = 2
                     ), 0)
                 ) AS nilai_invoice,
-                SUM(abx.uang_dp) AS total_down_payment,
+                SUM(
+  COALESCE(abx.uang_dp, 0) +
+  COALESCE(abx.uang_dp_2, 0)
+) AS total_down_payment,
                 SUM(
                     COALESCE((
                         SELECT SUM(tidd.grand_total)
@@ -295,7 +298,7 @@ class Mdashboard extends Model
                     ), 0)
                 >
                 (
-                    abx.uang_dp +
+                    COALESCE(abx.uang_dp, 0) + COALESCE(abx.uang_dp_2, 0) +
                     COALESCE((
                         SELECT SUM(tidd.grand_total)
                         FROM trans_invoice_detail tidd
@@ -410,7 +413,10 @@ class Mdashboard extends Model
                         WHERE tid.id_ref = abx.id AND tid.tipe_id = 2
                     ), 0)
                 ) AS nilai_invoice,
-                SUM(abx.uang_dp) AS total_down_payment,
+                SUM(
+  COALESCE(abx.uang_dp, 0) +
+  COALESCE(abx.uang_dp_2, 0)
+) AS total_down_payment,
                 SUM(
                     COALESCE((
                         SELECT SUM(tidd.grand_total)
@@ -457,7 +463,7 @@ class Mdashboard extends Model
                     ), 0)
                 >
                 (
-                    abx.uang_dp +
+                    COALESCE(abx.uang_dp, 0) + COALESCE(abx.uang_dp_2, 0) +
                     COALESCE((
                         SELECT SUM(tidd.grand_total)
                         FROM trans_invoice_detail tidd
@@ -822,7 +828,7 @@ class Mdashboard extends Model
     function getDataDP($month = null, $year = null)
     {
         $builder = $this->db->table("trans_sales_order abx");
-        $builder->select("SUM(abx.uang_dp::float) as total_dp");
+        $builder->select("SUM(COALESCE(abx.uang_dp::float, 0) + COALESCE(abx.uang_dp_2::float, 0) ) as total_dp");
         
         $builder->where('abx.active = 1');
         $builder->where("EXTRACT(MONTH FROM abx.tgl_dp) = $month");

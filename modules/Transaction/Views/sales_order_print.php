@@ -303,11 +303,17 @@
                     </th>
                 </tr>
                 <tr>
+                    <?php 
+
+                        $uang_dp = !empty($data->uang_dp) ? $data->uang_dp : 0;
+                        $uang_dp += !empty($data->uang_dp_2) ? $data->uang_dp_2 : 0;
+                    
+                    ?>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 4 ?>">
-                        DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> )
+                        DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> ) <?= !empty($data->uang_dp) ? 'dan DP 2 ( '.formatTanggalIndonesia($data->tgl_dp_2).' )' : "-" ?>
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
-                         <?= !empty($data->uang_dp) ? "Rp." . number_format(round($data->uang_dp)) : "-" ?>
+                         <?= !empty($uang_dp) ? "Rp." . number_format(round($uang_dp)) : "-" ?>
                     </th>
                 </tr>
                 <tr>
@@ -315,9 +321,6 @@
                         SISA PEMBAYARAN
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
-                        <?php
-                            $uang_dp = !empty($data->uang_dp) ? round($data->uang_dp) : 0;
-                        ?>
                          <?= "Rp." . number_format(round($sub_total_jumlah - $uang_dp)) ?>
                     </th>
                 </tr>

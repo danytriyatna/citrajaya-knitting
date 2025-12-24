@@ -149,6 +149,7 @@ class SalesOrder extends BaseController
           "style" => $row->style,
           "style_cnt_order" => $row->style_cnt,
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,
+          "uang_dp_2" => !empty($row->uang_dp_2) ? \format_angka($row->uang_dp_2) : 0,
           "pengiriman" => !empty($row->pengiriman) ? \format_angka($row->pengiriman) : 0,
           "status"  => $status,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
@@ -219,9 +220,12 @@ class SalesOrder extends BaseController
       "id_sample" => $results->id_sample,
       "status" => $status,
       "uang_dp" =>  !empty($results->uang_dp) ? $results->uang_dp : 0,
-      "pengiriman" =>  !empty($results->pengiriman) ? $results->pengiriman : 0,
       "tgl_dp" => $results->tgl_dp,
       "type_dp" => $results->type_dp,
+      "uang_dp_2" =>  !empty($results->uang_dp_2) ? $results->uang_dp_2 : 0,
+      "tgl_dp_2" => $results->tgl_dp_2,
+      "type_dp_2" => $results->type_dp_2,
+      "pengiriman" =>  !empty($results->pengiriman) ? $results->pengiriman : 0,
       "detail" => $detail,
       "key_ukuran" => $dtUkuran
     );
@@ -264,22 +268,28 @@ class SalesOrder extends BaseController
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
     $uang_dp = $this->request->getPost('uang_dp');
+    $uang_dp_2 = $this->request->getPost('uang_dp_2');
     $pengiriman = $this->request->getPost('pengiriman');
     $tgl_dp = $this->request->getPost('tgl_dp');
     $type_dp = $this->request->getPost('type_dp');
-    if ($type_dp == 'null') {
+    $tgl_dp_2 = $this->request->getPost('tgl_dp_2');
+    $type_dp_2 = $this->request->getPost('type_dp_2');
+    if ($type_dp == 'null' || empty($type_dp)) {
       $type_dp = null;
+    }
+    if ($type_dp_2 == 'null' || empty($type_dp_2)) {
+      $type_dp_2 = null;
     }
     $style = $this->request->getPost('style');
     $repeat = $this->request->getPost('repeat');
     if (strpos($tgl_dp, 'undefined') !== false || empty($tgl_dp))  {
-        $tgl_dp = null;
+      $tgl_dp = null;
+    }
+    if (strpos($tgl_dp_2, 'undefined') !== false || empty($tgl_dp_2))  {
+      $tgl_dp_2 = null;
     }
     if (strpos($tglDeadlineDua, 'undefined') !== false || empty($tglDeadlineDua))  {
-        $tglDeadlineDua = null;
-    }
-    if (empty($type_dp)) {
-        $type_dp = null;
+      $tglDeadlineDua = null;
     }
 
     $this->validation->setRules([
@@ -334,9 +344,12 @@ class SalesOrder extends BaseController
       'tgl_deadline' => $tglDeadline,
       'tgl_deadline_dua' => $tglDeadlineDua,
       'uang_dp' => $uang_dp,
-      'pengiriman' => $pengiriman,
       'tgl_dp' => $tgl_dp,
       'type_dp' => $type_dp,
+      'uang_dp_2' => $uang_dp_2,
+      'tgl_dp_2' => $tgl_dp_2,
+      'type_dp_2' => $type_dp_2,
+      'pengiriman' => $pengiriman,
       'style' => $style,
       'style_cnt' => $repeat,
       // 'kode_sales_order' => $noSalesOrder,
@@ -1560,10 +1573,11 @@ class SalesOrder extends BaseController
             $qty_do = !empty($r->qty_do) ? $r->qty_do : 0;
             $nilai_so = !empty($r->harga_total) ? $r->harga_total : 0;
             $nilai_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
+            $nilai_dp_2 = !empty($r->uang_dp_2) ? $r->uang_dp_2 : 0;
             $nilai_invoice = !empty($r->nilai_invoice) ? $r->nilai_invoice : 0;
             $pembayaran = !empty($r->pembayaran) ? $r->pembayaran : 0;
             $sisa = $nilai_so - ($nilai_dp + $nilai_invoice); 
-            $sisa_pembayaran = $nilai_so - ($nilai_dp + $pembayaran);
+            $sisa_pembayaran = $nilai_so - ($nilai_dp + $nilai_dp_2 + $pembayaran);
 
             $total_qty += $qty; 
             $total_qty_prod += $qty_prod; 
@@ -1607,7 +1621,7 @@ class SalesOrder extends BaseController
                     ->setCellValue('J'.$ix, $qty_hasil)
                     ->setCellValue('K'.$ix, $qty_do)
                     ->setCellValue('L'.$ix, $nilai_so)
-                    ->setCellValue('M'.$ix, $nilai_dp)
+                    ->setCellValue('M'.$ix, $nilai_dp + $nilai_dp_2)
                     ->setCellValue('N'.$ix, $nilai_invoice)
                     ->setCellValue('O'.$ix, $sisa)
                     ->setCellValue('P'.$ix, $pembayaran)

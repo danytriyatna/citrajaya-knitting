@@ -310,7 +310,7 @@
                     
                     ?>
                     <th style="font-size: 12px; text-align: right; padding-right: 6px; border-right:1px solid #000; border-left:1px solid #000;" colspan="<?= count($ukuran) + 4 ?>">
-                        DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : "-" ?> ) <?= !empty($data->uang_dp) ? 'dan DP 2 ( '.formatTanggalIndonesia($data->tgl_dp_2).' )' : "-" ?>
+                        DP ( <?= !empty($data->uang_dp) ? formatTanggalIndonesia($data->tgl_dp) : null ?> ) <?= !empty($data->tgl_dp_2) ? 'dan DP 2 ( '.formatTanggalIndonesia($data->tgl_dp_2).' )' : null ?>
                     </th>
                     <th style="font-size: 12px; text-align: right; border:1px solid #000; padding-right: 6px;">
                          <?= !empty($uang_dp) ? "Rp." . number_format(round($uang_dp)) : "-" ?>

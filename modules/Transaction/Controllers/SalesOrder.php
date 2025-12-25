@@ -1308,7 +1308,6 @@ class SalesOrder extends BaseController
       $this->data['ukuran'] = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }
-
     
     $html = view($this->views . '\sales_order_print', $this->data);
 

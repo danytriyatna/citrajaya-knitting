@@ -104,13 +104,13 @@ class ItemTransfer extends BaseController
       //     $atr_del['class'] = '';
       //     $atr_del['onclick'] = "return confirm('Hapus Data ?')";
       // }
-      if ($row->status != 0) {
+      // if ($row->status != 0) {
         $atr_other['title'] = 'Print';
         $atr_other['target'] = "blank";
         $atr_other['url'] = $this->urlv . '/print/';
         $atr_other['class'] = '';
         $atr_other['icon_class'] = 'fa-print';
-      }
+      // }
       if ($atr_edit || $atr_del)
         $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
 

@@ -78,7 +78,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
+            title: "Colour", field: "colour",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
         },
     ]
 

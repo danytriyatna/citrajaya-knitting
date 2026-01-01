@@ -320,7 +320,7 @@ class WorkOrder extends BaseController
           "kg_loss" => $row->kg_loss,
           "total"   => $row->total,
           "loss"    => $row->loss,
-          "kuota"   => $row->kuota,
+          "kuota"   => $row->qty - $row->qty_do,
           "kuota_tambah"    => $row->kuota_tambah,
           'details' => !empty($data_detail) ? $data_detail : []
         )

@@ -264,6 +264,7 @@ class BarangKeluar extends BaseController
         $keterangan = $this->request->getPost('keterangan');
         $dataDetail = $this->request->getPost('data');
         $no_ref_trf = $this->request->getPost('no_ref_trf');
+        $no_ref_wo = $this->request->getPost('no_ref_wo');
         if ($id != "") {
             $id = decrypt($id);
         }
@@ -279,6 +280,7 @@ class BarangKeluar extends BaseController
             "id_kategori" => $id_kategori,
             "keterangan" => $keterangan,
             "no_ref_trf" => $no_ref_trf,
+            "no_ref_wo" => $no_ref_wo,
             "nama" => $nama
         ];
         if ($id) {

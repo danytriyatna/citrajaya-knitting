@@ -187,7 +187,32 @@ class WalkorderModel extends \App\Models\PrModel
         $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, abx.gram, abx.gram_nd, abx.kg, abx.loss,
                           abx.kg_loss, abx.total, abx.tipe_id, abx.kuota, abx.kuota_tambah,
                           (case when abx.tipe_id = 2 then tso.id_warna_1 else ts.id_warna_1 end) as id_wdasar,
-		                  (case when abx.tipe_id = 2 then rw2.kode_warna else rw1.kode_warna end) as wdasar,
+		                  (
+                            CASE 
+                                WHEN abx.tipe_id = 2 THEN
+                                TRIM(BOTH ' - ' FROM
+                                    COALESCE(rws1.kode_warna, '') ||
+                                    CASE WHEN rws2.kode_warna IS NOT NULL THEN ' - ' || rws2.kode_warna ELSE '' END ||
+                                    CASE WHEN rws3.kode_warna IS NOT NULL THEN ' - ' || rws3.kode_warna ELSE '' END ||
+                                    CASE WHEN rws4.kode_warna IS NOT NULL THEN ' - ' || rws4.kode_warna ELSE '' END ||
+                                    CASE WHEN rws5.kode_warna IS NOT NULL THEN ' - ' || rws5.kode_warna ELSE '' END ||
+                                    CASE WHEN rws6.kode_warna IS NOT NULL THEN ' - ' || rws6.kode_warna ELSE '' END ||
+                                    CASE WHEN rws7.kode_warna IS NOT NULL THEN ' - ' || rws7.kode_warna ELSE '' END ||
+                                    CASE WHEN rws8.kode_warna IS NOT NULL THEN ' - ' || rws8.kode_warna ELSE '' END
+                                )
+                                ELSE
+                                TRIM(BOTH ' - ' FROM
+                                    COALESCE(rw1.kode_warna, '') ||
+                                    CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                                    CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                                    CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                                    CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                                    CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                                    CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                                    CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+                                )
+                            END
+                            ) AS wdasar,
 		                  (CASE 
                                 WHEN abx.tipe_id = 2 THEN (
                                     SELECT SUM(tsou.qty) 
@@ -199,14 +224,42 @@ class WalkorderModel extends \App\Models\PrModel
                                     FROM trans_sample_ukuran tsu 
                                     WHERE tsu.id_sample_det = ts.id
                                 )
-                            END) as qty
+                            END) as qty,
+                            (CASE 
+                                WHEN abx.tipe_id = 2 THEN (
+                                    SELECT SUM(tdd.qty) 
+                                    FROM trans_delivery_detail tdd  
+                                    inner join trans_sales_order_det tsod on tsod.id = tdd.ref_detail_id
+                                    WHERE tdd.ref_detail_id = tso.id
+                                )
+                                WHEN abx.tipe_id = 1 THEN (
+                                 	SELECT SUM(tdd.qty) 
+                                    FROM trans_delivery_detail tdd  
+                                    inner join trans_sample_det tsd on tsd.id = tdd.ref_detail_id
+                                    WHERE tdd.ref_detail_id = ts.id
+                                )
+                            END) as qty_do
 
                         ");
 
         $builder->join("trans_sales_order_det tso", "tso.id = abx.ref_detail_id and abx.tipe_id = 2", "left");
-        $builder->join("ref_warna rw2", "rw2.id = tso.id_warna_1", "left");
+        $builder->join("ref_warna rws1", "rws1.id = tso.id_warna_1", "left");
+        $builder->join("ref_warna rws2", "rws2.id = tso.id_warna_2", "left");
+        $builder->join("ref_warna rws3", "rws3.id = tso.id_warna_3", "left");
+        $builder->join("ref_warna rws4", "rws4.id = tso.id_warna_4", "left");
+        $builder->join("ref_warna rws5", "rws5.id = tso.id_warna_5", "left");
+        $builder->join("ref_warna rws6", "rws6.id = tso.id_warna_6", "left");
+        $builder->join("ref_warna rws7", "rws7.id = tso.id_warna_7", "left");
+        $builder->join("ref_warna rws8", "rws8.id = tso.id_warna_8", "left");
         $builder->join("trans_sample_det ts", "ts.id = abx.ref_detail_id and abx.tipe_id = 1", "left");
         $builder->join("ref_warna rw1", "rw1.id = ts.id_warna_1", "left");
+        $builder->join("ref_warna rw2", "rw2.id = ts.id_warna_2", "left");
+        $builder->join("ref_warna rw3", "rw3.id = ts.id_warna_3", "left");
+        $builder->join("ref_warna rw4", "rw4.id = ts.id_warna_4", "left");
+        $builder->join("ref_warna rw5", "rw5.id = ts.id_warna_5", "left");
+        $builder->join("ref_warna rw6", "rw6.id = ts.id_warna_6", "left");
+        $builder->join("ref_warna rw7", "rw7.id = ts.id_warna_7", "left");
+        $builder->join("ref_warna rw8", "rw8.id = ts.id_warna_8", "left");
 
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');

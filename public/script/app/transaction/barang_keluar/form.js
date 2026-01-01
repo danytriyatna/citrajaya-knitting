@@ -3,6 +3,7 @@ let inpIdVendor = $('#id_vendor');
 let inpVendor = $('#nama_vendor');
 let inpTglReceive = $('#tanggal');
 let divNamaVendor = $('#divNamaVendor');
+let divWO = $('#divWO');
 let spanVendor = $('#spanVendor');
 let inpBarang = $('#namaBarang');
 let inpKeterangan = $('#trans_desc');
@@ -24,8 +25,10 @@ let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
 let btnApprove = $('#btn-approve');
 let inpNoRefTrf = $('#no_ref_transfer');
+let inpNoRefWO = $('#no_ref_wo');
 let btnSimpanDetail = $('#btn-simpan-det');
 let btnView = $('#ic_ref_transfer');
+let btnViewWO = $('#ic_ref_wo');
 let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
@@ -38,6 +41,10 @@ if(inpIdHeader.val().length == 0){
 
 if(selectKategori.val() == 8){
     divNamaVendor.removeClass("d-none")
+}
+
+if(selectKategori.val() == 5){
+    divWO.removeClass("d-none")
 }
 
 if(inpStatus.val() == 0){
@@ -504,6 +511,70 @@ let dtListSO = new Tabulator("#dt-list-sample", {
     },
 });
 
+let dtListWO = new Tabulator("#dt-list-wo", {
+    columns: [
+        {title: "ID", field: "id", visible:false},
+        {
+            title: 'WO NO.', field: 'kode_walkorder', headerSort:false, sorter: 'string',
+            width: "30%", formatter : "html"
+        }, 
+        {
+            title: 'SAMPLE/SO NO.', field: 'ref_kode', headerSort:false, sorter: 'string',
+            width: "30%", formatter : "html"
+        }, 
+        {
+            title: 'BUYER', field: 'konsumen_nama', formatter : "html", align: "center", cssClass: "text-center", headerSort:false,
+            width: "40%", 
+        } ,
+    ],
+    
+    locale: 'id',    
+    ajaxURL: "/trans/work-order/list",
+    ajaxConfig: "POST",
+    sortMode: "remote",
+    filterMode: "remote",
+    placeholder: "Tidak ada data",
+    selectableRows: true,
+    ajaxRequesting: function (url, params) {
+        params.start = params.size * (params.page - 1);
+        params.length = params.size;
+        params.isApprove = true;
+    },
+    ajaxResponse: function (url, params, response) {
+        let pageSize = dtListWO.getPageSize();
+        let pageNo = dtListWO.getPage();
+        let startRow = (pageSize * (pageNo - 1)) + 1;
+        let endRow = response.data.length + startRow - 1;
+        if (response.data.length === 0) {
+            startRow = 0; endRow = 0;
+        }
+        let recordsFiltered = parseInt(response.recordsFiltered);
+        let recordsTotal = parseInt(response.recordsTotal);
+
+        $("#table-footer .tabulator-startrow").text(startRow);
+        $("#table-footer .tabulator-endrow").text(endRow);
+        $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+
+        let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+        elTotalFilteredRow.text("");
+        if (recordsTotal > recordsFiltered) {
+            elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+                + " entri keseluruhan)");
+        }
+        return response;
+    },
+    footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+        + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+        + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+    pagination: true,
+    paginationMode: "remote",
+    paginationSize: 25,
+    paginationButtonCount: 10,
+    dataSendParams: {
+        sorters: "order"
+    },
+});
+
 let searchThreadSO = null;
 let elSearchSO = $("#tb-search-so");
 if (elSearchSO != null) {
@@ -514,6 +585,20 @@ if (elSearchSO != null) {
         clearTimeout(searchThreadSO);
         searchThreadSO = setTimeout(function () {
             dtListSO.setFilter("", "like", elSearchSO.val());
+        }, 600);
+    });
+}
+
+let searchThreadWO = null;
+let elSearchWO = $("#tb-search-wo");
+if (elSearchWO != null) {
+    elSearchWO.keyup(function (e) {
+        if ($(this).val().length < 3 && e.keyCode > 13) {
+            return;
+        }
+        clearTimeout(searchThreadWO);
+        searchThreadWO = setTimeout(function () {
+            dtListWO.setFilter("", "like", elSearchSO.val());
         }, 600);
     });
 }
@@ -538,6 +623,12 @@ dtListSO.on("rowClick", function(e, row){
         });
 
     $("#modal-so").modal("hide");
+})
+
+dtListWO.on("rowClick", function(e, row){
+    inpNoRefWO.val(row.getData().kode_walkorder)
+        
+    $("#modal-wo").modal("hide");
 })
 
 
@@ -664,8 +755,14 @@ selectKategori.on("change",function(e){
     var nilai = e.target.value;
     if(nilai == 8){
         divNamaVendor.removeClass("d-none")
+        divWO.addClass("d-none")
+    }
+    else if(nilai == 5){
+        divNamaVendor.addClass("d-none")
+        divWO.removeClass("d-none")
     } else {
         divNamaVendor.addClass("d-none")
+        divWO.addClass("d-none")
     } 
 })
 
@@ -755,6 +852,15 @@ btnView.click(function(){
     }, 500);
     $("#modal-so").modal("show")
     dtListSO.deselectRow();
+   
+})
+
+btnViewWO.click(function(){
+    setTimeout(() => {
+        dtListWO.redraw(true)
+    }, 500);
+    $("#modal-wo").modal("show")
+    dtListWO.deselectRow();
    
 })
 
@@ -909,6 +1015,7 @@ function simpanData(status) {
             data:dtListDetail.getData(),
             keterangan:inpKeterangan.val(),
             no_ref_trf:inpNoRefTrf.val(),
+            no_ref_wo:inpNoRefWO.val(),
             status:status
         },
         dataType: "json",

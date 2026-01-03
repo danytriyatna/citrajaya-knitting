@@ -551,11 +551,11 @@ let dtListWO = new Tabulator("#dt-list-wo", {
         let recordsFiltered = parseInt(response.recordsFiltered);
         let recordsTotal = parseInt(response.recordsTotal);
 
-        $("#table-footer .tabulator-startrow").text(startRow);
-        $("#table-footer .tabulator-endrow").text(endRow);
-        $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+        $("#table-footer-wo .tabulator-startrow").text(startRow);
+        $("#table-footer-wo .tabulator-endrow").text(endRow);
+        $("#table-footer-wo .tabulator-totalrow").text(recordsFiltered);
 
-        let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+        let elTotalFilteredRow = $("#table-footer-wo .tabulator-totalfilteredrow");
         elTotalFilteredRow.text("");
         if (recordsTotal > recordsFiltered) {
             elTotalFilteredRow.text(" (disaring dari " + recordsTotal
@@ -563,7 +563,7 @@ let dtListWO = new Tabulator("#dt-list-wo", {
         }
         return response;
     },
-    footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+    footerElement: '<div id="table-footer-wo" class="pull-left tabulator-info">'
         + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
         + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
     pagination: true,
@@ -598,7 +598,7 @@ if (elSearchWO != null) {
         }
         clearTimeout(searchThreadWO);
         searchThreadWO = setTimeout(function () {
-            dtListWO.setFilter("", "like", elSearchSO.val());
+            dtListWO.setFilter("", "like", elSearchWO.val());
         }, 600);
     });
 }

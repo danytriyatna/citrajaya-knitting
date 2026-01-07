@@ -7,12 +7,14 @@ use App\Models\FileModel;
 use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Referensi\Models\SatuanModel;
+use Modules\Referensi\Models\WarnaModel;
 
 class RefBarang extends BaseController
 {
     protected $mBarang;
     protected $mJenisBarang;
     protected $mSatuan;
+    protected $mWarna;
 
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/barang';
@@ -23,6 +25,7 @@ class RefBarang extends BaseController
         $this->mBarang = new BarangModel();
         $this->mJenisBarang = new JenisBarangModel();
         $this->mSatuan = new SatuanModel();
+        $this->mWarna = new WarnaModel();
         $this->files  = new FileModel();
     }
 
@@ -41,6 +44,12 @@ class RefBarang extends BaseController
                 'dir' => 'ASC'
             ]
         ];
+        $sortWarna = [
+            [
+                'field' => 'kode_warna',
+                'dir' => 'ASC'
+            ]
+        ];
         $sortJenisBarang = [
             [
                 'field' => 'nama_jenis_barang',
@@ -49,8 +58,10 @@ class RefBarang extends BaseController
         ];
 
         $dataSatuan = $this->mSatuan->getData(null, 0, 99999, $sortSatuan);
+        $dataWarna = $this->mWarna->getData(null, 0, 99999, $sortWarna);
         $dataJenisBarang = $this->mJenisBarang->getData(null, 0, 99999, $sortJenisBarang);
         $this->data['satuan'] = $dataSatuan;
+        $this->data['warna'] = $dataWarna;
         $this->data['jenisBarang'] = $dataJenisBarang;
         return view($this->views . '\barang\index', $this->data);
     }
@@ -112,6 +123,8 @@ class RefBarang extends BaseController
                     "nama_jenis_barang" => $row->nama_jenis_barang,
                     "nama_satuan" => $row->nama_satuan,
                     "id_satuan" => $row->id_satuan,
+                    "id_warna" => $row->id_warna,
+                    "kode_warna" => $row->kode_warna,
                     "id_jenis_barang" => $row->id_jenis_barang,
                     "keterangan" => $row->keterangan,
                 )
@@ -126,6 +139,7 @@ class RefBarang extends BaseController
         $nama_barang = $this->request->getPost('nama_barang');
         $id_jenis_barang = $this->request->getPost('id_jenis_barang');
         $id_satuan = $this->request->getPost('id_satuan');
+        $id_warna = $this->request->getPost('id_warna');
         $harga_satuan = $this->request->getPost('harga_satuan');
         $stok_minimum = $this->request->getPost('stok_minimum');
         $keterangan = $this->request->getPost('keterangan');
@@ -137,6 +151,7 @@ class RefBarang extends BaseController
             'nama_barang' => $nama_barang,
             'id_jenis_barang' => $id_jenis_barang,
             'id_satuan' => $id_satuan,
+            'id_warna' => $id_warna,
             'harga_satuan' => $harga_satuan,
             'stok_minimum' => $stok_minimum,
             'keterangan' => $keterangan,

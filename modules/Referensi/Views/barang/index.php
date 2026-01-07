@@ -49,6 +49,19 @@
           </div>
         </div>
         <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="id_warna">Warna<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <select id="id_warna" name="id_warna" class="form-control custom-select select2">
+              <?php foreach ($warna as $item) : ?>
+                <option value="<?= $item->id ?>"><?= $item->kode_warna ?></option>
+              <?php endforeach ?>
+            </select>
+            <div class="invalid-feedback">
+              Warna tidak valid
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="stok_mininum">Stok Minimum<span class="text-danger">*</span></label>
           <div class="col-md-9">
             <input type="number" id="stok_minimum" name="stok_minimum" class="form-control" placeholder="Ketik Stok Minimum" required>

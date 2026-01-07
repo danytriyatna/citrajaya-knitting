@@ -6,6 +6,7 @@ $(document).ready(function () {
     let inpKeterangan       = $('#keterangan');
     let inpHargaSatuan       = $('#harga_satuan');
     let inpIdSatuan       = $('#id_satuan');
+    let inpIdWarna       = $('#id_warna');
     let inpIdJenisBarang       = $('#id_jenis_barang');
     let inpStokMinimum       = $('#stok_minimum');
 
@@ -41,6 +42,7 @@ $(document).ready(function () {
                         inpHargaSatuan.val(data_row.harga_satuan).trigger('change');
                         inpStokMinimum.val(data_row.stok_minimum)
                         inpIdSatuan.val(data_row.id_satuan).trigger('change');
+                        inpIdWarna.val(data_row.id_warna).trigger('change');
                         
                         inpIdJenisBarang.val(data_row.id_jenis_barang).trigger('change');
                         inpKeterangan.val(data_row.keterangan)
@@ -51,7 +53,7 @@ $(document).ready(function () {
             },
             {
                 title: "Kode Barang", field: "kode_barang", headerSort: false,
-                width: "15%"
+                width: "10%"
             },
             {
                 title: "Nama Barang", field: "nama_barang", headerSort: false,
@@ -62,8 +64,12 @@ $(document).ready(function () {
                 width: "15%"
             },
             {
-                title: "Stok Minimum", field: "stok_minimum", headerSort: false,
+                title: "Warna", field: "kode_warna", headerSort: false,
                 width: "15%"
+            },
+            {
+                title: "Stok Minimum", field: "stok_minimum", headerSort: false,
+                width: "10%"
             },
             {
                 title: "Satuan", field: "nama_satuan", headerSort: false,
@@ -71,7 +77,7 @@ $(document).ready(function () {
             },
             {
                 title: "Harga Satuan", field: "harga_satuan", headerSort: false,
-                width: "15%",formatter: "money", formatterParams: {
+                width: "12%",formatter: "money", formatterParams: {
                     decimal: ",",
                     thousand: ".",
                     symbol: "Rp",  // Simbol mata uang Rupiah
@@ -153,6 +159,7 @@ $(document).ready(function () {
         inpHargaSatuan.val(0).trigger('change');
         inpStokMinimum.val("")
         inpIdSatuan.val("").trigger('change');
+        inpIdWarna.val("").trigger('change');
         inpIdJenisBarang.val("").trigger('change');
         isModal.modal("show");
     });
@@ -171,6 +178,7 @@ $(document).ready(function () {
         if(inpHargaSatuan.val().length == 0) validation = false
         if(inpIdJenisBarang.val() == null) validation = false
         if(inpIdSatuan.val() == null) validation = false
+        if(inpIdWarna.val() == null) validation = false
         if(inpStokMinimum.val().length == 0) validation = false
     
         if(validation){
@@ -182,6 +190,7 @@ $(document).ready(function () {
                     nama_barang   : inpNamaBarang.val(),
                     harga_satuan   : inpHargaSatuan.val(),
                     id_satuan   : inpIdSatuan.val(),
+                    id_warna   : inpIdWarna.val(),
                     id_jenis_barang   : inpIdJenisBarang.val(),
                     stok_minimum   : inpStokMinimum.val(),
                     keterangan : inpKeterangan.val(),

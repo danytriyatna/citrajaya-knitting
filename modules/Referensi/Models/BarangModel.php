@@ -22,8 +22,9 @@ class BarangModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblJenisBarang . " abx", "uk.id_jenis_barang = abx.id", "inner");
         $builder->join($this->tblSatuan . " bbx", "uk.id_satuan = bbx.id", "inner");
+        $builder->join("ref_warna rw", "uk.id_warna = rw.id", "left");
         $builder->select("uk.id, uk.nama_barang, uk.keterangan, uk.id_satuan, uk.id_jenis_barang, uk.stok_minimum, uk.harga_satuan,
-                          uk.kode_barang, abx.nama_jenis_barang, bbx.nama_satuan");
+                          uk.kode_barang, abx.nama_jenis_barang, bbx.nama_satuan, uk.id_warna, rw.kode_warna");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -68,6 +69,7 @@ class BarangModel extends \App\Models\PrModel
         $builder->select("count(1) as _cnt");
         $builder->join($this->tblJenisBarang . " abx", "uk.id_jenis_barang = abx.id", "inner");
         $builder->join($this->tblSatuan . " bbx", "uk.id_satuan = bbx.id", "inner");
+        $builder->join("ref_warna rw", "uk.id_warna = rw.id", "left");
 
         $builder->where('uk.active = 1');
 

@@ -1055,6 +1055,7 @@ class Rpt_mutasi extends BaseController
             $gets->getStyle("I3" )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
+        $startRow = $ix;
         for ($xx = 0; $xx < count($results_all) ; $xx++) { 
             
             $r = $results_all[$xx];
@@ -1129,8 +1130,11 @@ class Rpt_mutasi extends BaseController
             }
 
             else if ($r->type == "Sales Order") {
-                $grand_total_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
-                $grand_total_sub_masuk += !empty($r->uang_dp) ? $r->uang_dp : 0;
+                $uang_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
+                $uang_dp_2 = !empty($r->uang_dp_2) ? $r->uang_dp_2 : 0;
+                $total_uang_dp = $uang_dp + $uang_dp_2;
+                $grand_total_masuk += $total_uang_dp;
+                $grand_total_sub_masuk += $total_uang_dp;
                 $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                     ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
@@ -1139,7 +1143,7 @@ class Rpt_mutasi extends BaseController
                     ->setCellValue('E'.$ix, "-")
                     ->setCellValue('F'.$ix, "-")
                     ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                    ->setCellValue('H'.$ix, !empty($r->uang_dp) ? $r->uang_dp : 0);
+                    ->setCellValue('H'.$ix, $total_uang_dp);
                 $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
                 ->setFormatCode('#,##0.00');
             }
@@ -1286,19 +1290,26 @@ class Rpt_mutasi extends BaseController
         
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFooter);
         
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('H'.$length, $grand_total_masuk);
+    //    $sheets->setActiveSheetIndex(0)
+    //                 ->setCellValue('H'.$length, $grand_total_masuk);
+
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('H' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
 
         $gets->getStyle("H" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
+        // $sheets->setActiveSheetIndex(0)
+        //             ->setCellValue('I'.$length, $grand_total);
+
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('I'.$length, $grand_total);
+            ->setCellValue('I' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
 
         $gets->getStyle("I" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
         $length++;
+        // $startRow++;
 
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Saldo Akhir");
@@ -1311,8 +1322,11 @@ class Rpt_mutasi extends BaseController
         
         $saldo = !empty($saldo->saldo) ? $saldo->saldo : 0;
         
+        // $sheets->setActiveSheetIndex(0)
+        //             ->setCellValue('H'.$length, $saldo + $grand_total_masuk - $grand_total);
+
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('H'.$length, $saldo + $grand_total_masuk - $grand_total);
+            ->setCellValue('H' . $length, '=(I3+H' . $length-1 . '-I' . $length-1 . ')');
 
         $gets->getStyle("H" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');

@@ -236,7 +236,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_so($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_sales_order tso");
-        $builder->select("'Sales Order' as type,tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp as tgl_transaksi, tso.kode_sales_order, tso.uang_dp");
+        $builder->select("'Sales Order' as type,tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp as tgl_transaksi, tso.kode_sales_order, tso.uang_dp, tso.uang_dp_2");
         $builder->join("ref_rekening rr", "rr.id = tso.type_dp", "left");
         $builder->join("ref_konsumen rk", "rk.id = tso.id_konsumen", "left");
         // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");

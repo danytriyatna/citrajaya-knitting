@@ -1143,9 +1143,26 @@ class Rpt_mutasi extends BaseController
                     ->setCellValue('E'.$ix, "-")
                     ->setCellValue('F'.$ix, "-")
                     ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                    ->setCellValue('H'.$ix, $total_uang_dp);
+                    ->setCellValue('H'.$ix, $uang_dp);
                 $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
                 ->setFormatCode('#,##0.00');
+                $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+
+                if (!empty($r->tgl_transaksi_2)) {
+                    $length++;
+                    $ix++;
+                    $sheets->setActiveSheetIndex(0)
+                        ->setCellValue('A'.$ix, !empty($r->tipe_bayar_2) ? $r->tipe_bayar_2 : "-")
+                        ->setCellValue('B'.$ix, !empty($r->tgl_transaksi_2) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi_2)))) : "-")
+                        ->setCellValue('C'.$ix, "Sales Order")
+                        ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+                        ->setCellValue('E'.$ix, "-")
+                        ->setCellValue('F'.$ix, "-")
+                        ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                        ->setCellValue('H'.$ix, $uang_dp_2);
+                    $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+                    }
             }
 
             else if ($r->type == "Customer Receipt") {

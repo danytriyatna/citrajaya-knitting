@@ -219,7 +219,6 @@ class BarangMasuk extends BaseController
                 else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
                     $resDataDetSO = count($results) > 0 ? $this->mRef->getDataDetSO($id) : null;
                 }
-                
                 $this->data['dataSO'] = json_encode($resDataDetSO);
             }else{
                 $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;

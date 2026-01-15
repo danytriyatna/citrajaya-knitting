@@ -599,97 +599,97 @@ class ItemTransferModel extends \App\Models\PrModel
     }
 
     function get_export($from_date = null, $to_date = null)
-{
-    $db = $this->db;
+    {
+        $db = $this->db;
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBQUERY (x) – hitung qty_terima per TRF
-    |--------------------------------------------------------------------------
-    */
-    $subBuilder = $db->table('trans_barang_trf_so_det tbtsd');
+        /*
+        |--------------------------------------------------------------------------
+        | SUBQUERY (x) – hitung qty_terima per TRF
+        |--------------------------------------------------------------------------
+        */
+        $subBuilder = $db->table('trans_barang_trf_so_det tbtsd');
 
-    $subBuilder->select([
-        'tbth.kode_transaksi',
-        'rk.nama AS buyer',
-        'tbtsd.style',
-        'jp.nama AS proses',
-        'ro.nama_operator',
-        'tbtsd.color',
-        'tbtsd.kode_ukuran',
-        'tbtsd.qty',
-        'COALESCE(tso.kode_sales_order, ts.kode_sample) AS kode',
-        'COALESCE(tso.tgl_transaksi, ts.tgl_transaksi) AS tgl_transaksi',
-        "COALESCE((
-            SELECT SUM(tbmp.qty)
-		    FROM trans_barang_masuk_produksi tbmp
-		    INNER JOIN trans_barang_header tbh
-		        ON tbh.id = tbmp.id_header
-		    WHERE tbmp.kode_sales_order = tbtsd.kode_sales_order
-		      AND tbmp.kode_ukuran = tbtsd.kode_ukuran
-		      AND tbmp.color = tbtsd.color
-		      AND tbh.id_proses = tbth.id_proses
-		      AND tbh.id_cmt = tbth.id_cmt
-	          AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
-		      AND tbh.active = 1
-        ), 0) AS qty_terima"
-    ]);
+        $subBuilder->select([
+            'tbth.kode_transaksi',
+            'rk.nama AS buyer',
+            'tbtsd.style',
+            'jp.nama AS proses',
+            'ro.nama_operator',
+            'tbtsd.color',
+            'tbtsd.kode_ukuran',
+            'tbtsd.qty',
+            'COALESCE(tso.kode_sales_order, ts.kode_sample) AS kode',
+            'COALESCE(tso.tgl_transaksi, ts.tgl_transaksi) AS tgl_transaksi',
+            "COALESCE((
+                SELECT SUM(tbmp.qty)
+                FROM trans_barang_masuk_produksi tbmp
+                INNER JOIN trans_barang_header tbh
+                    ON tbh.id = tbmp.id_header
+                WHERE tbmp.kode_sales_order = tbtsd.kode_sales_order
+                AND tbmp.kode_ukuran = tbtsd.kode_ukuran
+                AND tbmp.color = tbtsd.color
+                AND tbh.id_proses = tbth.id_proses
+                AND tbh.id_cmt = tbth.id_cmt
+                AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.active = 1
+            ), 0) AS qty_terima"
+        ]);
 
-    $subBuilder->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner');
-    $subBuilder->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left');
-    $subBuilder->join('ref_operator ro', 'ro.id = tbth.id_cmt', 'left');
-    $subBuilder->join('trans_sales_order tso', 'tso.kode_sales_order = tbtsd.kode_sales_order', 'left');
-    $subBuilder->join('trans_sample ts', 'ts.kode_sample = tbtsd.kode_sales_order', 'left');
-    $subBuilder->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'inner');
+        $subBuilder->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner');
+        $subBuilder->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left');
+        $subBuilder->join('ref_operator ro', 'ro.id = tbth.id_cmt', 'left');
+        $subBuilder->join('trans_sales_order tso', 'tso.kode_sales_order = tbtsd.kode_sales_order', 'left');
+        $subBuilder->join('trans_sample ts', 'ts.kode_sample = tbtsd.kode_sales_order', 'left');
+        $subBuilder->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'inner');
 
-    // 🔴 FILTER TANGGAL DINAMIS
-    if ($from_date && $to_date) {
-        $subBuilder->groupStart()
-            ->where('tso.tgl_transaksi >=', $from_date)
-            ->where('tso.tgl_transaksi <=', $to_date)
-        ->groupEnd()
-        ->orGroupStart()
-            ->where('ts.tgl_transaksi >=', $from_date)
-            ->where('ts.tgl_transaksi <=', $to_date)
-        ->groupEnd();
+        // 🔴 FILTER TANGGAL DINAMIS
+        if ($from_date && $to_date) {
+            $subBuilder->groupStart()
+                ->where('tso.tgl_transaksi >=', $from_date)
+                ->where('tso.tgl_transaksi <=', $to_date)
+            ->groupEnd()
+            ->orGroupStart()
+                ->where('ts.tgl_transaksi >=', $from_date)
+                ->where('ts.tgl_transaksi <=', $to_date)
+            ->groupEnd();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUERY LUAR – GROUPING FINAL
+        |--------------------------------------------------------------------------
+        */
+        $builder = $db->table("({$subBuilder->getCompiledSelect(false)}) x");
+
+        $builder->select([
+            'buyer',
+            'style',
+            'proses',
+            'nama_operator',
+            'color',
+            'kode_ukuran',
+            'SUM(qty) AS qty',
+            'qty_terima',
+            'kode',
+            'tgl_transaksi'
+        ]);
+
+        $builder->groupBy([
+            'buyer',
+            'style',
+            'proses',
+            'nama_operator',
+            'color',
+            'kode_ukuran',
+            'qty_terima',
+            'kode',
+            'tgl_transaksi'
+        ]);
+
+        $builder->orderBy('tgl_transaksi');
+
+        return $builder->get()->getResult();
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QUERY LUAR – GROUPING FINAL
-    |--------------------------------------------------------------------------
-    */
-    $builder = $db->table("({$subBuilder->getCompiledSelect(false)}) x");
-
-    $builder->select([
-        'buyer',
-        'style',
-        'proses',
-        'nama_operator',
-        'color',
-        'kode_ukuran',
-        'SUM(qty) AS qty',
-        'qty_terima',
-        'kode',
-        'tgl_transaksi'
-    ]);
-
-    $builder->groupBy([
-        'buyer',
-        'style',
-        'proses',
-        'nama_operator',
-        'color',
-        'kode_ukuran',
-        'qty_terima',
-        'kode',
-        'tgl_transaksi'
-    ]);
-
-    $builder->orderBy('tgl_transaksi');
-
-    return $builder->get()->getResult();
-}
 
 
 

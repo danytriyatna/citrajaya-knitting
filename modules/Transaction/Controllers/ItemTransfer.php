@@ -432,7 +432,43 @@ class ItemTransfer extends BaseController
               }
           }
       }
-      $data['dataSO'] = count($resDataDetSO) > 0 ? $resDataDetSO : null;
+      $grouped = [];
+
+      foreach ($resDataDetSO as $row) {
+
+          // buat key unik berdasarkan identitas barang
+          $key = implode('|', [
+              $row->kode_sales_order,
+              $row->id_konsumen,
+              $row->style,
+              $row->color,
+              $row->kode_ukuran,
+              $row->id_proses
+          ]);
+
+          if (!isset($grouped[$key])) {
+              // simpan baris pertama
+              $grouped[$key] = $row;
+              $grouped[$key]->qty_kirim = (int)$row->qty_kirim;
+              $grouped[$key]->qty = (int)$row->qty;
+          } else {
+              // jumlahkan qty jika sudah ada
+              $grouped[$key]->qty_kirim += (int)$row->qty_kirim;
+              $grouped[$key]->qty += (int)$row->qty;
+          }
+
+          // qty_terima tetap satu (sama untuk semua header)
+          $grouped[$key]->qty_terima = (int)$row->qty_terima;
+
+          // hitung ulang sisa
+          $grouped[$key]->qty_sisa =
+              $grouped[$key]->qty_kirim - $grouped[$key]->qty_terima;
+      }
+
+      foreach ($grouped as $key => $value) {
+        $value->qty_kirim = $value->qty_sisa;
+      }
+      $data['dataSO'] = array_values($grouped);
       $data['dataSODet'] = count($resDataDetSODet) > 0 ? $resDataDetSODet : null;
     }
     // if (!empty($resDataDetSO)) {

@@ -777,13 +777,13 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        {title: "No.SO", field: "kode_sales_order", width: "10%"},
-        {title: "Style", field: "style", width: "20%"},
+        {title: "No.SO", field: "kode_sales_order", width: "15%"},
+        {title: "Style", field: "style", width: "15%"},
         {title: "Deskripsi", field: "deskripsi", width: "20%"},
         {title: "Buyer", field: "buyer", width: "20%"},
-        {title: "Colour", field: "color", width: "15%"},
-        {title: "Qty", field: "qty_kirim", width: "15%"},
-        {title: "Ukuran", field: "kode_ukuran", width: "10%"},
+        {title: "Colour", field: "color", width: "20%"},
+        {title: "Qty", field: "qty_kirim", width: "10%"},
+        {title: "Ukuran", field: "kode_ukuran", width: "15%"},
     ],
     placeholder: "Tidak ada data",
 });
@@ -841,7 +841,7 @@ dtListProduksiRef.on("rowClick", function(e, row){
     // }
     data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
     // dtListProduksi.addRow(data);
-    addItem(data);
+    addItem(data, 'click');
     modalRefpo.modal("hide");
 
     setTimeout(() => {
@@ -1365,7 +1365,7 @@ function simpanData(status) {
         },
         minLength: 3,
         select: function( event, ui ) {
-            addItem(ui.item.data);
+            addItem(ui.item.data, 'scan');
         },
         open: function() {
           $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
@@ -1377,10 +1377,9 @@ function simpanData(status) {
     });
 
 
-    function addItem(data){
+    function addItem(data, type){
         let produksi_data = dtListProduksi.getData();
         let index = -1;
-
         if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
             index = produksi_data.findIndex(x => 
 
@@ -1406,6 +1405,11 @@ function simpanData(status) {
                 totalQty += parseFloat(item.qty) || 0;
                 totalAmount += parseFloat(item.amount) || 0;
             });
+
+            if (type == 'click') {
+                totalQty = 1;
+                data.qty = 1;
+            }
 
             const hargaRata = totalQty > 0 ? Math.floor(totalAmount / totalQty) : 0;
 
@@ -1502,7 +1506,7 @@ function simpanData(status) {
 
                 if (hasil.length > 0) {
                     hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
-                    addItem(hasil[0]);
+                    addItem(hasil[0], 'scan');
 
                     setTimeout(() => {
                         $( "#text_barcode" ).val("");

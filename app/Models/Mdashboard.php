@@ -24,7 +24,7 @@ class Mdashboard extends Model
         
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (coalesce(tbl.uang_dp, 0) + coalesce(tbl.uang_dp_2, 0) + coalesce(tbl.nilai_pembayaran, 0))");
         $builder->groupEnd();
 
         // $builder->where("EXTRACT(MONTH FROM tbl.tgl_dp) = 10");
@@ -69,7 +69,7 @@ class Mdashboard extends Model
 
         $builder->groupStart();
             $builder->where("tbl.qty > tbl.qty_kirim");
-            $builder->orWhere("tbl.harga_total > (tbl.uang_dp + tbl.uang_dp_2 + tbl.nilai_pembayaran)");
+            $builder->orWhere("tbl.harga_total > (coalesce(tbl.uang_dp, 0) + coalesce(tbl.uang_dp_2, 0) + coalesce(tbl.nilai_pembayaran, 0))");
         $builder->groupEnd();
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {

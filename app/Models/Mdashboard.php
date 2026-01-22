@@ -749,7 +749,6 @@ class Mdashboard extends Model
 
         $builder = $this->db->newQuery()->fromSubquery($builderPoFiltered, 'po_filtered');
 
-        // Query utama (aggregate)
         $builder->select("
             id_vendor,
             nama_vendor,
@@ -854,6 +853,20 @@ class Mdashboard extends Model
         return $this->_data;
     }
 
+    function getDataPCR($month = null, $year = null){
+        $builder = $this->db->table("trans_customer_receipt tcr");
+        
+        $builder->select("SUM(COALESCE(tcr.total_bayar::float, 0)) as grand_total");
+        
+        $builder->where("tcr.active", 1);
+        $builder->where("EXTRACT(MONTH FROM tcr.tgl_transaksi) =", $month);
+        $builder->where("EXTRACT(YEAR FROM tcr.tgl_transaksi) =", $year);    
+        
+        $result = $builder->get()->getRow();
+        
+        return $result ? $result->grand_total : 0;
+    }
+
     function getDataPemakaian($month = null, $year = null)
     {
         $builder = $this->db->table("trans_barang_detail abx");
@@ -889,9 +902,9 @@ class Mdashboard extends Model
 
         $builder->where("ax.active = 1");
         $builder->where("(
-    CAST(ax.kode AS INTEGER) >= 5000 
-    AND MOD(CAST(ax.kode AS INTEGER), 1000) != 0
-  )");
+            CAST(ax.kode AS INTEGER) >= 5000 
+            AND MOD(CAST(ax.kode AS INTEGER), 1000) != 0
+        )");
 
         $this->_data = $builder->get()->getResult();
 
@@ -899,6 +912,33 @@ class Mdashboard extends Model
     }
 
     function getGrafikDataPenjualan($year = null)
+    {
+        $builder = $this->db->table("trans_customer_receipt abx");
+        $builder->select("
+            EXTRACT(MONTH FROM abx.tgl_transaksi) AS bulan,
+            SUM(abx.total_bayar::float) AS total_penjualan
+        ");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->where("abx.active", 1);
+        $builder->where("EXTRACT(YEAR FROM abx.tgl_transaksi)", $year);
+        $builder->groupBy("EXTRACT(MONTH FROM abx.tgl_transaksi)");
+        $builder->orderBy("bulan", "ASC");
+
+        $result = $builder->get()->getResult();
+
+        $data = [];
+        for ($i = 0; $i < 12; $i++) {
+            $data[$i] = 0; 
+        }
+
+        foreach ($result as $row) {
+            $data[(int)$row->bulan-1] = (float)$row->total_penjualan;
+        }
+
+        return $data;
+    }
+
+    function getGrafikDataPenjualanOld($year = null)
     {
         $builder = $this->db->table("trans_invoice abx");
         $builder->select("
@@ -913,10 +953,9 @@ class Mdashboard extends Model
 
         $result = $builder->get()->getResult();
 
-        // Jika mau hasil dalam bentuk array bulan => total
         $data = [];
         for ($i = 0; $i < 12; $i++) {
-            $data[$i] = 0; // default 0
+            $data[$i] = 0; 
         }
 
         foreach ($result as $row) {
@@ -943,7 +982,6 @@ class Mdashboard extends Model
 
         $result = $builder->get()->getResult();
 
-        // Pastikan hasil lengkap dari bulan 1–12 (yang kosong diisi 0)
         $data = [];
         for ($i = 0; $i < 12; $i++) {
             $data[$i] = 0;
@@ -1025,7 +1063,6 @@ class Mdashboard extends Model
             ), 0)
         ";
 
-        // 2) Ambil total semua saldo (tanpa limit)
         $builder2 = $this->db->table("m_coa mc");
         $builder2->select("SUM({$sub}) AS total_saldo", FALSE);
         $builder2->where("LOWER(mc.kode) LIKE", "13%");

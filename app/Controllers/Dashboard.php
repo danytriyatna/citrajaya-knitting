@@ -368,7 +368,7 @@ class Dashboard extends BaseController
             $laba_kotor += $total_dp;
         }
 
-        $penjualan = $this->mdashboard->getDataPenjualan($month, $year);
+        $penjualan = $this->mdashboard->getDataPCR($month, $year);
         if (!empty($penjualan)) {
             $laba_kotor += $penjualan;// Atau bisa gunakan format lain
         } 

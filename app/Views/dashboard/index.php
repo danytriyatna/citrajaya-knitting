@@ -468,8 +468,13 @@
                     <th></th>
                     <th></th>
                   </tr>
-                  <tr>
+                  <!-- <tr>
                     <td class="p-s-24">- Pemakaian Barang/Bahan</td>
+                    <td id="pemakaian">7.500.000,00</td>
+                    <td></td>
+                  </tr> -->
+                  <tr>
+                    <td class="p-s-24">- Beban Pembelian</td>
                     <td id="pemakaian">7.500.000,00</td>
                     <td></td>
                   </tr>

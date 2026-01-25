@@ -195,8 +195,12 @@ class PurchaseOrder extends BaseController
     $qty = $this->request->getPost('qty');
     $dataDetail = $this->request->getPost('data');
     $buttonType = $this->request->getPost('buttonType');
+    $status = $this->request->getPost('status');
     $approve_status = 0;
     if (isset($buttonType) && $buttonType == "approve") {
+      $approve_status = 1;
+    }
+    if ($status == 1) {
       $approve_status = 1;
     }
     if ($id != "") {

@@ -44,11 +44,11 @@ const regex = /^[0-9.,]+$/;
 
 if(inpApproveStatus.val() == 0){
     btnAdd.show()
-    btnSimpan.show()
+    // btnSimpan.show()
     btnApprove.show()
 } else{
     btnAdd.hide()
-    btnSimpan.hide()
+    // btnSimpan.hide()
     btnApprove.hide()
 }
 
@@ -374,7 +374,9 @@ function formatRupiah(value){
 function openModalDetail(row = null){
     if(row){
         let data = row.getData()
+        inpIdDetail.val(data.id)
         inpBarang.val(data.nama_barang)
+        inpKodeBarang.val(data.kode_barang)
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQty.val(data.qty)
@@ -668,7 +670,8 @@ function simpanData(stringButton) {
             qty:totalQty,
             total:totalGrandPrice,
             data:dtListDetailPO.getData(),
-            buttonType:stringButton
+            buttonType:stringButton,
+            status:inpStatus.val()
         },
         dataType: "json",
         beforeSend: function () {
@@ -727,8 +730,8 @@ let buttonRowAction = function(cell) {
     // }
     if (inpApproveStatus.val() == 0){
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
-        fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
     }
+    fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
    
 
     return fmBtnEdit + " " + fmBtnDelete;

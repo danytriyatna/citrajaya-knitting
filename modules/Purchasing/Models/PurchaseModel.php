@@ -34,12 +34,17 @@ class PurchaseModel extends \App\Models\PrModel
                         WHERE CAST(tpd.id_header AS INTEGER) = uk.id 
                     ), 0) as qty, 
         COALESCE((
+                        SELECT SUM(tpd.grand_price)
+                        FROM trans_po_detail tpd
+                        WHERE CAST(tpd.id_header AS INTEGER) = uk.id 
+                    ), 0) as total, 
+        COALESCE((
                         SELECT SUM(trd.qty)
                         FROM trans_receive_detail trd
                         inner join trans_receive_header trh on trh.id = CAST(trd.id_header AS INTEGER)
                         WHERE CAST(trh.id_po AS INTEGER) = uk.id 
                         AND trh.status = 1
-                    ), 0) as qty_payment, uk.total, uk.total_payment, uk.approve_status, uk.keterangan");
+                    ), 0) as qty_payment, uk.total_payment, uk.approve_status, uk.keterangan");
 
         if (!empty($params['isReceive']) && $params['isReceive']) {
             $builder->groupStart();
@@ -190,28 +195,27 @@ class PurchaseModel extends \App\Models\PrModel
     {
         $this->db->transStart();
         try {
-            if (!empty($id)) {
-                $arrDelete =  [
-                    "id_header" => $id,
-                ];
-                $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
-                $arrParam =  [
-                    "id" => $id,
-                ];
-                $this->updateRecords($this->table, $data, $arrParam);
-            } else {
-                $data['po_no'] = $this->generateKodePO();
-                $id = $this->insertRecordGetid($this->table,  $data);
-            }
-            $arrDelete =  [
-                "id_header" => $id,
-            ];
+            // if (!empty($id)) {
+            //     $arrDelete =  [
+            //         "id_header" => $id,
+            //     ];
+            //     $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
+            //     $arrParam =  [
+            //         "id" => $id,
+            //     ];
+            //     $this->updateRecords($this->table, $data, $arrParam);
+            // } else {
+            //     $data['po_no'] = $this->generateKodePO();
+            //     $id = $this->insertRecordGetid($this->table,  $data);
+            // }
+            // $arrDelete =  [
+            //     "id_header" => $id,
+            // ];
 
             foreach ($detail as $rowData) {
                 if ($rowData['id_barang'] != "") {
                     $idBarang = decrypt($rowData['id_barang']);
                 }
-
                 $dataDetail = [
                     "id_barang" => $idBarang,
                     "disc" => !empty($rowData['disc']) ? $rowData['disc'] : null,
@@ -225,10 +229,16 @@ class PurchaseModel extends \App\Models\PrModel
                     "qty_receive" => 0,
                     "id_satuan" => !empty($rowData['id_satuan']) ? $rowData['id_satuan'] : null,
                     "qty" => $rowData['qty'],
-
                 ];
 
-                $this->insertRecordGetid($this->tblDet, $dataDetail);
+                $getDetail = $this->db->table($this->tblDet . " uk")->where('id', $rowData['id'])->get()->getRow();
+                if (!empty($getDetail)) {
+                    $this->updateRecord($this->tblDet, $dataDetail, 'id', $getDetail->id);
+                }
+                else {
+                    $this->insertRecordGetid($this->tblDet, $dataDetail);
+                }
+
             }
 
             $this->db->transComplete();

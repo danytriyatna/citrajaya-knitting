@@ -195,22 +195,22 @@ class PurchaseModel extends \App\Models\PrModel
     {
         $this->db->transStart();
         try {
-            // if (!empty($id)) {
-            //     $arrDelete =  [
-            //         "id_header" => $id,
-            //     ];
-            //     $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
-            //     $arrParam =  [
-            //         "id" => $id,
-            //     ];
-            //     $this->updateRecords($this->table, $data, $arrParam);
-            // } else {
-            //     $data['po_no'] = $this->generateKodePO();
-            //     $id = $this->insertRecordGetid($this->table,  $data);
-            // }
-            // $arrDelete =  [
-            //     "id_header" => $id,
-            // ];
+            if (!empty($id)) {
+                $arrDelete =  [
+                    "id_header" => $id,
+                ];
+                // $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
+                $arrParam =  [
+                    "id" => $id,
+                ];
+                $this->updateRecords($this->table, $data, $arrParam);
+            } else {
+                $data['po_no'] = $this->generateKodePO();
+                $id = $this->insertRecordGetid($this->table,  $data);
+            }
+            $arrDelete =  [
+                "id_header" => $id,
+            ];
 
             foreach ($detail as $rowData) {
                 if ($rowData['id_barang'] != "") {
@@ -230,10 +230,15 @@ class PurchaseModel extends \App\Models\PrModel
                     "id_satuan" => !empty($rowData['id_satuan']) ? $rowData['id_satuan'] : null,
                     "qty" => $rowData['qty'],
                 ];
-
-                $getDetail = $this->db->table($this->tblDet . " uk")->where('id', $rowData['id'])->get()->getRow();
-                if (!empty($getDetail)) {
-                    $this->updateRecord($this->tblDet, $dataDetail, 'id', $getDetail->id);
+                
+                if (!empty($rowData['id'])) {
+                    $getDetail = $this->db->table($this->tblDet . " uk")->where('id', $rowData['id'])->get()->getRow();
+                    if (!empty($getDetail)) {
+                        $this->updateRecord($this->tblDet, $dataDetail, 'id', $getDetail->id);
+                    }
+                    else {
+                        $this->insertRecordGetid($this->tblDet, $dataDetail);
+                    }
                 }
                 else {
                     $this->insertRecordGetid($this->tblDet, $dataDetail);

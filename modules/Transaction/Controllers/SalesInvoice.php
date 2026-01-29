@@ -113,8 +113,8 @@ class SalesInvoice extends BaseController
       // if ($atr_edit || $atr_del)
       $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
 
-      // $status = $row->status  == 1 ? "Draft" : "Approved";
-      $status = "Approved";
+      $status = $row->status  == 1 ? "Approved" : "Draft";
+      // $status = "Approved";
       // $tipe   = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
       $total       = $row->total;
@@ -177,7 +177,7 @@ class SalesInvoice extends BaseController
     $stdData->ttl_inp = '';
     $stdData->pajak_inp = '';
     $stdData->ttl_harga_inp = '';
-    $stdData->status = 1;
+    $stdData->status = 0;
     $stdData->tgl_jatuh_tempo = date('d-m-Y');
     $stdData->rentang_waktu = 0;
 
@@ -185,7 +185,7 @@ class SalesInvoice extends BaseController
     $dt_details = [];
     $dt_prods   = [];
 
-    $status = 1;
+    $status = 0;
     if (!empty($id)) {
       $stdData = $this->mInvoice->getData($id);
       $status  = $stdData->status;
@@ -193,15 +193,12 @@ class SalesInvoice extends BaseController
 
       // $this->data['detail'] = json_encode($list_detail);
 
-      $status = $stdData->status;
-
       $dt_details = [];
       // get produksi data
       $params['id_invoice'] = $stdData->id;
       $params['id_konsumen'] = $stdData->id_konsumen;
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
       if (!empty($dt)) {
-        $status = true;
         $message = "Berhasil mengambil data  ";
         $xdata = [];
 
@@ -315,6 +312,7 @@ class SalesInvoice extends BaseController
         $stdData->ttl_harga_inp  = trim($this->request->getPost('ttl_harga_inp'));
         $stdData->keterangan  = trim($this->request->getPost('keterangan'));
         $stdData->tgl_jatuh_tempo  = trim($this->request->getPost('tgl_jatuh_tempo'));
+        $stdData->status  = trim($this->request->getPost('status'));
         // $stdData->rentang_waktu  = trim($this->request->getPost('rentang_waktu'));
 
         $dt_details = trim($this->request->getPost('dt_details'));
@@ -325,13 +323,12 @@ class SalesInvoice extends BaseController
         $data['id_konsumen'] = $stdData->id_konsumen;
         $data['tgl_jatuh_tempo'] = \fdate_ind_to_eng($stdData->tgl_jatuh_tempo);
         $data['rentang_waktu'] = $stdData->rentang_waktu;
+        $data['status'] = $stdData->status;
 
         $data['total'] = $stdData->ttl_inp;
         $data['pph'] = 11;
         $data['pph_total'] = $stdData->pajak_inp;
         $data['grand_total'] = $stdData->ttl_harga_inp;
-
-        $data['status'] = 1;
 
         if (!empty($id)) {
           $data['updated_at'] = date('Y-m-d H:i:s');
@@ -375,7 +372,6 @@ class SalesInvoice extends BaseController
     $this->data['dt_prods']      = $dt_prods; // = json_decode($dt_prods, true);
     $this->data['status']        = $status;
     $this->data['show_save_btn'] = $show_save_btn;
-
     return view($this->views . '\sales_invoice_form', $this->data);
   }
 
@@ -455,67 +451,92 @@ class SalesInvoice extends BaseController
 
 
 
-  // function update($id, $dataIn, $detail, $produksi){
-  //   $tgl = date('Y-m-d H:i:s');
-  //   $userId = $this->get_userid();
+  function update($id, $dataIn, $detail)
+  {
+    $tgl = date('Y-m-d H:i:s');
+    $userId = $this->get_userid();
 
-  //   $this->db->transBegin();
+    $this->db->transBegin();
+    $this->mInvoice->updateRecord($this->mInvoice->table, $dataIn, 'id', $id);
 
-  //   $this->mDelivery->updateRecord($this->mDelivery->table, $dataIn, 'id', $id);
+    $qty = 0;
 
-  //   $qty = 0;
+    if (!empty($detail)) {
+      foreach ($detail as $key => $value) {
+        $getDetailRow = $this->mInvoice->getDataDetailUpdate($id, $value['ref_id'], $value['tipe_id']);
+        $detData = [];
+        $detData['down_payment'] = $value['ref_dp'];
+        $detData['total'] = $value['ref_total'];
+        $detData['grand_total'] = $value['totals'];
+        $detData['qty_do'] = $value['ref_qty'];
+        $this->mInvoice->updateRecord($this->mInvoice->table2, $detData, 'id', $getDetailRow->id);
 
-  //   if(!empty($produksi)){
-  //     $builderx = $this->db->table($this->mDelivery->table2);
-  //     $builderx->where("id_delivery", $id);
-  //     $builderx->delete();
+        // if ($dataIn['status' == 1]) {
+        //   $status['invoice_status'] = true;
+        //   $this->mDelivery->updateRecord($this->mDelivery->table, $status, "id_invoice", $id);
+        // }
+      }
 
-  //     foreach ($produksi as $item) {
-  //       $ddata = [];
-  //       $ddata['id_delivery'] = $id;
-  //       $ddata['ref_detail_id'] = $item['ref_detail_id'];
-  //       $ddata['id_ukuran'] = $item['id_ukuran'];
-  //       $ddata['qty'] = $item['qty'];
-  //       $ddata['created_at'] = $tgl;
-  //       $ddata['created_by'] = $userId;
-  //       $this->mDelivery->insertRecordGetid($this->mDelivery->table2,$ddata);
+      // $builderx = $this->mInvoice->table($this->mInvoice->table2);
+      // $builderx->where("id_invoice", $id);
+      // $builderx->delete();
+      // foreach ($detail as $item) {
+      //   if (!empty($item['bayar'])) {
+      //     $hasil = explode(",", $item['list_delivery']);
+      //     foreach ($hasil as $key => $value) {
+      //       if (!in_array($value, $delivery_id)) {
+      //           $delivery_id[] = $value;
+      //       } 
+      //     }
+      //     $ddata = [];
+      //     $ddata['id_invoice'] = $id;
+      //     $ddata['id_ref'] = $item['ref_id'];
+      //     $ddata['kode_ref'] = $item['ref_kode'];
+      //     $ddata['tipe_id'] = $item['tipe_id'];
+      //     // $ddata['qty'] = $item['tipe_id'];
+      //     $ddata['qty_do'] = $item['deliver_qty'];
+      //     $ddata['down_payment'] = $item['ref_dp'];
 
-  //       $qty = $qty + $item['qty'];
-  //     }
-  //   }
+      //     $ddata['total'] = $item['totals'];
+      //     $ddata['grand_total'] = $item['totals'];
 
-  //   $dataIn['qty'] = $qty;
-  //   $this->mDelivery->updateRecord($this->mDelivery->table, $dataIn, 'id', $id);
-  //   // if(!empty($produksi)){
-  //   //   $builderx = $this->mDelivery->table($this->mDelivery->table3);
-  //   //   $builderx->where("id_delivery", $id);
-  //   //   $builderx->delete();
+      //     $ddata['created_at'] = $tgl;
+      //     $ddata['created_by'] = $userId;
+      //     $id_detail = $this->mInvoice->insertRecordGetid($this->mInvoice->table2, $ddata);
+      //     $ddataDel['invoice_status'] = $userId;
 
-  //   //   $data_uk = $this->mUkuran->getData(0, 0, 9999);
-  //   //   foreach ($produksi as $itemx) {
-  //   //     $ddata = [];
-  //   //     $ddata['ref_detail_id'] = $itemx['ref_detail_id'];
-  //   //     $ddata['id_ukuran'] = $itemx['id_ukuran'];
-  //   //     $ddata['qty'] = $itemx['qty'];
-  //   //     $ddata['qty_do'] = $itemx['qty_prod'];
-  //   //     $ddata['created_at'] = $tgl;
-  //   //     $ddata['created_by'] = $userId;
-  //   //     $this->mDelivery->insertRecordGetid($this->mDelivery->table3,$ddata);
-  //   //   }
-  //   // }
+      //     foreach ($item['detail_data'] as $xdetail) {
+      //       $dddata = [];
+      //       $dddata['id_invoice'] = $id;
+      //       $dddata['id_invoice_detail'] = $id_detail;
+      //       $dddata['id_delivery'] = $xdetail['id_delivery'];
+      //       $dddata['qty'] = $xdetail['qty_do'];
+      //       $dddata['total'] = $xdetail['total_harga'];
+      //       $this->mInvoice->insertRecordGetid($this->mInvoice->table3, $dddata);
+      //     }
+      //   }
+      // }
+      
+      // if (count($delivery_id) > 0) {
+      //     foreach ($delivery_id as $key => $value) {
+      //       $status['invoice_status'] = true;
+      //       $status['id_invoice'] = $id;
+      //       $this->mDelivery->updateRecord($this->mDelivery->table, $status, "id", $value);
+      //     }
+      // }
+    }
 
 
+    // $this->mcommon->setLog($this->auth->getUserId(), $this->MOD_ALIAS, $id, "Insert Delivery");
 
-  //   $this->mcommon->setLog($this->auth->getUserId() ,$this->MOD_ALIAS, $id,"Update Delivery");   
-
-  //   if ($this->db->transStatus() === FALSE) {
-  //       $this->db->transRollback();
-  //       return FALSE;
-  //   } else {
-  //       $this->db->transCommit();
-  //       return TRUE;
-  //   }
-  // }
+    if ($this->db->transStatus() === FALSE) {
+      $this->db->transRollback();
+      return FALSE;
+    } else {
+      $this->db->transCommit();
+      return TRUE;
+    }
+  }
 
 
   // get data produksi

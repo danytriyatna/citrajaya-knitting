@@ -469,6 +469,7 @@ class CustomerReceipt extends BaseController
         $data = [];
         if (!empty($id_konsumen)) {
             $params['id_konsumen'] = $id_konsumen;
+            $params['status'] = 1;
             $dtInv = $this->mInvoice->getData(null, 0, 9999, null, null, $params);
             if (!empty($dtInv)) {
                 $i = 0;

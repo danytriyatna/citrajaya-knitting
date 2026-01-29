@@ -555,7 +555,7 @@ class SalesOrderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_delivery_detail abx");
 
-        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty, td.status, abx.id_delivery");
+        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty, td.status, abx.id_delivery, td.id_invoice");
 
 
         $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
@@ -594,7 +594,7 @@ class SalesOrderModel extends \App\Models\PrModel
         $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
         $builder->where("abx.ref_detail_id", $ref_detail_id);
         $builder->where("abx.id_ukuran", $id_ukuran);
-        $builder->where("td.id_invoice $type", null);
+        // $builder->where("td.id_invoice $type", null);
         $builder->where("td.active", 1);
         $builder->orderBy("td.id", 'desc');
         $this->_data = $builder->get()->getResult();
@@ -683,6 +683,16 @@ class SalesOrderModel extends \App\Models\PrModel
     //     }
     // }
 
+    function getStatusSI($id = null)
+    {
+        $builder = $this->db->table("trans_invoice abx");
+        $builder->select("abx.id, abx.status");
+        
+        $builder->whereIn("abx.id", $id);
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
     function trxInsertUpdateRecord($dataWarna, $dataUkuran)
     {
         $this->db->transStart();
@@ -732,9 +742,28 @@ class SalesOrderModel extends \App\Models\PrModel
                         $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
                         $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
                         if ((float)$getSOUkuran->harga_satuan != (float) $rowData['harga_satuan']) {
-                            $queryStatus = false;
-                            $msgError = 'Invoice sudah dibuat, Tidak dapat merubah HARGA!';
-                            break;
+                            $all_ids = array_column($getDODet, 'id_invoice');
+                            $unique_ids = array_unique($all_ids);
+
+                            if (!empty($all_ids)) {
+                                // 2. Panggil fungsi getStatusSI
+                                $statusData = $this->getStatusSI($unique_ids);
+                                
+                                // 3. Ambil semua nilai status saja dalam bentuk array [0, 1, 0, ...]
+                                $allStatuses = array_column($statusData, 'status');
+
+                                // 4. CEK: Jika ada angka 1 di dalam array tersebut
+                                if (in_array(1, $allStatuses) || in_array("1", $allStatuses)) {
+                                    $queryStatus = false;
+                                    $msgError = 'Invoice sudah Approve, Tidak dapat merubah HARGA!';
+                                    break;
+                                }
+                            }
+                            if ($queryStatus == false) {
+                                $queryStatus = false;
+                                $msgError = 'Invoice sudah Approve, Tidak dapat merubah HARGA!';
+                                break;
+                            }
                         }
                         else if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
                             $queryStatus = false;

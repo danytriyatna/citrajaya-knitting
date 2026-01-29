@@ -140,6 +140,7 @@
                       <label class="control-label text-start text-md-end col-md-3 col-form-label" for="si_no">SI No.</label>
                       <div class="col-md-9">
                         <input type="text" id="si_no" readonly name="si_no" class="form-control" placeholder="Ketikkan nomor SI" value="<?= !empty($row) ? $row->kode_invoice : ""; ?>">
+                        <input type="hidden" id="status" readonly name="status" class="form-control" placeholder="Ketikkan nomor SI" value="<?= !empty($row) ? $row->status : 0; ?>">
                       </div>
                     </div>
                   </div>
@@ -238,12 +239,22 @@
                     
                     <input type="hidden" name="dt_details" value='<?= !empty($dt_details) ? $dt_details : ""?>'>
                     <input type="hidden" name="id" value="<?= !empty($id) ? $id : ""?>">
-                    <?php if (isset($show_save_btn) && $show_save_btn === TRUE): ?>
+                    <!-- <?php if (isset($show_save_btn) && $show_save_btn === TRUE): ?>
                         <button id="btn-save" type="button" name="actionf" value="save"
                                 class='btn btn-primary float-left text-white m-l-5'>
                             <span class="fa fa-save"></span> Simpan
                         </button>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
+                    <?php if($status == 0 || empty($status)) { ?>
+                      <button type="button" id="btn-save" value="save" class='btn btn-success'>
+                        <span class="fa fa-save"></span> Simpan
+                      </button>
+                      <?php if(!empty($id)) { ?>
+                      <button type="button" id="btn-send" value="approve" class='btn btn-info'>
+                        <span class="fa fa-paper-plane"></span> Approval
+                      </button>
+                      <?php } ?>
+                    <?php } ?>
 
                   </div>
                 </div>

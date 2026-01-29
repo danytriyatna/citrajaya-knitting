@@ -51,6 +51,9 @@ class InvoiceModel extends \App\Models\PrModel
             if (!empty($params['id_konsumen'])) {
                 $builder->where('abx.id_konsumen', $params['id_konsumen']);
             }
+            if (!empty($params['status'])) {
+                $builder->where('abx.status', $params['status']);
+            }
 
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
@@ -166,6 +169,27 @@ class InvoiceModel extends \App\Models\PrModel
         $builder->groupEnd();
 
         $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
+    function getDataDetailUpdate($id_invoice = null, $id_ref = null, $tipe_id = null)
+    {
+        $builder = $this->db->table($this->table2 . " abx");
+
+        $builder->select(" abx.id, abx.id_invoice,  abx.id_ref, abx.kode_ref, abx.tipe_id,
+                            abx.qty, abx.qty_do,  abx.total, abx.down_payment, abx.grand_total,
+                            (case when abx.tipe_id = 1 then ts.kode_sample else tso.kode_sales_order end) as ref_kode,
+                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_transaksi end) as ref_tgl");
+
+        $builder->join("trans_sample ts", "ts.id = abx.id_ref and abx.tipe_id = 1", "left");
+        $builder->join("trans_sales_order tso", "tso.id = abx.id_ref and abx.tipe_id = 2", "left");
+
+        $builder->where("abx.id_invoice", $id_invoice);
+        $builder->where("abx.id_ref", $id_ref);
+        $builder->where("abx.tipe_id", $tipe_id);
+
+        $this->_data = $builder->get()->getRow();
 
         return $this->_data;
     }

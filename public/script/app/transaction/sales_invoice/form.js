@@ -55,6 +55,7 @@ $(document).ready(function () {
 
     // set footer calculation
     let ttlText      = $("#ttl_text");
+    let status_data      = $("#status");
     let pajakText    = $("#pajak_text");
     let ttlHargaText = $("#ttl_harga_text");
     let ttlInp       = $("#ttl_inp");
@@ -393,8 +394,29 @@ $(document).ready(function () {
             }
         })
     });
-
+    
     $("#btn-send").on("click", function(e) {
+        e.preventDefault();
+        status_data.val(1);
+        Swal.fire({
+            title: "Apakah anda ingin menyimpan Work Order ?",
+            icon: 'question',
+            confirmButtonText: 'Simpan',
+            confirmButtonColor: '#198754',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#6C757D'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setDataInputTable();
+
+                // $("#actionf").val('save');
+                $("#fmain").submit();
+            }
+        })
+    });
+
+    $("#btn-send-old").on("click", function(e) {
         e.preventDefault();
         
 

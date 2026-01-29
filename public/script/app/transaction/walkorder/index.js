@@ -15,6 +15,7 @@ $(document).ready(function () {
      const inpp_warna = $("#warnaPrint");
      const inpp_trans = $("#warnaTrans");
      const brcStyle            = $("#style_input");
+     const inpRole           = $('#role_id');
      let qty_ukuran            = [];
 
     
@@ -108,7 +109,7 @@ $(document).ready(function () {
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"Kartu Produksi", width:"10%", hozAlign:"center",  formatter: print_btn,
+                {headerSort: false,  title:"Kartu Produksi", width:"10%", hozAlign:"center",  formatter: print_btn, visible: (inpRole.val() == 1 || inpRole.val() == 2),
                     cellClick: function(e, cell) {
                         let row = cell.getRow();
                         let rowIndex = cell.getRow().getPosition();

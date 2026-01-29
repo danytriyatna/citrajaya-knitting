@@ -105,6 +105,7 @@
                   <option value="1">Sample</option>
                   <option value="2">Sales Order</option>
                 </select>
+                <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
               </div>
             </div>
             <div class="col-sm-4 offset-md-5">

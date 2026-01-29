@@ -70,7 +70,8 @@ class SalesOrder extends BaseController
     $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
     $this->data['rekening_list'] = $this->mRekening->where("active", 1)->findAll();
-
+    $this->data['role_id'] = session()->get('role_id');
+    
     return view($this->views . '\sales_order_list', $this->data);
   }
 

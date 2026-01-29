@@ -5,6 +5,7 @@ $(document).ready(function () {
     $("[data-politespace]").politespace();
 
     const inpData           = $('#data_id');
+    const inpRole           = $('#role_id');
     const inpNoSalesOrder   = $('#no_sales_order');
     const inpDeskripsi      = $('#desc_style');
     const inpStyle          = $('#style');
@@ -326,10 +327,10 @@ $(document).ready(function () {
 
         // declarre untuk variable print qr
         const print_btn = () => {
-            let btn = `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modalz" title="print-warna"> <i class="fa fa-print" title="print-warna"></i></button>`;
+            let btn = `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modalz" title="print-warna"> <i class="fa fa-print" title="print-warna"></i></button>`;    
             return btn
         }
-    
+        
         onRendered(()=>{
             
             document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', ()=>{
@@ -348,7 +349,7 @@ $(document).ready(function () {
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
+                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (inpRole.val() == 1 || inpRole.val() == 2),
                     cellClick: function(e, cell) {
                         let row = cell.getRow();
                         let data_row = row.getData();

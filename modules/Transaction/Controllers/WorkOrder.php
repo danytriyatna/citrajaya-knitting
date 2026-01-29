@@ -60,6 +60,7 @@ class WorkOrder extends BaseController
     
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
     $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
+    $this->data['role_id'] = session()->get('role_id');
 
     return view($this->views . '\work_order_list', $this->data);
   }

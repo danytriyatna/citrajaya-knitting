@@ -237,11 +237,11 @@ class ItemTransfer extends BaseController
 
   public function listsSO()
   {
+    $id_proses      = $this->request->getPost('id_proses');
     $start      = $this->request->getPost('start');
     $limit      = $this->request->getPost('length');
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
-
     $params = [];
 
     $results = $this->mRef->getUkuranTrans(null, $start, $limit, $order, $filters, $params);
@@ -257,6 +257,24 @@ class ItemTransfer extends BaseController
     );
 
     foreach ($results as $row) {
+      $getSisa = $this->mRef->getDataSisaProses($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
+      if ($id_proses == 1) {
+        $sisa = $row->qty;
+      }
+      else {
+        $getProsesIdRajut = $this->mRef->getDataRajutBTM($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
+        $sisa = $getProsesIdRajut;
+      }
+      // if ($row->kode_transaksi == 'SOD260100033') {
+      //     dd($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi, $getSisa);
+      //   }
+      if (!empty($getSisa)) {
+        
+        $sisa -= $getSisa;
+      }
+      if (empty($sisa)) {
+        $sisa = 0;
+      }
       array_push(
         $build_array["data"],
         array(
@@ -272,6 +290,7 @@ class ItemTransfer extends BaseController
           "qty" => $row->qty,
           "amount" => $row->amount,
           "kode_ukuran" => $row->kode_ukuran,
+          "qty_ref" => $sisa,
         )
       );
     }
@@ -300,6 +319,28 @@ class ItemTransfer extends BaseController
 
       $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
       $resDataDetSO = $this->mRefDet->getDataDetSO($id);
+      foreach ($resDataDetSO as $key => $row) {
+        
+        $getSisa = $this->mRef->getDataSisaProses($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
+        $params['kode_transaksi'] = $row->kode_sales_order;
+        $params['kode_ukuran'] = $row->kode_ukuran;
+        $params['all_color'] = $row->color;
+        $getUkuranTrans = $this->mRef->getUkuranTrans(null, null, null, null, null, $params);
+        if ($resData->id_proses == 1) {
+          // $sisa = $row->qty;
+          $sisa = $getUkuranTrans[0]->qty;
+        }
+        else {
+          $getProsesIdRajut = $this->mRef->getDataRajutBTM($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
+          $sisa = $getProsesIdRajut;
+        }
+        if (!empty($getSisa)) {
+          
+          $sisa -= $getSisa;
+        }
+        $row->qty_ref = $sisa;
+        // $row->qty_ref = $getUkuranTrans[0]->qty - $sisa;
+      }
 
       // dd($resDataDetail);
 
@@ -693,6 +734,7 @@ class ItemTransfer extends BaseController
 
     function getCariProduk(){
       $kata_kunci = $this->request->getPost('kata_kunci');
+      $id_proses = $this->request->getPost('id_proses');
       $status = false;
       $msg = "Data barang tidak ditemukan !";
       $data  = [];
@@ -756,6 +798,24 @@ class ItemTransfer extends BaseController
         $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
         // print_r($results);exit;
         foreach ($results as $r) {
+          $getSisa = $this->mRef->getDataSisaProses($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
+          if ($id_proses == 1) {
+            $sisa = $r->qty;
+          }
+          else {
+            $getProsesIdRajut = $this->mRef->getDataRajutBTM($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
+            $sisa = $getProsesIdRajut;
+          }
+          // if ($row->kode_transaksi == 'SOD260100033') {
+          //     dd($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi, $getSisa);
+          //   }
+          if (!empty($getSisa)) {
+            
+            $sisa -= $getSisa;
+          }
+          if (empty($sisa)) {
+            $sisa = 0;
+          }
 
           $isi = [];
           $isi = [
@@ -768,6 +828,7 @@ class ItemTransfer extends BaseController
             "color"            => $r->color,
             "buyer"            => $r->buyer,
             "qty"              => $qty,//$r->qty,
+            "qty_ref"              => $sisa,//$r->qty,
             "amount"           => $r->amount,
             "kode_ukuran"      => $r->kode_ukuran,
             "kata_kunci"       => $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran,

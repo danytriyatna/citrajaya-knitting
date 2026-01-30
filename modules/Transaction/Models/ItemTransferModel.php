@@ -207,6 +207,9 @@ class ItemTransferModel extends \App\Models\PrModel
             if (!empty($params['style'])) {
                 $builder->where('tu.style', strtolower($params['style']));
             }
+            if (!empty($params['all_color'])) {
+                $builder->where('tu.color',  $params['all_color']);
+            }
             if (!empty($params['color'])) {
                 $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color']);
                 $prm_color = strtoupper($ascii);
@@ -416,6 +419,10 @@ class ItemTransferModel extends \App\Models\PrModel
             }
             
             foreach ($dataSO as $rowData) {
+                if ($rowData['qty_ref'] < $rowData['qty']) {
+                    throw new \Exception("QTY melebihi QTY REF!");
+                    break;
+                }
                 $dataDetail = [
                     // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
                     "id_header" => $id,
@@ -713,4 +720,47 @@ class ItemTransferModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
+
+    function getDataSisaProses($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    {
+        $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
+        $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
+        
+        $builder->select("sum(tbmp.qty) as total_proses");
+
+        $builder->where('tbh.id_proses', $id_proses);
+        $builder->where('tbh.status', 1);
+        $builder->where('tbmp.id_konsumen', $id_konsumen);
+        $builder->where('tbmp.kode_ukuran', $kode_ukuran);
+        $builder->where('tbmp.kode_sales_order', $kode_so);
+        // if (!empty($id)) {
+        //     $builder->where('tbmp.id <>', $id);
+        // }
+
+        $this->_data = $builder->get()->getRow()->total_proses;
+
+        return $this->_data;
+    }
+
+    function getDataRajutBTM($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    {
+        $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
+        
+        $builder->select("sum(tbtsd.qty) as total_proses");
+
+        $builder->where('tbth.id_proses', 1);
+        $builder->where('tbth.status', 1);
+        $builder->where('tbtsd.id_konsumen', $id_konsumen);
+        $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
+        $builder->where('tbtsd.kode_sales_order', $kode_so);
+        // if (!empty($id)) {
+        //     $builder->where('tbtsd.id <>', $id);
+        // }
+
+        $this->_data = $builder->get()->getRow()->total_proses;
+
+        return $this->_data;
+    }
+    
 }

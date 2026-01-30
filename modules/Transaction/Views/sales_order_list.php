@@ -727,5 +727,8 @@
 
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
+<script>
+    const USER_ROLE = <?= json_encode(session()->get('role_id')) ?>;
+</script>
 <script src="script/app/transaction/sales_order/index.js"></script>
 <?= $this->endSection('script'); ?>

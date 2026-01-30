@@ -349,7 +349,7 @@ $(document).ready(function () {
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (inpRole.val() == 1 || inpRole.val() == 2),
+                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (USER_ROLE == 1 || USER_ROLE == 2),
                     cellClick: function(e, cell) {
                         let row = cell.getRow();
                         let data_row = row.getData();

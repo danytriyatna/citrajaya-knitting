@@ -252,25 +252,23 @@
                               <td> 
                                   <h5 class="form-check-h1" for="proses_<?= $r->seq ?>"><?= $r->nama ?></h5>
                                   <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty_prod ?>" />
-                                  <!-- <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty - $r->qty_prod ?>" /> -->
                               </td>
                               <td style="text-align:right;">
                                 <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_prod ?></label>
-                                <!-- <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty - $r->qty_prod ?></label> -->
                               </td>
                             </tr>
                           <?php } ?>
-                            <tr>
+                            <!-- <tr>
                               <td> 
                                   <h5 class="form-check-h1" for="proses_ready">Ready</h5>
                               </td>
                               <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_ready" id="qty_ready">
+                                <label class="form-check-label" for="proses_ready" id="qty_ready"> -->
                                   <!-- !empty($last_data) ? ($last_data->qty_prod - $qty_kirim) : 0; -->
-                                  <?= !empty($last_data) ? ($last_data->qty_prod) : 0; ?>
+                                  <!-- <?= !empty($last_data) ? ($last_data->qty_prod) : 0; ?>
                                 </label>
                               </td>
-                            </tr>
+                            </tr> -->
                             <tr>
                               <td> 
                                  <h5 class="form-check-h1" for="proses_kirim">Kirim</h5>

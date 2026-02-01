@@ -257,12 +257,12 @@ class ItemTransfer extends BaseController
     );
 
     foreach ($results as $row) {
-      $getSisa = $this->mRef->getDataSisaProses($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
+      $getSisa = $this->mRef->getDataPengurang($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
       if ($id_proses == 1) {
         $sisa = $row->qty;
       }
       else {
-        $getProsesIdRajut = $this->mRef->getDataRajutBTM($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
+        $getProsesIdRajut = $this->mRef->getDataRajut($id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_transaksi);
         $sisa = $getProsesIdRajut;
       }
       // if ($row->kode_transaksi == 'SOD260100033') {
@@ -321,7 +321,7 @@ class ItemTransfer extends BaseController
       $resDataDetSO = $this->mRefDet->getDataDetSO($id);
       foreach ($resDataDetSO as $key => $row) {
         
-        $getSisa = $this->mRef->getDataSisaProses($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
+        $getSisa = $this->mRef->getDataPengurang($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
         $params['kode_transaksi'] = $row->kode_sales_order;
         $params['kode_ukuran'] = $row->kode_ukuran;
         $params['all_color'] = $row->color;
@@ -331,7 +331,7 @@ class ItemTransfer extends BaseController
           $sisa = $getUkuranTrans[0]->qty;
         }
         else {
-          $getProsesIdRajut = $this->mRef->getDataRajutBTM($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
+          $getProsesIdRajut = $this->mRef->getDataRajut($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->id);
           $sisa = $getProsesIdRajut;
         }
         if (!empty($getSisa)) {
@@ -798,12 +798,12 @@ class ItemTransfer extends BaseController
         $results = $this->mRef->getUkuranTrans(null, 0, 999, null, null, $params);
         // print_r($results);exit;
         foreach ($results as $r) {
-          $getSisa = $this->mRef->getDataSisaProses($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
+          $getSisa = $this->mRef->getDataPengurang($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
           if ($id_proses == 1) {
             $sisa = $r->qty;
           }
           else {
-            $getProsesIdRajut = $this->mRef->getDataRajutBTM($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
+            $getProsesIdRajut = $this->mRef->getDataRajut($id_proses, $r->id_konsumen, $r->kode_ukuran, $r->kode_transaksi);
             $sisa = $getProsesIdRajut;
           }
           // if ($row->kode_transaksi == 'SOD260100033') {

@@ -143,6 +143,30 @@ class ProductionModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataProsesProdNew($id, $last_proses = null)
+    {
+        $builder = $this->db->table("trans_produksi_operator tpo");
+        $builder->select("jpp.nama, jpp.seq, jpp.id,
+                            COALESCE(SUM(tpo.qty), 0) AS qty_prod");
+        $builder->join("trans_produksi tp", "tp.id = tpo.id_produksi", "inner");
+        $builder->join("_jenis_proses_produksi jpp", "tpo.id_proses = jpp.id", "inner");
+        if(!empty($id)){
+            $builder->where('tp.id', $id);
+        }
+        $builder->groupBy("jpp.nama, jpp.seq, jpp.id");
+        if ($last_proses == true) {
+            $builder->orderBy("jpp.seq", "DESC");
+            $this->_data = $builder->get()->getRow();
+        }
+        else {
+            $builder->orderBy("jpp.seq", "ASC");
+            $this->_data = $builder->get()->getResult();
+        }
+        
+
+        return $this->_data;
+    }
+
     function getDataNextProses($idWorkOrder, $id, $seq)
     {
         $builder = $this->db->table("trans_walkorder_proses abx");

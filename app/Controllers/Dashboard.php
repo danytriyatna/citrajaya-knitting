@@ -181,8 +181,8 @@ class Dashboard extends BaseController
             $parms['last_proses'] = 1;
             $parms['id_walkorder'] = $row->id_walkorder;
             if (!empty($row->id_walkorder)) {
-                $dataLast = $this->mProduksi->getDataProsesProd($parms);
-                $last_data = !empty($dataLast) ? $dataLast[0] : [];
+                $dataLast = $this->mProduksi->getDataProsesProdNew($row->id_prod, true);
+                $last_data = !empty($dataLast) ? $dataLast : [];
     
                 $qty_kirim = 0;
                 if(!empty($row->id_prod)){

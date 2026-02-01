@@ -337,7 +337,7 @@ class Production extends BaseController
       }
 
       $prms['id_walkorder'] = $resData->id_walkorder;
-      $dataProses = $this->mProduksi->getDataProsesProd($prms);
+      $dataProses = $this->mProduksi->getDataProsesProdNew($id);
       // dd($resData->id_walkorder);
       // get last qty ( untuk mengambil data yang suddah dikirim )
       $parms['last_proses'] = 1;

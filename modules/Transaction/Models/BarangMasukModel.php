@@ -266,7 +266,7 @@ class BarangMasukModel extends \App\Models\PrModel
                     $kode_transaksi = $hedr_data->kode_transaksi;
                     $i = 0;
                     foreach ($dataProduksi as $xrow) {
-                        if ($xrow['qty_kirim'] < $xrow['qty']) {
+                        if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1) {
                             throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
                         }
                         // print_r($xrow);exit;

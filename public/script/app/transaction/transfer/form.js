@@ -59,11 +59,11 @@ if(inpIdHeader.val().length == 0){
 if(inpStatus.val() == 0){
     btnAdd.show()
     btnView.show()
-    btnSimpan.show()
+    // btnSimpan.show()
     btnApprove.show()
 } else{
     btnAdd.hide()
-    btnSimpan.hide()
+    // btnSimpan.hide()
     btnApprove.hide() 
     btnView.hide()
 }

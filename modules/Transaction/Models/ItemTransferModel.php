@@ -409,6 +409,11 @@ class ItemTransferModel extends \App\Models\PrModel
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
                 $this->deleteRecordMultipleColumn($this->tblDetailSO, $arrDelete);
+                
+                $getCurrent = $this->getData($id);
+                if ($getCurrent->status == 1) {
+                    $data['status'] = 1;
+                }
                 $arrParam =  [
                     "id" => $id,
                 ];
@@ -721,14 +726,14 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataSisaProses($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    function getDataRajut($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
     {
         $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
         $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
         
         $builder->select("sum(tbmp.qty) as total_proses");
 
-        $builder->where('tbh.id_proses', $id_proses);
+        $builder->where('tbh.id_proses', 1);
         $builder->where('tbh.status', 1);
         $builder->where('tbmp.id_konsumen', $id_konsumen);
         $builder->where('tbmp.kode_ukuran', $kode_ukuran);
@@ -742,14 +747,14 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataRajutBTM($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    function getDataPengurang($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
     {
         $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
         $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
         
         $builder->select("sum(tbtsd.qty) as total_proses");
 
-        $builder->where('tbth.id_proses', 1);
+        $builder->where('tbth.id_proses', $id_proses);
         $builder->where('tbth.status', 1);
         $builder->where('tbtsd.id_konsumen', $id_konsumen);
         $builder->where('tbtsd.kode_ukuran', $kode_ukuran);

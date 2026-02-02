@@ -180,6 +180,7 @@ class Dashboard extends BaseController
 
             $parms['last_proses'] = 1;
             $parms['id_walkorder'] = $row->id_walkorder;
+            
             if (!empty($row->id_walkorder)) {
                 $dataLast = $this->mProduksi->getDataProsesProdNew($row->id_prod, true);
                 $last_data = !empty($dataLast) ? $dataLast : [];
@@ -213,6 +214,22 @@ class Dashboard extends BaseController
                 $qty_sisa_kirim = null;
 
             }
+            if (!empty($row->id_prod)) {
+                $dataRajut = $this->mProduksi->getDataProsesProdNew($row->id_prod, false, true);
+                $rajut_data = !empty($dataRajut) ? $dataRajut : [];
+                if (!empty($rajut_data)) {
+                    // $qty_hasil = $last_data->qty_prod - $qty_kirim;
+                    $qty_prod = $rajut_data->qty_prod;
+                }
+                else {
+                    $qty_prod = 0;
+                }
+            }
+            else {
+                $qty_prod = 0;
+            }
+
+            $qty_sisa = (int) $row->qty - (int) $qty_prod;
 
             $pembayaran = !empty($row->nilai_pembayaran) ? $row->nilai_pembayaran : 0;
             $dp = !empty($row->uang_dp) ? $row->uang_dp : 0;
@@ -231,7 +248,8 @@ class Dashboard extends BaseController
                 'tgl_transaksi' => $tgl_transaksi,
                 'tgl_deadline' => $tgl_deadline,
                 'qty' => $row->qty,
-                'qty_prod' => $row->qty_prod,
+                // 'qty_prod' => $row->qty_prod,
+                'qty_prod' => $qty_prod,
                 'qty_kirim' => $row->qty_kirim,
                 'uang_dp' => $dp,
                 'pembayaran' => $pembayaran + $dp,

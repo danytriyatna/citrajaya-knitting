@@ -637,6 +637,7 @@ function simpanData(status) {
             id:inpIdHeader.val(),
             id_po:inpIdPo.val(),
             rec_date:formatLocaleDate(inpTglShip.val()),
+            receive_date:formatLocaleDate(inpTglReceive.val()),
             qty:totalQty,
             namaVendor:inpNamaVendor.val(),
             form_no:inpFormNo.val(),

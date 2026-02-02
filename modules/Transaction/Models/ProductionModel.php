@@ -143,7 +143,7 @@ class ProductionModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataProsesProdNew($id, $last_proses = null)
+    function getDataProsesProdNew($id, $last_proses = null, $rajut = null)
     {
         $builder = $this->db->table("trans_produksi_operator tpo");
         $builder->select("jpp.nama, jpp.seq, jpp.id,
@@ -156,6 +156,10 @@ class ProductionModel extends \App\Models\PrModel
         $builder->groupBy("jpp.nama, jpp.seq, jpp.id");
         if ($last_proses == true) {
             $builder->orderBy("jpp.seq", "DESC");
+            $this->_data = $builder->get()->getRow();
+        }
+        else if (!empty($rajut)){
+            $builder->where('jpp.id', 1);
             $this->_data = $builder->get()->getRow();
         }
         else {

@@ -260,6 +260,7 @@ class ReceiveItem extends BaseController
     $id = $this->request->getPost('id');
     $id_po = $this->request->getPost('id_po');
     $rec_date = $this->request->getPost('rec_date');
+    $receive_date = $this->request->getPost('receive_date');
     $statusData = $this->request->getPost('status');
     $form_no = $this->request->getPost('form_no');
     $qty = $this->request->getPost('qty');
@@ -273,7 +274,8 @@ class ReceiveItem extends BaseController
     }
     $dataHeader = [
       "id_po" => $id_po,
-      "rec_date" => $rec_date,
+      "rec_date" => $receive_date,
+      // "receive_date" => $receive_date,
       "status" => $statusData,
       "form_no" => $form_no,
       "qty" => $qty,

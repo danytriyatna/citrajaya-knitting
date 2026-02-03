@@ -206,7 +206,7 @@
                     
 
                 // Kolom warna
-                 echo "<td style='text-align:left; vertical-align: top; border:1px solid #808080;'>{$color['keterangan']}</td>";
+                 echo "<td style='text-align:left; vertical-align: middle; border:1px solid #808080;'>{$color['keterangan']}</td>";
 
                 // Kolom ukuran
                 foreach ($ukuran as $sizeName) {
@@ -217,15 +217,15 @@
                             break;
                         }
                     }
-                    echo "<td style='text-align:center; vertical-align: center; border: 1px solid #808080;'>{$qty}</td>";
+                    echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'>{$qty}</td>";
                 }
 
                 // Harga unit & total harga (per warna)
                 $hargaUnit = number_format($color['harga_satuan'], 0, ',', '.');
                 $totalHarga = number_format($color['total_harga'], 0, ',', '.');
 
-                echo "<td style='text-align:right; vertical-align: center; border: 1px solid #808080;'>{$hargaUnit}</td>";
-                echo "<td style='text-align:right; vertical-align: center; border: 1px solid #808080;'>{$totalHarga}</td>";
+                echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$hargaUnit}</td>";
+                echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$totalHarga}</td>";
 
                 echo "</tr>";
             endforeach;

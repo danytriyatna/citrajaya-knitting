@@ -33,6 +33,10 @@ class UkuranModel extends \App\Models\PrModel
                 $builder->where('uk.key_ukuran', $params['key_ukuran']);
             }
 
+            if(!empty($params['kode_ukuran'])){
+                $builder->whereIn('uk.kode_ukuran', $params['kode_ukuran']);
+            }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {

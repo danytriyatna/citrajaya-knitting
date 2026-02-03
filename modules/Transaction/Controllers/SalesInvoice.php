@@ -962,15 +962,15 @@ class SalesInvoice extends BaseController
                             
                         }
                         else if ($size == "sm") {
-                            $size = "s / m";
+                            $size = "s/m";
                             
                         }
                         else if ($size == "ml") {
-                            $size = "m / l";
+                            $size = "m/l";
                             
                         }
                         else if ($size == "lxl") {
-                            $size = "l / xl";
+                            $size = "l/xl";
                             
                         }
                         else if ($size == "xxxxl") {
@@ -1101,11 +1101,14 @@ class SalesInvoice extends BaseController
           $dt_details[] = $isi;
         }
       }
+      $params['kode_ukuran'] = $ukuranAll;
+      $getSeqUkuran = $this->mUkuran->getData(null, null, null, null, null, $params);
+      $kodeUkuranSaja = array_column($getSeqUkuran, 'kode_ukuran');
       $this->data['data'] = !empty($resData) ? $resData : [];
       // $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
       $this->data['detail'] = !empty($dtails) ? $dtails : [];
       $this->data['detail_so'] = !empty($dtails_so) ? $dtails_so : [];
-      $this->data['ukuran'] = !empty($ukuranAll) ? $ukuranAll : [];
+      $this->data['ukuran'] = !empty($kodeUkuranSaja) ? $kodeUkuranSaja : [];
       $this->data['kode_ref'] = !empty($kode_ref) ? $kode_ref : [];
       $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
       $this->data['data_detail'] = !empty($warna) ? $warna : [];

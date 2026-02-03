@@ -35,6 +35,11 @@ $(document).ready(function () {
 			}, 
 
             {
+				title: 'TGL DEADLINE 2', field: 'tgl_deadline_dua', headerSort:false, sorter: 'string',
+				width: 130, formatter : "html", hozAlign: 'center', cssClass: 'text-center'
+			}, 
+
+            {
 				title: 'QTY', field: 'qty', headerSort:false, sorter: 'string',
 				width: 100, formatter : "html", hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
 			}, 

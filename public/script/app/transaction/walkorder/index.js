@@ -11,6 +11,7 @@ $(document).ready(function () {
      const inpp_deskripsi = $("#deskripsiPrint");
      const inpp_tglSample = $("#tglSamplePrint");
      const inpp_tglDeadline = $("#tglDeadlinePrint");
+     const inpp_tglDeadlineDua = $("#tglDeadlinePrintDua");
      const inpp_buyer = $("#buyerPrint");    
      const inpp_warna = $("#warnaPrint");
      const inpp_trans = $("#warnaTrans");
@@ -72,6 +73,7 @@ $(document).ready(function () {
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>
                         <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em></p>
+                        <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-'}</em></p>
                         <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i>&nbsp; ${data.konsumen_nama}</p>
                         <a class="hover-zoom-rotate" href="${data.file_name}" target="_blank"><img class="m-t-0 d-block object-fit-cover rounded" src="${data.file_name}" alt="Foto Sample" width="160px" height="90px" /></a>
                       </div>
@@ -149,6 +151,7 @@ $(document).ready(function () {
                             inpp_warna.html(data_row.colordasar);
                             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
                             inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+                            inpp_tglDeadlineDua.html(data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-')
 
                             brcStyle.val(xdata.style)
                             inpp_buyer.html(data.konsumen_nama)

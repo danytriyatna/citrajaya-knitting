@@ -15,7 +15,7 @@ class Mdashboard extends Model
         
         $builder = $this->db->table("v_traking_order_so tbl");
 
-        $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
+        $builder->select("tbl.trans_id, tbl.trans_kode, tbl.tgl_transaksi, tbl.id_konsumen, tbl.nama, tbl.keterangan, tbl.tgl_deadline, tbl.tgl_deadline_dua, tbl.qty, tbl.style, tbl.deskripsi, tbl.tipe, 
                           tbl.kode_prod, tbl.id_prod, tbl.qty_prod, nilai_pembayaran,
                           tbl.kode_dev, tbl.id_dev, tbl.qty_kirim, rk.id_walkorder, tbl.file_name, tbl.uang_dp, tbl.uang_dp_2, tbl.harga_total, tbl.nilai_invoice");
         

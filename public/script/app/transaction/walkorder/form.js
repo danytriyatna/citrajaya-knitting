@@ -64,6 +64,7 @@ $(document).ready(function () {
                     inpp_warna.html(data_row.colordasar);
                     inpp_tglSample.html(formatterDate(dataRow.tgl_transaksi))
                     inpp_tglDeadline.html(formatterDate(dataRow.tgl_deadline))
+                    inpp_tglDeadlineDua.html(formatterDate(dataRow.tgl_deadline_dua))
 
                     brcStyle.val(dataRow.keterangan_style)
                     inpp_buyer.html(dataRow.konsumen_nama)
@@ -677,6 +678,7 @@ $(document).ready(function () {
      const inpp_deskripsi = $("#deskripsiPrint");
      const inpp_tglSample = $("#tglSamplePrint");
      const inpp_tglDeadline = $("#tglDeadlinePrint");
+     const inpp_tglDeadlineDua = $("#tglDeadlinePrintDua");
      const inpp_buyer = $("#buyerPrint");    
      const inpp_warna = $("#warnaPrint");
      const inpp_trans = $("#warnaTrans");

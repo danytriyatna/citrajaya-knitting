@@ -38,6 +38,7 @@ $(document).ready(function () {
     const tglSalesOrderText  = $('#tglSalesOrderText');
     const buyerText          = $('#buyerText');
     const tglDeadlineText    = $('#tglDeadlineText');
+    const tglDeadlineTextDua    = $('#tglDeadlineTextDua');
     const noSalesOrderText   = $('#noSalesOrderText');
     const fotoText           = $('#fotoText');
     const rowDet             = $("#rowDet")
@@ -256,6 +257,7 @@ $(document).ready(function () {
      const inpp_deskripsi = $("#deskripsiPrint");
      const inpp_tglSample = $("#tglSamplePrint");
      const inpp_tglDeadline = $("#tglDeadlinePrint");
+     const inpp_tglDeadlineDua = $("#tglDeadlinePrintDua");
      const inpp_buyer = $("#buyerPrint");    
      const inpp_warna = $("#warnaPrint");
      const inpp_trans = $("#warnaTrans");
@@ -315,6 +317,7 @@ $(document).ready(function () {
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>
                         <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em></p>
+                        <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-'}</em></p>
                         <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i>&nbsp; ${data.nama}</p>
                         <a class="hover-zoom-rotate" href="${data.file_gambar}" target="_blank"><img class="m-t-0 d-block object-fit-cover rounded" src="${data.file_gambar}" alt="Foto Sample" width="160px" height="90px" /></a>
                       </div>
@@ -349,52 +352,53 @@ $(document).ready(function () {
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (USER_ROLE == 1 || USER_ROLE == 2),
-                    cellClick: function(e, cell) {
-                        let row = cell.getRow();
-                        let data_row = row.getData();
-                        if (e.target.title === 'print-warna') {
-                            qty_ukuran = [];
-                            const inpp_slcUkuran = $("#print_slc_ukuran");
-                            const inpp_qty       = $("#print_qty");
-                            const inpp_qtyp      = $("#print_qtyp");
-                            const allowed = data.key_ukuran.map(x => x.key_ukuran); // ambil semua kode_ukuran
-                            const select = document.getElementById('print_slc_ukuran');
+                // {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (USER_ROLE == 1 || USER_ROLE == 2),
+                //     cellClick: function(e, cell) {
+                //         let row = cell.getRow();
+                //         let data_row = row.getData();
+                //         if (e.target.title === 'print-warna') {
+                //             qty_ukuran = [];
+                //             const inpp_slcUkuran = $("#print_slc_ukuran");
+                //             const inpp_qty       = $("#print_qty");
+                //             const inpp_qtyp      = $("#print_qtyp");
+                //             const allowed = data.key_ukuran.map(x => x.key_ukuran); // ambil semua kode_ukuran
+                //             const select = document.getElementById('print_slc_ukuran');
 
-                            select.querySelectorAll('option').forEach(opt => {
-                                if (opt.value === '' || allowed.includes(opt.value)) {
-                                    opt.hidden = false; // tampilkan kalau cocok
-                                    if (opt.value == 'all') {
-                                        qty_ukuran[opt.value] = data_row["all_"]
-                                    }
-                                    else {
-                                        qty_ukuran[opt.value] = data_row[opt.value]
-                                    }
-                                } else {
-                                    opt.hidden = true; // sembunyikan kalau tidak ada di daftar
-                                }
-                            });
-                            // inpp_slcUkuran
-                            inpp_qty.val(1)
-                            inpp_qtyp.val(1)
+                //             select.querySelectorAll('option').forEach(opt => {
+                //                 if (opt.value === '' || allowed.includes(opt.value)) {
+                //                     opt.hidden = false; // tampilkan kalau cocok
+                //                     if (opt.value == 'all') {
+                //                         qty_ukuran[opt.value] = data_row["all_"]
+                //                     }
+                //                     else {
+                //                         qty_ukuran[opt.value] = data_row[opt.value]
+                //                     }
+                //                 } else {
+                //                     opt.hidden = true; // sembunyikan kalau tidak ada di daftar
+                //                 }
+                //             });
+                //             // inpp_slcUkuran
+                //             inpp_qty.val(1)
+                //             inpp_qtyp.val(1)
 
-                            inpp_foto.attr('src', data.file_gambar);
-                            inpp_noSo.html(data.kode_sales_order)
-                            inpp_deskripsi.html(data.deskripsi);
-                            inpp_warna.html(data_row.colordasar);
-                            inpp_tglSample.html(formatterDate(data.tgl_transaksi))
-                            inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+                //             inpp_foto.attr('src', data.file_gambar);
+                //             inpp_noSo.html(data.kode_sales_order)
+                //             inpp_deskripsi.html(data.deskripsi);
+                //             inpp_warna.html(data_row.colordasar);
+                //             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
+                //             inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+                //             inpp_tglDeadlineDua.html(data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-')
 
-                            brcStyle.val(data.style)
-                            inpp_buyer.html(data.nama)
+                //             brcStyle.val(data.style)
+                //             inpp_buyer.html(data.nama)
 
-                            setTimeout(() => {
-                                inpp_trans.html(data_row.id);
-                                mdlPrint.modal("show");
-                            }, 500);
-                        } 
-                    }
-                },
+                //             setTimeout(() => {
+                //                 inpp_trans.html(data_row.id);
+                //                 mdlPrint.modal("show");
+                //             }, 500);
+                //         } 
+                //     }
+                // },
                 // {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
                 {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colour"}
             ]
@@ -729,6 +733,7 @@ $(document).ready(function () {
                 buyerText.html(`<i class="fa fa-user f-s-11"></i>&nbsp; ${data.nama}`)
                 fotoText.attr("src",data.file_gambar)
                 tglDeadlineText.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em>`)
+                tglDeadlineTextDua.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-'}</em>`)
                 if(data.detail){
                     idSalesOrderDet = data.detail.id
                     inpPoWarna1.val(data.detail.id_warna_1).trigger('change');

@@ -29,6 +29,7 @@ class WalkorderModel extends \App\Models\PrModel
                           abx.tipe_id, cbx.file_name, abx.id_gudang, abx.keterangan, 
                           (case when abx.tipe_id = 1 then ts.deskripsi else tso.deskripsi end) as deskripsi,
                           (case when abx.tipe_id = 1 then ts.style else tso.style end) as style,
+                          (case when abx.tipe_id = 1 then null else tso.tgl_deadline_dua end) as tgl_deadline_dua,
                         ");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");

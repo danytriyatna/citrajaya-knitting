@@ -173,6 +173,7 @@ class WorkOrder extends BaseController
           "file_name"          => $file_gambar,
           "qty_remain"        => $qty - $qty_prod,
           "tgl_deadline"      => fdate_eng_to_ind($row->tgl_deadline),
+          "tgl_deadline_dua"  => !empty($row->tgl_deadline_dua) ? $row->tgl_deadline_dua : '',
           "tgl_transaksi"     => fdate_eng_to_ind($row->tgl_transaksi),
           "keterangan_style"  => $row->deskripsi,
           "style"  => $row->style,
@@ -185,7 +186,7 @@ class WorkOrder extends BaseController
           "ref_data" => $ref_data
         )
       );
-    }
+    };
     return $this->response->setJSON($build_array);
   }
 

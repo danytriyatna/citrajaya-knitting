@@ -173,6 +173,11 @@ class Dashboard extends BaseController
                 $tgl_deadline = fdate_eng_to_ind($row->tgl_deadline);
             }
 
+            $tgl_deadline_dua = "";
+            if(!empty($row->tgl_deadline_dua)){
+                $tgl_deadline_dua = fdate_eng_to_ind($row->tgl_deadline_dua);
+            }
+
             $tgl_transaksi = "";
             if(!empty($row->tgl_transaksi)){
                 $tgl_transaksi = fdate_eng_to_ind($row->tgl_transaksi);
@@ -247,6 +252,7 @@ class Dashboard extends BaseController
                 'keterangan' => $row->style."/".$row->deskripsi,
                 'tgl_transaksi' => $tgl_transaksi,
                 'tgl_deadline' => $tgl_deadline,
+                'tgl_deadline_dua' => $tgl_deadline_dua,
                 'qty' => $row->qty,
                 // 'qty_prod' => $row->qty_prod,
                 'qty_prod' => $qty_prod,

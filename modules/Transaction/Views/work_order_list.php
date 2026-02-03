@@ -24,7 +24,8 @@
             <p class="f-w-500 m-y-0 d-none" id="warnaTrans">Trans</p>
             <hr class="m-y-8">
             <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp;<em id="tglSamplePrint">-</em> </p>
-            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline <em id="tglDeadlinePrint">-</em></p>
+            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline: <em id="tglDeadlinePrint">-</em></p>
+            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline 2: <em id="tglDeadlinePrintDua">-</em></p>
             <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i><em id="buyerPrint"></em></p>
           </div>
         </div>

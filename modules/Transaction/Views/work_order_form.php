@@ -58,7 +58,8 @@
             <p class="f-w-500 m-y-0 d-none" id="warnaTrans">Trans</p>
             <hr class="m-y-8">
             <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp;<em id="tglSamplePrint">-</em> </p>
-            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline <em id="tglDeadlinePrint">-</em></p>
+            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline: <em id="tglDeadlinePrint">-</em></p>
+            <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp;Deadline 2: <em id="tglDeadlinePrintDua">-</em></p>
             <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i><em id="buyerPrint"></em></p>
           </div>
         </div>
@@ -153,6 +154,7 @@
               <h5 class="f-w-700 m-b-12"><?= $row->deskripsi; ?></h5>
               <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi); ?></p>
               <p class="m-y-0"><em>Deadline: <?= fdate_eng_to_ind($row->tgl_deadline); ?></em></p>
+              <p class="m-y-0"><em>Deadline 2: <?= !empty($row->tgl_deadline_dua) ? fdate_eng_to_ind($row->tgl_deadline_dua) : '-'; ?></em></p>
               <p class="f-w-700 m-t-4"><?= $row->konsumen_nama; ?></p>
               <img class="m-t-10 w-90" src="<?= $row->file_gambar; ?>" alt="Foto Sample">
             </div>

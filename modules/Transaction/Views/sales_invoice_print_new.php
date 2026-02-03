@@ -186,6 +186,7 @@
         <tbody>
         <?php
         $nomor = 1;
+        $total_qty = 0;
         foreach ($data_detail as $key => $value):
             foreach ($value as $w => $color):
                 echo "<tr>";
@@ -214,6 +215,7 @@
                     foreach ($color['ukuran'] as $size) {
                         if ($size['size'] == $sizeName) {
                             $qty = $size['qty'];
+                            $total_qty += $qty; 
                             break;
                         }
                     }
@@ -245,6 +247,12 @@
             $total = !empty($total_pengiriman) ? $total + $total_pengiriman : $total;
             $formatTotal = number_format($total, 0, ',', '.');
             ?>
+            <tr>
+                <td colspan="3" style="text-align: left; vertical-align: top; border-top:1px solid #808080; border-left:1px solid #808080; border-right:1px solid #808080;"><strong style="font-size: 13px;">TOTAL</strong></td>
+                <td colspan="<?= count($ukuran) ?>" style="border:1px solid #808080;"><strong><?= $total_qty ?></strong></td>
+                <td style="text-align: right; border:1px solid #808080;"></td>
+                <td style="text-align: right; border:1px solid #808080;"></td>
+            </tr>
             <tr>
                 <td colspan="<?= $colspan ?>" style="text-align: left; vertical-align: top; border-top:1px solid #808080; border-left:1px solid #808080; border-right:1px solid #808080;"><strong style="font-size: 13px;">NOTES: </strong></td>
                 <td style="border:1px solid #808080;"><strong>SUB TOTAL</strong></td>

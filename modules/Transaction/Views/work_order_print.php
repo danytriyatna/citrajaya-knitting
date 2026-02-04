@@ -136,7 +136,7 @@
     </tr>
     <tr>
       <th  style="text-align: left;"><em>DEADLINE :</em></th>
-      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_deadline) ? formatTanggalIndonesiaNow($sales_order->tgl_deadline) : null ; ?></td>
+      <td  style="text-align: left;" colspan="5"><?= !empty($sales_order->tgl_deadline) ? formatTanggalIndonesiaNow($sales_order->tgl_deadline) : null ; ?> <?= !empty($sales_order->tgl_deadline_dua) ? ' dan '.formatTanggalIndonesiaNow($sales_order->tgl_deadline_dua) : null ; ?></td>
     </tr>
     <tr>
       <th  style="text-align: left;"><em>DESK :</em></th>

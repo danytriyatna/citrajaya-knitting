@@ -210,7 +210,7 @@
                 </td>
             </tr>
             <tr style="border: none;">
-                <td style="border: none; width: 5%; vertical-align: top;">
+                <td style="border: none; width: 7%; vertical-align: top;">
                     Deadline
                 </td>
                 <td style="border: none; width: 2%; vertical-align: top;">
@@ -219,14 +219,14 @@
                 <td style="border: none; width: 20%; vertical-align: top;">
                     <?= formatTanggalIndonesia($data->tgl_deadline) ?>
                 </td>
-                <td style="border: none; width: 5%; vertical-align: top;">
-                    Ket
+                <td style="border: none; width: 7%; vertical-align: top;">
+                    Deadline 2
                 </td>
                 <td style="border: none; width: 3%; vertical-align: top;">
                     :
                 </td>
                 <td style="border: none; width: 30%; vertical-align: top;">
-                    <?= $data->keterangan ?>
+                    <?= !empty($data->tgl_deadline) ? formatTanggalIndonesia($data->tgl_deadline) : '-' ?>
                 </td>
             </tr>
         </tbody>

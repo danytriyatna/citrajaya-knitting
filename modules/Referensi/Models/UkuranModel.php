@@ -57,6 +57,39 @@ class UkuranModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getDataUkuranByKey($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table($this->table . " uk");
+
+        $builder->select("uk.id, uk.kode_ukuran, uk.keterangan, uk.key_ukuran, uk.seq");
+
+        if ($id == null or $id == "") {
+            $builder->where('uk.active = 1');
+            if(!empty($params['key_ukuran'])){
+                $builder->whereIn('uk.key_ukuran', $params['key_ukuran']);
+            }
+
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy('seq asc');
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("uk.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+
+        return $this->_data;
+    }
     
     function getDataCnt($filters = null, $params = null)
     {

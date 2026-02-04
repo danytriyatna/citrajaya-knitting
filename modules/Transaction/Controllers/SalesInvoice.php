@@ -1101,9 +1101,15 @@ class SalesInvoice extends BaseController
           $dt_details[] = $isi;
         }
       }
-      $params['kode_ukuran'] = $ukuranAll;
-      $getSeqUkuran = $this->mUkuran->getData(null, null, null, null, null, $params);
-      $kodeUkuranSaja = array_column($getSeqUkuran, 'kode_ukuran');
+      $params['key_ukuran'] = $ukuranAll;
+      $params['key_ukuran'] = array_map(function($val) {
+          return strtolower(trim($val));
+      }, $params['key_ukuran']);
+      $getSeqUkuran = $this->mUkuran->getDataUkuranByKey(null, null, null, null, null, $params);
+      $kodeUkuranSaja = array_column($getSeqUkuran, 'key_ukuran');
+      $kodeUkuranSaja = array_map(function($val) {
+          return strtoupper(trim($val));
+      }, $kodeUkuranSaja);
       $this->data['data'] = !empty($resData) ? $resData : [];
       // $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
       $this->data['detail'] = !empty($dtails) ? $dtails : [];

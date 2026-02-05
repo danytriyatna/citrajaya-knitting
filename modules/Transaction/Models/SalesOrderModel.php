@@ -255,6 +255,7 @@ class SalesOrderModel extends \App\Models\PrModel
         $col21 = "";
         $col22 = "";
         $col3  = "";
+        $col_harga  = "";
 
         foreach ($dtUkuran as $item) {
             $key = $item->key_ukuran;
@@ -265,6 +266,82 @@ class SalesOrderModel extends \App\Models\PrModel
             $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
 
             $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql,  0) as $keySql" : ",coalesce(tbl.$keySql, 0) as $keySql";
+            $codeSub = $keySql;
+            $keySql == 'all_' ? $codeSub = 'all' : $codeSub = $codeSub;
+            $col_harga .= ($col_harga == "") ? 
+            "COALESCE(
+                    ( 
+                        SELECT tsou.harga_satuan
+                        FROM trans_sales_order_ukuran tsou 
+                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
+                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
+                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
+                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
+                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
+                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
+                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
+                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
+                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
+                        WHERE tsou.id_sales_order_det = tbl.id
+                        AND ru.key_ukuran = '$codeSub' 
+                        AND CONCAT_WS('~', 
+                        NULLIF(rw1.kode_warna, ''), 
+                        NULLIF(rw2.kode_warna, ''), 
+                        NULLIF(rw3.kode_warna, ''),
+                        NULLIF(rw4.kode_warna, ''),
+                        NULLIF(rw5.kode_warna, ''),
+                        NULLIF(rw6.kode_warna, ''),
+                        NULLIF(rw7.kode_warna, ''),
+                        NULLIF(rw8.kode_warna, '')
+                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
+                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
+                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
+                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
+                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
+                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
+                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
+                )
+                    ), 0
+            ) AS harga_satuan_$codeSub" 
+
+            : ",COALESCE(
+                    ( 
+                        SELECT tsou.harga_satuan
+                        FROM trans_sales_order_ukuran tsou 
+                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
+                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
+                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
+                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
+                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
+                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
+                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
+                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
+                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
+                        WHERE tsou.id_sales_order_det = tbl.id
+                        AND ru.key_ukuran = '$codeSub' 
+                        AND CONCAT_WS('~', 
+                        NULLIF(rw1.kode_warna, ''), 
+                        NULLIF(rw2.kode_warna, ''), 
+                        NULLIF(rw3.kode_warna, ''),
+                        NULLIF(rw4.kode_warna, ''),
+                        NULLIF(rw5.kode_warna, ''),
+                        NULLIF(rw6.kode_warna, ''),
+                        NULLIF(rw7.kode_warna, ''),
+                        NULLIF(rw8.kode_warna, '')
+                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
+                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
+                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
+                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
+                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
+                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
+                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
+                )
+                    ), 0
+            ) AS harga_satuan_$codeSub";
             //  $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg" : ",coalesce(tbl.$hrg,0) as $hrg";
             
             $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
@@ -307,7 +384,8 @@ class SalesOrderModel extends \App\Models\PrModel
                     SELECT SUM(x.harga_total)
                     FROM trans_sales_order_ukuran x
                     WHERE x.id_sales_order_det = tbl.id
-                ), 0) as total_harga
+                ), 0) as total_harga,
+                {$col_harga}
             FROM 
                 CROSSTAB(
                     $$
@@ -345,7 +423,6 @@ class SalesOrderModel extends \App\Models\PrModel
             LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
             LEFT JOIN ref_warna w8 ON td.id_warna_8 = w8.id;
         ";
-
         $query = $this->db->query($sql);
         $this->_data = $query->getResult();
         return $this->_data;

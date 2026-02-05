@@ -1301,13 +1301,77 @@ class SalesOrder extends BaseController
       $resDataDetail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
       $keysUkuran = !empty($resDataDetail) ? array_keys(get_object_vars($resDataDetail[0])) : [];
 
-      // Tentukan key mana yang merupakan ukuran (filter selain `id`, `no`, `colordasar`, `colour`, dan `total_harga`)
       $excludeKeys = ["id", "no", "colordasar", "keterangan", "colour", "total_harga", "total_satuan"];
-      $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
+
+      $ukuranKeysInc = array_diff($keysUkuran, $excludeKeys);
+
+      $ukuranKeysInc = preg_grep('/^harga_satuan_/', $ukuranKeysInc, PREG_GREP_INVERT);
+
+      $ukuranKeysInc = array_values($ukuranKeysInc);
+
+      $sizes = ['xs', 's', 'sm', 'ml', 'm', 'l', 'lxl', 'xl', 'xxl', 'xxxl', 'xxxxl', 'xxxxxl', 'jumbo', 'all', 'xxxxxxl'];
+
+      foreach ($resDataDetail as $row) {
+          $priceGroups = [];
+          foreach ($sizes as $size) {
+              $priceField = "harga_satuan_" . $size;
+              $priceValue = isset($row->$priceField) ? (int)$row->$priceField : 0;
+              if ($priceValue > 0) {
+                  $priceGroups[$priceValue][] = $size;
+              }
+          }
+
+          foreach ($priceGroups as $price => $groupedSizes) {
+              $newRow = clone $row;
+              $newRow->total_satuan = (string) $price;
+              $currentTotalHarga = 0;
+
+              foreach ($sizes as $size) {
+                  if (in_array($size, $groupedSizes)) {
+                      if ($size == 'all') {
+                        $size = 'all_';
+                      }
+                      $qty = (int) $row->$size;
+                      $currentTotalHarga += ($qty * $price);
+                  } else {
+                    if ($size == 'all') {
+                        $size = 'all_';
+                      }
+                      $newRow->$size = "0";
+                      $pField = "harga_satuan_" . $size;
+                      if(isset($newRow->$pField)) unset($newRow->$pField);
+                  }
+              }
+              $newRow->total_harga = (string) $currentTotalHarga;
+              $tempData[] = $newRow;
+          }
+      }
+
+      usort($tempData, function($a, $b) {
+          return (int)$a->total_satuan <=> (int)$b->total_satuan;
+      });
+
+      $finalData = [];
+      $lastPrice = null;
+
+      foreach ($tempData as $index => $item) {
+          if ($lastPrice !== null && $item->total_satuan !== $lastPrice) {
+              $separator = new \stdClass();
+              foreach ($item as $key => $val) {
+                  $separator->$key = null; 
+              }
+              $separator->is_separator = true; 
+              
+              $finalData[] = $separator;
+          }
+
+          $finalData[] = $item;
+          $lastPrice = $item->total_satuan;
+      }
 
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['ukuran'] = !empty($ukuranKeysInc) ? $ukuranKeysInc : [];
-      $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
+      $this->data['detail'] = !empty($resDataDetail) ? $finalData : [];
     }
     
     $html = view($this->views . '\sales_order_print', $this->data);

@@ -270,13 +270,17 @@
             <?php $i = 1; $sub_total_qty = 0; $sub_total_jumlah = 0;
             foreach ($detail as $row) : ?>
                 <tr>
-                    <td><?= $i++ ?></td>
+                    <td><?= !empty($row->total_satuan) ? $i++ : '&nbsp;' ?></td>
                     <td><?= $row->keterangan ?></td>
-                    <?php $total_qty = 0;
-                        foreach ($ukuran as $u) : ?>
-                        <td class="text-center"><?= $row->$u ?></td>
-                    <?php $total_qty += $row->$u; endforeach; $sub_total_qty += $total_qty; ?>
-                    <td class="text-center"><?= $total_qty ?></td>
+                <?php 
+                    $total_qty = 0;
+                    foreach ($ukuran as $u) : ?>
+                    <td class="text-center"><?= $row->$u ?></td>
+                <?php 
+                    $total_qty += $row->$u; 
+                    endforeach; $sub_total_qty += $total_qty; 
+                ?>
+                    <td class="text-center"><?= !empty($row->total_satuan) ? $total_qty : null ?></td>
                     <td class="text-right"><?= !empty($row->total_satuan) ? "Rp." . number_format(round($row->total_satuan)) : "" ?></td>
                     <td class="text-right"><?= !empty($row->total_harga) ? "Rp." . number_format(round($row->total_harga)) : "" ?></td>
                     <?php 

@@ -885,9 +885,10 @@ class ItemTransfer extends BaseController
                ->setCellValue('F4', 'CMT')
                ->setCellValue('G4', 'WARNA')
                ->setCellValue('H4', 'UKURAN')
-               ->setCellValue('I4', 'QTY KIRIM')
-               ->setCellValue('J4', 'QTY TERIMA')
-               ->setCellValue('K4', 'SELISIH');
+               ->setCellValue('I4', 'QTY SO/SPL')
+               ->setCellValue('J4', 'QTY KIRIM')
+               ->setCellValue('K4', 'QTY TERIMA')
+               ->setCellValue('L4', 'SELISIH');
 
             $styleArray = [
                 'borders' => [
@@ -1008,12 +1009,12 @@ class ItemTransfer extends BaseController
             ];
             
         $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:K4')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:L4')->applyFromArray($styleArray_header);
         // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
         // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:K2');
+        $sheets->getActiveSheet()->mergeCells('A2:L2');
         // $sheets->getActiveSheet()->mergeCells('A4:I4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
@@ -1034,19 +1035,20 @@ class ItemTransfer extends BaseController
           $gets->getColumnDimension('I')->setWidth(17);
           $gets->getColumnDimension('J')->setWidth(17);
           $gets->getColumnDimension('K')->setWidth(17);
+          $gets->getColumnDimension('L')->setWidth(17);
 
         // end set width
         //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:K4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:K4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+          $gets->getStyle('A4:L4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:L4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I','J','K'
+            'A','B','C','D', 'E','F','G', 'H','I','J','K','L'
         );
 
-        for ($i=0; $i < 11 ; $i++) { 
+        for ($i=0; $i < 12 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -1111,14 +1113,15 @@ class ItemTransfer extends BaseController
                     ->setCellValue('F'.$ix, !empty($r->nama_operator) ? $r->nama_operator : '-')
                     ->setCellValue('G'.$ix, !empty($r->color) ? $r->color : '-')
                     ->setCellValue('H'.$ix, !empty($r->kode_ukuran) ? $r->kode_ukuran : '-')
-                    ->setCellValue('I'.$ix, !empty($r->qty) ? $r->qty : 0)
-                    ->setCellValue('J'.$ix, !empty($r->qty_terima) ? $r->qty_terima : 0)
-                    ->setCellValue('K'.$ix, !empty($selisih) ? $selisih : 0);
+                    ->setCellValue('I'.$ix, !empty($r->qty_ref) ? $r->qty_ref : 0)
+                    ->setCellValue('J'.$ix, !empty($r->qty) ? $r->qty : 0)
+                    ->setCellValue('K'.$ix, !empty($r->qty_terima) ? $r->qty_terima : 0)
+                    ->setCellValue('L'.$ix, !empty($selisih) ? $selisih : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':K'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':L'.$ix)->applyFromArray($stylexArray);
             // }
 
             $ix++;
@@ -1128,7 +1131,7 @@ class ItemTransfer extends BaseController
 
         $sheets->getActiveSheet()->mergeCells('A'. $length .':H'. $length);
         
-        $gets->getStyle('A'.$length.':K'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':L'.$length)->applyFromArray($stylexArrayFooter);
         
        $sheets->setActiveSheetIndex(0)
                       ->setCellValue('I' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
@@ -1136,6 +1139,8 @@ class ItemTransfer extends BaseController
                       ->setCellValue('J' . $length, '=SUM(J' . $startRow . ':J' . $length-1 . ')');
        $sheets->setActiveSheetIndex(0)
                       ->setCellValue('K' . $length, '=SUM(K' . $startRow . ':K' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)
+                      ->setCellValue('L' . $length, '=SUM(L' . $startRow . ':L' . $length-1 . ')');
                
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);

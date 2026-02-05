@@ -644,7 +644,61 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
                 AND tbh.active = 1
-            ), 0) AS qty_terima"
+            ), 0) AS qty_terima,
+             COALESCE(
+                ( 
+                    SELECT tsu.qty
+                    FROM trans_sample_ukuran tsu 
+                    inner JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
+                    inner join trans_sample_det tsd on tsd.id = tsu.id_sample_det 
+                    left join ref_warna rw1 on rw1.id = tsd.id_warna_1 
+                    left join ref_warna rw2 on rw2.id = tsd.id_warna_2 
+                    left join ref_warna rw3 on rw3.id = tsd.id_warna_3 
+                    left join ref_warna rw4 on rw4.id = tsd.id_warna_4 
+                    left join ref_warna rw5 on rw5.id = tsd.id_warna_5 
+                    left join ref_warna rw6 on rw6.id = tsd.id_warna_6 
+                    left join ref_warna rw7 on rw7.id = tsd.id_warna_7 
+                    left join ref_warna rw8 on rw8.id = tsd.id_warna_8 
+                    WHERE tsu.id_sample = ts.id
+                    AND ru.kode_ukuran = tbtsd.kode_ukuran
+                    AND CONCAT_WS('~', 
+                    NULLIF(rw1.kode_warna, ''), 
+                    NULLIF(rw2.kode_warna, ''), 
+                    NULLIF(rw3.kode_warna, ''),
+                    NULLIF(rw4.kode_warna, ''),
+                    NULLIF(rw5.kode_warna, ''),
+                    NULLIF(rw6.kode_warna, ''),
+                    NULLIF(rw7.kode_warna, ''),
+                    NULLIF(rw8.kode_warna, '')
+                    ) = tbtsd.color
+                ), 
+                ( 
+                    SELECT tsou.qty
+                    FROM trans_sales_order_ukuran tsou 
+                    inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                    inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
+                    left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
+                    left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
+                    left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
+                    left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
+                    left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
+                    left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
+                    left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
+                    left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
+                    WHERE tsou.id_sales_order = tso.id
+                    AND ru.kode_ukuran = tbtsd.kode_ukuran
+                    AND CONCAT_WS('~', 
+                    NULLIF(rw1.kode_warna, ''), 
+                    NULLIF(rw2.kode_warna, ''), 
+                    NULLIF(rw3.kode_warna, ''),
+                    NULLIF(rw4.kode_warna, ''),
+                    NULLIF(rw5.kode_warna, ''),
+                    NULLIF(rw6.kode_warna, ''),
+                    NULLIF(rw7.kode_warna, ''),
+                    NULLIF(rw8.kode_warna, '')
+                    ) = tbtsd.color
+                )
+            ) AS qty_ref"
         ]);
 
         $subBuilder->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner');
@@ -683,7 +737,8 @@ class ItemTransferModel extends \App\Models\PrModel
             'SUM(qty) AS qty',
             'qty_terima',
             'kode',
-            'tgl_transaksi'
+            'tgl_transaksi',
+            'qty_ref'
         ]);
 
         $builder->groupBy([
@@ -695,7 +750,8 @@ class ItemTransferModel extends \App\Models\PrModel
             'kode_ukuran',
             'qty_terima',
             'kode',
-            'tgl_transaksi'
+            'tgl_transaksi',
+            'qty_ref'
         ]);
 
         $builder->orderBy('tgl_transaksi');

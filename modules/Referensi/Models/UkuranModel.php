@@ -66,8 +66,8 @@ class UkuranModel extends \App\Models\PrModel
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
-            if(!empty($params['key_ukuran'])){
-                $builder->whereIn('uk.key_ukuran', $params['key_ukuran']);
+            if(!empty($params['kode_ukuran'])){
+                $builder->whereIn('uk.kode_ukuran', $params['kode_ukuran']);
             }
 
             if (!empty($order)) {

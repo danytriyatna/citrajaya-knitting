@@ -971,7 +971,12 @@ class SalesInvoice extends BaseController
                         }
                         else if ($size == "lxl") {
                             $size = "l/xl";
-                            
+                        }
+                        else if ($size == "xxl") {
+                            $size = "2xl";
+                        }
+                        else if ($size == "xxxl") {
+                            $size = "3xl";
                         }
                         else if ($size == "xxxxl") {
                             $size = "4xl";
@@ -1101,12 +1106,12 @@ class SalesInvoice extends BaseController
           $dt_details[] = $isi;
         }
       }
-      $params['key_ukuran'] = $ukuranAll;
-      $params['key_ukuran'] = array_map(function($val) {
-          return strtolower(trim($val));
-      }, $params['key_ukuran']);
+      $params['kode_ukuran'] = $ukuranAll;
+      $params['kode_ukuran'] = array_map(function($val) {
+          return strtoupper(trim($val));
+      }, $params['kode_ukuran']);
       $getSeqUkuran = $this->mUkuran->getDataUkuranByKey(null, null, null, null, null, $params);
-      $kodeUkuranSaja = array_column($getSeqUkuran, 'key_ukuran');
+      $kodeUkuranSaja = array_column($getSeqUkuran, 'kode_ukuran');
       $kodeUkuranSaja = array_map(function($val) {
           return strtoupper(trim($val));
       }, $kodeUkuranSaja);
@@ -1122,7 +1127,6 @@ class SalesInvoice extends BaseController
       $this->data['total_dp_2'] = !empty($total_dp_2) ? $total_dp_2 : 0;
       $this->data['total_pengiriman'] = !empty($total_pengiriman) ? $total_pengiriman : 0;
       $this->data['sub_total'] = !empty($sub_total) ? $sub_total : 0;
-      // dd($this->data['detail']);
     }
     $html = view($this->views . '\sales_invoice_print_new', $this->data);
 

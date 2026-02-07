@@ -188,6 +188,7 @@
         <?php
         $nomor = 1;
         $total_qty = 0;
+        $total_harga = 0;
         foreach ($data_detail as $key => $value):
             foreach ($value as $w => $color):
                 echo "<tr>";
@@ -212,26 +213,38 @@
 
                 // Kolom ukuran
                 $sub_qty = 0;
-                foreach ($ukuran as $sizeName) {
-                    $qty = 0;
-                    foreach ($color['ukuran'] as $size) {
-                        if ($size['size'] == $sizeName) {
-                            $qty = $size['qty'];
-                            $total_qty += $qty; 
-                            $sub_qty += $qty; 
-                            break;
+                if (empty($color['is_separator'])) {
+                    foreach ($ukuran as $sizeName) {
+                        $qty = 0;
+                        foreach ($color['ukuran'] as $size) {
+                            if ($size['size'] == $sizeName) {
+                                $qty = $size['qty'];
+                                $total_qty += $qty; 
+                                $sub_qty += $qty; 
+                                break;
+                            }
                         }
+                        echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'>{$qty}</td>";
                     }
-                    echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'>{$qty}</td>";
+                        
+                    $total_harga += $color['total_harga'];
+                    // Harga unit & total harga (per warna)
+                    $hargaUnit = number_format($color['harga_satuan'], 0, ',', '.');
+                    $totalHarga = number_format($color['total_harga'], 0, ',', '.');
+    
+                    echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'>{$sub_qty}</td>";
+                    echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$hargaUnit}</td>";
+                    echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$totalHarga}</td>";
                 }
+                else  {
 
-                // Harga unit & total harga (per warna)
-                $hargaUnit = number_format($color['harga_satuan'], 0, ',', '.');
-                $totalHarga = number_format($color['total_harga'], 0, ',', '.');
-
-                echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'>{$sub_qty}</td>";
-                echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$hargaUnit}</td>";
-                echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'>{$totalHarga}</td>";
+                    foreach ($ukuran as $sizeName) {
+                        echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'></td>";
+                    }
+                    echo "<td style='text-align:center; vertical-align: middle; border: 1px solid #808080;'></td>";
+                    echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'></td>";
+                    echo "<td style='text-align:right; vertical-align: middle; border: 1px solid #808080;'></td>";
+                }
 
                 echo "</tr>";
             endforeach;
@@ -245,8 +258,8 @@
             <?php 
 
             $colspan = count($ukuran) + 3; // 4 for No, Deskripsi, Warna, Harga Unit
-            $formatSubTotal = number_format($sub_total, 0, ',', '.');
-            $total = !empty($total_dp) ? $sub_total - $total_dp : $sub_total;
+            $formatSubTotal = number_format($total_harga, 0, ',', '.');
+            $total = !empty($total_dp) ? $total_harga - $total_dp : $total_harga;
             $total = !empty($total_dp_2) ? $total - $total_dp_2 : $total;
             $total = !empty($total_pengiriman) ? $total + $total_pengiriman : $total;
             $formatTotal = number_format($total, 0, ',', '.');

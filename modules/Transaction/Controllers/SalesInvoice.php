@@ -948,10 +948,13 @@ class SalesInvoice extends BaseController
           if (!empty($dtails_so)) {
              $kode_ref[] = $value_det->kode_ref;
              $deskripsi[] = $value_det->style."/".$value_det->deskripsi;
+            //  dd($dtails_so);
              foreach ($dtails_so as $keyso => $valueso) {
                 $rowsToDisplay = [];
                 $qty_total = 0;
                 foreach ($ukuranSize as $ind => $size) {
+                  $hargaSatuan = 'harga_satuan_'.$size;
+                  $sizeOld = $size;
                     if ($size == "all") {
                         $size = "all_";
                     }
@@ -991,28 +994,83 @@ class SalesInvoice extends BaseController
                             
                         }
                         $qty_total += $qty;
-                        $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty];
+                        $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty, 'harga_satuan' => $valueso->$hargaSatuan];
                         if (!in_array(strtoupper($size), $ukuranAll)) {
                           // Jika belum ada, tambahkan ke array
                               $ukuranAll[] = strtoupper($size);
                           }
                     }
                 }
-                $sub_total += $valueso->total_harga;
-                $warna_det[] = [
-                  "warna" => $valueso->colour,
-                  "keterangan" => $valueso->keterangan,
-                  "ukuran" => $rowsToDisplay,
-                  "qty_total" => $qty_total,
-                  "harga_satuan" => $qty_total != 0 ? (float)$valueso->total_harga/$qty_total : $valueso->total_harga,
-                  "total_harga" => $valueso->total_harga,
-                ];
-             }
-              $warna[$value_det->kode_ref] = $warna_det;
+
+                $groupedByPrice = [];
+                foreach ($rowsToDisplay as $item) {
+                    $harga = $item['harga_satuan'];
+                    $groupedByPrice[$harga][] = $item;
+                }
+
+                // 2. Lakukan looping untuk setiap kelompok harga yang ditemukan
+                foreach ($groupedByPrice as $harga => $daftarUkuran) {
+                    
+                    // Hitung qty_total khusus untuk kelompok harga ini saja
+                    $qty_total_per_harga = array_sum(array_column($daftarUkuran, 'qty'));
+
+                    // Masukkan ke dalam array warna_det sebagai baris terpisah
+                    // $warna_det[] = [
+                    //     "warna"      => $valueso->colour,
+                    //     "keterangan" => $valueso->keterangan,
+                    //     "ukuran"     => $daftarUkuran, // Isinya hanya ukuran yang harganya sama
+                    //     "qty_total"  => $qty_total_per_harga,
+                    //     "harga_ref"  => $harga // Opsional: untuk penanda harga di baris ini
+                    // ];
+                    $sub_total += $valueso->total_harga;
+                    $warna_det[] = [
+                      "warna" => $valueso->colour,
+                      "keterangan" => $valueso->keterangan,
+                      "ukuran" => $daftarUkuran,
+                      "qty_total" => $qty_total_per_harga,
+                      "harga_satuan" => $harga,
+                      "total_harga" => $harga * $qty_total_per_harga,
+                    ];
+                }
+            }
+            usort($warna_det, function($a, $b) {
+                // Ambil harga dari item pertama di dalam array ukuran masing-masing baris
+                $hargaA = (int)$a['ukuran'][0]['harga_satuan'];
+                $hargaB = (int)$b['ukuran'][0]['harga_satuan'];
+
+                // Urutkan dari harga terkecil ke terbesar
+                return $hargaA <=> $hargaB;
+            });
+
+            $final_warna_det = [];
+            $lastPrice = null;
+
+            foreach ($warna_det as $item) {
+                $currentPrice = (int)$item['ukuran'][0]['harga_satuan'];
+
+                // Jika harga berubah (dan bukan baris pertama), tambahkan baris kosong
+                if ($lastPrice !== null && $currentPrice !== $lastPrice) {
+                    
+                    // Buat baris kosong dengan field yang sama tapi isinya NULL
+                    $emptyRow = [];
+                    foreach ($item as $key => $val) {
+                        $emptyRow[$key] = null;
+                    }
+                    
+                    // Flag tambahan jika nanti di view ingin diberi styling khusus (opsional)
+                    $emptyRow['is_separator'] = true; 
+
+                    $final_warna_det[] = $emptyRow;
+                }
+
+                $final_warna_det[] = $item;
+                $lastPrice = $currentPrice;
+            }
+            $warna[$value_det->kode_ref] = $final_warna_det;
           }
         }
       }
-      // dd($warna, $ukuranAll, $deskripsi, $kode_ref);
+      
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
       if (!empty($dt)) {
 
@@ -1115,7 +1173,6 @@ class SalesInvoice extends BaseController
       $kodeUkuranSaja = array_map(function($val) {
           return strtoupper(trim($val));
       }, $kodeUkuranSaja);
-      // dd($warna);
       $this->data['data'] = !empty($resData) ? $resData : [];
       // $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
       $this->data['detail'] = !empty($dtails) ? $dtails : [];

@@ -199,7 +199,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.kode_transaksi', $params['kode_transaksi']);
             }
             if (!empty($params['kode_ukuran'])) {
-                $builder->where('lower(tu.key_ukuran)', strtolower($params['kode_ukuran']));
+                $builder->where('lower(tu.kode_ukuran)', strtolower($params['kode_ukuran']));
             }
             if (!empty($params['deskripsi'])) {
                 $builder->where('tu.deskripsi', $params['deskripsi']);
@@ -275,7 +275,7 @@ class ItemTransferModel extends \App\Models\PrModel
             } else {
                 $builder->orderBy('tu.tgl_transaksi');
             }
-
+            
             if (empty($offset)) $offset = 0;
             if (empty($limit)) $limit = 10;
 
@@ -423,27 +423,29 @@ class ItemTransferModel extends \App\Models\PrModel
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
             
-            foreach ($dataSO as $rowData) {
-                if ($rowData['qty_ref'] < $rowData['qty']) {
-                    throw new \Exception("QTY melebihi QTY REF!");
-                    break;
+            if (!empty($dataSO)) {
+                foreach ($dataSO as $rowData) {
+                    if ($rowData['qty_ref'] < $rowData['qty']) {
+                        throw new \Exception("QTY melebihi QTY REF!");
+                        break;
+                    }
+                    $dataDetail = [
+                        // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
+                        "id_header" => $id,
+                        "color" => $rowData['color'],
+                        "tipe" => !empty($rowData['tipe']) ? $rowData['tipe'] : null,
+                        "ref_detail_id" => !empty($rowData['ref_detail_id']) ? $rowData['ref_detail_id'] : null,
+                        "deskripsi" => $rowData['deskripsi'],
+                        "style" => !empty($rowData['style']) ? $rowData['style'] : null,
+                        "qty" => !empty($rowData['qty']) ? $rowData['qty'] : null,
+                        // "amount" => !empty($rowData['amount']) ? $rowData['amount'] : null,
+                        "id_konsumen" => $rowData['id_konsumen'],
+                        "kode_sales_order" => $rowData['kode_sales_order'],
+                        "kode_ukuran" => $rowData['kode_ukuran'],
+                        "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
+                    ];
+                    $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
                 }
-                $dataDetail = [
-                    // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
-                    "id_header" => $id,
-                    "color" => $rowData['color'],
-                    "tipe" => !empty($rowData['tipe']) ? $rowData['tipe'] : null,
-                    "ref_detail_id" => !empty($rowData['ref_detail_id']) ? $rowData['ref_detail_id'] : null,
-                    "deskripsi" => $rowData['deskripsi'],
-                    "style" => !empty($rowData['style']) ? $rowData['style'] : null,
-                    "qty" => !empty($rowData['qty']) ? $rowData['qty'] : null,
-                    // "amount" => !empty($rowData['amount']) ? $rowData['amount'] : null,
-                    "id_konsumen" => $rowData['id_konsumen'],
-                    "kode_sales_order" => $rowData['kode_sales_order'],
-                    "kode_ukuran" => $rowData['kode_ukuran'],
-                    "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
-                ];
-                $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
             }
             
             if(!empty($detail)){
@@ -782,7 +784,7 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataRajut($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    function getDataRajut($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null)
     {
         $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
         $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
@@ -794,6 +796,7 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->where('tbmp.id_konsumen', $id_konsumen);
         $builder->where('tbmp.kode_ukuran', $kode_ukuran);
         $builder->where('tbmp.kode_sales_order', $kode_so);
+        $builder->where('tbmp.color', $color);
         // if (!empty($id)) {
         //     $builder->where('tbmp.id <>', $id);
         // }
@@ -803,7 +806,7 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataPengurang($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $id = null)
+    function getDataPengurang($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null)
     {
         $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
         $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
@@ -815,6 +818,7 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->where('tbtsd.id_konsumen', $id_konsumen);
         $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
         $builder->where('tbtsd.kode_sales_order', $kode_so);
+        $builder->where('tbtsd.color', $color);
         // if (!empty($id)) {
         //     $builder->where('tbtsd.id <>', $id);
         // }

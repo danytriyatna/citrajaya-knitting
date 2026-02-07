@@ -1115,6 +1115,7 @@ class SalesInvoice extends BaseController
       $kodeUkuranSaja = array_map(function($val) {
           return strtoupper(trim($val));
       }, $kodeUkuranSaja);
+      // dd($warna);
       $this->data['data'] = !empty($resData) ? $resData : [];
       // $this->data['detail'] = !empty($dt_details) ? $dt_details : [];
       $this->data['detail'] = !empty($dtails) ? $dtails : [];

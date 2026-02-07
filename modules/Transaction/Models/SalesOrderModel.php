@@ -430,117 +430,117 @@ class SalesOrderModel extends \App\Models\PrModel
     }
 
     function getDataDetailSalesOrder_crostab_si($id, $idInvoice = null)
-{
-    // get data ukuran 
-    $pru['use'] = 1; // ambil ukuran yang digunakan order 
-    $pru['id_sales_order'] = $id;
-    $dtUkuran = $this->getUkuranTrans($pru);
-    
-    // Dynamic Columns
-    $col11 = "";
-    $col21 = "";
-    $col3  = "";
-    $tddInvoice = "";
-    if (!empty($idInvoice)) {
-        $tddInvoice = " and td_head.id_invoice = $idInvoice" ;
-        $idInvoice = " and td_head.id_invoice = $idInvoice";
-    }
-    else {
-        $idInvoice = "";
-    }
-
-    foreach ($dtUkuran as $item) {
-        $key = $item->key_ukuran;
-        if ($key == 'all') $key = 'all_';
+    {
+        // get data ukuran 
+        $pru['use'] = 1; // ambil ukuran yang digunakan order 
+        $pru['id_sales_order'] = $id;
+        $dtUkuran = $this->getUkuranTrans($pru);
         
-        $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
+        // Dynamic Columns
+        $col11 = "";
+        $col21 = "";
+        $col3  = "";
+        $tddInvoice = "";
+        if (!empty($idInvoice)) {
+            $tddInvoice = " and td_head.id_invoice = $idInvoice" ;
+            $idInvoice = " and td_head.id_invoice = $idInvoice";
+        }
+        else {
+            $idInvoice = "";
+        }
 
-        // 👉 sekarang qty ambil dari delivery (tdd)
-        $col11 .= ($col11 == "") 
-            ? "coalesce(tbl.$keySql,0) as $keySql" 
-            : ",coalesce(tbl.$keySql,0) as $keySql";
-        
-        $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+        foreach ($dtUkuran as $item) {
+            $key = $item->key_ukuran;
+            if ($key == 'all') $key = 'all_';
+            
+            $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
 
-        $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
+            // 👉 sekarang qty ambil dari delivery (tdd)
+            $col11 .= ($col11 == "") 
+                ? "coalesce(tbl.$keySql,0) as $keySql" 
+                : ",coalesce(tbl.$keySql,0) as $keySql";
+            
+            $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+
+            $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
+        }
+        $sql = "
+            SELECT 
+                tbl.id,
+                ROW_NUMBER() OVER (ORDER BY tbl.id) AS no,
+                COALESCE(w1.kode_warna, '') as colorDasar,
+                TRIM(BOTH ' - ' FROM COALESCE(w1.kode_warna, '') ||
+                    CASE WHEN w2.kode_warna IS NOT NULL THEN ' - ' || w2.kode_warna ELSE '' END ||
+                    CASE WHEN w3.kode_warna IS NOT NULL THEN ' - ' || w3.kode_warna ELSE '' END ||
+                    CASE WHEN w4.kode_warna IS NOT NULL THEN ' - ' || w4.kode_warna ELSE '' END ||
+                    CASE WHEN w5.kode_warna IS NOT NULL THEN ' - ' || w5.kode_warna ELSE '' END ||
+                    CASE WHEN w6.kode_warna IS NOT NULL THEN ' - ' || w6.kode_warna ELSE '' END ||
+                    CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
+                ) AS colour,
+                TRIM(BOTH ' ~ ' FROM COALESCE(w1.keterangan, '') ||
+                    CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
+                    CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
+                    CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
+                    CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
+                    CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
+                    CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
+                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
+                ) AS keterangan,
+                {$col11},
+                COALESCE((
+                    SELECT SUM(tdp.qty_do * tdp.harga_satuan)
+                    FROM trans_delivery_detail tdd
+                    INNER JOIN trans_delivery_prod tdp 
+                        ON tdp.id_delivery = tdd.id_delivery 
+                    AND tdp.id_ukuran = tdd.id_ukuran 
+                    AND tdp.ref_detail_id = tdd.ref_detail_id
+                    INNER JOIN trans_delivery td_head 
+                        ON td_head.id = tdd.id_delivery
+                    WHERE tdd.ref_detail_id = tbl.id {$tddInvoice}
+                ), 0) AS total_harga
+            FROM 
+                CROSSTAB(
+                    $$
+                    SELECT 
+                        td.id,
+                        ru.seq,
+                        (CASE WHEN ru.key_ukuran = 'all' THEN 'all_' ELSE 
+                            LOWER(REGEXP_REPLACE(ru.key_ukuran, '[^a-zA-Z0-9]+', '_', 'g')) END) AS key_ukuran,
+                        SUM(COALESCE(tdd.qty,0)) AS qty_do
+                    FROM 
+                        trans_delivery_detail tdd
+                    INNER JOIN trans_delivery td_head ON td_head.id = tdd.id_delivery
+                    INNER JOIN trans_sales_order_det td ON td.id = tdd.ref_detail_id
+                    INNER JOIN ref_ukuran ru ON ru.id = tdd.id_ukuran
+                    WHERE td.id_sales_order = {$id}
+                    {$idInvoice}
+                    GROUP BY td.id, ru.key_ukuran, ru.seq
+                    ORDER BY td.id, ru.seq ASC
+                    $$,
+                    $$ 
+                        SELECT unnest(string_to_array('{$col3}', ','))
+                    $$
+                ) AS tbl (
+                    id INT,
+                    seq INT,
+                    {$col21}
+                )
+            INNER JOIN trans_sales_order_det td ON td.id = tbl.id
+            INNER JOIN ref_warna w1 ON td.id_warna_1 = w1.id
+            LEFT JOIN ref_warna w2 ON td.id_warna_2 = w2.id
+            LEFT JOIN ref_warna w3 ON td.id_warna_3 = w3.id
+            LEFT JOIN ref_warna w4 ON td.id_warna_4 = w4.id
+            LEFT JOIN ref_warna w5 ON td.id_warna_5 = w5.id
+            LEFT JOIN ref_warna w6 ON td.id_warna_6 = w6.id
+            LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
+            LEFT JOIN ref_warna w8 ON td.id_warna_8 = w8.id;
+        ";
+
+        $query = $this->db->query($sql);
+        $this->_data = $query->getResult();
+        return $this->_data;
     }
-    $sql = "
-        SELECT 
-            tbl.id,
-            ROW_NUMBER() OVER (ORDER BY tbl.id) AS no,
-            COALESCE(w1.kode_warna, '') as colorDasar,
-            TRIM(BOTH ' - ' FROM COALESCE(w1.kode_warna, '') ||
-                CASE WHEN w2.kode_warna IS NOT NULL THEN ' - ' || w2.kode_warna ELSE '' END ||
-                CASE WHEN w3.kode_warna IS NOT NULL THEN ' - ' || w3.kode_warna ELSE '' END ||
-                CASE WHEN w4.kode_warna IS NOT NULL THEN ' - ' || w4.kode_warna ELSE '' END ||
-                CASE WHEN w5.kode_warna IS NOT NULL THEN ' - ' || w5.kode_warna ELSE '' END ||
-                CASE WHEN w6.kode_warna IS NOT NULL THEN ' - ' || w6.kode_warna ELSE '' END ||
-                CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
-                CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
-            ) AS colour,
-            TRIM(BOTH ' ~ ' FROM COALESCE(w1.keterangan, '') ||
-                CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
-                CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
-                CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
-                CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
-                CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
-                CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
-            ) AS keterangan,
-            {$col11},
-             COALESCE((
-                SELECT SUM(tdp.qty_do * tdp.harga_satuan)
-                FROM trans_delivery_detail tdd
-                INNER JOIN trans_delivery_prod tdp 
-                    ON tdp.id_delivery = tdd.id_delivery 
-                AND tdp.id_ukuran = tdd.id_ukuran 
-                AND tdp.ref_detail_id = tdd.ref_detail_id
-                INNER JOIN trans_delivery td_head 
-                    ON td_head.id = tdd.id_delivery
-                WHERE tdd.ref_detail_id = tbl.id {$tddInvoice}
-            ), 0) AS total_harga
-        FROM 
-            CROSSTAB(
-                $$
-                SELECT 
-                    td.id,
-                    ru.seq,
-                    (CASE WHEN ru.key_ukuran = 'all' THEN 'all_' ELSE 
-                        LOWER(REGEXP_REPLACE(ru.key_ukuran, '[^a-zA-Z0-9]+', '_', 'g')) END) AS key_ukuran,
-                    SUM(COALESCE(tdd.qty,0)) AS qty_do
-                FROM 
-                    trans_delivery_detail tdd
-                INNER JOIN trans_delivery td_head ON td_head.id = tdd.id_delivery
-                INNER JOIN trans_sales_order_det td ON td.id = tdd.ref_detail_id
-                INNER JOIN ref_ukuran ru ON ru.id = tdd.id_ukuran
-                WHERE td.id_sales_order = {$id}
-                {$idInvoice}
-                GROUP BY td.id, ru.key_ukuran, ru.seq
-                ORDER BY td.id, ru.seq ASC
-                $$,
-                $$ 
-                    SELECT unnest(string_to_array('{$col3}', ','))
-                $$
-            ) AS tbl (
-                id INT,
-                seq INT,
-                {$col21}
-            )
-        INNER JOIN trans_sales_order_det td ON td.id = tbl.id
-        INNER JOIN ref_warna w1 ON td.id_warna_1 = w1.id
-        LEFT JOIN ref_warna w2 ON td.id_warna_2 = w2.id
-        LEFT JOIN ref_warna w3 ON td.id_warna_3 = w3.id
-        LEFT JOIN ref_warna w4 ON td.id_warna_4 = w4.id
-        LEFT JOIN ref_warna w5 ON td.id_warna_5 = w5.id
-        LEFT JOIN ref_warna w6 ON td.id_warna_6 = w6.id
-        LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
-        LEFT JOIN ref_warna w8 ON td.id_warna_8 = w8.id;
-    ";
-
-    $query = $this->db->query($sql);
-    $this->_data = $query->getResult();
-    return $this->_data;
-}
 
 
     function getUkuranTrans($params)

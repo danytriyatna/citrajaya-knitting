@@ -750,7 +750,7 @@ class ItemTransfer extends BaseController
             $params['kode_transaksi'] = trim($kt_exp[0]);
         }
         if (!empty($kt_exp[1])) {
-            $params['kode_ukuran'] = trim($kt_exp[1]);
+            $params['key_ukuran'] = trim($kt_exp[1]);
         }
         if (!empty($kt_exp[2])) {
             $params['color'] = trim($kt_exp[2]);

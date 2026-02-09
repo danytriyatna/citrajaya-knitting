@@ -201,6 +201,9 @@ class ItemTransferModel extends \App\Models\PrModel
             if (!empty($params['kode_ukuran'])) {
                 $builder->where('lower(tu.kode_ukuran)', strtolower($params['kode_ukuran']));
             }
+            if (!empty($params['key_ukuran'])) {
+                $builder->where('lower(tu.key_ukuran)', strtolower($params['key_ukuran']));
+            }
             if (!empty($params['deskripsi'])) {
                 $builder->where('tu.deskripsi', $params['deskripsi']);
             }
@@ -278,7 +281,6 @@ class ItemTransferModel extends \App\Models\PrModel
             
             if (empty($offset)) $offset = 0;
             if (empty($limit)) $limit = 10;
-
             $builder->limit($limit, $offset);
             $this->_data = $builder->get()->getResult();
         } else {

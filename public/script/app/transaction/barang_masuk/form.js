@@ -1464,20 +1464,16 @@ function simpanData(status) {
                 const arrKunci = kataKunci.split(";");
                 let hasil = refData.map(item => ({ ...item }));
                 
-                //  console.log('hasil', hasil)
-                //  console.log('arrKunci', arrKunci)
                 if (arrKunci[0]!= undefined && arrKunci[0] != '') {
                     hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
                 }
-                //  console.log('hasil1', hasil)
                 if (arrKunci[1]!= undefined && arrKunci[1] != '') {
                     hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
                 }
-                //  console.log('hasil2', hasil)
                 if (arrKunci[2]!= undefined && arrKunci[2] != '') {
-                    const normalize = str => str.toUpperCase().replace(/\s+/g, ' ').trim();
+                    const normalize = str => str.replace(/\s+/g, ' ').trim();
                     const inputColor = normalize(arrKunci[2]);
-                    const inputColor2 = normalize(arrKunci[4]);
+                    const inputColor2 = (arrKunci[4]) ? normalize(arrKunci[4]) : null;
                     hasil = hasil.filter(item => {
                         if (item.color) {
                             const firstColor = item.color.toString().split('~')[0].toUpperCase();
@@ -1498,8 +1494,6 @@ function simpanData(status) {
                         return false;
                     });
                 }
-                // console.log('hasil3', hasil)
-                // console.log('arrKunci', arrKunci
 
                 
                

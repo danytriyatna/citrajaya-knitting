@@ -282,6 +282,21 @@
 
    <?php } ?>
 
+   <table class="w-100">
+        <thead>
+            <tr>
+                <th class="text-left" style="width: 70%;">Keterangan:</th>
+                <th class="text-center" style="width: 30%;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><?= !empty($data->keterangan) ? $data->keterangan : null ?></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
 
     <table class="w-100">
         <tbody>

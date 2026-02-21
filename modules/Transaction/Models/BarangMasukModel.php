@@ -105,7 +105,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
         $builder->select("uk.tanggal, tbmp.tgl_transaksi, uk.kode_transaksi, dbx.kategori as jenis_transaksi, uk.no_ref_trf, tbmp.kode_sales_order, ebx.nama as nama_buyer, tbmp.style, tbmp.deskripsi, abx.nama_gudang as gudang_pengirim, 
                         jp.nama as nama_proses, rp.nama_operator as nama_cmt, tbmp.color, tbmp.kode_ukuran, tbmp.keterangan, 
-                        tbmp.nomor_mesin, tbmp.jam_mesin, tbmp.nilai_mesin, tbmp.qty_kirim, tbmp.qty, tbmp.harga, tbmp.amount, uk.status");
+                        tbmp.nomor_mesin, tbmp.jam_mesin, tbmp.nilai_mesin, tbmp.qty_kirim, tbmp.qty, tbmp.harga, tbmp.amount, tbmp.tgl_scan, uk.status");
         $builder->where('uk.active = 1');
         $builder->where("tbmp.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
         $builder->orderBy("tbmp.tgl_transaksi", "desc");
@@ -291,6 +291,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "id_ref" => !empty($idSo) ? $idSo : null,
                             "id_header" => $id,
                             "color" => $xrow['color'],
+                            "tgl_scan" => !empty($xrow['tgl_scan']) ? $xrow['tgl_scan'] : null,
                             "deskripsi" => $xrow['deskripsi'],
                             "style" => !empty($xrow['style']) ? $xrow['style'] : null,
                             "qty" => !empty($xrow['qty']) ? $xrow['qty'] : null,
@@ -549,7 +550,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder = $this->db->table("trans_barang_masuk_produksi abx");
 
         $builder->select("abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
+                          abx.color,abx.amount, abx.tgl_scan, cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
                           abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin, abx.harga,
                           (abx.qty - abx.qty_kirim) as qty_sisa, abx.berat");
 

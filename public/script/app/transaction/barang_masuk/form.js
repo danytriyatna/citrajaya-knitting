@@ -709,6 +709,7 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             },
             editor: "date"
         },
+        
         // {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
         // {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
         // {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
@@ -763,6 +764,8 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             symbol: "Rp",  // Simbol mata uang Rupiah
             precision: 0,   // Tidak ada desimal
         }},
+        {title: "Tgl<br>Scan", field: "tgl_scan", width: "10%", visible:false
+        },
     ],
     placeholder: "Tidak ada data",
 });
@@ -1500,6 +1503,7 @@ function simpanData(status) {
 
                 if (hasil.length > 0) {
                     hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+                    hasil[0].tgl_scan = arrKunci[arrKunci.length - 1] ? arrKunci[arrKunci.length - 1] : null;
                     addItem(hasil[0], 'scan');
 
                     setTimeout(() => {

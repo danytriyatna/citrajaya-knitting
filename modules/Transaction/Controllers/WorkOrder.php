@@ -2,19 +2,19 @@
 
 namespace Modules\Transaction\Controllers;
 
-use CodeIgniter\Controller;
 use App\Controllers\BaseController;
-use Modules\Transaction\Models\WalkorderModel;
-use Modules\Referensi\Models\ProsesProduksiModel;
+use App\Models\FileModel;
+use CodeIgniter\Controller;
+use DateTime;
+use Modules\Referensi\Models\GudangModel;
 use Modules\Referensi\Models\KonsumenModel;
+use Modules\Referensi\Models\ProsesProduksiModel;
 use Modules\Referensi\Models\UkuranModel;
 use Modules\Referensi\Models\WarnaModel;
+use Modules\Transaction\Models\ProductionModel;
 use Modules\Transaction\Models\SalesOrderModel;
 use Modules\Transaction\Models\SampleModel;
-use Modules\Transaction\Models\ProductionModel;
-use Modules\Referensi\Models\GudangModel;
-
-use App\Models\FileModel;
+use Modules\Transaction\Models\WalkorderModel;
 
 class WorkOrder extends BaseController
 {
@@ -720,8 +720,22 @@ class WorkOrder extends BaseController
       }
     }
 
+    $dateTime = [];
+
+    $save_name = [];
     $warnaNew = str_replace('/', '_', $warna);
-    $save_name  = $warnaNew . '-' . $noSample .'-'. time() . '.png';
+    
+    for ($i = 0; $i < $qtyp; $i++) {
+      $now = new DateTime();
+      $dateTime[] = $now->format('Y m d H-i-s-u');
+      $save_name[]  = $warnaNew . '-' . $noSample .'-'. time() . '-' . $dateTime[$i] . '.png';
+    }
+
+
+    $path = FCPATH . "uploads/media/qrcode/";
+
+    // Hapus semua file di dalam folder dalam satu baris
+    array_map('unlink', glob("$path/*.*"));
 
     /* QR Code File Directory Initialize */
     $dir = 'uploads/media/qrcode/';
@@ -737,6 +751,7 @@ class WorkOrder extends BaseController
     $config['black']        = [255, 255, 255];
     $config['white']        = [255, 255, 255];
     $this->ciqrcode->initialize($config);
+    
 
     $data = [
       'ukuran' => $ukuran,
@@ -753,6 +768,7 @@ class WorkOrder extends BaseController
       'style' => !empty($data_so->stylex) ? $data_so->stylex : $data_so->style,
       'desc' => !empty($data_so) ? $data_so->deskripsi : null,
       'kode_qr' => !empty($data_so->kode_sales_order) ? $data_so->kode_sales_order : $data_so->kode_sample,
+      'date_time' => $dateTime,
     ];
 
     
@@ -773,15 +789,20 @@ class WorkOrder extends BaseController
     /* QR Data  */
     $params['level']    = 'L';
     $params['size']     = 5;
-    $params['savename'] = FCPATH . $config['imagedir'] . $save_name;
-    
-    $oks = $this->ciqrcode->generate($params);
-    
+    $kodeQR = [];
+    $dataPrams = $params['data'];
+    // dd(FCPATH . $config['imagedir'] . $save_name[0], $save_name[0]);
+    for ($i = 0; $i < $qtyp; $i++) {
+      $kodeQR[] = $save_name[$i];
+      $params['savename'] = FCPATH . $config['imagedir'] . $save_name[$i];  
+      $params['data'] = $dataPrams . ';' . $dateTime[$i];  
+      $oks = $this->ciqrcode->generate($params);
+    }
     /* Return Data */
-    $url = base_url() . "/uploads/media/qrcode/" . $save_name;
+    // $url = base_url() . "/uploads/media/qrcode/" . $save_name;
 
     $this->data["data"] = $data;
-    $this->data["fileName"] = $save_name;
+    $this->data["fileName"] = $kodeQR;
     return view($this->views . '\vprint_kartu_produksi', $this->data);
   }
 }

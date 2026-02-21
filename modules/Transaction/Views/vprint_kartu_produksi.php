@@ -211,10 +211,13 @@
       <br>
       <table style="width: 100%; text-align: center;">
         <tr>
-          <th><img height="115px" width="115px" src="<?= base_url(); ?>/uploads/media/qrcode/<?= $fileName; ?>" alt="QR Code" width="160px" height="160px"></th>
+          <th><img height="115px" width="115px" src="<?= base_url(); ?>/uploads/media/qrcode/<?= $fileName[$i]; ?>" alt="QR Code" width="160px" height="160px"></th>
         </tr>
         <tr>
           <th><?= $data['kode_qr'] ?></th>
+        </tr>
+        <tr>
+          <th style="font-size: 10px; text-align: right;"><?= $data['date_time'][$i] ?></th>
         </tr>
         <!-- <tr><th>Admin</th><th>Montir Kepala</th></tr> -->
         <!-- <tr><td><br><br>.....................</td><td><br><br>.....................</td></tr> -->

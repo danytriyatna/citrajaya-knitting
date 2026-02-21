@@ -31,6 +31,7 @@ let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
+const inpRole           = $('#role_id');
 
 const divDetail = $(".div_detail");
 const divRefProduk = $(".div_produksi");
@@ -865,20 +866,20 @@ if(dataSO.length > 0){
     }, 1000);
 }
 
-inpLotNo.keyup(function (e){
-    let lotNo = inpLotNo.val()
-    if(dtListDetail.getData().some(x => x.lot_no == inpLotNo.val() && inpEdit.val() != inpLotNo.val())){
-        e.target.value = ""
-        return Swal.fire({
-            text: `Lot No ${lotNo} sudah ada`,
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    } 
+// inpLotNo.keyup(function (e){
+//     let lotNo = inpLotNo.val()
+//     if(dtListDetail.getData().some(x => x.lot_no == inpLotNo.val() && inpEdit.val() != inpLotNo.val())){
+//         e.target.value = ""
+//         return Swal.fire({
+//             text: `Lot No ${lotNo} sudah ada`,
+//             icon: 'error',
+//             showConfirmButton: false,
+//             timer: 2000
+//         });
+//     } 
 
-    // checkLotNo(e.target.value)
-})
+//     // checkLotNo(e.target.value)
+// })
 
 
 inpPrice.on("input", function(e){
@@ -979,11 +980,9 @@ selectKategori.on("change",function(e){
     divNamaKonsumen.addClass("d-none")
     divDetail.show();
     divRefProduk.hide();
-    // if(nilai == 3){
-    //     divNamaKonsumen.removeClass("d-none")
-    // } else
-    
-    if(nilai == 9){
+    if(nilai == 3){
+        divNamaKonsumen.removeClass("d-none")
+    } else if(nilai == 9){
         divNamaKonsumen.addClass("d-none")
     }else if(nilai == 12 || nilai == 1){
         divDetail.hide();

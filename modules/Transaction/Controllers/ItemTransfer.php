@@ -364,6 +364,7 @@ class ItemTransfer extends BaseController
     $this->data['operator']    = $dataOperator;
     $this->data['gudang']    = $resDataGudang;
     $this->data['proses']    = $resDataProses;
+    $this->data['role_id'] = session()->get('role_id');
     return view($this->views . '\item_transfer_form_static', $this->data);
   }
 

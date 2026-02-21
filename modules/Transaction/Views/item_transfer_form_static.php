@@ -152,6 +152,7 @@
                       <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
+                      <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
                       <input type="hidden" id="id_cmt" name="id_cmt" value="<?= !empty($resData->id_cmt) ? $resData->id_cmt : null ?>" class="form-control" required>
                       <input type="text" id="trans_no" name="trans_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->kode_transaksi) ? $resData->kode_transaksi : null ?>" readonly>
@@ -267,7 +268,7 @@
              <div class="input-group my-2">
                 <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
                 <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
-                <button type="button" class="btn btn-info text-white" id="btn-view"><i class="fa fa-plus"></i></button> 
+                <button  <?=  !empty($role_id) && ($role_id == 1 || $role_id == 2) ? null : 'hidden' ?> type="button" class="btn btn-info text-white" id="btn-view"><i class="fa fa-plus"></i></button> 
               </div>
           </div>
           <div class="row">

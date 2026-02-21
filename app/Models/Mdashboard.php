@@ -983,7 +983,7 @@ class Mdashboard extends Model
         return $data;
     }
 
-    function getGrafikDataPemakaian($year = null)
+    function getGrafikDataPemakaianOld($year = null)
     {
         $builder = $this->db->table("trans_barang_detail abx");
         $builder->select("
@@ -996,6 +996,35 @@ class Mdashboard extends Model
         $builder->where("bbx.id_kategori <>", 13);
         $builder->where("EXTRACT(YEAR FROM bbx.tanggal)", $year);
         $builder->groupBy("EXTRACT(MONTH FROM bbx.tanggal)");
+        $builder->orderBy("bulan", "ASC");
+
+        $result = $builder->get()->getResult();
+
+        $data = [];
+        for ($i = 0; $i < 12; $i++) {
+            $data[$i] = 0;
+        }
+
+        foreach ($result as $row) {
+            $data[(int)$row->bulan-1] = (float)$row->total_pemakaian;
+        }
+
+        return $data;
+    }
+
+    function getGrafikDataPemakaian($year = null)
+    {
+        $builder = $this->db->table("trans_receive_detail abx");
+        $builder->select("
+            EXTRACT(MONTH FROM bbx.rec_date) AS bulan,
+            SUM(COALESCE(abx.price, 0) * COALESCE(abx.qty, 0)) AS total_pemakaian
+        ");
+        $builder->join("trans_receive_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
+        $builder->where("bbx.active", 1);
+        // $builder->where("bbx.jenis_transaksi", 2);
+        // $builder->where("bbx.id_kategori <>", 13);
+        $builder->where("EXTRACT(YEAR FROM bbx.rec_date)", $year);
+        $builder->groupBy("EXTRACT(MONTH FROM bbx.rec_date)");
         $builder->orderBy("bulan", "ASC");
 
         $result = $builder->get()->getResult();

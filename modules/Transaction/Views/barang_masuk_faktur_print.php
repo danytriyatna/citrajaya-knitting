@@ -207,36 +207,41 @@
             </tr>
         </thead>
         <tbody>
-            <?php $i = 1;
-            $qty = 0;
-            $qty_kirim = 0;
-            $harga = 0;
-            $amount = 0;
-            foreach ($dataSO as $row) { ?>
-                <tr>
-                    <td><?= $i++ ?></td>
-                    <td>
-                        <?= $row->kode_sales_order ?>
-                    </td>
-                    <td><?= !empty($row->style) ? $row->style : $row->deskripsi ?></td>
-                    <td class="text-left"><?= formatTanggalIndonesia($row->tgl_transaksi) ?></td>
-                    <td class="text-center"><?= $data->proses ?></td>
-                    <td class="text-right"><?= $row->qty ?></td>
-                    <td class="text-right"><?= $row->qty_kirim ?></td>
-                    <td class="text-right"><?= !empty($row->harga) ? "Rp. " . number_format(round($row->harga)) : "Rp. 0" ?></td>
-                    <td class="text-right"><?= !empty($row->amount) ? "Rp. " . number_format(round($row->amount)) : "Rp. 0" ?></td>
-                    </td>
-                </tr>
             <?php 
-            $qty = $qty + $row->qty;
-            $qty_kirim = $qty_kirim + $row->qty_kirim;
-            $rharga = !empty($row->harga) ? $row->harga: 0;
-            $harga = $harga + $rharga;
-            $ramount = !empty($row->amount) ? $row->amount: 0;
-            $amount = $amount + $row->amount;
-        
-            } ?>
+            // Pastikan $dataSO tidak null sebelum masuk ke pengecekan
+            $dataSO = $dataSO ?? []; 
 
+            if (!empty($dataSO)) : 
+                $i = 1;
+                $qty = 0;
+                $qty_kirim = 0;
+                $harga = 0;
+                $amount = 0;
+
+                foreach ($dataSO as $row) : ?>
+                    <tr>
+                        <td><?= $i++ ?></td>
+                        <td><?= $row->kode_sales_order ?></td>
+                        <td><?= !empty($row->style) ? $row->style : $row->deskripsi ?></td>
+                        <td class="text-left"><?= formatTanggalIndonesia($row->tgl_transaksi) ?></td>
+                        <td class="text-center"><?= $data->proses ?></td>
+                        <td class="text-right"><?= $row->qty ?></td>
+                        <td class="text-right"><?= $row->qty_kirim ?></td>
+                        <td class="text-right"><?= !empty($row->harga) ? "Rp. " . number_format(round($row->harga)) : "Rp. 0" ?></td>
+                        <td class="text-right"><?= !empty($row->amount) ? "Rp. " . number_format(round($row->amount)) : "Rp. 0" ?></td>
+                    </tr>
+                    <?php 
+                    // Update total accumulator
+                    $qty += $row->qty;
+                    $qty_kirim += $row->qty_kirim;
+                    $harga += !empty($row->harga) ? $row->harga : 0;
+                    $amount += !empty($row->amount) ? $row->amount : 0;
+                endforeach; 
+            else : ?>
+                <tr>
+                    <td colspan="9" class="text-center">Data tidak ditemukan.</td>
+                </tr>
+            <?php endif; ?>
         </tbody>
         <tfoot>
             <!-- <tr>
@@ -248,10 +253,10 @@
             </tr> -->
              <tr>
                 <th colspan="5">Total</th>
-                <th class="text-right"><?= $qty; ?></th>
-                <th class="text-right"><?= $qty_kirim; ?></th>
-                <th class="text-right"><?= "Rp. " .number_format(round($harga)); ?></th>
-                <th class="text-right"><?= "Rp. " . number_format(round($amount)); ?></th>
+                <th class="text-right"><?= !empty($qty) ? $qty : 0 ?></th>
+                <th class="text-right"><?= !empty($qty_kirim) ? $qty_kirim : 0 ?></th>
+                <th class="text-right"><?= !empty($harga) ? "Rp. " . number_format(round($harga)) : "Rp. 0" ?></th>
+                <th class="text-right"><?= !empty($amount) ? "Rp. " . number_format(round($amount)) : "Rp. 0" ?></th>
             </tr>
         </tfoot>
     </table>

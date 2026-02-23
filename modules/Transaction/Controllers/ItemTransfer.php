@@ -741,6 +741,22 @@ class ItemTransfer extends BaseController
       try {
 
         $kt_exp = explode(";",$kata_kunci);
+
+        $last_item = end($kt_exp);
+
+        /**
+         * Penjelasan Regex:
+         * ^\d{4}       : 4 digit tahun (2026)
+         * \s\d{2}      : Spasi lalu 2 digit bulan
+         * \s\d{2}      : Spasi lalu 2 digit hari
+         * \s\d{2}-\d{2}-\d{2}-\d{6} : Jam-Menit-Detik-Mikrosekon
+         */
+        $pattern = '/^\d{4} \d{2} \d{2} \d{2}-\d{2}-\d{2}-\d{6}$/';
+
+        if (preg_match($pattern, $last_item)) {
+            array_pop($kt_exp); // Hapus elemen terakhir jika cocok
+        }
+        
         // dd(trim($kt_exp[0]), trim($kt_exp[1]), trim($kt_exp[2]), trim($kt_exp[3]), trim($kt_exp[4]));
         // print_r($kt_exp);exit;
         // $kunci_jadi = $kt_exp[1] . ' ' . $kt_exp[2]; 

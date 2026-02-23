@@ -1595,7 +1595,9 @@ function simpanData(status) {
 					if(es.data.length > 0){
 						addItem(es.data[0]);
 					}else{
-						alert("Produk tidak ditemukan !");
+						toastr.error("Produk tidak ditemukan", "Gagal", {
+                            positionClass: "toast-top-right"
+                        });
 					}
 				  }else{
 					  console.log(es.msg);

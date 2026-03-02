@@ -212,6 +212,7 @@ class PurchaseModel extends \App\Models\PrModel
                 "id_header" => $id,
             ];
 
+            $arrDeleteDetail =  [];
             foreach ($detail as $rowData) {
                 if ($rowData['id_barang'] != "") {
                     $idBarang = decrypt($rowData['id_barang']);
@@ -235,16 +236,21 @@ class PurchaseModel extends \App\Models\PrModel
                     $getDetail = $this->db->table($this->tblDet . " uk")->where('id', $rowData['id'])->get()->getRow();
                     if (!empty($getDetail)) {
                         $this->updateRecord($this->tblDet, $dataDetail, 'id', $getDetail->id);
+                        $arrDeleteDetail[] = $getDetail->id;
                     }
                     else {
-                        $this->insertRecordGetid($this->tblDet, $dataDetail);
+                        $getID =  $this->insertRecordGetid($this->tblDet, $dataDetail);
+                        $arrDeleteDetail[] = $getID;
                     }
                 }
                 else {
-                    $this->insertRecordGetid($this->tblDet, $dataDetail);
+                    $getID = $this->insertRecordGetid($this->tblDet, $dataDetail);
+                    $arrDeleteDetail[] = $getID;
                 }
 
             }
+
+             $this->db->table($this->tblDet . " uk")->whereNotIn('id', $arrDeleteDetail)->where('id_header', $id)->delete();
 
             $this->db->transComplete();
 

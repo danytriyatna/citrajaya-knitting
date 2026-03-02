@@ -97,7 +97,7 @@ class SalesInvoice extends BaseController
         $atr_edit['class'] = '';
       }
       // if ($this->_delete) {
-      if (false) {
+      if ($row->status != 1) {
         $atr_del['title'] = 'Hapus';
         $atr_del['url'] = $this->urlv . '/delete/';
         $atr_del['class'] = '';
@@ -537,6 +537,36 @@ class SalesInvoice extends BaseController
       return TRUE;
     }
   }
+
+  public function delete($id = NULL)
+    {
+        $this->db->transBegin();
+
+        if ($id != null && $id != "") {
+            $id = decrypt($id);
+        } else {
+            $this->session->setFlashdata('err', "Data tidak ditemukan !");
+            return redirect()->to('/trans/sales-invoice');
+        }
+
+        
+        $this->mInvoice->deleteRecord($this->mInvoice->table2, 'id_invoice', $id);
+        $this->mInvoice->deleteRecord($this->mInvoice->table3, 'id_invoice', $id);  
+        
+        $this->mDelivery->updateRecords($this->mDelivery->table, ['invoice_status' => false, 'id_invoice' => null], ['id_invoice' => $id]);
+        $this->mInvoice->deleteRecord($this->mInvoice->table, 'id', $id);
+        // $id = (int) $id;
+
+        if ($this->db->transStatus() === FALSE) {
+          $this->db->transRollback();
+          $this->session->setFlashdata('err', "Data gagal dihapus !");
+        } else {
+          $this->db->transCommit();
+          $this->session->setFlashdata('message', "Data berhasil dihapus !");
+        }
+        
+        return redirect()->to('/trans/sales-invoice');
+    }
 
 
   // get data produksi

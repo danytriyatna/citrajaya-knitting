@@ -153,4 +153,8 @@ $(document).ready(function () {
         return new Date(parts[2], parts[1] - 1, parts[0]); 
         // year, monthIndex (0=Jan), day
     }
+
+    dtList.on("rowClick", () => {
+        confirmDelete();
+    });
 });

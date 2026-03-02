@@ -154,6 +154,42 @@ class InvoiceModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataDelivery($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $builder = $this->db->table($this->table3 . " abx");
+
+        $builder->select(" abx.id, abx.id_invoice,  abx.id_invoice_detail, abx.id_delivery, abx.qty,
+                            abx.total, abx.active,
+                            (case when abx.tipe_id = 1 then ts.kode_sample else tso.kode_sales_order end) as ref_kode,
+                            (case when abx.tipe_id = 1 then ts.tgl_transaksi else tso.tgl_transaksi end) as ref_tgl");
+
+        if ($id == null or $id == "") {
+
+            if (!empty($params['id_invoice'])) {
+                $builder->where('abx.id_invoice', $params['id_invoice']);
+            }
+
+            if (!empty($order)) {
+                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
+            } else {
+                $builder->orderBy('abx.id desc');
+            }
+
+            if (empty($offset)) $offset = 0;
+            if (empty($limit)) $limit = 10;
+
+            $builder->limit($limit, $offset);
+
+            $this->_data = $builder->get()->getResult();
+        } else {
+            $builder->where("abx.id", $id);
+
+            $this->_data = $builder->get()->getRow();
+        }
+
+        return $this->_data;
+    }
+
     function getDataDetailCnt($filters = null, $params = null)
     {
         $builder = $this->db->table($this->table2 . " abx");
@@ -328,56 +364,56 @@ class InvoiceModel extends \App\Models\PrModel
                     coalesce(tso.uang_dp_2, 0) as uang_dp_2, 
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id and sd.invoice_status = false and sd.status = 2 ),0) as qty_dlv,
                     coalesce((
-    select sum(tdp.qty_do * tdp.harga_satuan)
-    from trans_delivery td
-    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
-),0) as total_harga_delivery,
-(
-            select string_agg(sd.id::text, ',')
-            from trans_delivery sd
-            inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
-            where tw2.tipe_id = 2 
-              and tw2.ref_id = tso.id 
-              and sd.invoice_status = false and sd.status = 2
-        ) as list_delivery,
-                    tw.id as id_walkorder
-                FROM
-                    trans_sales_order_ukuran tsou
-                    inner join trans_sales_order tso on tso.id = tsou.id_sales_order
-                    inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
-                    group by 
-                        tso.id, tso.kode_sales_order,
-                        tso.id_konsumen, tso.style,  tso.tgl_transaksi,
-                        tso.uang_dp, tso.uang_dp_2, tw.id 
-                union all 
-                select 
-                    1 as tipe_id,
-                    ts.id,
-                    ts.kode_sample as kode,
-                    ts.id_konsumen, 
-                    ts.style as keterangan_style,
-                    ts.tgl_transaksi,
-                    sum(coalesce(tsu.qty, 0)) as qty,
-                    sum(coalesce(tsu.harga_total, 0)) as total_harga,
-                    coalesce(ts.uang_dp, 0) as uang_dp,
-                    coalesce(ts.uang_dp_2, 0) as uang_dp_2,
-                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
-                    and sd.invoice_status = false and sd.status = 2),0) as qty_dlv,
-                    coalesce((
-    select sum(tdp.qty_do * tdp.harga_satuan)
-    from trans_delivery td
-    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
-),0) as total_harga_delivery,
-(
-            select string_agg(sd.id::text, ',')
-            from trans_delivery sd
-            inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
-            where tw2.tipe_id = 1 
-              and tw2.ref_id = ts.id 
-              and sd.invoice_status = false and sd.status = 2
-        ) as list_delivery,
+                        select sum(tdp.qty_do * tdp.harga_satuan)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
+                    ),0) as total_harga_delivery,
+                    (
+                                select string_agg(sd.id::text, ',')
+                                from trans_delivery sd
+                                inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
+                                where tw2.tipe_id = 2 
+                                and tw2.ref_id = tso.id 
+                                and sd.invoice_status = false and sd.status = 2
+                            ) as list_delivery,
+                                        tw.id as id_walkorder
+                                    FROM
+                                        trans_sales_order_ukuran tsou
+                                        inner join trans_sales_order tso on tso.id = tsou.id_sales_order
+                                        inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                                        group by 
+                                            tso.id, tso.kode_sales_order,
+                                            tso.id_konsumen, tso.style,  tso.tgl_transaksi,
+                                            tso.uang_dp, tso.uang_dp_2, tw.id 
+                                    union all 
+                                    select 
+                                        1 as tipe_id,
+                                        ts.id,
+                                        ts.kode_sample as kode,
+                                        ts.id_konsumen, 
+                                        ts.style as keterangan_style,
+                                        ts.tgl_transaksi,
+                                        sum(coalesce(tsu.qty, 0)) as qty,
+                                        sum(coalesce(tsu.harga_total, 0)) as total_harga,
+                                        coalesce(ts.uang_dp, 0) as uang_dp,
+                                        coalesce(ts.uang_dp_2, 0) as uang_dp_2,
+                                        coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
+                                        and sd.invoice_status = false and sd.status = 2),0) as qty_dlv,
+                                        coalesce((
+                        select sum(tdp.qty_do * tdp.harga_satuan)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
+                    ),0) as total_harga_delivery,
+                    (
+                                select string_agg(sd.id::text, ',')
+                                from trans_delivery sd
+                                inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
+                                where tw2.tipe_id = 1 
+                                and tw2.ref_id = ts.id 
+                                and sd.invoice_status = false and sd.status = 2
+                            ) as list_delivery,
                     tw.id as id_walkorder
                 from 
                     trans_sample_ukuran tsu
@@ -424,56 +460,56 @@ class InvoiceModel extends \App\Models\PrModel
                     coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id 
                     and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']} ),0) as qty_dlv,
                     coalesce((
-    select sum(tdp.qty_do * tdp.harga_satuan)
-    from trans_delivery td
-    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = true and td.id_invoice = {$params['id_invoice']}
-),0) as total_harga_delivery,
-(
-            select string_agg(sd.id::text, ',')
-            from trans_delivery sd
-            inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
-            where tw2.tipe_id = 2 
-              and tw2.ref_id = tso.id 
-              and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}
-        ) as list_delivery,
-                    tw.id as id_walkorder
-                FROM
-                    trans_sales_order_ukuran tsou
-                    inner join trans_sales_order tso on tso.id = tsou.id_sales_order
-                    inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
-                    group by 
-                        tso.id, tso.kode_sales_order,
-                        tso.id_konsumen, tso.style,  tso.tgl_transaksi,
-                        tso.uang_dp, tso.uang_dp_2, tw.id 
-                union all 
-                select 
-                    1 as tipe_id,
-                    ts.id,
-                    ts.kode_sample as kode,
-                    ts.id_konsumen, 
-                    ts.style as keterangan_style,
-                    ts.tgl_transaksi,
-                    sum(coalesce(tsu.qty, 0)) as qty,
-                    sum(coalesce(tsu.harga_total, 0)) as total_harga,
-                    coalesce(ts.uang_dp, 0) as uang_dp,
-                    coalesce(ts.uang_dp_2, 0) as uang_dp_2,
-                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
-                    and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}),0) as qty_dlv,
-                    coalesce((
-    select sum(tdp.qty_do * tdp.harga_satuan)
-    from trans_delivery td
-    inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
-    where td.id_walkorder = tw.id and td.invoice_status = true and td.id_invoice = {$params['id_invoice']}
-),0) as total_harga_delivery,
-(
-            select string_agg(sd.id::text, ',')
-            from trans_delivery sd
-            inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
-            where tw2.tipe_id = 1 
-              and tw2.ref_id = ts.id 
-              and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}
-        ) as list_delivery,
+                        select sum(tdp.qty_do * tdp.harga_satuan)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = true and td.id_invoice = {$params['id_invoice']}
+                    ),0) as total_harga_delivery,
+                    (
+                                select string_agg(sd.id::text, ',')
+                                from trans_delivery sd
+                                inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
+                                where tw2.tipe_id = 2 
+                                and tw2.ref_id = tso.id 
+                                and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}
+                            ) as list_delivery,
+                                        tw.id as id_walkorder
+                                    FROM
+                                        trans_sales_order_ukuran tsou
+                                        inner join trans_sales_order tso on tso.id = tsou.id_sales_order
+                                        inner join trans_walkorder tw on tw.ref_id = tso.id and tw.tipe_id = 2
+                                        group by 
+                                            tso.id, tso.kode_sales_order,
+                                            tso.id_konsumen, tso.style,  tso.tgl_transaksi,
+                                            tso.uang_dp, tso.uang_dp_2, tw.id 
+                                    union all 
+                                    select 
+                                        1 as tipe_id,
+                                        ts.id,
+                                        ts.kode_sample as kode,
+                                        ts.id_konsumen, 
+                                        ts.style as keterangan_style,
+                                        ts.tgl_transaksi,
+                                        sum(coalesce(tsu.qty, 0)) as qty,
+                                        sum(coalesce(tsu.harga_total, 0)) as total_harga,
+                                        coalesce(ts.uang_dp, 0) as uang_dp,
+                                        coalesce(ts.uang_dp_2, 0) as uang_dp_2,
+                                        coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
+                                        and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}),0) as qty_dlv,
+                                        coalesce((
+                        select sum(tdp.qty_do * tdp.harga_satuan)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = true and td.id_invoice = {$params['id_invoice']}
+                    ),0) as total_harga_delivery,
+                    (
+                                select string_agg(sd.id::text, ',')
+                                from trans_delivery sd
+                                inner join trans_walkorder tw2 on tw2.id = sd.id_walkorder
+                                where tw2.tipe_id = 1 
+                                and tw2.ref_id = ts.id 
+                                and sd.invoice_status = true and sd.id_invoice = {$params['id_invoice']}
+                            ) as list_delivery,
                     tw.id as id_walkorder
                 from 
                     trans_sample_ukuran tsu

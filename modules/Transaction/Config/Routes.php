@@ -77,6 +77,7 @@ $routes->group('trans/sales-invoice', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('add', 'SalesInvoice::form');
   $routes->post('add', 'SalesInvoice::form');
   $routes->get('form/(:any)', 'SalesInvoice::form/$1');
+  $routes->get('delete/(:any)', 'SalesInvoice::delete/$1');
   $routes->post('form/(:any)', 'SalesInvoice::form/$1');
   $routes->post('get_order', 'SalesInvoice::walkorder_user');
   $routes->post('cari_produk', 'SalesInvoice::getDataProduksiItem');

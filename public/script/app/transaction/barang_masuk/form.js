@@ -767,6 +767,8 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         }},
         {title: "Tgl<br>Scan", field: "tgl_scan", width: "10%", visible:false
         },
+        {title: "Print Type", field: "print_type", width: "10%", visible:false
+        },
     ],
     placeholder: "Tidak ada data",
 });

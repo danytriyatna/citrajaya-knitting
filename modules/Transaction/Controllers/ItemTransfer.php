@@ -743,17 +743,21 @@ class ItemTransfer extends BaseController
         $kt_exp = explode(";",$kata_kunci);
 
         $last_item = end($kt_exp);
-
         /**
-         * Penjelasan Regex:
-         * ^\d{4}       : 4 digit tahun (2026)
-         * \s\d{2}      : Spasi lalu 2 digit bulan
-         * \s\d{2}      : Spasi lalu 2 digit hari
-         * \s\d{2}-\d{2}-\d{2}-\d{6} : Jam-Menit-Detik-Mikrosekon
+         * Penjelasan Regex Baru:
+         * ^\d{4} \d{2} \d{2}   : Tanggal (Tahun Bulan Hari)
+         * \d{2}-\d{2}-\d{2}    : Jam-Menit-Detik
+         * -\d{6}               : Mikrodetik
+         * \(\d+\)              : Karakter "(" diikuti satu atau lebih digit lalu ")"
+         * $                    : Akhir string
          */
-        $pattern = '/^\d{4} \d{2} \d{2} \d{2}-\d{2}-\d{2}-\d{6}$/';
+        $pattern = '/^(\d{4} \d{2} \d{2} \d{2}-\d{2}-\d{2}-\d{6})\((\d+)\)$/';
 
-        if (preg_match($pattern, $last_item)) {
+        $hanya_tanggal = null;
+        $isi_kurung = null;
+
+        if (preg_match($pattern, trim($last_item), $matches)) {
+            $isi_kurung = $matches[2];
             array_pop($kt_exp); // Hapus elemen terakhir jika cocok
         }
         
@@ -846,6 +850,7 @@ class ItemTransfer extends BaseController
             "amount"           => $r->amount,
             "kode_ukuran"      => $r->kode_ukuran,
             "kata_kunci"       => $r->kode_transaksi . " - (" . $r->color . ") " . $r->kode_ukuran,
+            "print_type"       => $isi_kurung,
           ];
 
           

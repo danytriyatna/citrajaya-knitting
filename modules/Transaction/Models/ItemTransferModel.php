@@ -436,6 +436,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         "id_header" => $id,
                         "color" => $rowData['color'],
                         "tipe" => !empty($rowData['tipe']) ? $rowData['tipe'] : null,
+                        "print_type" => !empty($rowData['print_type']) ? $rowData['print_type'] : null,
                         "ref_detail_id" => !empty($rowData['ref_detail_id']) ? $rowData['ref_detail_id'] : null,
                         "deskripsi" => $rowData['deskripsi'],
                         "style" => !empty($rowData['style']) ? $rowData['style'] : null,

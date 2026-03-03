@@ -389,7 +389,7 @@ let dtList = new Tabulator("#dt-list", {
         },
         {title: "No.SO", field: "kode_sales_order", width: "10%"},
         {title: "Ref Detail ID", field: "ref_detail_id", visible:false},
-        {title: "Tipe", field: "tipe", visible:false},
+        {title: "Tipe", field: "tipe", visible:true},
         {title: "Style", field: "style", width: "10%"},
         {title: "Deskripsi", field: "deskripsi", width: "19%"},
         // {title: "Buyer", field: "buyer", width: "20%"},
@@ -418,6 +418,7 @@ let dtList = new Tabulator("#dt-list", {
         },
         {title: "Ukuran", field: "kode_ukuran", width: "5%"},
         {title: "Keterangan", field: "keterangan", width: "15%",editor:"input"},
+        {title: "Print Type", field: "print_type", width: "15%", visible:false},
         // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
         //     decimal: ",",
         //     thousand: ".",

@@ -250,14 +250,19 @@ class PurchaseModel extends \App\Models\PrModel
 
             }
 
-             $this->db->table($this->tblDet . " uk")->whereNotIn('id', $arrDeleteDetail)->where('id_header', $id)->delete();
+             $this->db->table($this->tblDet . " uk")->whereNotIn('id', $arrDeleteDetail)->where('id_header', (string)$id)->delete();
 
-            $this->db->transComplete();
-
+            
+            
             if ($this->db->transStatus() === TRUE) {
+                $this->db->transComplete();
                 return true;
             } else {
-                throw new \Exception("Transaction failed");
+                $dbError = $this->db->error(); 
+                // Gabungkan pesan agar lebih informatif
+                $errorMessage = "Transaction failed!";
+                $this->db->transRollback();
+                throw new \Exception($errorMessage);
             }
         } catch (\Exception $e) {
             $this->db->transRollback();

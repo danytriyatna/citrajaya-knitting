@@ -247,7 +247,9 @@
                           <?php if (!empty($resData->id_kategori) && $resData->id_kategori == $item['id']) { ?>
                             <option selected value="<?= $item['id'] ?>"><?= $item['kategori'] ?></option>
                           <?php } else { ?>
-                            <option value="<?= $item['id'] ?>"><?= $item['kategori'] ?></option>
+                            <?php if ($item['id'] != 1) : ?>
+                              <option value="<?= $item['id'] ?>"><?= $item['kategori'] ?></option>
+                            <?php endif; ?>
                           <?php } ?>
                         <?php endforeach; ?>
                       </select>

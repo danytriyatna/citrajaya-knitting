@@ -729,7 +729,7 @@ class WorkOrder extends BaseController
     for ($i = 0; $i < $qtyp; $i++) {
       $now = new DateTime();
       $dateTime[] = $now->format('Y m d H-i-s-u');
-      $save_name[]  = $warnaNew . '-' . $noSample .'-'. time() . '-' . $dateTime[$i] . '.png';
+      $save_name[]  = $warnaNew . '-' . $noSample .'-'. time() . '-' . $dateTime[$i] . '(' . $print_type . ')' . '.png';
     }
 
 
@@ -753,7 +753,7 @@ class WorkOrder extends BaseController
     $config['white']        = [255, 255, 255];
     $this->ciqrcode->initialize($config);
 
-    $print_type = $print_type == 1 ? "PRODUKSI" : "PERBAIKAN"; 
+    $print_type_text = $print_type == 1 ? "PRODUKSI" : "PERBAIKAN"; 
     
 
     $data = [
@@ -772,7 +772,7 @@ class WorkOrder extends BaseController
       'desc' => !empty($data_so) ? $data_so->deskripsi : null,
       'kode_qr' => !empty($data_so->kode_sales_order) ? $data_so->kode_sales_order : $data_so->kode_sample,
       'date_time' => $dateTime,
-      'print_type' => $print_type
+      'print_type' => $print_type_text
     ];
 
     
@@ -799,7 +799,7 @@ class WorkOrder extends BaseController
     for ($i = 0; $i < $qtyp; $i++) {
       $kodeQR[] = $save_name[$i];
       $params['savename'] = FCPATH . $config['imagedir'] . $save_name[$i];  
-      $params['data'] = $dataPrams . ';' . $dateTime[$i];  
+      $params['data'] = $dataPrams . ';' . $dateTime[$i] . '(' . $print_type . ')';  
       $oks = $this->ciqrcode->generate($params);
     }
     /* Return Data */

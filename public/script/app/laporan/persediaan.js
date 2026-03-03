@@ -241,7 +241,7 @@ $("#btn-tampilkan").click(function () {
       return false    
     }
     getUpdateDataLaporan()
-    $(".preloader").hide().css("opacity", "1");
+    
   });
 
   function getUpdateDataLaporan(){
@@ -256,9 +256,12 @@ $("#btn-tampilkan").click(function () {
             setTimeout(() => {
                 dtList.redraw(true)
             }, 500);
+
+            $(".preloader").hide().css("opacity", "1");
         },
         error: function(xhr, status, error) {
             console.error('Error fetching data:', error);
+            $(".preloader").hide().css("opacity", "1");
         }
     });
   }

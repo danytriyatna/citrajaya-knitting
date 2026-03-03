@@ -684,6 +684,7 @@ class WorkOrder extends BaseController
     $ukuran_text = $this->request->getGet("ukuran_text");
     $qty = $this->request->getGet("qty");
     $qtyp = $this->request->getGet("qtyp");
+    $print_type = $this->request->getGet("print_type");
     $noSample = $this->request->getGet("noSample");
     $deskripsi = $this->request->getGet("deskripsi");
     $buyer = $this->request->getGet("buyer");
@@ -751,6 +752,8 @@ class WorkOrder extends BaseController
     $config['black']        = [255, 255, 255];
     $config['white']        = [255, 255, 255];
     $this->ciqrcode->initialize($config);
+
+    $print_type = $print_type == 1 ? "PRODUKSI" : "PERBAIKAN"; 
     
 
     $data = [
@@ -769,6 +772,7 @@ class WorkOrder extends BaseController
       'desc' => !empty($data_so) ? $data_so->deskripsi : null,
       'kode_qr' => !empty($data_so->kode_sales_order) ? $data_so->kode_sales_order : $data_so->kode_sample,
       'date_time' => $dateTime,
+      'print_type' => $print_type
     ];
 
     

@@ -457,6 +457,7 @@ $(document).ready(function () {
         const inpp_slcUkuran = $("#print_slc_ukuran");
         const inpp_qty       = $("#print_qty");
         const inpp_qtyp      = $("#print_qtyp");
+        const inpp_printType = $("#print_type");
 
         // mdlPrint
         const dt_noSample = inpp_noSo.html()
@@ -467,7 +468,7 @@ $(document).ready(function () {
 
         const dt_style = brcStyle.val()
 
-        if(inpp_slcUkuran.val() == "" || inpp_slcUkuran.val() == null) validation = false
+        if(inpp_slcUkuran.val() == "" || inpp_slcUkuran.val() == null || inpp_printType.val() == "" || inpp_printType.val() == null) validation = false
 
         if (validation == false) {
             Swal.fire({
@@ -486,6 +487,7 @@ $(document).ready(function () {
             ukuran_text : inpp_slcUkuran.find("option:selected").text(),
             qty : inpp_qty.val(),
             qtyp : inpp_qtyp.val(),
+            print_type : inpp_printType.val(),
             noSample : dt_noSample,
             deskripsi : dt_deskripsi,
             buyer : '',

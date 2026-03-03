@@ -186,6 +186,9 @@
         <tr>
           <td style="font-weight: 800;">Desc.</td><td style="font-weight: 800;">:</td><td colspan="4" style="font-weight: 800;"><?= !empty($data['desc']) ? $data['desc'] : '__________' ?></td>
         </tr>
+        <tr>
+          <td style="font-weight: 800; font-size: 14px;"><?= $data['print_type'] ?></td>
+        </tr>
       </table>
 
       <br>

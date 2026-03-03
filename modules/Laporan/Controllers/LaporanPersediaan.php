@@ -367,7 +367,7 @@ class LaporanPersediaan extends BaseController
                     ->setCellValue('C'.$ix, !empty($r->barang) ? $r->barang : '-')
                     ->setCellValue('D'.$ix, !empty($r->saldo_awal) ? $r->saldo_awal : 0)
                     ->setCellValue('E'.$ix, !empty($r->masuk) ? $r->masuk : 0)
-                    ->setCellValue('F'.$ix, !empty($r->kaluar) ? $r->kaluar : 0)
+                    ->setCellValue('F'.$ix, !empty($r->keluar) ? $r->keluar : 0)
                     ->setCellValue('G'.$ix, !empty($r->saldo_akhir) ? $r->saldo_akhir : 0)
                     ->setCellValue('H'.$ix, $nilai)
                     ->setCellValue('I'.$ix, !empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-");

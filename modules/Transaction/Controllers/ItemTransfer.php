@@ -325,7 +325,11 @@ class ItemTransfer extends BaseController
         $getUkuranTrans = $this->mRef->getUkuranTrans(null, null, null, null, null, $params);
         if ($resData->id_proses == 1) {
           // $sisa = $row->qty;
-          $sisa = $getUkuranTrans[0]->qty;
+          $sisa = 0;
+          if (!empty($getUkuranTrans[0]->qty)) {
+            # code...
+            $sisa = $getUkuranTrans[0]->qty;
+          }
         }
         else {
           $getProsesIdRajut = $this->mRef->getDataRajut($resData->id_proses, $row->id_konsumen, $row->kode_ukuran, $row->kode_sales_order, $row->color, $row->id);

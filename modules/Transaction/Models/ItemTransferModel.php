@@ -427,7 +427,7 @@ class ItemTransferModel extends \App\Models\PrModel
             
             if (!empty($dataSO)) {
                 foreach ($dataSO as $rowData) {
-                    if ($rowData['qty_ref'] < $rowData['qty']) {
+                    if ($rowData['qty_ref'] < $rowData['qty'] && (!empty($rowData['print_type']) && $rowData['print_type'] == 1)) {
                         throw new \Exception("QTY melebihi QTY REF!");
                         break;
                     }

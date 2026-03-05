@@ -236,21 +236,40 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_so($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_sales_order tso");
-        $builder->select("'Sales Order' as type,tso.type_dp, CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tso.tgl_dp as tgl_transaksi, tso.kode_sales_order, tso.uang_dp, tso.uang_dp_2
-                        , tso.tgl_dp_2 as tgl_transaksi_2, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar_2");
+        $builder->select("'Sales Order' as type, tso.type_dp, 
+                        CONCAT('Penerimaan Penjualan', ' - ', rk.nama) AS keterangan, 
+                        CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+                        tso.tgl_dp as tgl_transaksi, tso.kode_sales_order, tso.uang_dp, tso.uang_dp_2, 
+                        tso.tgl_dp_2 as tgl_transaksi_2, 
+                        CONCAT(rr2.rekening_no, ' - ', rr2.rekening_bank) AS tipe_bayar_2");
+
         $builder->join("ref_rekening rr", "rr.id = tso.type_dp", "left");
         $builder->join("ref_rekening rr2", "rr2.id = tso.type_dp_2", "left");
         $builder->join("ref_konsumen rk", "rk.id = tso.id_konsumen", "left");
-        // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
-        $builder->where("tso.active = 1");
-        $builder->where('EXTRACT(MONTH FROM tso.tgl_dp)', $month);
-        $builder->where('EXTRACT(YEAR FROM tso.tgl_dp)', $year);
+
+        $builder->where("tso.active", 1);
+
+        // Memulai grouping untuk kondisi OR (agar tidak merusak tso.active)
+        $builder->groupStart();
+            // Kondisi untuk tgl_dp
+            $builder->groupStart();
+                $builder->where('EXTRACT(MONTH FROM tso.tgl_dp)', $month);
+                $builder->where('EXTRACT(YEAR FROM tso.tgl_dp)', $year);
+            $builder->groupEnd();
+
+            // Kondisi OR untuk tgl_dp_2
+            $builder->orGroupStart();
+                $builder->where('EXTRACT(MONTH FROM tso.tgl_dp_2)', $month);
+                $builder->where('EXTRACT(YEAR FROM tso.tgl_dp_2)', $year);
+            $builder->groupEnd();
+        $builder->groupEnd();
         if (!empty($ref_masuk)) {
             $builder->where("rr.coa_id", $ref_masuk);
         }
         
 
         $builder->orderBy("tso.tgl_dp ASC");
+        $builder->orderBy("tso.tgl_dp_2 ASC");
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;

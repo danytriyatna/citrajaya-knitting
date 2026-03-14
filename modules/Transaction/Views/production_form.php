@@ -243,7 +243,8 @@
                       <thead>
                         <tr>
                           <th>Proses</th>
-                          <th style="text-align:right;">Qty</th>
+                          <th style="text-align:right;">Qty Prod</th>
+                          <th style="text-align:right;">Qty Fix</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -255,6 +256,9 @@
                               </td>
                               <td style="text-align:right;">
                                 <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_prod ?></label>
+                              </td>
+                              <td style="text-align:right;">
+                                <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_fix ?></label>
                               </td>
                             </tr>
                           <?php } ?>
@@ -275,6 +279,9 @@
                               </td>
                               <td style="text-align:right;">
                                 <label class="form-check-label" for="proses_kirim" id="qty_kirim"><?= !empty($qty_kirim) ? $qty_kirim : 0; ?></label>
+                              </td>
+                              <td style="text-align:right;">
+                                <label class="form-check-label" for="proses_kirim_fix" id="qty_kirim_fix"></label>
                               </td>
                             </tr>
                       </tbody>

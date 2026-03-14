@@ -147,7 +147,8 @@ class ProductionModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_produksi_operator tpo");
         $builder->select("jpp.nama, jpp.seq, jpp.id,
-                            COALESCE(SUM(tpo.qty), 0) AS qty_prod");
+                            SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod,
+    SUM(CASE WHEN tpo.print_type = 2 THEN tpo.qty ELSE 0 END) AS qty_fix");
         $builder->join("trans_produksi tp", "tp.id = tpo.id_produksi", "inner");
         $builder->join("_jenis_proses_produksi jpp", "tpo.id_proses = jpp.id", "inner");
         if(!empty($id)){

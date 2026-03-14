@@ -675,6 +675,7 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
     paginationButtonCount: 5,
     columns: [
         {title: "ID", field: "id_konsumen", width: "20%",visible:false},
+        {title: "ID_MP", field: "id_mp", width: "10%",visible:false},
         {
             headerSort: false,  
             title: '#', 

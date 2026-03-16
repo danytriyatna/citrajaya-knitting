@@ -35,6 +35,8 @@ $(document).ready(function () {
     var idSampleDet      = null
     var status           = null
 
+    const brcStyle            = $("#style_input");
+
 
     // conf function 
     let cellMoney = function(cell, formatterParams){
@@ -404,31 +406,83 @@ $(document).ready(function () {
 
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},
-                {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
+                // {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
+                //     cellClick: function(e, cell) {
+                //         let row = cell.getRow();
+                //         let data_row = row.getData();
+                //         if (e.target.title === 'print-warna') {
+                //             // console.log(data_row)
+
+                //             const inpp_slcUkuran = $("#print_slc_ukuran");
+                //             const inpp_qty       = $("#print_qty");
+                //             const inpp_qtyp      = $("#print_qtyp");
+
+                //             // inpp_slcUkuran
+                //             inpp_qty.val(1)
+                //             inpp_qtyp.val(1)
+
+                //             inpp_foto.attr('src', data.file_gambar);
+                //             inpp_noSample.html(data.kode_sample)
+                //             inpp_deskripsi.html(data.deskripsi);
+                //             inpp_warna.html(data_row.colordasar);
+                //             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
+                //             inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+                //             inpp_buyer.html(data.nama)
+
+                //             setTimeout(() => {
+                //                 // inpp_trans.html(data.id);
+                //                 mdlPrint.modal("show");
+                //             }, 500);
+                //         } 
+                //     }
+                // },
+                {headerSort: false,  title:"QR", width:"10%", hozAlign:"center",  formatter: print_btn,
                     cellClick: function(e, cell) {
                         let row = cell.getRow();
+                        let rowIndex = cell.getRow().getPosition();
                         let data_row = row.getData();
                         if (e.target.title === 'print-warna') {
-                            // console.log(data_row)
-
+                            qty_ukuran = [];
+                            const xdata = data.ref_data;
                             const inpp_slcUkuran = $("#print_slc_ukuran");
                             const inpp_qty       = $("#print_qty");
                             const inpp_qtyp      = $("#print_qtyp");
-
+                            const allowed = data.key_ukuran.map(x => x.key_ukuran); // ambil semua kode_ukuran
+                            const select = document.getElementById('print_slc_ukuran');
+                            
+                            select.querySelectorAll('option').forEach(opt => {
+                            if (opt.value === '' || allowed.includes(opt.value)) {
+                                opt.hidden = false; // tampilkan kalau cocok
+                                if (opt.value == 'all') {
+                                    qty_ukuran[opt.value] = data_row["all_"]
+                                }
+                                else {
+                                    qty_ukuran[opt.value] = data_row[opt.value]
+                                }
+                            } else {
+                                opt.hidden = true; // sembunyikan kalau tidak ada di daftar
+                            }
+                            });
+                            let keys = Object.keys(data_row);
                             // inpp_slcUkuran
                             inpp_qty.val(1)
                             inpp_qtyp.val(1)
+
+                             
 
                             inpp_foto.attr('src', data.file_gambar);
                             inpp_noSample.html(data.kode_sample)
                             inpp_deskripsi.html(data.deskripsi);
                             inpp_warna.html(data_row.colordasar);
                             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
-                            inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
+                            inpp_tglDeadline.html(data.tgl_deadline? formatterDate(data.tgl_deadline) : '-')
+
+                            // brcStyle.val(xdata.style)
                             inpp_buyer.html(data.nama)
 
+
                             setTimeout(() => {
-                                // inpp_trans.html(data.id);
+                                inpp_trans.html(data_row.id);
                                 mdlPrint.modal("show");
                             }, 500);
                         } 
@@ -799,6 +853,44 @@ $(document).ready(function () {
         });
     }
 
+    // $("#btn-cetak-print").on('click', function (e) {
+    //     e.preventDefault()
+
+    //     //   const inpp_slcWarna = $("#print_slc_warna");
+    //     const inpp_slcUkuran = $("#print_slc_ukuran");
+    //     const inpp_qty       = $("#print_qty");
+    //     const inpp_qtyp      = $("#print_qtyp");
+
+    //     // mdlPrint
+    //     const dt_noSample = inpp_noSample.html()
+    //     const dt_deskripsi = inpp_deskripsi.html()
+    //     const dt_buyer = inpp_buyer.html()
+    //     const dt_warna = inpp_warna.html()
+    //     // inpp_trans
+
+    //     // Query parameters
+    //     let params = {
+    //         ukuran : inpp_slcUkuran.val(),
+    //         qty : inpp_qty.val(),
+    //         qtyp : inpp_qtyp.val(),
+    //         noSample : dt_noSample,
+    //         deskripsi : dt_deskripsi,
+    //         buyer : '',
+    //         warna : dt_warna,
+    //       };
+  
+    //       // Buat query string
+    //       let queryString = $.param(params); // Convert objek ke query string
+    //       let fullUrl = `trans/sample/generate?${queryString}`;
+  
+    //       // Buka link di tab baru
+    //       window.open(fullUrl, '_blank');
+    //     //   setTimeout(() => {
+    //     //     // inpp_trans.html(data.id);
+    //     //     mdlPrint.modal("hide");
+    //     // }, 500);
+
+    // });
     $("#btn-cetak-print").on('click', function (e) {
         e.preventDefault()
 
@@ -806,28 +898,37 @@ $(document).ready(function () {
         const inpp_slcUkuran = $("#print_slc_ukuran");
         const inpp_qty       = $("#print_qty");
         const inpp_qtyp      = $("#print_qtyp");
+        const inpp_printType = $("#print_type");
 
         // mdlPrint
         const dt_noSample = inpp_noSample.html()
         const dt_deskripsi = inpp_deskripsi.html()
         const dt_buyer = inpp_buyer.html()
         const dt_warna = inpp_warna.html()
+        const dt_trans = inpp_trans.html()
+
+        const dt_style = brcStyle.val()
         // inpp_trans
 
         // Query parameters
         let params = {
             ukuran : inpp_slcUkuran.val(),
+            ukuran_text : inpp_slcUkuran.find("option:selected").text(),
             qty : inpp_qty.val(),
             qtyp : inpp_qtyp.val(),
+            print_type : inpp_printType.val(),
             noSample : dt_noSample,
             deskripsi : dt_deskripsi,
             buyer : '',
             warna : dt_warna,
+            trans : dt_trans,
+            style : dt_style
           };
   
           // Buat query string
           let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/sample/generate?${queryString}`;
+          let fullUrl = `trans/work-order/generate?${queryString}`;
+        //   let fullUrl = `trans/sales-order/generate?${queryString}`;
   
           // Buka link di tab baru
           window.open(fullUrl, '_blank');

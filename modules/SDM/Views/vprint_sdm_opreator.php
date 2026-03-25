@@ -183,9 +183,10 @@
 
         <th class="text-left" style="width: 10%;">Tanggal</th>
         <th class="text-left" style="width: 15%;">Kode Transaksi</th>
-        <th class="text-left" style="width: 25%;">Proses</th>
-        <th class="text-right" style="width: 15%;">Harga</th>
-        <th class="text-right" style="width: 5%;">Qty</th>
+        <th class="text-left" style="width: 30%;">Proses</th>
+        <th class="text-right" style="width: 20%;">Harga</th>
+        <th class="text-right" style="width: 5%;">Qty Produksi</th>
+        <th class="text-right" style="width: 5%;">Qty Perbaikan</th>
         <th class="text-right" style="width: 20%;">Harga Total</th>
       </tr>
     </thead>
@@ -193,18 +194,22 @@
       <?php 
         $harga = 0;
         $qty = 0;
+        $qty_produksi = 0;
+        $qty_perbaikan = 0;
         $harga_total = 0;
 
         $proses = '';
         foreach ($detail as $r) { 
         $harga = $harga + $r->harga;
         $qty = $qty + $r->qty;
+        $qty_produksi = $qty_produksi + $r->qty_produksi;
+        $qty_perbaikan = $qty_perbaikan + $r->qty_perbaikan;
         $harga_total =  $harga_total + $r->harga_total;
         ?> 
         <?php if( $proses != $r->proses) { ?>
           <tr>
             <td style="border-bottom:1px solid #000;"><b></b></td>
-            <!-- <td style="border-bottom:1px solid #000;"><b></b></td> -->
+            <td style="border-bottom:1px solid #000;"><b></b></td>
             <td style="border-bottom:1px solid #000;"><b><?= $r->proses ?></b></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
             <td style="border-bottom:1px solid #000;" class="text-right"></td>
@@ -219,7 +224,8 @@
           <td><?= $r->kode_transaksi ?></td>
           <td><?= $r->keterangan_style ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga, 2) ?></td>
-          <td class="text-right"><?= ($r->qty) ?></td>
+          <td class="text-right"><?= ($r->qty_produksi) ?></td>
+          <td class="text-right"><?= ($r->qty_perbaikan) ?></td>
           <td class="text-right">Rp <?= format_angka($r->harga_total, 2) ?></td>
         </tr>
       <?php } ?>
@@ -229,7 +235,8 @@
       <th class="text-left"  style="border-top:solid;"></th>
       <th class="text-left"  style="border-top:solid;">Total</th>
       <th class="text-right" style="border-top:solid;"></th>
-      <th class="text-right" style="border-top:solid;"><?= $qty ?></th>
+      <th class="text-right" style="border-top:solid;"><?= $qty_produksi ?></th>
+      <th class="text-right" style="border-top:solid;"><?= $qty_perbaikan ?></th>
       <th class="text-right" style="border-top:solid;">Rp <?= format_angka($harga_total, 2) ?></th>
     </tfoot>
   </table>

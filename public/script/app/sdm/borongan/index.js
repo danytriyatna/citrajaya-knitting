@@ -155,7 +155,27 @@ $(document).ready(function () {
             }, 
                 
             {
-                title: 'Qty', field: 'qty', headerSort:false, sorter: 'string',
+                title: 'Qty Produksi', field: 'qty_produksi', headerSort:false, sorter: 'string',
+                formatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return formatRibuan(num);
+                },
+                width: 180, cssClass: "text-right", hozAlign: "right",
+                bottomCalc: "sum", 
+                bottomCalcFormatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == null || val === "") return "";
+                    let num = Number(val);
+                    if (isNaN(num)) return val;
+                    return formatRibuan(num);
+                }
+            }, 
+
+            {
+                title: 'Qty Perbaikan', field: 'qty_perbaikan', headerSort:false, sorter: 'string',
                 formatter: function(cell) {
                     let val = cell.getValue();
                     if (val == null || val === "") return "";

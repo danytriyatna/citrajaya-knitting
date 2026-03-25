@@ -192,7 +192,7 @@ class Mabsensi extends \App\Models\PrModel
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
                       FROM trans_produksi_operator 
                       WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
-                      AND id_category = 12 
+                      AND (print_type = 1 OR print_type is null)
                       GROUP BY id_operator) th",
                     'rk.id_operator = th.id_operator',
                     'left'
@@ -202,7 +202,7 @@ class Mabsensi extends \App\Models\PrModel
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
                     FROM trans_produksi_operator
                     WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
-                      AND id_category = 1 
+                      AND print_type = 2
                       GROUP BY id_operator) tp1",
                     'rk.id_operator = tp1.id_operator',
                     'left'
@@ -212,7 +212,7 @@ class Mabsensi extends \App\Models\PrModel
                 $builder->join(
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
                       FROM trans_produksi_operator 
-                      WHERE id_category = 12
+                      WHERE (print_type = 1 OR print_type is null)
                       GROUP BY id_operator) th",
                     'rk.id_operator = th.id_operator',
                     'left'
@@ -221,8 +221,8 @@ class Mabsensi extends \App\Models\PrModel
                 $builder->join(
                     "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
                     FROM trans_produksi_operator
-                      WHERE id_category = 1
-                      ROUP BY id_operator) tp1",
+                      WHERE print_type = 2
+                      GROUP BY id_operator) tp1",
                     'rk.id_operator = tp1.id_operator',
                     'left'
                 );

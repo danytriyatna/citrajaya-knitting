@@ -18,8 +18,25 @@ class Mborongan extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_produksi_operator pd");
 
-        $builder->select("tp.keterangan_style, tp.keterangan, rp.nama_operator, pd.id_proses, pd.id_operator, jp.nama as proses, 
-                          sum(pd.harga) as harga, sum(pd.qty) as qty, sum(pd.harga_total) as harga_total, pd.kode_transaksi, pd.tgl_transaksi");
+        $builder->select("
+            tp.keterangan_style, 
+            tp.keterangan, 
+            rp.nama_operator, 
+            pd.id_proses, 
+            pd.id_operator, 
+            jp.nama as proses, 
+            pd.kode_transaksi, 
+            pd.tgl_transaksi,
+            SUM(pd.harga) as harga, 
+            SUM(pd.qty) as qty, 
+            SUM(pd.harga_total) as harga_total,
+            
+            /* Logika: 1 atau NULL = qty_produksi */
+            SUM(CASE WHEN pd.print_type = 1 OR pd.print_type IS NULL THEN pd.qty ELSE 0 END) AS qty_produksi,
+            
+            /* Logika: 2 = qty_perbaikan */
+            SUM(CASE WHEN pd.print_type = 2 THEN pd.qty ELSE 0 END) AS qty_perbaikan
+        ");
                         //   tp.kode_prod, pd.tgl_transaksi,
 
         $builder->join("trans_produksi tp", "tp.id = pd.id_produksi", "inner");

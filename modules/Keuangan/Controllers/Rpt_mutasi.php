@@ -1168,7 +1168,6 @@ class Rpt_mutasi extends BaseController
                                 if ($date_1->format('n') == $bulan && $date_1->format('Y') == $tahun) {
                                     $length++;
                                     $ix++;
-                                    dd();
                                 }
                             }
                             $uang_dp_2 = !empty($r->uang_dp_2) ? $r->uang_dp_2 : 0;

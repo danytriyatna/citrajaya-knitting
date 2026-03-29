@@ -24,14 +24,14 @@ class DeliveryModel extends \App\Models\PrModel
                             abx.status, abx.qty as qty_delv, abx.tipe_id,  abx.id_walkorder,
                             bbx.nama as konsumen_nama, tp.keterangan_style,
                             tp.qty, twx.ref_kode as kode_so, tso.deskripsi, abx.id_invoice,
-    (
-        tp.qty - COALESCE((
-            SELECT SUM(abx2.qty) 
-            FROM trans_delivery abx2 
-            WHERE abx2.id_produksi = abx.id_produksi 
-              AND abx2.id < abx.id
-        ),0)
-    ) as sisa_qty");
+                            (
+                                tp.qty - COALESCE((
+                                    SELECT SUM(abx2.qty) 
+                                    FROM trans_delivery abx2 
+                                    WHERE abx2.id_produksi = abx.id_produksi 
+                                    AND abx2.id < abx.id
+                                ),0)
+                            ) as sisa_qty");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
         $builder->join("trans_produksi tp", "tp.id = abx.id_produksi", "inner");

@@ -19,6 +19,9 @@ use Endroid\QrCode\Logo\Logo;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Writer\ValidationException;
+use Modules\Transaction\Models\WalkorderModel;
+use Modules\Transaction\Models\ProductionModel;
+use Modules\Referensi\Models\RekeningModel;
 
 class Sample extends BaseController
 {
@@ -27,6 +30,9 @@ class Sample extends BaseController
   protected $files;
   protected $mUkuran;
   protected $mWarna;
+  protected $mworkOrder;
+  protected $mRekening;
+  protected $mProduksi;
 
   protected $views = '\Modules\Transaction\Views';
   protected $urlv  = 'trans/sample';
@@ -39,6 +45,9 @@ class Sample extends BaseController
     $this->mkonsumen = new KonsumenModel();
     $this->mWarna = new WarnaModel();
     $this->files  = new FileModel();
+    $this->mworkOrder = new WalkorderModel();
+    $this->mRekening   = new RekeningModel();
+    $this->mProduksi = new ProductionModel();
   }
 
 
@@ -250,7 +259,7 @@ class Sample extends BaseController
     $hargaTotal = $this->request->getPost('hargaTotal');
     $stat = $this->request->getPost('status');
     $style = $this->request->getPost('style');
-    
+    $submit_data = $this->request->getPost('status');
 
     $this->validation->setRules([
       'idKonsumen '               => ['label' => 'Pilih Buyer', 'rules' => 'required'],
@@ -335,6 +344,316 @@ class Sample extends BaseController
         unset($arr_isi['status']);
       }
       $id = decrypt($id);
+
+      $getTotalSO = $this->mSample->getTotalUkuranSample($id);
+      if (!empty($getTotalSO)) {
+        $arr_isi['qty'] = $getTotalSO->qty;
+        $arr_isi['total_harga'] = $getTotalSO->harga_total;
+      }
+      $this->mSample->updateRecord($this->mSample->table, $arr_isi, 'id', $id);
+      
+      //auto update qty in WO dan PROD
+      $paramsWO['ref_id'] = $id;
+      $paramsWO['tipe_id'] = 1;
+      $getWO = $this->mworkOrder->getData(null, null, null, null, null, $paramsWO);
+      if (!empty($getWO)) {
+        foreach ($getWO as $keyWO => $valueWO) {
+          $allQty = $this->mSample->getTotal_qty($id, 1);
+          $wo_data = [
+            'ref_id' => $id,
+            'id_konsumen' => $idKonsumen,
+            'keterangan_style' => $style,
+            'keterangan' => $deskripsi,
+            'tgl_deadline' => $tglDeadline,
+            'qty' => !empty($allQty) ? $allQty : 0,
+            'tipe_id' => 1,
+            'file_id' => !empty($fileIdSample) ? $fileIdSample : null,
+            'updated_at' => date("Y-m-d H:i:s")
+          ];
+          $this->mworkOrder->updateRecord($this->mworkOrder->table, $wo_data, 'id', $valueWO->id);
+
+          // $data_warna = $this->mSample->getDataDetailSample_ori($id);
+          // if (!empty($id) && $id != 'null') {
+
+          //   $params_wo['tipe_id'] = 1;
+          //   $params_wo['ref_id']  = $id;
+          //   $ref_sample_wo = $this->mworkOrder->getData(null, 0, 1, null, null, $params_wo);
+          //   if (!empty($ref_sample_wo)) {
+
+          //     if (!empty($data_warna)) {
+          //       foreach ($data_warna as $xrow) {
+
+          //         // get detail wo 
+          //         $prms_sample['id_warna_1'] = $xrow->id_warna_1;
+          //         // $prms_sample['id_warna_2'] = $xrow->id_warna_2;
+          //         if (!empty($xrow->id_warna_2)) $prms_sample['id_warna_2'] = $xrow->id_warna_2;
+          //         if (!empty($xrow->id_warna_3)) $prms_sample['id_warna_3'] = $xrow->id_warna_3;
+          //         if (!empty($xrow->id_warna_4)) $prms_sample['id_warna_4'] = $xrow->id_warna_4;
+          //         $data_detail = $this->mSample->getDataDetailSample_ori($id, $prms_sample);
+          //         if (!empty($data_detail)) {
+          //           $params_wod['ref_detail_id'] = $data_detail[0]->id;
+          //           $params_wod['tipe_id'] = 1;
+          //           $params_wod['single'] = true;
+          //           $params_wod['id_walkorder']  = $ref_sample_wo[0]->id;
+          //           $data_detail_wo = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $params_wod);
+          //           // $prgram['id_sample_det'] = $data_detail[0]->id;
+          //           // $dtGram = $this->mSample->getData_gram(null, 0, 9999, null,  null, $prgram);
+          //           if (!empty($data_detail_wo)) {
+
+          //             $qty_wodet =  $this->mSample->getTotal_qty($xrow->id, 2);
+          //             $gram = 0;
+          //             $gram_nd = 0;
+          //             $kg = 0;
+          //             $loss = 0;
+          //             $kg_loss = 0;
+          //             $total = 0;
+          //             $kuota = 0;
+          //             $kuota_tambah = 0;
+
+          //             if (!empty($data_detail_wo->gram)) {
+          //               $gram = $data_detail_wo->gram;
+          //               $gram_nd = $gram * $qty_wodet;
+          //               $kg = $gram_nd / 1000;
+          //               $loss = $data_detail_wo->loss;
+          //               $kg_loss = ($kg * $loss) / 100;
+          //               $total = $kg +  $kg_loss;
+
+          //               $kuota = $data_detail_wo->kuota;
+          //               $kuota_tambah = $kuota - $total;
+          //             }
+
+          //             $detail_wo_get = [
+          //               'id_walkorder' => $valueWO->id,
+          //               'ref_detail_id' => $xrow->id,
+          //               'tipe_id' => 2,
+          //               'single' => true,
+          //             ];
+                      
+          //             $getWODet = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $detail_wo_get);
+          //             if (empty($getWODet)) {
+          //               $detail_wo = [
+          //                 'id_walkorder' => $valueWO->id,
+          //                 'ref_detail_id' => $xrow->id,
+          //                 'qty' => $qty_wodet,
+          //                 'tipe_id' => 2,
+          //                 'gram'         => $gram,
+          //                 'gram_nd'      => $gram_nd,
+          //                 'kg'           => $kg,
+          //                 'loss'         => $loss,
+          //                 'kg_loss'      => $kg_loss,
+          //                 'total'        => $total,
+          //                 'kuota'        => $kuota,
+          //                 'kuota_tambah' => $kuota_tambah,
+          //                 'created_at' => date("Y-m-d H:i:s")
+          //               ];
+
+          //               $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
+
+          //               for ($i = 0; $i < 8; $i++) {
+          //                 $field_name = 'id_warna_' . ($i + 1);
+          //                 if (!empty($xrow->$field_name)) {
+
+          //                   $params_d['id_walkorder_detail'] = $data_detail_wo->id;
+          //                   $params_d['id_warna'] = $xrow->$field_name;
+          //                   $data_detail = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_d);
+
+          //                   $xgram = 0;
+          //                   $xgram_nd = 0;
+          //                   $xkg = 0;
+          //                   $xloss = 0;
+          //                   $xkg_loss = 0;
+          //                   $xtotal = 0;
+          //                   $xkuota = 0;
+          //                   $xkuota_tambah = 0;
+
+          //                   if(!empty($data_detail)) {
+          //                     if (!empty($data_detail[0]->gram)) {
+          //                       $xgram = $data_detail[0]->gram;
+          //                       $xgram_nd = $xgram * $qty_wodet;
+          //                       $xkg = $xgram_nd / 1000;
+          //                       $xloss = $data_detail[0]->loss;
+          //                       $xkg_loss = ($xkg * $xloss) / 100;
+          //                       $xtotal = $xkg +  $xkg_loss;
+      
+          //                       $xkuota = $data_detail[0]->kuota;
+          //                       $xkuota_tambah = $xkuota - $xtotal;
+          //                     }
+      
+          //                     $isi_warna = [
+          //                       'id_walkorder_detail' => $wo_det_id,
+          //                       'id_warna' => $xrow->$field_name,
+          //                       'persen'       => $data_detail[0]->persen,
+          //                       'gram'         => $xgram,
+          //                       'gram_nd'      => $xgram_nd,
+          //                       'kg'           => $xkg,
+          //                       'kg_loss'      => $xkg_loss,
+          //                       'total'        => $xtotal,
+          //                       'kuota'        => $xkuota,
+          //                       'kuota_tambah' => $xkuota_tambah,
+          //                       'loss'         => $xloss,
+          //                       'created_at' => date("Y-m-d H:i:s")
+          //                     ];
+      
+          //                     $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+          //                   }else{
+          //                     $isi_warna = [
+          //                       'id_walkorder_detail' => $wo_det_id,
+          //                       'id_warna' => $xrow->$field_name,
+          //                       'created_at' => date("Y-m-d H:i:s")
+          //                     ];
+          //                     $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+          //                   }
+          //                 }
+          //               }
+          //             }
+
+          //           } else {
+          //             $params_wod['ref_detail_id'] = $xrow->id;
+          //             $params_wod['tipe_id'] = 1;
+          //             $params_wod['single'] = true;
+          //             $params_wod['id_walkorder']  = $valueWO->id;
+
+          //             $data_detail_wo = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $params_wod);
+          //             $detail_wo = [
+          //               'id_walkorder' => $valueWO->id,
+          //               'ref_detail_id' => $xrow->id,
+          //               'qty' => $this->mSample->getTotal_qty($xrow->id, 1),
+          //               'tipe_id' => 1,
+          //               'created_at' => date("Y-m-d H:i:s")
+          //             ];
+          //             if(!empty($data_detail_wo) > 0) {
+          //               $this->mworkOrder->updateRecord($this->mworkOrder->table2, $detail_wo, 'id', $data_detail_wo->id);
+
+          //               for ($i = 0; $i < 8; $i++) {
+          //                 $field_name = 'id_warna_' . ($i + 1);
+          //                 if (!empty($xrow->$field_name)) {
+          //                   $params_warna = [
+          //                     'id_walkorder_detail' => $data_detail_wo->id,
+          //                     'id_warna' => $xrow->$field_name,
+          //                     'single' => true,
+          //                   ];
+          //                   $data_detail_warna = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_warna);
+          //                   if (!empty($data_detail_warna)) {
+          //                     $isi_warna = [
+          //                       'id_walkorder_detail' => $data_detail_wo->id,
+          //                       'id_warna' => $xrow->$field_name,
+          //                     ];
+          //                     $this->mworkOrder->updateRecord($this->mworkOrder->table5, $isi_warna, 'id', $data_detail_warna->id);
+          //                   }
+          //                 }
+          //               }
+          //             }
+          //             else {
+          //               $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
+
+          //               for ($i = 0; $i < 8; $i++) {
+          //                 $field_name = 'id_warna_' . ($i + 1);
+          //                 if (!empty($xrow->$field_name)) {
+          //                   $isi_warna = [
+          //                     'id_walkorder_detail' => $wo_det_id,
+          //                     'id_warna' => $xrow->$field_name,
+          //                     'created_at' => date("Y-m-d H:i:s")
+          //                   ];
+          //                   $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+          //                 }
+          //               }
+          //             }
+          //           }
+          //         } else {
+          //           $detail_wo = [
+          //             'id_walkorder' => $valueWO->id,
+          //             'ref_detail_id' => $xrow->id,
+          //             'tipe_id' => 1,
+          //           ];
+          //           $getWODet = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $detail_wo);
+          //           if (empty($getWODet)) {
+
+          //             $detail_wo = [
+          //               'id_walkorder' => $valueWO->id,
+          //               'ref_detail_id' => $xrow->id,
+          //               'qty' => $this->mSample->getTotal_qty($xrow->id, 2),
+          //               'tipe_id' => 1,
+          //               'created_at' => date("Y-m-d H:i:s")
+          //             ];
+
+          //             $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
+
+          //             for ($i = 0; $i < 8; $i++) {
+          //               $field_name = 'id_warna_' . ($i + 1);
+          //               if (!empty($xrow->$field_name)) {
+          //                 $isi_warna = [
+          //                   'id_walkorder_detail' => $wo_det_id,
+          //                   'id_warna' => $xrow->$field_name,
+          //                   'created_at' => date("Y-m-d H:i:s")
+          //                 ];
+          //                 $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+          //               }
+          //             }
+          //           }
+          //         }
+          //       }
+          //     }
+          //   }
+          // } 
+          // else {
+          //   if (!empty($data_warna)) {
+          //     foreach ($data_warna as $xrow) {
+          //       $detail_wo = [
+          //         'id_walkorder' => $valueWO->id,
+          //         'ref_detail_id' => $xrow->id,
+          //         'tipe_id' => 2,
+          //       ];
+
+          //       $getWODet = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $detail_wo);
+          //       if (empty($getWODet)) {
+          //         $detail_wo = [
+          //           'id_walkorder' => $valueWO->id,
+          //           'ref_detail_id' => $xrow->id,
+          //           'qty' => $this->mSalesOrder->getTotal_qty($xrow->id, 2),
+          //           'tipe_id' => 2,
+          //           'created_at' => date("Y-m-d H:i:s")
+          //         ];
+
+          //         $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
+
+          //         for ($i = 0; $i < 8; $i++) {
+          //           $field_name = 'id_warna_' . ($i + 1);
+          //           if (!empty($xrow->$field_name)) {
+          //             $isi_warna = [
+          //               'id_walkorder_detail' => $wo_det_id,
+          //               'id_warna' => $xrow->$field_name,
+          //               'created_at' => date("Y-m-d H:i:s")
+          //             ];
+          //             $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+          //           }
+          //         }
+          //       }
+          //     }
+          //   }
+          // }
+
+          $paramsPD['id_walkorder'] = $valueWO->id;
+          $paramsPD['tipe_id'] = 1;
+          $getPD = $this->mProduksi->getData(null, null, null, null, null, $paramsPD);
+          if (!empty($getPD)) {
+            foreach ($getPD as $keyPD => $valuePD) {
+              $wo_data = [
+                'id_konsumen' => $idKonsumen,
+                'tgl_deadline' => $tglDeadline,
+                'keterangan_style' => $style,
+                'keterangan' => $deskripsi,
+                'qty' => !empty($allQty) ? $allQty : 0,
+                'tipe_id' => 1,
+                'file_id' => !empty($fileIdSample) ? $fileIdSample : null,
+                'updated_at' => date("Y-m-d H:i:s")
+              ];
+              $arr_pd_update['qty'] = !empty($allQty) ? $allQty : 0;
+              $this->mProduksi->updateRecord($this->mProduksi->table, $arr_pd_update, 'id', $valuePD->id);
+            }
+          }
+        }
+      }
+      
       $res = $this->mSample->trxSubmitSample($arr_isi, $id);
       if ($res) {
         $msg    = "Data berhasil diupdate !";
@@ -377,14 +696,16 @@ class Sample extends BaseController
       "id_sample" => (int)decrypt($idSample),
       "id" => !empty($idSampleDet) ? $idSampleDet :  null,
     ];
-
     $res = $this->mSample->trxInsertUpdateRecord($dataWarna, $dataUkuran, $dataGram);
 
-    if ($res) {
+    if ($res === true) {
       $status = true;
       $msg = "Data berhasil disimpan!";
     }
-
+    else {
+        $status = false;
+        $msg = $res;
+    }
     $build_array['message'] = $msg;
     $build_array['status']  = $status;
 

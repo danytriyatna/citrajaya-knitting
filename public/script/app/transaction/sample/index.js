@@ -1166,7 +1166,7 @@ $(document).ready(function () {
                         isModalPO.modal("hide");
                     }else{
                         Swal.fire({
-                            text: response.message,
+                            html: response.message,
                             icon: 'error',
                             showConfirmButton: false,
                             timer: 2000

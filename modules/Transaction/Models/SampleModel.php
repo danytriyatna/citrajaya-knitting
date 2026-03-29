@@ -603,6 +603,122 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataUkuranSample($id = null)
+    {
+        $builder = $this->db->table("trans_sample_ukuran abx");
+        $builder->select("abx.id, abx.qty, abx.id_ukuran, abx.harga_satuan, abx.id_sample, abx.id_sample_det, abx.harga_total");
+        
+        $builder->where("abx.id", $id);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getDataUkuranSampleOld($id = null, $sampleId = null, $idSampleDet = null)
+    {
+        $builder = $this->db->table("trans_sample_ukuran abx");
+        $builder->select("abx.id, abx.qty, abx.id_ukuran, abx.harga_satuan, abx.id_sample, abx.id_sample_det, abx.harga_total");
+        
+        $builder->whereNotIn("abx.id", $id);
+        $builder->where("abx.id_sample", $sampleId);
+        $builder->where("abx.id_sample_det", $idSampleDet);
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getDataDODetail($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_detail abx");
+
+        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty, td.status, abx.id_delivery, td.id_invoice");
+
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        $builder->where("td.id_invoice $type", null);
+        $builder->where("tp.tipe_id", 1);
+        
+
+        $builder->orderBy("td.id", 'desc');
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getDODetailSUM($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_detail abx");
+
+        $builder->select("COALESCE(SUM(abx.qty),0) as qty");
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        $builder->where("td.id_invoice $type", null);
+        $builder->where("td.active", 1);
+        $builder->where("tp.tipe_id", 1);
+
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getStatusSI($id = null)
+    {
+        $builder = $this->db->table("trans_invoice abx");
+        $builder->select("abx.id, abx.status");
+        
+        $builder->whereIn("abx.id", $id);
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getDataDOProd($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $builder = $this->db->table("trans_delivery_prod abx");
+
+        $builder->select("abx.id, abx.ref_detail_id, abx.id_ukuran, abx.qty,  abx.qty_do, td.status, abx.id_delivery");
+
+
+        $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
+        $builder->where("abx.ref_detail_id", $ref_detail_id);
+        $builder->where("abx.id_ukuran", $id_ukuran);
+        // $builder->where("td.id_invoice $type", null);
+        $builder->where("td.active", 1);
+        $builder->where("tp.tipe_id", 1);
+        $builder->orderBy("td.id", 'desc');
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function getTotalUkuranSample($id_sample = null)
+    {
+        $builder = $this->db->table("trans_sample_ukuran abx");
+
+        $builder->select("COALESCE(SUM(abx.qty), 0) as qty, COALESCE(SUM(abx.harga_total), 0) as harga_total");
+
+
+        $builder->where("abx.id_sample", $id_sample);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function deleteDataWOProsesUkuran($ref_detail_id = null, $id_ukuran = null, $type = null)
+    {
+        $sql = "
+        DELETE FROM trans_walkorder_proses_ukuran abx
+        USING trans_walkorder_proses twd, trans_walkorder tw
+        WHERE abx.id_walkorder_proses = twd.id
+        AND twd.id_walkorder = tw.id
+        AND abx.ref_detail_id = ?
+        AND abx.id_ukuran = ?
+        AND tw.tipe_id = 1;
+        ";
+
+        return $this->db->query($sql, [$ref_detail_id, $id_ukuran]);
+    }
+
     function trxInsertUpdateRecord($dataWarna, $dataUkuran, $dataGram)
     {
         $this->db->transStart();
@@ -617,11 +733,11 @@ class SampleModel extends \App\Models\PrModel
                 $idSampleDet = $this->insertRecordGetid("trans_sample_det", $dataWarna);
             }
             if (!empty($dataWarna['id']) && ($dataWarna['id_sample'])) {
-                $arrDelete = [
-                    "id_sample" => $dataWarna['id_sample'],
-                    "id_sample_det" => $dataWarna['id']
-                ];
-                $this->deleteRecordMultipleColumn("trans_sample_ukuran", $arrDelete);
+                // $arrDelete = [
+                //     "id_sample" => $dataWarna['id_sample'],
+                //     "id_sample_det" => $dataWarna['id']
+                // ];
+                // $this->deleteRecordMultipleColumn("trans_sample_ukuran", $arrDelete);
 
                 $arrDelete = [
                     "id_sample_det" => $dataWarna['id']
@@ -631,6 +747,8 @@ class SampleModel extends \App\Models\PrModel
 
             $head_qty = 0;
             $head_total = 0;
+            $queryStatus = true;
+            $IDS = [];
             foreach ($dataUkuran as $rowData) {
                 $harga_total = (!empty($rowData['qty']) && !empty($rowData['harga_satuan'])) ? $rowData['qty'] * $rowData['harga_satuan'] : 0;
                 $arrDataUkuran = [
@@ -647,33 +765,148 @@ class SampleModel extends \App\Models\PrModel
 
                 $head_qty = $head_qty + (!empty($rowData['qty'])) ? (int) $rowData['qty'] : 0;
                 $head_total = $head_total + (!empty($harga_total)) ? (float) $harga_total : 0;
-                $this->insertRecordGetid("trans_sample_ukuran", $arrDataUkuran);
+
+                $ukuranId = !empty($rowData['id']) ? $rowData['id'] : null;
+                $getSOUkuran = $this->getDataUkuranSample($ukuranId);
+                if (!empty($getSOUkuran)) {
+                    $IDS[] = $getSOUkuran->id;
+                    $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                    if (count($getDODet) > 0) {
+                        $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
+                        if ((float)$getSOUkuran->harga_satuan != (float) $rowData['harga_satuan']) {
+                            $all_ids = array_column($getDODet, 'id_invoice');
+                            $unique_ids = array_unique($all_ids);
+
+                            if (!empty($all_ids)) {
+                                // 2. Panggil fungsi getStatusSI
+                                $statusData = $this->getStatusSI($unique_ids);
+                                
+                                // 3. Ambil semua nilai status saja dalam bentuk array [0, 1, 0, ...]
+                                $allStatuses = array_column($statusData, 'status');
+
+                                // 4. CEK: Jika ada angka 1 di dalam array tersebut
+                                if (in_array(1, $allStatuses) || in_array("1", $allStatuses)) {
+                                    $queryStatus = false;
+                                    $msgError = 'Invoice sudah Approve, Tidak dapat merubah HARGA!';
+                                    break;
+                                }
+                            }
+                            if ($queryStatus == false) {
+                                
+                                $queryStatus = false;
+                                $msgError = 'Invoice sudah Approve, Tidak dapat merubah HARGA!';
+                                break;
+                            }
+                        }
+                        else if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
+                            $queryStatus = false;
+                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';
+                            break;
+                        }
+                    }
+
+                    if ($rowData['qty'] == 0) {
+                        if ($rowData['id'] == 24952) {
+                            # code...
+                            dd($rowData['id']);
+                        }
+                        $arr_do_prod = [
+                            "id_ukuran" => $rowData['id_ukuran'],
+                            "ref_detail_id" => $arrDataUkuran['id_sample_det'],
+                        ];
+                        $this->deleteRecordMultipleColumn("trans_delivery_prod", $arr_do_prod);
+                        $this->deleteRecordMultipleColumn("trans_delivery_detail", $arr_do_prod);
+
+                        $deleteWOProsesUkuran = $this->deleteDataWOProsesUkuran($dataWarna['id'], $rowData['id_ukuran']);
+
+                        $this->deleteRecord("trans_sample_ukuran", "id", $rowData['id']);
+                    }
+                    else {
+                        $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
+                        // if ($rowData['id'] == 24952) {
+                        //     dd($rowData['id'], $rowData['qty'], $getSOUkuran->qty, $getDODetSUMDO->qty, $getDODetSUMDO->qty);
+                        // }
+                        if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
+                            $queryStatus = false;
+                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';
+                            break;
+                        }
+
+                        $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
+                        foreach ($getDOProd as $keyDO => $value) {
+                            $arr_do_prod = [
+                                "harga_satuan" => (float)$rowData['harga_satuan'],
+                                "qty" => $rowData['qty'],
+                            ];
+                            $this->updateRecord("trans_delivery_prod", $arr_do_prod, 'id', $value->id);
+                        }
+                        
+                        $this->updateRecord("trans_sample_ukuran", $arrDataUkuran, 'id', $getSOUkuran->id);
+                    }
+                }
+                else {
+                    $IDS[] = $this->insertRecordGetid("trans_sample_ukuran", $arrDataUkuran);
+                }
+            }
+            
+            if (!empty($dataWarna['id']) && ($dataWarna['id_sample']) && $queryStatus === true) {
+                $getSOUkuranOld = $this->getDataUkuranSampleOld($IDS, $dataWarna['id_sample'], $dataWarna['id']);
+                
+                foreach ($getSOUkuranOld as $key => $value) {
+                    $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $value->id_ukuran, "<>");
+                    $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $value->id_ukuran, "=");
+                    if ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty > 0) {
+                        $queryStatus = false;
+                        $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';
+                        break;
+                    }
+                    $arr_do_prod = [
+                        "id_ukuran" => $value->id_ukuran,
+                        "ref_detail_id" => $value->id_sample_det,
+                    ];
+                    $this->deleteRecordMultipleColumn("trans_delivery_prod", $arr_do_prod);
+                    $this->deleteRecordMultipleColumn("trans_delivery_detail", $arr_do_prod);
+
+                    $deleteWOProsesUkuran = $this->deleteDataWOProsesUkuran($dataWarna['id'], $value->id_ukuran);
+
+                    $this->deleteRecord("trans_sample_ukuran", "id", $value->id);
+                }
             }
 
-
-            foreach ($dataGram as $xrow) {
-                $arrDataGram = [
-                    "id_sample_det" => $idSampleDet,
-                    "id_warna" => $xrow['id_warna'],
-                    "qty" => $xrow['qty'],
-                    "gram" => $xrow['gram'],
-                    "gram_nd" => $xrow['gram_nd'],
-                    "kg" => $xrow['kg'],
-                    "loss" => $xrow['loss'],
-                    "kg_loss" => $xrow['kg_loss'],
-                    "total" => $xrow['total'],
-                    "active" => 1,
-                    "created_at" =>  date("Y-m-d H:i:s"),
-
-                ];
-
-                $this->insertRecordGetid("trans_sample_gram", $arrDataGram);
+            if (!empty($dataGram)) {
+                # code...
+                foreach ($dataGram as $xrow) {
+                    $arrDataGram = [
+                        "id_sample_det" => $idSampleDet,
+                        "id_warna" => $xrow['id_warna'],
+                        "qty" => $xrow['qty'],
+                        "gram" => $xrow['gram'],
+                        "gram_nd" => $xrow['gram_nd'],
+                        "kg" => $xrow['kg'],
+                        "loss" => $xrow['loss'],
+                        "kg_loss" => $xrow['kg_loss'],
+                        "total" => $xrow['total'],
+                        "active" => 1,
+                        "created_at" =>  date("Y-m-d H:i:s"),
+    
+                    ];
+    
+                    $this->insertRecordGetid("trans_sample_gram", $arrDataGram);
+                }
             }
 
             // update data qty dan total harga 
             $head_up['qty'] = $head_qty;
             $head_up['total_harga'] = $head_total;
             $this->updateRecord($this->table, $head_up, 'id', $dataWarna['id_sample']);
+
+            if ($queryStatus == false) {
+                $this->db->transRollback();
+                return $msgError;
+            }
+
             $this->db->transComplete();
 
             if ($this->db->transStatus() === TRUE) {

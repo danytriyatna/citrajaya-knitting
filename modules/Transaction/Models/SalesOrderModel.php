@@ -714,9 +714,11 @@ class SalesOrderModel extends \App\Models\PrModel
 
 
         $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
         $builder->where("abx.ref_detail_id", $ref_detail_id);
         $builder->where("abx.id_ukuran", $id_ukuran);
         $builder->where("td.id_invoice $type", null);
+        $builder->where("tp.tipe_id", 2);
         
 
         $builder->orderBy("td.id", 'desc');
@@ -747,10 +749,12 @@ class SalesOrderModel extends \App\Models\PrModel
 
 
         $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
+        $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
         $builder->where("abx.ref_detail_id", $ref_detail_id);
         $builder->where("abx.id_ukuran", $id_ukuran);
         // $builder->where("td.id_invoice $type", null);
         $builder->where("td.active", 1);
+        $builder->where("tp.tipe_id", 2);
         $builder->orderBy("td.id", 'desc');
         $this->_data = $builder->get()->getResult();
         return $this->_data;
@@ -892,7 +896,6 @@ class SalesOrderModel extends \App\Models\PrModel
                 $getSOUkuran = $this->getDataUkuranSO($ukuranId);
                 if (!empty($getSOUkuran)) {
                     $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "<>");
-                    
                     if (count($getDODet) > 0) {
                         $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
                         $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
@@ -1009,6 +1012,14 @@ class SalesOrderModel extends \App\Models\PrModel
                         $this->deleteRecord("trans_sales_order_ukuran", "id", $rowData['id']);
                     }
                     else {
+                        $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
+                        $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
+                        if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
+                            $queryStatus = false;
+                            $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';
+                            break;
+                        }
+
                         $getDOProd = $this->getDataDOProd($dataWarna['id'], $rowData['id_ukuran']);
                         foreach ($getDOProd as $keyDO => $value) {
                             $arr_do_prod = [

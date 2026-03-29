@@ -268,9 +268,6 @@ class BarangMasukModel extends \App\Models\PrModel
 
                     $idMP = [];
                     foreach ($dataProduksi as $xrow) {
-                        if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1) {
-                            throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
-                        }
                         // print_r($xrow);exit;
                         $xpr = [];
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
@@ -301,6 +298,10 @@ class BarangMasukModel extends \App\Models\PrModel
                                 $hanya_tanggal = $matches[1];
                                 $isi_kurung    = $matches[2];
                             }
+                        }
+
+                        if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1 && $isi_kurung != 2) {
+                            throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
                         }
 
 

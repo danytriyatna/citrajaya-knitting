@@ -242,9 +242,9 @@
                   <table class="table table-striped table-sm no-footer mb-0">
                       <thead>
                         <tr>
-                          <th>Proses</th>
-                          <th style="text-align:right;">Qty Prod</th>
-                          <th style="text-align:right;">Qty Fix</th>
+                          <th style="width: 60%">Proses</th>
+                          <th style="text-align:right; width: 20%">Qty Prod</th>
+                          <th style="text-align:right; width: 20%">Qty Perbaikan</th>
                         </tr>
                       </thead>
                       <tbody>

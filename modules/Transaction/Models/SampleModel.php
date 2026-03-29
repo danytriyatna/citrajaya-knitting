@@ -77,6 +77,14 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataDetailSampleById($id)
+    {
+        $builder = $this->db->table("trans_sample_det" . " abx");
+        $builder->where("abx.id", $id);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
     function getDataUkuran($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null, $idProses = null)
     {
         $builder = $this->db->table("trans_sample_ukuran abx");
@@ -159,7 +167,7 @@ class SampleModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_sample_det" . " abx");
         $builder->select("abx.id,ROW_NUMBER
-	( ) OVER ( ORDER BY abx.id ) AS No,
+	    ( ) OVER ( ORDER BY abx.id ) AS No,
             TRIM (
                 BOTH ' - ' 
             FROM
@@ -654,9 +662,13 @@ class SampleModel extends \App\Models\PrModel
         $builder->join("trans_delivery td", "td.id = abx.id_delivery", 'inner');
         $builder->join("trans_produksi tp", "tp.id = td.id_produksi", 'inner');
         $builder->where("abx.ref_detail_id", $ref_detail_id);
-        $builder->where("abx.id_ukuran", $id_ukuran);
-        $builder->where("td.id_invoice $type", null);
-        $builder->where("td.active", 1);
+        if (!empty($id_ukuran)) {
+            $builder->where("abx.id_ukuran", $id_ukuran);
+        }
+        if (!empty($type)) {
+            $builder->where("td.id_invoice $type", null);
+            $builder->where("td.active", 1);
+        }
         $builder->where("tp.tipe_id", 1);
 
         $this->_data = $builder->get()->getRow();
@@ -807,10 +819,6 @@ class SampleModel extends \App\Models\PrModel
                     }
 
                     if ($rowData['qty'] == 0) {
-                        if ($rowData['id'] == 24952) {
-                            # code...
-                            dd($rowData['id']);
-                        }
                         $arr_do_prod = [
                             "id_ukuran" => $rowData['id_ukuran'],
                             "ref_detail_id" => $arrDataUkuran['id_sample_det'],
@@ -825,9 +833,6 @@ class SampleModel extends \App\Models\PrModel
                     else {
                         $getDODetSUM = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "<>");
                         $getDODetSUMDO = $this->getDODetailSUM($dataWarna['id'], $rowData['id_ukuran'], "=");
-                        // if ($rowData['id'] == 24952) {
-                        //     dd($rowData['id'], $rowData['qty'], $getSOUkuran->qty, $getDODetSUMDO->qty, $getDODetSUMDO->qty);
-                        // }
                         if ((int)$rowData['qty'] < (int)$getSOUkuran->qty && ((int)$rowData['qty'] < ((int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty))) {
                             $queryStatus = false;
                             $msgError = 'Tidak dapat mengubah QTY <strong>lebih kecil dari '.(int)$getDODetSUMDO->qty  + (int)$getDODetSUM->qty.'</strong>! Total QTY Delivery Order pada item ini sudah mencapai batas minimal!';

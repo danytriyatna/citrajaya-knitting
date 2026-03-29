@@ -744,8 +744,43 @@ class Sample extends BaseController
     $id = (int)$this->request->getPost('id');
     $msg    = "Data gagal dihapus !";
     $status = false;
+    $getCurrentDelDetail = $this->mSample->getDataDetailSampleById($id);
+    
+    if (!empty($getCurrentDelDetail)) {
+      $params_wo['ref_id'] = $getCurrentDelDetail->id_sample;
+      $params_wo['tipe_id'] = 1;
+      $ref_sample_wo = $this->mworkOrder->getData(null, 0, 1, null, null, $params_wo);
+      if (!empty($ref_sample_wo)) {
+        foreach ($ref_sample_wo as $key_wo => $valueWO) {
+          $getDODetSUM = $this->mSample->getDODetailSUM($id);
+          if ($getDODetSUM->qty > 0) {
+            $build_array['message'] = "Data tidak bisa dihapus karena sudah ada transaksi DO";
+            $build_array['status']  = false;
+            return $this->response->setJSON($build_array); 
+          }
+          
+          $this->mworkOrder->deleteRecord($this->mworkOrder->table5, 'id_walkorder_detail', $getCurrentDelDetail->id);
+
+          $getUkuranDel = $this->mSample->getDataDetailSampleUkuran($getCurrentDelDetail->id_sample, $getCurrentDelDetail->id);
+          if (!empty($getUkuranDel)) {
+            foreach ($getUkuranDel as $xrow) {
+              $this->mSample->deleteDataWOProsesUkuran($getCurrentDelDetail->id, $xrow->id_ukuran);
+            }
+          }
+
+          $params_wo_det['id_walkorder'] = $valueWO->id;
+          $params_wo_det['ref_detail_id'] = $getCurrentDelDetail->id;
+          $params_wo_det['tipe_id'] = 1;
+          $this->mworkOrder->deleteRecordMultipleColumn($this->mworkOrder->table2, $params_wo_det);
+        }
+      }
+    }
+    $params_wo['tipe_id'] = 1;
+    $params_wo['ref_id']  = $id;
+    $ref_sample_wo = $this->mworkOrder->getData(null, 0, 1, null, null, $params_wo);
     $res = $this->mSample->deleteRecord("trans_sample_det", 'id', $id);
     $resDel = $this->mSample->deleteRecord("trans_sample_ukuran", 'id_sample_det', $id);
+    
     if ($resDel) {
       $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "Sample Dihapus");
       $status = true;

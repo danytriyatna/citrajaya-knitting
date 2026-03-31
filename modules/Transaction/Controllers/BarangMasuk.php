@@ -569,13 +569,13 @@ class BarangMasuk extends BaseController
                ->setCellValue('O4', 'NOMOR MESIN')
                ->setCellValue('P4', 'JAM MESIN')
                ->setCellValue('Q4', 'NILAI MESIN')
-               ->setCellValue('R4', 'QTY KIRIM')
-               ->setCellValue('S4', 'QTY')
-               ->setCellValue('T4', 'HARGA')
-               ->setCellValue('U4', 'AMOUNT')
-               ->setCellValue('V4', 'STATUS')
-               ->setCellValue('W4', 'TGL SCAN')
-               ->setCellValue('X4', 'TIPE TRANSAKSI');
+            //    ->setCellValue('R4', 'QTY KIRIM')
+               ->setCellValue('R4', 'QTY')
+               ->setCellValue('S4', 'HARGA')
+               ->setCellValue('T4', 'AMOUNT')
+               ->setCellValue('U4', 'STATUS')
+               ->setCellValue('V4', 'TGL SCAN')
+               ->setCellValue('W4', 'TIPE TRANSAKSI');
 
             $styleArray = [
                 'borders' => [
@@ -696,12 +696,12 @@ class BarangMasuk extends BaseController
             ];
             
         $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:X4')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:W4')->applyFromArray($styleArray_header);
         // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
         // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:X2');
+        $sheets->getActiveSheet()->mergeCells('A2:W2');
         // $sheets->getActiveSheet()->mergeCells('A4:I4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
@@ -728,26 +728,27 @@ class BarangMasuk extends BaseController
           $gets->getColumnDimension('O')->setWidth(10);
           $gets->getColumnDimension('P')->setWidth(10);
           $gets->getColumnDimension('Q')->setWidth(10);
+        //   $gets->getColumnDimension('R')->setWidth(15);
           $gets->getColumnDimension('R')->setWidth(15);
-          $gets->getColumnDimension('S')->setWidth(15);
+          $gets->getColumnDimension('S')->setWidth(30);
           $gets->getColumnDimension('T')->setWidth(30);
-          $gets->getColumnDimension('U')->setWidth(30);
-          $gets->getColumnDimension('V')->setWidth(10);
-          $gets->getColumnDimension('W')->setWidth(25);
-          $gets->getColumnDimension('X')->setWidth(15);
+          $gets->getColumnDimension('U')->setWidth(10);
+          $gets->getColumnDimension('V')->setWidth(25);
+          $gets->getColumnDimension('W')->setWidth(15);
+        //   $gets->getColumnDimension('X')->setWidth(15);
 
         // end set width
         //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:X4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:X4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+          $gets->getStyle('A4:W4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:W4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X'
+            'A','B','C','D', 'E','F','G', 'H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W'
         );
 
-        for ($i=0; $i < 24 ; $i++) { 
+        for ($i=0; $i < 23 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -836,22 +837,22 @@ class BarangMasuk extends BaseController
                     ->setCellValue('O'.$ix, !empty($r->nomor_mesin) ? $r->nomor_mesin : '-')
                     ->setCellValue('P'.$ix, !empty($r->jam_mesin) ? $r->jam_mesin : '-')
                     ->setCellValue('Q'.$ix, !empty($r->nilai_mesin) ? $r->nilai_mesin : '-')
-                    ->setCellValue('R'.$ix, !empty($r->qty_kirim) ? $r->qty_kirim : 0)
-                    ->setCellValue('S'.$ix, !empty($r->qty) ? $r->qty : 0)
-                    ->setCellValue('T'.$ix, !empty($r->harga) ? $r->harga : 0)
-                    ->setCellValue('U'.$ix, !empty($r->amount) ? $r->amount : 0)
-                    ->setCellValue('V'.$ix, $status_data)
-                    ->setCellValue('W'.$ix, !empty($r->tgl_scan) ? $r->tgl_scan : '-')
-                    ->setCellValue('X'.$ix, $print_type);
+                    // ->setCellValue('R'.$ix, !empty($r->qty_kirim) ? $r->qty_kirim : 0)
+                    ->setCellValue('R'.$ix, !empty($r->qty) ? $r->qty : 0)
+                    ->setCellValue('S'.$ix, !empty($r->harga) ? $r->harga : 0)
+                    ->setCellValue('T'.$ix, !empty($r->amount) ? $r->amount : 0)
+                    ->setCellValue('U'.$ix, $status_data)
+                    ->setCellValue('V'.$ix, !empty($r->tgl_scan) ? $r->tgl_scan : '-')
+                    ->setCellValue('W'.$ix, $print_type);
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':X'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':W'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("T" . $ix .":U" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("T" . $ix .":V" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
             $ix++;
@@ -859,17 +860,17 @@ class BarangMasuk extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':R'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':Q'. $length);
         
-        $gets->getStyle('A'.$length.':X'.$length)->applyFromArray($stylexArrayFooter);
+        $gets->getStyle('A'.$length.':W'.$length)->applyFromArray($stylexArrayFooter);
         
        $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('S'.$length, $qty);
+                    ->setCellValue('R'.$length, $qty);
 
        $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('U'.$length, $amount);
+                    ->setCellValue('T'.$length, $amount);
 
-       $gets->getStyle("U" . $length)->getNumberFormat()
+       $gets->getStyle("T" . $length)->getNumberFormat()
                ->setFormatCode('#,##0.00');
        
         

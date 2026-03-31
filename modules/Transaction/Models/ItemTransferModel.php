@@ -649,6 +649,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
                 AND tbh.active = 1
+                AND tbh.status = 1
             ), 0) AS qty_terima,
              COALESCE(
                 ( 

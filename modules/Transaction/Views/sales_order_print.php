@@ -226,7 +226,7 @@
                     :
                 </td>
                 <td style="border: none; width: 30%; vertical-align: top;">
-                    <?= !empty($data->tgl_deadline_2) ? formatTanggalIndonesia($data->tgl_deadline_2) : '-' ?>
+                    <?= !empty($data->tgl_deadline_dua) ? formatTanggalIndonesia($data->tgl_deadline_dua) : '-' ?>
                 </td>
             </tr>
         </tbody>

@@ -484,7 +484,7 @@ class DeliveryOrder extends BaseController
         $ddata['ref_detail_id'] = $item['ref_detail_id'];
         $ddata['id_ukuran'] = $item['id_ukuran'];
         $ddata['qty'] = $item['qty'];
-        
+        $rs_prod = null;
         if (!empty($item['id'])) {
           $rs_prod = $this->mDelivery->getDataProduksi(null, $item['id']);
         }

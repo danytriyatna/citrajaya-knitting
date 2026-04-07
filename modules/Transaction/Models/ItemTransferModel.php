@@ -649,7 +649,6 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
                 AND tbh.active = 1
-                AND tbh.status = 1
             ), 0) AS qty_terima,
              COALESCE(
                 ( 
@@ -765,7 +764,172 @@ class ItemTransferModel extends \App\Models\PrModel
         return $builder->get()->getResult();
     }
 
+    function get_trf_data($from_date = null, $to_date = null, $idProses = null, $idOperator = null, $approved = null)
+    {
+        $db = $this->db;
 
+        /*
+        |--------------------------------------------------------------------------
+        | SUBQUERY (x) – Mengambil Data Detail & Hitung Qty Terkait
+        |--------------------------------------------------------------------------
+        */
+        $subBuilder = $db->table('trans_barang_trf_so_det tbtsd');
+
+        $subBuilder->select([
+            'tbtsd.id',
+            'tbth.kode_transaksi',
+            'COALESCE(tso.kode_sales_order, ts.kode_sample) as kode_sales_order',
+            'rk.nama AS buyer',
+            'tbtsd.id_konsumen',
+            'tbtsd.style',
+            'jp.nama AS proses',
+            'ro.nama_operator',
+            'tbtsd.print_type',
+            'tbtsd.color',
+            'tbtsd.kode_ukuran',
+            'ru.key_ukuran',
+            'tbtsd.qty',
+            'COALESCE(tso.kode_sales_order, ts.kode_sample) AS kode',
+            'COALESCE(tso.tgl_transaksi, ts.tgl_transaksi) AS tgl_transaksi',
+            // Subquery Qty Terima
+            "COALESCE((
+                SELECT SUM(tbmp.qty)
+                FROM trans_barang_masuk_produksi tbmp
+                INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
+                WHERE tbmp.kode_sales_order = tbtsd.kode_sales_order
+                AND tbmp.kode_ukuran = tbtsd.kode_ukuran
+                AND tbmp.color = tbtsd.color
+                AND tbh.id_proses = tbth.id_proses
+                AND tbh.id_cmt = tbth.id_cmt
+                AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.active = 1
+                AND tbh.status = 1
+            ), 0) AS qty_terima",
+            // Subquery Qty Kirim (Selisih)
+            "(tbtsd.qty - COALESCE((
+                SELECT SUM(tbmp.qty)
+                FROM trans_barang_masuk_produksi tbmp
+                INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
+                WHERE tbmp.kode_sales_order = tbtsd.kode_sales_order
+                AND tbmp.kode_ukuran = tbtsd.kode_ukuran
+                AND tbmp.color = tbtsd.color
+                AND tbh.id_proses = tbth.id_proses
+                AND tbh.id_cmt = tbth.id_cmt
+                AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.active = 1
+                AND tbh.status = 1
+            ), 0)) AS qty_kirim",
+            // Subquery Qty Ref (Logic COALESCE Sample vs SO)
+            "COALESCE(
+                ( 
+                    SELECT tsu.qty FROM trans_sample_ukuran tsu 
+                    INNER JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
+                    INNER JOIN trans_sample_det tsd ON tsd.id = tsu.id_sample_det 
+                    LEFT JOIN ref_warna rw1 ON rw1.id = tsd.id_warna_1 
+                    LEFT JOIN ref_warna rw2 ON rw2.id = tsd.id_warna_2 
+                    LEFT JOIN ref_warna rw3 ON rw3.id = tsd.id_warna_3 
+                    LEFT JOIN ref_warna rw4 ON rw4.id = tsd.id_warna_4 
+                    LEFT JOIN ref_warna rw5 ON rw5.id = tsd.id_warna_5 
+                    LEFT JOIN ref_warna rw6 ON rw6.id = tsd.id_warna_6 
+                    LEFT JOIN ref_warna rw7 ON rw7.id = tsd.id_warna_7 
+                    LEFT JOIN ref_warna rw8 ON rw8.id = tsd.id_warna_8 
+                    WHERE tsu.id_sample = ts.id AND ru.kode_ukuran = tbtsd.kode_ukuran
+                    AND CONCAT_WS('~', NULLIF(rw1.kode_warna,''), NULLIF(rw2.kode_warna,''), NULLIF(rw3.kode_warna,''), NULLIF(rw4.kode_warna,''), NULLIF(rw5.kode_warna,''), NULLIF(rw6.kode_warna,''), NULLIF(rw7.kode_warna,''), NULLIF(rw8.kode_warna,'')) = tbtsd.color
+                ), 
+                ( 
+                    SELECT tsou.qty FROM trans_sales_order_ukuran tsou 
+                    INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                    INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det 
+                    LEFT JOIN ref_warna rw1 ON rw1.id = tsod.id_warna_1 
+                    LEFT JOIN ref_warna rw2 ON rw2.id = tsod.id_warna_2 
+                    LEFT JOIN ref_warna rw3 ON rw3.id = tsod.id_warna_3 
+                    LEFT JOIN ref_warna rw4 ON rw4.id = tsod.id_warna_4 
+                    LEFT JOIN ref_warna rw5 ON rw5.id = tsod.id_warna_5 
+                    LEFT JOIN ref_warna rw6 ON rw6.id = tsod.id_warna_6 
+                    LEFT JOIN ref_warna rw7 ON rw7.id = tsod.id_warna_7 
+                    LEFT JOIN ref_warna rw8 ON rw8.id = tsod.id_warna_8 
+                    WHERE tsou.id_sales_order = tso.id AND ru.kode_ukuran = tbtsd.kode_ukuran
+                    AND CONCAT_WS('~', NULLIF(rw1.kode_warna,''), NULLIF(rw2.kode_warna,''), NULLIF(rw3.kode_warna,''), NULLIF(rw4.kode_warna,''), NULLIF(rw5.kode_warna,''), NULLIF(rw6.kode_warna,''), NULLIF(rw7.kode_warna,''), NULLIF(rw8.kode_warna,'')) = tbtsd.color
+                )
+            ) AS qty_ref",
+            // Subquery Harga
+            "((SELECT wop.harga FROM trans_walkorder_proses wop 
+                LEFT JOIN trans_walkorder wo ON wop.id_walkorder = wo.id 
+                WHERE wop.id_proses = tbth.id_proses 
+                AND wo.ref_kode = tbtsd.kode_sales_order LIMIT 1)) AS harga"
+        ]);
+
+        $subBuilder->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner');
+        $subBuilder->join("ref_ukuran ru", "tbtsd.kode_ukuran = ru.kode_ukuran", "left");
+        $subBuilder->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left');
+        $subBuilder->join('ref_operator ro', 'ro.id = tbth.id_cmt', 'left');
+        $subBuilder->join('trans_sales_order tso', 'tso.kode_sales_order = tbtsd.kode_sales_order', 'left');
+        $subBuilder->join('trans_sample ts', 'ts.kode_sample = tbtsd.kode_sales_order', 'left');
+        $subBuilder->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'inner');
+
+        // Filter Tanggal
+        if ($from_date && $to_date) {
+            $subBuilder->groupStart()
+                ->where('tso.tgl_transaksi >=', $from_date)
+                ->where('tso.tgl_transaksi <=', $to_date)
+            ->groupEnd()
+            ->orGroupStart()
+                ->where('ts.tgl_transaksi >=', $from_date)
+                ->where('ts.tgl_transaksi <=', $to_date)
+            ->groupEnd();
+        }
+
+        // Filter Lainnya
+        if (!empty($idProses)) $subBuilder->where('tbth.id_proses', $idProses);
+        if (!empty($idOperator)) $subBuilder->where('tbth.id_cmt', $idOperator);
+        if (!empty($approved)) $subBuilder->where('tbth.status', 1);
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUERY LUAR – Menyatukan Baris Duplicate dengan SUM & GROUP BY
+        |--------------------------------------------------------------------------
+        */
+        $builder = $db->table("({$subBuilder->getCompiledSelect(false)}) x");
+
+        $builder->select([
+            'buyer',
+            'kode_sales_order',
+            'style',
+            'proses',
+            'nama_operator',
+            'id_konsumen',
+            'print_type',
+            'color',
+            'kode_ukuran',
+            'key_ukuran',
+            'SUM(qty) AS qty',            // Agregasi qty agar tidak duplicate baris
+            'SUM(qty_terima) AS qty_terima',
+            'SUM(qty_kirim) AS qty_kirim',
+            'kode',
+            'tgl_transaksi',
+            'MAX(qty_ref) AS qty_ref',     // Mengambil nilai tertinggi/unik
+            'MAX(harga) AS harga'          // Mengambil nilai tertinggi/unik
+        ]);
+
+        $builder->groupBy([
+            'buyer',
+            'kode_sales_order',
+            'style',
+            'proses',
+            'nama_operator',
+            'id_konsumen',
+            'print_type',
+            'color',
+            'kode_ukuran',
+            'key_ukuran',
+            'kode',
+            'tgl_transaksi'
+        ]);
+
+        $builder->orderBy('tgl_transaksi', 'ASC');
+
+        return $builder->get()->getResult();
+    }
 
     function get_qty_terima($from_date = null, $to_date = null){
         $builder = $this->db->table("trans_barang_masuk_produksi tbmp");

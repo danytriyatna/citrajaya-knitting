@@ -437,6 +437,42 @@ class ItemTransfer extends BaseController
     }
     else {
       $results = $this->mRef->getDataByProsesAndOperator($id_proses, $id_cmt);
+      // $results = $this->mRef->get_trf_data(null, null, $id_proses, $id_cmt, 1);
+      // // $grouped = [];
+
+      // // foreach ($results as $row) {
+
+      // //     // buat key unik berdasarkan identitas barang
+      // //     $key = implode('|', [
+      // //         $row->kode_sales_order,
+      // //         $row->id_konsumen,
+      // //         $row->style,
+      // //         $row->color,
+      // //         $row->kode_ukuran,
+      // //         $row->id_proses
+      // //     ]);
+
+      // //     if (!isset($grouped[$key])) {
+      // //         // simpan baris pertama
+      // //         $grouped[$key] = $row;
+      // //         $grouped[$key]->qty_kirim = (int)$row->qty_kirim;
+      // //         $grouped[$key]->qty = (int)$row->qty;
+      // //     } else {
+      // //         // jumlahkan qty jika sudah ada
+      // //         $grouped[$key]->qty_kirim += (int)$row->qty_kirim;
+      // //         $grouped[$key]->qty += (int)$row->qty;
+      // //     }
+
+      // //     // qty_terima tetap satu (sama untuk semua header)
+      // //     $grouped[$key]->qty_terima = (int)$row->qty_terima;
+
+      // //     // hitung ulang sisa
+      // //     $grouped[$key]->qty_sisa =
+      // //         $grouped[$key]->qty_kirim - $grouped[$key]->qty_terima;
+      // // }
+      // $data['status'] = true;
+      // $data['dataSO'] = array_values($results);
+      // return $this->response->setJSON($data);
     }
     $data = [];
     
@@ -444,7 +480,7 @@ class ItemTransfer extends BaseController
 
     $data['status'] = true;
     if (isset($noSO)) {
-      $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSO($results->id) : null;
+      $resDataDetSO = !empty($results) ? $this->mRefDet->getDataDetSORef($results->id) : null;
       $resDataDetSODet = !empty($results) ? $this->mRefDet->getDataDetail($results->id) : null;
       $data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : null;
       $data['dataSODet'] = !empty($resDataDetSODet) ? $resDataDetSODet : null;
@@ -455,7 +491,7 @@ class ItemTransfer extends BaseController
 
       if (!empty($results)) {
           foreach ($results as $value) {
-              $dataDetSO = $this->mRefDet->getDataDetSO($value->id);
+              $dataDetSO = $this->mRefDet->getDataDetSORef($value->id);
               $dataDetSODet = $this->mRefDet->getDataDetail($value->id);
 
               if (!empty($dataDetSO)) {

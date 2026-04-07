@@ -300,6 +300,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             }
                         }
 
+                        // print_r($xrow);exit;
                         if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1 && $isi_kurung != 2) {
                             throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
                         }

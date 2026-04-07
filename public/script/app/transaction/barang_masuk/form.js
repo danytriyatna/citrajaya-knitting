@@ -1370,7 +1370,7 @@ function simpanData(status) {
         },
         minLength: 3,
         select: function( event, ui ) {
-            addItem(ui.item.data, 'scan');
+            addItem(ui.item.data, 'search');
         },
         open: function() {
           $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
@@ -1382,12 +1382,12 @@ function simpanData(status) {
     });
 
 
-    function addItem(data, type){
+    function addItem(data, typeAction = null){
         let produksi_data = dtListProduksi.getData();
         let index = -1;
         if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
             index = produksi_data.findIndex(x => 
-
+                
                 x.kode_sales_order == data.kode_sales_order &&
                 (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '') && (x.color ? x.color.split('~')[1] : '') == (data.color ? data.color.split('~')[1] : '') &&                x.kode_ukuran == data.kode_ukuran
             );
@@ -1406,12 +1406,18 @@ function simpanData(status) {
             let totalQty = 0;
             let totalAmount = 0;
 
-            matchingItems.forEach(item => {
-                totalQty += parseFloat(item.qty) || 0;
-                totalAmount += parseFloat(item.amount) || 0;
-            });
-
-            if (type == 'click') {
+            if (typeAction == 'scan') {
+                matchingItems.forEach(item => {
+                    totalQty += parseFloat(item.qty) || 0;
+                    totalAmount += parseFloat(item.amount) || 0;
+                });
+            }
+            else if (typeAction == 'search') {
+                totalQty = parseFloat(data.qty_kirim) || 0;
+                totalAmount = parseFloat(data.amount) || 0;
+                data.qty = totalQty || 0;
+            }
+            else  {
                 totalQty = 1;
                 data.qty = 1;
             }
@@ -1427,7 +1433,9 @@ function simpanData(status) {
             const hargaFix = (parseFloat(data.harga) || 0) > 0 ? parseFloat(data.harga) : hargaRata;
             data.harga = hargaFix;
             data.amount = (parseFloat(data.qty) || 0) * hargaFix;
-
+            
+            console.log("data yang ditambahkan", data)
+            
             dtListProduksi.addRow(data);
         }
 

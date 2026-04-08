@@ -686,11 +686,13 @@ $(document).ready(function () {
 
     $("#btn-cetak-print").on('click', function (e) {
         e.preventDefault()
-
+        validation = true;
+        
         //   const inpp_slcWarna = $("#print_slc_warna");
         const inpp_slcUkuran = $("#print_slc_ukuran");
         const inpp_qty       = $("#print_qty");
         const inpp_qtyp      = $("#print_qtyp");
+        const inpp_printType = $("#print_type");
 
         // mdlPrint
         const dt_noSample = inpp_noSo.html()
@@ -700,13 +702,27 @@ $(document).ready(function () {
         const dt_trans = inpp_trans.html()
 
         const dt_style = brcStyle.val()
+
+        if(inpp_slcUkuran.val() == "" || inpp_slcUkuran.val() == null || inpp_printType.val() == "" || inpp_printType.val() == null) validation = false
+
+        if (validation == false) {
+            Swal.fire({
+                text: "Lengkapi isian pada form !",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 1000
+            });
+            return false;
+        }
         // inpp_trans
 
         // Query parameters
         let params = {
             ukuran : inpp_slcUkuran.val(),
+            ukuran_text : inpp_slcUkuran.find("option:selected").text(),
             qty : inpp_qty.val(),
             qtyp : inpp_qtyp.val(),
+            print_type : inpp_printType.val(),
             noSample : dt_noSample,
             deskripsi : dt_deskripsi,
             buyer : '',
@@ -717,7 +733,7 @@ $(document).ready(function () {
   
           // Buat query string
           let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/sales-order/generate?${queryString}`;
+          let fullUrl = `trans/work-order/generate?${queryString}`;
   
           // Buka link di tab baru
           window.open(fullUrl, '_blank');

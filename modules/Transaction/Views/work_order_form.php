@@ -77,6 +77,7 @@
                     <th>UKURAN</th>
                     <th class="text-end">QTY</th>
                     <th class="text-end">QTY PRINT</th>
+                    <th>TIPE PRINT</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -88,7 +89,7 @@
                     </td> -->
                     <td>
                       <select id="print_slc_ukuran" class="form-select">
-                        <option value="" disabled>-- Pilih Ukuran --</option>
+                        <option value="" disabled selected>-- Pilih Ukuran --</option>
                         <?php foreach ($ukuran as $item) : ?>
                           <option value="<?= $item['key_ukuran'] ?>"><?= $item['kode_ukuran'] ?></option>
                         <?php endforeach; ?>
@@ -96,6 +97,13 @@
                     </td>
                     <td><input id="print_qty" type="text" class="form-control text-end" placeholder="Ketikkan qty" value="1"></td>
                     <td><input id="print_qtyp" type="text" class="form-control text-end" placeholder="Ketikkan qty print" value="1"></td>
+                    <td>
+                      <select id="print_type" class="form-select">
+                        <option value="" disabled>-- Pilih Tipe --</option>
+                        <option value="1" selected>Produksi</option>
+                        <option value="2">Perbaikan</option>
+                      </select>
+                    </td>
                   </tr>
                 </tbody>
               </table>

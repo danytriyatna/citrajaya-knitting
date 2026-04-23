@@ -566,6 +566,7 @@ class ItemTransfer extends BaseController
     $id = $this->request->getPost('id');
     $tanggal = $this->request->getPost('tanggal');
     $statusData = $this->request->getPost('status');
+    $oldStatus = $this->request->getPost('statusFrom') ? $this->request->getPost('statusFrom') : 0;
     $id_gudang_asal = $this->request->getPost('id_gudang_asal');
     $id_gudang_tujuan = $this->request->getPost('id_gudang_tujuan');
     $id_cmt = $this->request->getPost('id_cmt');
@@ -602,7 +603,7 @@ class ItemTransfer extends BaseController
       $dataHeader['created_by'] = $this->get_userid();
     }
     // print_r($dataDetail);exit;
-    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO);
+    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
     if ($res) {
       $status = true;
       $msg = "Data berhasil disimpan!";

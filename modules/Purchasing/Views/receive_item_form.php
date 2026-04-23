@@ -156,7 +156,7 @@
                       <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
-                      <input type="text" id="receive_no" name="receive_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->po_no) ? $resData->po_no : null ?>" readonly>
+                      <input type="text" id="receive_no" name="receive_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->rec_no) ? $resData->rec_no : null ?>" readonly>
                     </div>
                   </div>
                 </div>

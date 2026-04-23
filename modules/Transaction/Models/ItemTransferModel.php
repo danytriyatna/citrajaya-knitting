@@ -399,18 +399,99 @@ class ItemTransferModel extends \App\Models\PrModel
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }
+
+    function getTransferSOSUMQty($kode_sales_order = null, $kode_ukuran = null, $color = null, $id_konsumen = null, $id_proses = null, $id_cmt = null, $type_update = null, $value = null)
+    {
+        $builder = $this->db->table("trans_barang_trf_so_det tbtsd");
+
+        $builder->select("COALESCE(SUM(tbtsd.qty), 0) as total_qty_transfer");
+
+        $builder->join("trans_barang_trf_header tbh", "tbh.id = tbtsd.id_header", 'inner');
+        $builder->where("tbtsd.kode_sales_order", $kode_sales_order);
+        $builder->where("tbtsd.kode_ukuran", $kode_ukuran);
+        $builder->where("tbtsd.color", $color);
+        $builder->where("tbtsd.id_konsumen", $id_konsumen);
+        $builder->where("tbh.id_proses",  $id_proses);
+        $builder->where("tbh.id_cmt", $id_cmt);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getBTMSUMQty($kode_sales_order = null, $kode_ukuran = null, $color = null, $id_konsumen = null, $id_proses = null, $id_cmt = null, $type_update = null, $value = null)
+    {
+        $builder = $this->db->table("trans_barang_masuk_produksi tbmp");
+
+        $builder->select("COALESCE(SUM(tbmp.qty), 0) as total_qty_btm, COALESCE(SUM(tbmp.qty_kirim), 0) as total_qty_kirim_btm");
+
+        $builder->join("trans_barang_header tbh", "tbh.id =tbmp.id_header", 'inner');
+        $builder->where("tbmp.kode_sales_order", $kode_sales_order);
+        $builder->where("tbmp.kode_ukuran", $kode_ukuran);
+        $builder->where("tbmp.color", $color);
+        $builder->where("tbmp.id_konsumen", $id_konsumen);
+        $builder->where("tbh.id_proses",  $id_proses);
+        $builder->where("tbh.id_cmt", $id_cmt);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function getDetailItem($id = null)
+    {
+        $builder = $this->db->table("trans_barang_trf_so_det abx");
+        $builder->select("tbth.id_proses, tbth.id_cmt, tbth.status, abx.id, abx.id_header, abx.kode_sales_order, abx.qty, abx.id_konsumen, abx.kode_ukuran, abx.style, abx.color, abx.print_type");
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = abx.id_header", 'inner');
+
+        $builder->where("abx.id", $id);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
+    function updateDataBTMQtyKirim($kode_sales_order = null, $kode_ukuran = null, $color = null, $id_konsumen = null, $id_proses = null, $id_cmt = null, $type_update = null, $value = null, $condition = null)
+    {
+        // Menentukan operator: jika type_update adalah 'minus', maka dikurangi. 
+        // Jika tidak, default ditambah.
+        $operator = ($type_update === 'minus') ? '-' : '+';
+        
+        $sql = "
+            UPDATE trans_barang_masuk_produksi AS tbmp
+            SET qty_kirim = tbmp.qty_kirim $operator :value:
+            FROM trans_barang_header AS tbh
+            WHERE tbh.id = tbmp.id_header 
+            AND tbmp.kode_sales_order = :kode_so:
+            AND tbmp.kode_ukuran = :ukuran:
+            AND tbmp.color = :color:
+            AND tbmp.id_konsumen = :id_konsumen:
+            AND tbh.id_proses = :id_proses:
+            AND tbh.id_cmt = :id_cmt:
+        ";
+
+        if (!empty($condition)) {
+            $sql .= " AND tbmp.qty >= (tbmp.qty_kirim - :value:) ";
+        }
+
+        $params = [
+            'value'             => (float) ($value ?? 0),
+            'kode_so'           => $kode_sales_order,
+            'ukuran'            => $kode_ukuran,
+            'color'             => $color,
+            'id_konsumen'       => $id_konsumen,
+            'id_proses'         => $id_proses,
+            'id_cmt'            => $id_cmt
+        ];
+
+        // Eksekusi query dengan parameter binding
+        return $this->db->query($sql, $params);
+    }
     
-    function trxInsertUpdateRecord($data, $id, $detail, $dataSO)
+    function trxInsertUpdateRecord($data, $id, $detail, $dataSO, $oldStatus = null)
     {
         $this->db->transStart();
         try {
-            
             if (!empty($id)) {
                 $arrDelete =  [
                     "id_header" => $id,
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
-                $this->deleteRecordMultipleColumn($this->tblDetailSO, $arrDelete);
+                // $this->deleteRecordMultipleColumn($this->tblDetailSO, $arrDelete);
                 
                 $getCurrent = $this->getData($id);
                 if ($getCurrent->status == 1) {
@@ -427,10 +508,12 @@ class ItemTransferModel extends \App\Models\PrModel
             
             if (!empty($dataSO)) {
                 foreach ($dataSO as $rowData) {
+
                     if ($rowData['qty_ref'] < $rowData['qty'] && (!empty($rowData['print_type']) && $rowData['print_type'] == 1)) {
-                        throw new \Exception("QTY melebihi QTY REF!");
+                        throw new \Exception("QTY melebihi QTY REF! ({$rowData['kode_sales_order']})");
                         break;
                     }
+
                     $dataDetail = [
                         // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
                         "id_header" => $id,
@@ -447,7 +530,53 @@ class ItemTransferModel extends \App\Models\PrModel
                         "kode_ukuran" => $rowData['kode_ukuran'],
                         "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
                     ];
-                    $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
+
+                    $idDet = !empty($rowData['id']) ? $rowData['id'] : null;
+                    $getCurrentDet = $this->getDetailItem($idDet);
+                    if (!empty($getCurrentDet)) {
+                        if ($oldStatus == 0 && $data['status'] == 1) {
+                            $updateQtyKirimBtm = $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                            $getCurrentDet->id_cmt, 'plus', $rowData['qty']);
+                        }
+                        else if ($getCurrentDet->status == 1){
+                            $getQtySumTfSo = $this->getTransferSOSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                            $getCurrentDet->id_cmt);
+
+                            $getQtySumBtm = $this->getBTMSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                            $getCurrentDet->id_cmt);
+                            // dd($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty']));
+                            if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
+                                $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                            $getCurrentDet->id_cmt, 'minus', $getCurrentDet->qty - $rowData['qty'], true);
+                            }
+                            else if ($rowData['qty'] > $getCurrentDet->qty) {
+                                $updatePlus = $rowData['qty'] - $getCurrentDet->qty;
+                                $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                            $getCurrentDet->id_cmt, 'plus', $updatePlus);
+                            }
+                            else if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm > $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
+                                $total_selisih = $getQtySumTfSo->total_qty_transfer - $getQtySumBtm->total_qty_btm;
+                                $total_selisih = $getCurrentDet->qty - $total_selisih;
+                                throw new \Exception("QTY tidak dapat diubah lebih kecil dari {$total_selisih} pada ({$rowData['kode_sales_order']})");
+                                break;
+                            }
+                        }
+                        $this->updateRecord($this->tblDetailSO, $dataDetail, 'id', $getCurrentDet->id);
+                    }
+                    else {
+                        if ($data['status'] == 1) {
+                            $updateQtyKirimBtm = $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                            $rowData['color'], $rowData['id_konsumen'], $$data['id_proses'], 
+                                                            $data['id_cmt'], 'plus', $rowData['qty']);
+                        }
+                        $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
+                    }
+                    
                 }
             }
             

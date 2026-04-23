@@ -387,6 +387,7 @@ let dtList = new Tabulator("#dt-list", {
             
             }
         },
+        {title: "NID", field: "id", width: "10%", visible:false},
         {title: "No.SO", field: "kode_sales_order", width: "10%"},
         {title: "Ref Detail ID", field: "ref_detail_id", visible:false},
         // {title: "Tipe", field: "tipe", visible:true},
@@ -1409,10 +1410,8 @@ selectProses.on("change", function() {
 
 
 function simpanData(status) {
+    $(".preloader").css("opacity", "0.7").show();
     const valProduksi = inpRefProduksi.is(':checked') ? 1 : 0;
-
-  
-
 
     $.ajax({
         type: 'POST',
@@ -1430,6 +1429,7 @@ function simpanData(status) {
             keterangan:inpKeterangan.val(),
             status:status,
             ref_produksi: valProduksi,
+            statusFrom:inpStatus.val()
         },
         dataType: "json",
         beforeSend: function () {
@@ -1462,6 +1462,7 @@ function simpanData(status) {
                     timer: 2000
                 });
             }
+            $(".preloader").hide().css("opacity", "1");
         },
         error: function (e) {
             let msg = e.responseJSON.message;
@@ -1473,6 +1474,7 @@ function simpanData(status) {
                 showConfirmButton: false,
                 timer: 2000
             });
+            $(".preloader").hide().css("opacity", "1");
         },
     });
 

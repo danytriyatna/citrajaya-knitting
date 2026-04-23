@@ -1246,6 +1246,8 @@ const inpNomorMesin = $("#nomor_mesin");
 const inpNilaiMesin = $("#nilai_mesin");
 
 function simpanData(status) {
+    $(".preloader").css("opacity", "0.7").show();
+    
     $.ajax({
         type: 'POST',
         url: '/trans/incoming-goods/save',
@@ -1300,6 +1302,7 @@ function simpanData(status) {
                     // timer: 2000
                 });
             }
+            $(".preloader").hide().css("opacity", "1");
         },
         error: function (e) {
             let msg = e.responseJSON.message;
@@ -1311,6 +1314,7 @@ function simpanData(status) {
                 showConfirmButton: false,
                 // timer: 2000
             });
+            $(".preloader").hide().css("opacity", "1");
         },
     });
 
@@ -1321,7 +1325,7 @@ function simpanData(status) {
         source: function( request, response ) {
 
             // dtListProduksiRef.setData(refData);
-            if (refData == null) {
+            if (refData == null || refData.length == 0) {
                 Swal.fire({
                     text: "Data Tidak Ditemukan!",
                     icon: 'warning',
@@ -1358,7 +1362,8 @@ function simpanData(status) {
 
                 // console.log("results barcode", results)
                 response(results);
-            }else{
+            }
+            else{
                 Swal.fire({
                     text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
                     icon: 'warning',

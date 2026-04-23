@@ -509,10 +509,10 @@ class ItemTransferModel extends \App\Models\PrModel
             if (!empty($dataSO)) {
                 foreach ($dataSO as $rowData) {
 
-                    if ($rowData['qty_ref'] < $rowData['qty'] && (!empty($rowData['print_type']) && $rowData['print_type'] == 1)) {
-                        throw new \Exception("QTY melebihi QTY REF! ({$rowData['kode_sales_order']})");
-                        break;
-                    }
+                    // if ($rowData['qty_ref'] < $rowData['qty'] && (!empty($rowData['print_type']) && $rowData['print_type'] == 1)) {
+                    //     throw new \Exception("QTY melebihi QTY REF! ({$rowData['kode_sales_order']})");
+                    //     break;
+                    // }
 
                     $dataDetail = [
                         // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,

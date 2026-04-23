@@ -329,6 +329,44 @@ class Mcoa extends PrModel
         return $this->_data;
     }
 
+    function get_mutasi_export_biaya($month = null, $year = null, $ref_masuk = null)
+    {
+        $builder = $this->db->table("trans_akun_det");
+        $builder->select("
+            m_coa.nama,
+            trans_akun.trans_akun_date,
+            trans_akun.trans_akun_kode, 
+            m_coa.kode,
+            trans_akun_det.keterangan, 
+            trans_akun_det.jumlah,
+            CONCAT(ref_rekening.rekening_no , ' - ', ref_rekening.rekening_bank) AS tipe_bayar
+        ", false);
+
+        $builder->join("m_coa", "trans_akun_det.coa_id = m_coa.id", "inner");
+        $builder->join("trans_akun", "trans_akun.id = trans_akun_det.trans_akun_id", "inner");
+        $builder->join("ref_rekening", "ref_rekening.id = trans_akun.ref_rekening_id", "left");
+
+        $builder->where("trans_akun.active", 1);
+        
+        if (!empty($month)) {
+            // Gunakan (int) untuk memastikan tipe data angka dan false agar CI tidak menambah kutip
+            $builder->where("EXTRACT(MONTH FROM trans_akun.trans_akun_date) = " . (int)$month, null, false);
+        }
+        if (!empty($year)) {
+            $builder->where("EXTRACT(YEAR FROM trans_akun.trans_akun_date) = " . (int)$year, null, false);
+        }
+
+        $builder->where("(
+            CAST(m_coa.kode AS INTEGER) >= 5000 
+            AND MOD(CAST(m_coa.kode AS INTEGER), 1000) != 0
+        )");
+
+        $builder->orderBy("trans_akun.trans_akun_date", "ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
     function get_mutasi_history($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("m_mutasi_history mh");
         $builder->select("mh.id, mh.coa_id, mh.month, mh.year, mh.saldo");

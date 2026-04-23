@@ -3,20 +3,19 @@
 namespace Modules\Keuangan\Controllers;
 
 // user library spreadsheet for excel
+use App\Controllers\BaseController;
+use App\Models\FileModel;
+use CodeIgniter\Controller;
+use CodeIgniter\HTTP\ResponseInterface;
+use DateTime;
+use Modules\Keuangan\Models\Mcoa;
+use Modules\Keuangan\Models\Mlaba_rugi;
+use Modules\Keuangan\Models\Mtrans_akun_det;
+use Modules\Keuangan\Models\Mtrans_akun;
+use Modules\Referensi\Models\RekeningModel;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as Xlsx_r;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-// use PhpOffice\PhpSpreadsheet\Reader\Csv;
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx as Xlsx_r;
-
-use CodeIgniter\Controller;
-use App\Controllers\BaseController;
-use CodeIgniter\HTTP\ResponseInterface;
-use App\Models\FileModel;
-use Modules\Keuangan\Models\Mcoa;
-use Modules\Keuangan\Models\Mtrans_akun;
-use Modules\Keuangan\Models\Mtrans_akun_det;
-use Modules\Referensi\Models\RekeningModel;
-use Modules\Keuangan\Models\Mlaba_rugi;
 
 
 class Rpt_laba_rugi extends BaseController
@@ -130,6 +129,578 @@ class Rpt_laba_rugi extends BaseController
     }
 
     public function exp_laba($bulan, $tahun){
+        $ref_rekening = "all";
+        
+
+        $date = DateTime::createFromFormat('!m', $bulan); // !m → hanya bulan
+        $nama_bulan = $date->format('F');
+
+        $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun);
+        $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun);
+        $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun);
+        $resultsBiaya = $this->mcoa->get_mutasi_export_biaya($bulan, $tahun);
+
+        // gabung semua data
+        $results_all = array_merge($resultsSO, $resultsCR);
+
+        // sort berdasarkan tanggal (pastikan semua alias tanggal sama)
+        usort($results_all, function ($a, $b) {
+            return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
+        });
+
+        $getBulan = $bulan;
+        $getTahun = $tahun;
+        if ($bulan == 1) {
+            $getBulan = 12;
+            $getTahun = $tahun - 1;
+        }
+        else {
+            $getBulan = $bulan - 1;
+        }
+
+        $fileName = "Laporan laba Rugi Detail $nama_bulan.xlsx";
+
+        $saldo = $this->mcoa->get_mutasi_history($getBulan, $getTahun);
+        
+
+        //start phpspreadsheet
+        $sheets    = new Spreadsheet;
+
+        $gets = $sheets->getActiveSheet();
+        $title = $nama_bulan." ".$tahun;
+        $gets->getStyle('A2')->getFont()->setName('Arial Narrow')->setSize('16')->setBold(true);
+        $sheets->getActiveSheet()->freezePane('E5');
+          
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A2', 'Laporan Detail Laba Rugi '. $title)
+
+               ->setCellValue('A4', 'Tipe Bayar')
+               ->setCellValue('B4', 'Tanggal')
+               ->setCellValue('C4', 'Transaksi')
+               ->setCellValue('D4', 'Akun Kode')
+               ->setCellValue('E4', 'Kode')
+               ->setCellValue('F4', 'Nama Akun')
+               ->setCellValue('G4', 'Keterangan')
+               ->setCellValue('H4', 'Masuk')
+               ->setCellValue('I4', 'Keluar')
+               ->setCellValue('J4', 'Saldo');
+
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+
+            $stylexArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'alignment' => [
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+            ];
+
+            $stylexArrayFootertext = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'C5D9F1', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $stylexArrayFooter = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'C5D9F1', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $stylexArraySubFooter = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $stylexArraySubFooter2 = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+                'font' => [
+                    'bold' => true, // ✅ bikin teks tebal
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => [
+                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
+                    ],
+                ],
+            ];
+
+            $styleArray_header = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+
+            $style_bodyRight = [
+                'borders' => [
+                    'right' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            $style_bodyTop = [
+                'borders' => [
+                    'top' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            $style_bodyBottom = [
+                'borders' => [
+                    'bottom' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => '1f1f1f'],
+                    ],
+                ],
+            ];
+            
+        $gets->getStyle('A4:J4')->applyFromArray($styleArray_header);
+        // $gets->getStyle('A3:J3')->applyFromArray($styleArray_header);
+        
+        // set mergecell
+        // $sheets->getActiveSheet()->mergeCells('A2:J2');
+        $sheets->getActiveSheet()->mergeCells('A2:J2');
+        // $sheets->getActiveSheet()->mergeCells('A4:J4');
+        // $sheets->getActiveSheet()->mergeCells('A5:C5');
+
+        // set Center title
+        $sheets->getActiveSheet()->getStyle('A2')
+                ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+        
+        // set width
+          $gets->getColumnDimension('A')->setWidth(25);
+          $gets->getColumnDimension('B')->setWidth(18);
+          $gets->getColumnDimension('C')->setWidth(20);
+          $gets->getColumnDimension('D')->setWidth(20);
+          $gets->getColumnDimension('E')->setWidth(10);
+          $gets->getColumnDimension('F')->setWidth(40);
+          $gets->getColumnDimension('G')->setWidth(60);
+          $gets->getColumnDimension('H')->setWidth(25);
+          $gets->getColumnDimension('I')->setWidth(25);
+          $gets->getColumnDimension('J')->setWidth(25);
+        //   $gets->getColumnDimension('O')->setWidth(20);
+
+        // end set width
+        //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:J4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:J4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+
+        
+        $gets->setTitle('Detail');
+        $indexs = array(
+            'A','B','C','D', 'E','F','G', 'H', 'I', 'J'
+        );
+
+        for ($i=0; $i < 10 ; $i++) { 
+
+                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setARGB('C5D9F1');
+                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getEndColor()->setARGB('C5D9F1');
+            
+            // $sheets->getActiveSheet()->mergeCells($indexs[$i].'2');
+
+            $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
+                    ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
+                    
+            $gets->getStyle($indexs[$i].'4')->applyFromArray($styleArray_header);
+           
+        }
+
+        $ix = 5;
+        $is = 0;
+        
+        
+        $length = $ix;
+        $length_sub = $ix;
+
+        if(!empty($results_all)){
+            $length += count($results_all);
+        }
+
+        $bckColor = "F2F2F2";
+        $ig = $ix;
+        $ip = $ix;
+        
+        $g_id = null; 
+        $p_id = null; 
+
+        $grand_total = 0;
+        $grand_total_masuk = 0;
+        $grand_total_sub = 0;
+        $grand_total_sub_masuk = 0;
+        $ref_rekening_now = null;
+        $ref_bank = null;
+
+        // $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('A1', "Tipe Bayar");
+        // $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('B1', $text_masuk);
+
+        // $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('D1', "Periode");
+        // $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('E1', $nama_bulan." ".$tahun);
+        // $sheets->getActiveSheet()->getStyle("F")
+        //     ->getAlignment()
+        //     ->setWrapText(true);
+
+        // $sheets->setActiveSheetIndex(0)
+        //         ->setCellValue('H3', "Saldo Awal");
+        // $sheets->setActiveSheetIndex(0)
+        //     ->setCellValue('I3', !empty($saldo) ? $saldo->saldo : 0);
+        //     $gets->getStyle("I3" )->getNumberFormat()
+        //     ->setFormatCode('#,##0.00');
+
+        $startRow = $ix;
+        for ($xx = 0; $xx < count($results_all) ; $xx++) { 
+            
+            $r = $results_all[$xx];
+            if ($r->type == "Sales Order") {
+                $uang_dp = 0;
+                $uang_dp_2 = 0;
+                
+                $tgl_transaksi = $r->tgl_transaksi;
+                if ($tgl_transaksi) {
+                    $date = new DateTime($tgl_transaksi);
+                    
+                    // Cek apakah bulan dan tahun cocok
+                    if ($date->format('n') == $bulan && $date->format('Y') == $tahun) {
+                        $uang_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
+                        $sheets->setActiveSheetIndex(0)
+                            ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                            ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                            ->setCellValue('C'.$ix, "Sales Order")
+                            ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+                            ->setCellValue('E'.$ix, "-")
+                            ->setCellValue('F'.$ix, "-")
+                            ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                            ->setCellValue('H'.$ix, $uang_dp);
+                        $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                        ->setFormatCode('#,##0.00');
+                        $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+                    } 
+                }
+                
+
+                if (!empty($r->tgl_transaksi_2)) {
+                    $tgl_transaksi_2 = $r->tgl_transaksi_2;
+                    if ($tgl_transaksi_2) {
+                        $date = new DateTime($tgl_transaksi_2);
+                        
+                        // Cek apakah bulan dan tahun cocok
+                        if ($date->format('n') == $bulan && $date->format('Y') == $tahun) {
+                            if ($tgl_transaksi) {
+                                $date_1 = new DateTime($tgl_transaksi);
+                                if ($date_1->format('n') == $bulan && $date_1->format('Y') == $tahun) {
+                                    $length++;
+                                    $ix++;
+                                }
+                            }
+                            $uang_dp_2 = !empty($r->uang_dp_2) ? $r->uang_dp_2 : 0;
+                            $sheets->setActiveSheetIndex(0)
+                                ->setCellValue('A'.$ix, !empty($r->tipe_bayar_2) ? $r->tipe_bayar_2 : "-")
+                                ->setCellValue('B'.$ix, !empty($r->tgl_transaksi_2) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi_2)))) : "-")
+                                ->setCellValue('C'.$ix, "Sales Order")
+                                ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
+                                ->setCellValue('E'.$ix, "-")
+                                ->setCellValue('F'.$ix, "-")
+                                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                                ->setCellValue('H'.$ix, $uang_dp_2);
+                            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                            ->setFormatCode('#,##0.00');
+                        } 
+                    }
+                }
+
+                $total_uang_dp = $uang_dp + $uang_dp_2;
+                $grand_total_masuk += $total_uang_dp;
+                $grand_total_sub_masuk += $total_uang_dp;
+            }
+
+            else if ($r->type == "Customer Receipt") {
+                $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
+                $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                    ->setCellValue('C'.$ix, "Customer Receipt")
+                    ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
+                    ->setCellValue('E'.$ix, "-")
+                    ->setCellValue('F'.$ix, "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                    ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            }
+
+            $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
+
+            $ix++;
+        }
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Total Penjualan");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
+        
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
+        $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
+        
+        //    $sheets->setActiveSheetIndex(0)
+        //                 ->setCellValue('H'.$length, $grand_total_masuk);
+        $rowPenjualan = $length;
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('J' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
+
+        $gets->getStyle("J" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+        
+        // $sheets->setActiveSheetIndex(0)
+        //             ->setCellValue('I'.$length, $grand_total);
+
+        // $sheets->setActiveSheetIndex(0)
+        //     ->setCellValue('I' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
+
+        // $gets->getStyle("I" . $length )->getNumberFormat()
+        //        ->setFormatCode('#,##0.00');
+        $ix = $length + 1;
+        $startRow = $ix;
+        for ($xx=0; $xx < count($resultsPB); $xx++) {
+            $r = $resultsPB[$xx]; 
+            $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
+                    ->setCellValue('C'.$ix, "Pembayaran")
+                    ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
+                    ->setCellValue('E'.$ix, "-")
+                    ->setCellValue('F'.$ix, "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
+                $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+            
+            $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
+
+            $ix++;
+        }
+        $length = $ix;
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Total Beban Pembelian");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
+
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
+
+        $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
+
+        $rowPembelian = $length;
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
+
+        $gets->getStyle("J" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+
+        $length++;
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Laba Kotor");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
+
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
+
+        $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
+
+        $rowLabaKotor = $length;
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('J' . $length, '=J' . $rowPenjualan . '- J' . $rowPembelian);
+
+        $gets->getStyle("J" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+
+        $ix = $length + 1;
+        $startRow = $ix;
+        for ($xx=0; $xx < count($resultsBiaya); $xx++) {
+            $r = $resultsBiaya[$xx]; 
+            $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                    ->setCellValue('B'.$ix, !empty($r->trans_akun_date) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->trans_akun_date)))) : "-")
+                    ->setCellValue('C'.$ix, "Beban biaya")
+                    ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
+                    ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : "-")
+                    ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
+                    ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
+                $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+            
+            $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
+
+            $ix++;
+        }
+        $length = $ix;
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Total Beban Operasional");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
+
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
+
+        $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
+
+        $rowBiaya = $length;
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
+
+        $gets->getStyle("J" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+
+        $length++;
+
+        $sheets->setActiveSheetIndex(0)
+               ->setCellValue('A'.$length, "Laba Bersih");
+
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
+
+        $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
+
+        $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
+
+        $sheets->setActiveSheetIndex(0)
+            ->setCellValue('J' . $length, '=J' . $rowLabaKotor . '- J' . $rowBiaya);
+
+        $gets->getStyle("J" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0.00');
+
+        // $startRow++;
+
+        // $sheets->setActiveSheetIndex(0)
+        //        ->setCellValue('A'.$length, "Saldo Akhir");
+
+        // $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
+        
+        // $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFooter);
+        
+        // $sheets->getActiveSheet()->mergeCells('H'. $length .':I'. $length);
+        
+        // $saldo = !empty($saldo->saldo) ? $saldo->saldo : 0;
+        
+        // // $sheets->setActiveSheetIndex(0)
+        // //             ->setCellValue('H'.$length, $saldo + $grand_total_masuk - $grand_total);
+
+        // $sheets->setActiveSheetIndex(0)
+        //     ->setCellValue('H' . $length, '=(I3+H' . $length-1 . '-I' . $length-1 . ')');
+
+        // $gets->getStyle("H" . $length )->getNumberFormat()
+        //        ->setFormatCode('#,##0.00');
+        
+        // $isiSaldo = [
+        //     'coa_id' => $ref_masuk,
+        //     'month' => $bulan,
+        //     'year' => $tahun,
+        //     'saldo' => $saldo + $grand_total_masuk - $grand_total
+        // ];
+        // $saldo_new = $this->mcoa->get_mutasi_history($bulan, $tahun, $ref_masuk);
+        // if (!empty($saldo_new)) {
+        //     $saldo_id = $this->mcoa->updateRecord($this->mcoa->table2, $isiSaldo, "id", $saldo_new->id);
+        // }
+        // else {
+        //     $saldo_id = $this->mcoa->insertRecordGetid($this->mcoa->table2, $isiSaldo);
+        // }
+
+        
+        $sheets->setActiveSheetIndex(0);
+        $writer = new Xlsx($sheets);
+        
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="'.$fileName.'"'); 
+        header('Cache-Control: max-age=0');
+        ob_end_clean();
+        $writer->save('php://output'); // download file 
+        exit;
+    }
+
+    public function exp_laba_rugi($bulan, $tahun){
         $fileName = "laporan-laba-periode-{$bulan}-{$tahun}.xlsx";
 
         $results = $this->mcoa->getData(null, 0, 9999);

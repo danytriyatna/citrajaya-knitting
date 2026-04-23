@@ -294,20 +294,36 @@ class Mcoa extends PrModel
         return $this->_data;
     }
 
-    function get_mutasi_export_pb($month = null, $year = null, $ref_masuk = null){
+    function get_mutasi_export_pb($month = null, $year = null, $ref_masuk = null)
+    {
         $builder = $this->db->table("trans_po_pembayaran tpp");
-        $builder->select("'Pembayaran' as type, tpp.id_rek, CONCAT('Pembayaran Pembelian' , ' - ', rv.nama) AS keterangan, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, tpp.pay_date as tgl_transaksi, tpp.pay_no, tpp.total_bayar");
+        $builder->select("
+            'Pembayaran' AS type, 
+            tpp.id_rek, 
+            CONCAT('Pembayaran Pembelian', ' - ', rv.nama) AS keterangan, 
+            CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+            tpp.pay_date AS tgl_transaksi, 
+            tpp.pay_no, 
+            tpp.total_bayar
+        ", false);
+
         $builder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
         $builder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
-        // $builder->join("m_coa mc", "mc.id = rr.coa_id", "left");
-        $builder->where("tpp.active = 1");
-        $builder->where('EXTRACT(MONTH FROM tpp.pay_date)', $month);
-        $builder->where('EXTRACT(YEAR FROM tpp.pay_date)', $year);
+
+        $builder->where("tpp.active", 1);
+        
+        if (!empty($month)) {
+            $builder->where("EXTRACT(MONTH FROM tpp.pay_date) =", $month);
+        }
+        if (!empty($year)) {
+            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $year);
+        }
+
         if (!empty($ref_masuk)) {
             $builder->where("rr.coa_id", $ref_masuk);
         }
 
-        $builder->orderBy("tpp.pay_date ASC");
+        $builder->orderBy("tpp.pay_date", "ASC");
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;

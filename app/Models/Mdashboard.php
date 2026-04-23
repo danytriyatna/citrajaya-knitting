@@ -827,14 +827,39 @@ class Mdashboard extends Model
     function getDataDP($month = null, $year = null)
     {
         $builder = $this->db->table("trans_sales_order abx");
-        $builder->select("SUM(COALESCE(abx.uang_dp::float, 0) + COALESCE(abx.uang_dp_2::float, 0) ) as total_dp");
-        
-        $builder->where('abx.active = 1');
-        $builder->where("EXTRACT(MONTH FROM abx.tgl_dp) = $month");
-        $builder->where("EXTRACT(YEAR FROM abx.tgl_dp) = $year");    
 
-        $this->_data = $builder->get()->getRow()->total_dp;
-        return $this->_data;
+        $builder->select("
+            SUM(
+                (CASE 
+                    WHEN EXTRACT(MONTH FROM abx.tgl_dp) = $month AND EXTRACT(YEAR FROM abx.tgl_dp) = $year 
+                    THEN COALESCE(abx.uang_dp::float, 0) 
+                    ELSE 0 
+                END) 
+                + 
+                (CASE 
+                    WHEN EXTRACT(MONTH FROM abx.tgl_dp_2) = $month AND EXTRACT(YEAR FROM abx.tgl_dp_2) = $year 
+                    THEN COALESCE(abx.uang_dp_2::float, 0) 
+                    ELSE 0 
+                END)
+            ) as total_dp
+        ", false);
+
+        $builder->where('abx.active', 1);
+
+        $builder->groupStart();
+            $builder->groupStart();
+                $builder->where('EXTRACT(MONTH FROM abx.tgl_dp)', $month);
+                $builder->where('EXTRACT(YEAR FROM abx.tgl_dp)', $year);
+            $builder->groupEnd();
+            $builder->orGroupStart();
+                $builder->where('EXTRACT(MONTH FROM abx.tgl_dp_2)', $month);
+                $builder->where('EXTRACT(YEAR FROM abx.tgl_dp_2)', $year);
+            $builder->groupEnd();
+        $builder->groupEnd();
+
+        $result = $builder->get()->getRow();
+        
+        return $result ? (float)$result->total_dp : 0;
     }
 
     function getDataPenjualan($month = null, $year = null)
@@ -887,16 +912,22 @@ class Mdashboard extends Model
 
     function getDataPemakaian($month = null, $year = null)
     {
-        $builder = $this->db->table("trans_receive_detail abx");
+        $builder = $this->db->table("trans_po_pembayaran tpp");
         
-        $builder->select("SUM(COALESCE(abx.price, 0) * COALESCE(abx.qty, 0)) AS grand_total");
-        $builder->join("trans_receive_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
-        $builder->where('bbx.active = 1');
+        $builder->select("SUM(COALESCE(tpp.total_bayar, 0)) AS grand_total");
+        // $builder->where('bbx.active = 1');
         // $builder->where('bbx.jenis_transaksi', 2);
         // $builder->where('bbx.id_kategori !=', 13);
 
-        $builder->where("EXTRACT(MONTH FROM bbx.rec_date) = $month");
-        $builder->where("EXTRACT(YEAR FROM bbx.rec_date) = $year");    
+        $builder->where("tpp.active", 1);
+        
+        // Filter Bulan dan Tahun
+        if (!empty($month)) {
+            $builder->where("EXTRACT(MONTH FROM tpp.pay_date) =", $month);
+        }
+        if (!empty($year)) {
+            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $year);
+        }  
 
         $this->_data = $builder->get()->getRow()->grand_total;
 
@@ -1014,17 +1045,20 @@ class Mdashboard extends Model
 
     function getGrafikDataPemakaian($year = null)
     {
-        $builder = $this->db->table("trans_receive_detail abx");
+        $builder = $this->db->table("trans_po_pembayaran tpp");
         $builder->select("
-            EXTRACT(MONTH FROM bbx.rec_date) AS bulan,
-            SUM(COALESCE(abx.price, 0) * COALESCE(abx.qty, 0)) AS total_pemakaian
+            EXTRACT(MONTH FROM tpp.pay_date) AS bulan,
+            SUM(COALESCE(tpp.total_bayar, 0)) AS total_pemakaian
         ");
-        $builder->join("trans_receive_header bbx", "CAST(abx.id_header AS INTEGER) = bbx.id", "inner");
-        $builder->where("bbx.active", 1);
         // $builder->where("bbx.jenis_transaksi", 2);
         // $builder->where("bbx.id_kategori <>", 13);
-        $builder->where("EXTRACT(YEAR FROM bbx.rec_date)", $year);
-        $builder->groupBy("EXTRACT(MONTH FROM bbx.rec_date)");
+        $builder->where("tpp.active", 1);
+        
+        // Filter Bulan dan Tahun
+        if (!empty($year)) {
+            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $year);
+        }  
+        $builder->groupBy("EXTRACT(MONTH FROM tpp.pay_date)");
         $builder->orderBy("bulan", "ASC");
 
         $result = $builder->get()->getResult();

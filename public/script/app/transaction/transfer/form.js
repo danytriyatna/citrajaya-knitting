@@ -398,24 +398,24 @@ let dtList = new Tabulator("#dt-list", {
         {title: "Qty Ref Rajut", visible:(selectProses.val() == 1), field: "qty_ref", width: "8%",editor:"number", formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum'},
         {title: "Qty Ref", visible:(selectProses.val() != 1), field: "qty_ref", width: "8%",editor:"number", formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum'},
         {title: "Qty", field: "qty", width: "8%",editor:"number", formatter:"money", bottomCalcFormatter: 'money', bottomCalc: 'sum',
-            cellEdited: function(cell) {
-                console.log(cell);
-                let data = cell.getData();
-                let val = parseFloat(cell.getValue());
-                let ref = parseFloat(data.qty_ref);
+            // cellEdited: function(cell) {
+            //     console.log(cell);
+            //     let data = cell.getData();
+            //     let val = parseFloat(cell.getValue());
+            //     let ref = parseFloat(data.qty_ref);
 
-                if (val > ref) {
-                    Swal.fire({
-                        position: 'top-end',
-                        icon: 'warning',
-                        title: 'Qty melebihi Qty Ref!',
-                        showConfirmButton: false,
-                        timer: 2000,
-                    });
+            //     if (val > ref) {
+            //         Swal.fire({
+            //             position: 'top-end',
+            //             icon: 'warning',
+            //             title: 'Qty melebihi Qty Ref!',
+            //             showConfirmButton: false,
+            //             timer: 2000,
+            //         });
 
-                    cell.setValue(ref);
-                    }
-                },
+            //         cell.setValue(ref);
+            //         }
+            //     },
         },
         {title: "Ukuran", field: "kode_ukuran", width: "5%"},
         {title: "Keterangan", field: "keterangan", width: "15%",editor:"input"},

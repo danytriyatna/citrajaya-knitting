@@ -73,7 +73,7 @@
                   </div>
                 </div>
                 <hr>
-                <div class="table-responsive">
+                <div class="table-responsive d-none">
                   <?php 
                     $total_pendapatan = 0;
                     $total_pengeluaran = 0;

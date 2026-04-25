@@ -379,4 +379,149 @@ class Mcoa extends PrModel
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
+
+    function get_mutasi_export_so_laba($month_from = null, $year_from = null, $month_to = null, $year_to = null) {
+        $startDate = "$year_from-$month_from-01";
+        $lastDay = date("t", strtotime("$year_to-$month_to-01"));
+        $endDate = "$year_to-$month_to-$lastDay";
+
+        $sql1 = "SELECT 
+                    'Sales Order' as type, 
+                    tso.type_dp as id_rek,
+                    CONCAT('Penerimaan Penjualan', ' - ', rk.nama) AS keterangan, 
+                    CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+                    tso.tgl_dp as tgl_transaksi, 
+                    tso.kode_sales_order, 
+                    tso.uang_dp as nominal
+                FROM trans_sales_order tso
+                LEFT JOIN ref_rekening rr ON rr.id = tso.type_dp
+                LEFT JOIN ref_konsumen rk ON rk.id = tso.id_konsumen
+                WHERE tso.active = 1 
+                AND tso.tgl_dp >= '$startDate' 
+                AND tso.tgl_dp <= '$endDate'
+                AND tso.uang_dp > 0";
+
+        $sql2 = "SELECT 
+                    'Sales Order' as type, 
+                    tso.type_dp_2 as id_rek,
+                    CONCAT('Penerimaan Penjualan', ' - ', rk.nama) AS keterangan, 
+                    CONCAT(rr2.rekening_no, ' - ', rr2.rekening_bank) AS tipe_bayar, 
+                    tso.tgl_dp_2 as tgl_transaksi, 
+                    tso.kode_sales_order, 
+                    tso.uang_dp_2 as nominal
+                FROM trans_sales_order tso
+                LEFT JOIN ref_rekening rr2 ON rr2.id = tso.type_dp_2
+                LEFT JOIN ref_konsumen rk ON rk.id = tso.id_konsumen
+                WHERE tso.active = 1 
+                AND tso.tgl_dp_2 >= '$startDate' 
+                AND tso.tgl_dp_2 <= '$endDate'
+                AND tso.uang_dp_2 > 0";
+
+        $query = $this->db->query("$sql1 UNION ALL $sql2 ORDER BY tgl_transaksi ASC");
+        
+        return $query->getResult();
+    }
+
+    function get_mutasi_export_cr_laba($month_from = null, $year_from = null, $month_to = null, $year_to = null) {
+        
+        $startDate = "$year_from-$month_from-01";
+        $lastDay = date("t", strtotime("$year_to-$month_to-01"));
+        $endDate = "$year_to-$month_to-$lastDay";
+
+        $builder = $this->db->table("trans_customer_receipt tcr");
+        $builder->select("'Customer Receipt' as type, 
+                            tcr.id_rekening, 
+                            CONCAT('Penerimaan Penjualan' , ' - ', rk.nama) AS keterangan, 
+                            CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar, 
+                            tcr.tgl_transaksi, 
+                            tcr.kode_cr, 
+                            tcr.total_bayar as nominal");
+        
+        $builder->join("ref_rekening rr", "rr.id = tcr.id_rekening", "left");
+        $builder->join("ref_konsumen rk", "rk.id = tcr.id_konsumen", "left");
+
+        $builder->where("tcr.active", 1);
+
+        $builder->where("tcr.tgl_transaksi >=", $startDate);
+        $builder->where("tcr.tgl_transaksi <=", $endDate);
+
+        $builder->orderBy("tcr.tgl_transaksi", "ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_export_pb_laba($month_from = null, $year_from = null, $month_to = null, $year_to = null)
+    {
+        $startDate = "$year_from-$month_from-01";
+        
+        $lastDay = date("t", strtotime("$year_to-$month_to-01"));
+        $endDate = "$year_to-$month_to-$lastDay";
+
+        $builder = $this->db->table("trans_po_pembayaran tpp");
+        $builder->select("
+            'Pembayaran' AS type, 
+            tpp.id_rek, 
+            CONCAT('Pembayaran Pembelian', ' - ', rv.nama) AS keterangan, 
+            CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+            tpp.pay_date AS tgl_transaksi, 
+            tpp.pay_no, 
+            tpp.total_bayar
+        ", false);
+
+        $builder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
+        $builder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
+
+        $builder->where("tpp.active", 1);
+        
+        if (!empty($month_from) && !empty($year_from)) {
+            $builder->where("tpp.pay_date >=", $startDate);
+        }
+        
+        if (!empty($month_to) && !empty($year_to)) {
+            $builder->where("tpp.pay_date <=", $endDate);
+        }
+
+        $builder->orderBy("tpp.pay_date", "ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_mutasi_export_biaya_laba($month_from = null, $year_from = null, $month_to = null, $year_to = null)
+    {
+        $startDate = "$year_from-$month_from-01";
+        
+        $lastDay = date("t", strtotime("$year_to-$month_to-01"));
+        $endDate = "$year_to-$month_to-$lastDay";
+
+        $builder = $this->db->table("trans_akun_det");
+        $builder->select("
+            m_coa.nama,
+            trans_akun.trans_akun_date,
+            trans_akun.trans_akun_kode, 
+            m_coa.kode,
+            trans_akun_det.keterangan, 
+            trans_akun_det.jumlah,
+            CONCAT(ref_rekening.rekening_no , ' - ', ref_rekening.rekening_bank) AS tipe_bayar
+        ", false);
+
+        $builder->join("m_coa", "trans_akun_det.coa_id = m_coa.id", "inner");
+        $builder->join("trans_akun", "trans_akun.id = trans_akun_det.trans_akun_id", "inner");
+        $builder->join("ref_rekening", "ref_rekening.id = trans_akun.ref_rekening_id", "left");
+
+        $builder->where("trans_akun.active", 1);
+        
+        $builder->where("trans_akun.trans_akun_date >=", $startDate);
+        $builder->where("trans_akun.trans_akun_date <=", $endDate);
+        $builder->where("(
+            CAST(m_coa.kode AS INTEGER) >= 5000 
+            AND MOD(CAST(m_coa.kode AS INTEGER), 1000) != 0
+        )");
+
+        $builder->orderBy("trans_akun.trans_akun_date", "ASC");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
 }

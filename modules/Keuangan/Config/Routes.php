@@ -39,6 +39,6 @@ $routes->group('keuangan/laporan_mutasi', ['namespace' => '\Modules\Keuangan\Con
 $routes->group('keuangan/laporan_laba', ['namespace' => '\Modules\Keuangan\Controllers\Rpt_laba_rugi'], function ($routes){
     $routes->get('/', '\Modules\Keuangan\Controllers\Rpt_laba_rugi');
     $routes->post('list', '\Modules\Keuangan\Controllers\Rpt_laba_rugi::lists');
-    $routes->get('getExcel/(:any)', '\Modules\Keuangan\Controllers\Rpt_laba_rugi::exp_laba/$1/$2');
+    $routes->get('getExcel/(:any)/(:any)/(:any)/(:any)', '\Modules\Keuangan\Controllers\Rpt_laba_rugi::exp_laba/$1/$2/$3/$4');
 });
 

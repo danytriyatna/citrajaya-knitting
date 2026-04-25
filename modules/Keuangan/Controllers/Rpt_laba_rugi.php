@@ -127,54 +127,51 @@ class Rpt_laba_rugi extends BaseController
        
         return $this->response->setJSON($build_array);
     }
-
-    public function exp_laba($bulan, $tahun){
+    public function exp_laba($bulan, $tahun, $bulanTo, $tahunTo){
         $ref_rekening = "all";
-        
 
-        $date = DateTime::createFromFormat('!m', $bulan); // !m → hanya bulan
-        $nama_bulan = $date->format('F');
+        $dateFrom = DateTime::createFromFormat('!m', $bulan);
+        $nama_bulan_from = $dateFrom->format('F');
 
-        $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun);
-        $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun);
-        $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun);
-        $resultsBiaya = $this->mcoa->get_mutasi_export_biaya($bulan, $tahun);
+        $dateTo = DateTime::createFromFormat('!m', $bulanTo);
+        $nama_bulan_to = $dateTo->format('F');
 
-        // gabung semua data
+        if ($tahun == $tahunTo) {
+            $periode_text = "$nama_bulan_from - $nama_bulan_to $tahun";
+        } else {
+            $periode_text = "$nama_bulan_from $tahun - $nama_bulan_to $tahunTo";
+        }
+
+        $resultsSO = $this->mcoa->get_mutasi_export_so_laba($bulan, $tahun, $bulanTo, $tahunTo);
+        $resultsCR = $this->mcoa->get_mutasi_export_cr_laba($bulan, $tahun, $bulanTo, $tahunTo);
+        $resultsPB = $this->mcoa->get_mutasi_export_pb_laba($bulan, $tahun, $bulanTo, $tahunTo);
+        $resultsBiaya = $this->mcoa->get_mutasi_export_biaya_laba($bulan, $tahun, $bulanTo, $tahunTo);
+
         $results_all = array_merge($resultsSO, $resultsCR);
 
-        // sort berdasarkan tanggal (pastikan semua alias tanggal sama)
         usort($results_all, function ($a, $b) {
             return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
         });
+
+        $fileName = "Laporan Detail Laba Rugi $periode_text.xlsx";
 
         $getBulan = $bulan;
         $getTahun = $tahun;
         if ($bulan == 1) {
             $getBulan = 12;
             $getTahun = $tahun - 1;
-        }
-        else {
+        } else {
             $getBulan = $bulan - 1;
         }
 
-        $fileName = "Laporan laba Rugi Detail $nama_bulan.xlsx";
-
-        $saldo = $this->mcoa->get_mutasi_history($getBulan, $getTahun);
-        
-
-        //start phpspreadsheet
-        $sheets    = new Spreadsheet;
-
+        $sheets = new Spreadsheet;
         $gets = $sheets->getActiveSheet();
-        $title = $nama_bulan." ".$tahun;
+        
         $gets->getStyle('A2')->getFont()->setName('Arial Narrow')->setSize('16')->setBold(true);
         $sheets->getActiveSheet()->freezePane('E5');
-          
 
         $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A2', 'Laporan Detail Laba Rugi '. $title)
-
+            ->setCellValue('A2', 'Laporan Detail Laba Rugi Periode: ' . $periode_text)
                ->setCellValue('A4', 'Tipe Bayar')
                ->setCellValue('B4', 'Tanggal')
                ->setCellValue('C4', 'Transaksi')
@@ -330,20 +327,12 @@ class Rpt_laba_rugi extends BaseController
             ];
             
         $gets->getStyle('A4:J4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:J3')->applyFromArray($styleArray_header);
-        
-        // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:J2');
         $sheets->getActiveSheet()->mergeCells('A2:J2');
-        // $sheets->getActiveSheet()->mergeCells('A4:J4');
-        // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
-        // set Center title
         $sheets->getActiveSheet()->getStyle('A2')
                 ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
         
-        // set width
           $gets->getColumnDimension('A')->setWidth(25);
           $gets->getColumnDimension('B')->setWidth(18);
           $gets->getColumnDimension('C')->setWidth(20);
@@ -354,10 +343,7 @@ class Rpt_laba_rugi extends BaseController
           $gets->getColumnDimension('H')->setWidth(25);
           $gets->getColumnDimension('I')->setWidth(25);
           $gets->getColumnDimension('J')->setWidth(25);
-        //   $gets->getColumnDimension('O')->setWidth(20);
 
-        // end set width
-        //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
           $gets->getStyle('A4:J4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
           $gets->getStyle('A4:J4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
@@ -373,8 +359,6 @@ class Rpt_laba_rugi extends BaseController
                         ->getStartColor()->setARGB('C5D9F1');
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getEndColor()->setARGB('C5D9F1');
-            
-            // $sheets->getActiveSheet()->mergeCells($indexs[$i].'2');
 
             $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
                     ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
@@ -409,111 +393,27 @@ class Rpt_laba_rugi extends BaseController
         $ref_rekening_now = null;
         $ref_bank = null;
 
-        // $sheets->setActiveSheetIndex(0)
-        //         ->setCellValue('A1', "Tipe Bayar");
-        // $sheets->setActiveSheetIndex(0)
-        //         ->setCellValue('B1', $text_masuk);
-
-        // $sheets->setActiveSheetIndex(0)
-        //         ->setCellValue('D1', "Periode");
-        // $sheets->setActiveSheetIndex(0)
-        //         ->setCellValue('E1', $nama_bulan." ".$tahun);
-        // $sheets->getActiveSheet()->getStyle("F")
-        //     ->getAlignment()
-        //     ->setWrapText(true);
-
-        // $sheets->setActiveSheetIndex(0)
-        //         ->setCellValue('H3', "Saldo Awal");
-        // $sheets->setActiveSheetIndex(0)
-        //     ->setCellValue('I3', !empty($saldo) ? $saldo->saldo : 0);
-        //     $gets->getStyle("I3" )->getNumberFormat()
-        //     ->setFormatCode('#,##0.00');
-
         $startRow = $ix;
-        for ($xx = 0; $xx < count($results_all) ; $xx++) { 
-            
-            $r = $results_all[$xx];
-            if ($r->type == "Sales Order") {
-                $uang_dp = 0;
-                $uang_dp_2 = 0;
-                
-                $tgl_transaksi = $r->tgl_transaksi;
-                if ($tgl_transaksi) {
-                    $date = new DateTime($tgl_transaksi);
-                    
-                    // Cek apakah bulan dan tahun cocok
-                    if ($date->format('n') == $bulan && $date->format('Y') == $tahun) {
-                        $uang_dp = !empty($r->uang_dp) ? $r->uang_dp : 0;
-                        $sheets->setActiveSheetIndex(0)
-                            ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                            ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                            ->setCellValue('C'.$ix, "Sales Order")
-                            ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
-                            ->setCellValue('E'.$ix, "-")
-                            ->setCellValue('F'.$ix, "-")
-                            ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                            ->setCellValue('H'.$ix, $uang_dp);
-                        $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-                        ->setFormatCode('#,##0.00');
-                        $gets->getStyle('A'.$ix.':I'.$ix)->applyFromArray($stylexArray);
-                    } 
-                }
-                
+        foreach ($results_all as $r) { 
+            $sheets->setActiveSheetIndex(0)
+                ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
+                ->setCellValue('B'.$ix, formatTanggalIndonesia(date('Y-m-d', strtotime($r->tgl_transaksi))))
+                ->setCellValue('C'.$ix, $r->type) 
+                ->setCellValue('D'.$ix, ($r->type == "Sales Order") ? $r->kode_sales_order : $r->kode_cr)
+                ->setCellValue('E'.$ix, "-")
+                ->setCellValue('F'.$ix, "-")
+                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-");
 
-                if (!empty($r->tgl_transaksi_2)) {
-                    $tgl_transaksi_2 = $r->tgl_transaksi_2;
-                    if ($tgl_transaksi_2) {
-                        $date = new DateTime($tgl_transaksi_2);
-                        
-                        // Cek apakah bulan dan tahun cocok
-                        if ($date->format('n') == $bulan && $date->format('Y') == $tahun) {
-                            if ($tgl_transaksi) {
-                                $date_1 = new DateTime($tgl_transaksi);
-                                if ($date_1->format('n') == $bulan && $date_1->format('Y') == $tahun) {
-                                    $length++;
-                                    $ix++;
-                                }
-                            }
-                            $uang_dp_2 = !empty($r->uang_dp_2) ? $r->uang_dp_2 : 0;
-                            $sheets->setActiveSheetIndex(0)
-                                ->setCellValue('A'.$ix, !empty($r->tipe_bayar_2) ? $r->tipe_bayar_2 : "-")
-                                ->setCellValue('B'.$ix, !empty($r->tgl_transaksi_2) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi_2)))) : "-")
-                                ->setCellValue('C'.$ix, "Sales Order")
-                                ->setCellValue('D'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : "-")
-                                ->setCellValue('E'.$ix, "-")
-                                ->setCellValue('F'.$ix, "-")
-                                ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                                ->setCellValue('H'.$ix, $uang_dp_2);
-                            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-                            ->setFormatCode('#,##0.00');
-                        } 
-                    }
-                }
+            $nominal = !empty($r->nominal) ? $r->nominal : 0;
+            $sheets->getActiveSheet()->setCellValue('H'.$ix, $nominal);
 
-                $total_uang_dp = $uang_dp + $uang_dp_2;
-                $grand_total_masuk += $total_uang_dp;
-                $grand_total_sub_masuk += $total_uang_dp;
-            }
-
-            else if ($r->type == "Customer Receipt") {
-                $grand_total_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
-                $grand_total_sub_masuk += !empty($r->total_bayar) ? $r->total_bayar : 0;
-                $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
-                    ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                    ->setCellValue('C'.$ix, "Customer Receipt")
-                    ->setCellValue('D'.$ix, !empty($r->kode_cr) ? $r->kode_cr : "-")
-                    ->setCellValue('E'.$ix, "-")
-                    ->setCellValue('F'.$ix, "-")
-                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
-                    ->setCellValue('H'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
-                $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-                ->setFormatCode('#,##0.00');
-            }
-
+            $sheets->getActiveSheet()->getStyle("H" . $ix)->getNumberFormat()->setFormatCode('#,##0.00');
             $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
 
-            $ix++;
+            $grand_total_masuk += $nominal;
+            $grand_total_sub_masuk += $nominal;
+
+            $ix++; 
         }
 
         $sheets->setActiveSheetIndex(0)
@@ -524,8 +424,6 @@ class Rpt_laba_rugi extends BaseController
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
         
-        //    $sheets->setActiveSheetIndex(0)
-        //                 ->setCellValue('H'.$length, $grand_total_masuk);
         $rowPenjualan = $length;
         $sheets->setActiveSheetIndex(0)
             ->setCellValue('J' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
@@ -533,14 +431,6 @@ class Rpt_laba_rugi extends BaseController
         $gets->getStyle("J" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
         
-        // $sheets->setActiveSheetIndex(0)
-        //             ->setCellValue('I'.$length, $grand_total);
-
-        // $sheets->setActiveSheetIndex(0)
-        //     ->setCellValue('I' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
-
-        // $gets->getStyle("I" . $length )->getNumberFormat()
-        //        ->setFormatCode('#,##0.00');
         $ix = $length + 1;
         $startRow = $ix;
         for ($xx=0; $xx < count($resultsPB); $xx++) {
@@ -651,42 +541,6 @@ class Rpt_laba_rugi extends BaseController
 
         $gets->getStyle("J" . $length )->getNumberFormat()
                ->setFormatCode('#,##0.00');
-
-        // $startRow++;
-
-        // $sheets->setActiveSheetIndex(0)
-        //        ->setCellValue('A'.$length, "Saldo Akhir");
-
-        // $sheets->getActiveSheet()->mergeCells('A'. $length .':G'. $length);
-        
-        // $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFooter);
-        
-        // $sheets->getActiveSheet()->mergeCells('H'. $length .':I'. $length);
-        
-        // $saldo = !empty($saldo->saldo) ? $saldo->saldo : 0;
-        
-        // // $sheets->setActiveSheetIndex(0)
-        // //             ->setCellValue('H'.$length, $saldo + $grand_total_masuk - $grand_total);
-
-        // $sheets->setActiveSheetIndex(0)
-        //     ->setCellValue('H' . $length, '=(I3+H' . $length-1 . '-I' . $length-1 . ')');
-
-        // $gets->getStyle("H" . $length )->getNumberFormat()
-        //        ->setFormatCode('#,##0.00');
-        
-        // $isiSaldo = [
-        //     'coa_id' => $ref_masuk,
-        //     'month' => $bulan,
-        //     'year' => $tahun,
-        //     'saldo' => $saldo + $grand_total_masuk - $grand_total
-        // ];
-        // $saldo_new = $this->mcoa->get_mutasi_history($bulan, $tahun, $ref_masuk);
-        // if (!empty($saldo_new)) {
-        //     $saldo_id = $this->mcoa->updateRecord($this->mcoa->table2, $isiSaldo, "id", $saldo_new->id);
-        // }
-        // else {
-        //     $saldo_id = $this->mcoa->insertRecordGetid($this->mcoa->table2, $isiSaldo);
-        // }
 
         
         $sheets->setActiveSheetIndex(0);

@@ -36,42 +36,58 @@
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <div class="form-group row">
-                  <label class="col-sm-1">Periode</label>
-                  <div class="col-sm-2">
-                   <?= (isset($slc_tahun) && !empty($slc_tahun)) ? form_dropdown($slc_tahun) : ""; ?>
-                  </div>
-                  <label class="col-sm-1">Bulan</label>
-                  <div class="col-sm-2">
-                    <select name="bulan" id="bulan" class="form-control">
-                      <option <?= ($bulan == '01') ? 'selected' : ''; ?> value="01">Januari</option>
-                      <option <?= ($bulan == '02') ? 'selected' : ''; ?> value="02">Februari</option>
-                      <option <?= ($bulan == '03') ? 'selected' : ''; ?> value="03">Maret</option>
-                      <option <?= ($bulan == '04') ? 'selected' : ''; ?> value="04">April</option>
-                      <option <?= ($bulan == '05') ? 'selected' : ''; ?> value="05">Mei</option>
-                      <option <?= ($bulan == '06') ? 'selected' : ''; ?> value="06">Juni</option>
-                      <option <?= ($bulan == '07') ? 'selected' : ''; ?> value="07">Juli</option>
-                      <option <?= ($bulan == '08') ? 'selected' : ''; ?> value="08">Agustus</option>
-                      <option <?= ($bulan == '09') ? 'selected' : ''; ?> value="09">September</option>
-                      <option <?= ($bulan == '10') ? 'selected' : ''; ?> value="10">Oktober</option>
-                      <option <?= ($bulan == '11') ? 'selected' : ''; ?> value="11">November</option>
-                      <option <?= ($bulan == '12') ? 'selected' : ''; ?> value="12">Desember</option>
-                    </select>
-                  </div>
-                  <div class="col-sm-2">
-                    <button id="btn_cari" class="btn btn-primary open_form" type="button"><i class="fa fa-search"></i>
-                      Cari</button>
-                      <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i>
-                      Print</button>
-                  </div>
-                  <div hidden class="col-sm-3 offset-sm-6">
+                <div class="form-group row align-items-end">
+    
+                  <div class="col-md-4">
+                    <label class="font-weight-bold text-primary">Dari Periode:</label>
                     <div class="input-group">
-                      <input type="text" class="form-control" id="tb-search" placeholder="Pencarian . . .">
-                      <div class="input-group-append"><span class="input-group-text h-100"><i class="ti-search"></i></span>
+                      <select name="bulan_from" id="bulan_from" class="form-control">
+                        <?php
+                        $months = [
+                          '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+                          '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+                          '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                        ];
+                        foreach ($months as $v => $label): ?>
+                          <option value="<?= $v ?>" <?= ($bulan == $v) ? 'selected' : '' ?>><?= $label ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <?= (isset($slc_tahun) && !empty($slc_tahun)) ? form_dropdown($slc_tahun) : ""; ?>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="font-weight-bold text-danger">Sampai Periode:</label>
+                    <div class="input-group">
+                      <select name="bulan_to" id="bulan_to" class="form-control">
+                        <?php foreach ($months as $v => $label): ?>
+                          <option value="<?= $v ?>" <?= ($bulan == $v) ? 'selected' : '' ?>><?= $label ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <?= (isset($slc_tahun) && !empty($slc_tahun)) ? form_dropdown($slc_tahun) : ""; ?>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="btn-group w-100">
+                      <button id="btn_excel" class="btn btn-success shadow-sm" type="button">
+                        <i class="fa fa-file-excel"></i> Export Excel
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- <div class="row mt-3">
+                  <div class="col-md-4 offset-md-8">
+                    <div class="input-group shadow-sm">
+                      <input type="text" class="form-control" id="tb-search" placeholder="Cari data di tabel...">
+                      <div class="input-group-append">
+                        <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> -->
                 <hr>
                 <div class="table-responsive d-none">
                   <?php 

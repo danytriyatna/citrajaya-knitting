@@ -185,6 +185,11 @@ class ReceiveItemModel extends \App\Models\PrModel
                 $arrParam =  [
                     "id" => $id,
                 ];
+                $getCurrent = $this->getData($id);
+                $data['rec_no'] = $getCurrent->rec_no;
+                if ($getCurrent->status == 1) {
+                    $data['status'] = 1;
+                }
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
                 $data['rec_no'] = $this->generateKode();
@@ -257,8 +262,9 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "tipe" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
+                        "lot_no" => $rowData['lot_no'],
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
-                        "kode_transaksi" => $this->generateKode(),
+                        "kode_transaksi" => $data['rec_no'],
                     ];
                     $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
                     $arrStockBalances = [
@@ -266,6 +272,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
                         "tanggal" => date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
+                        "lot_no" => $rowData['lot_no'],
                         "saldo_awal" => 0,
                         "saldo_akhir" => $rowData['qty'],
                         "active" => 1,

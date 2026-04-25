@@ -494,6 +494,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 // $this->deleteRecordMultipleColumn($this->tblDetailSO, $arrDelete);
                 
                 $getCurrent = $this->getData($id);
+                $data['kode_transaksi'] = $getCurrent->kode_transaksi;
                 if ($getCurrent->status == 1) {
                     $data['status'] = 1;
                 }
@@ -639,8 +640,9 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLotsMasuk,
+                            "lot_no" => $rowData['lot_no'],
                             "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
-                            "kode_transaksi" => $this->generateKodePersediaan(),
+                            "kode_transaksi" => $data['kode_transaksi'],
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
                         $arrStockBalances = [
@@ -648,6 +650,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLotsMasuk,
+                            "lot_no" => $rowData['lot_no'],
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,
@@ -682,8 +685,9 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
+                            "lot_no" => $rowData['lot_no'],
                             "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
-                            "kode_transaksi" => $this->generateKodePersediaan(),
+                            "kode_transaksi" => $data['kode_transaksi'],
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
                         $arrStockBalances = [
@@ -691,6 +695,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
+                            "lot_no" => $rowData['lot_no'],
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,

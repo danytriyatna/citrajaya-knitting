@@ -164,7 +164,8 @@ class BarangMasukModel extends \App\Models\PrModel
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
                 // $this->deleteRecordMultipleColumn('trans_barang_masuk_produksi', $arrDelete);
-
+                $getCurrent = $this->getData($id);
+                $data['kode_transaksi'] = $getCurrent->kode_transaksi;
                 $arrParam =  [
                     "id" => $id,
                 ];
@@ -233,8 +234,9 @@ class BarangMasukModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
+                            "lot_no" => $rowData['lot_no'],
                             "price" => !empty($rowData['price']) ? $rowData['price'] : null,
-                            "kode_transaksi" => $this->generateKodePersediaan(),
+                            "kode_transaksi" => $data['kode_transaksi'],
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
                         $arrStockBalances = [
@@ -242,6 +244,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
+                            "lot_no" => $rowData['lot_no'],
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,

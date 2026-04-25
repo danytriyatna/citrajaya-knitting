@@ -510,7 +510,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         {field:"isEdit", visible:false},
         {field:"id_barang", visible:false},
         {field:"id_header", visible:false},
-        {field:"lot_id", visible:false},
+        {title:"LOT ID", field:"lot_id", visible:false},
         {field:"qty_exist", visible:false},
         {field:"nama_unit", visible:false},
         {
@@ -1429,7 +1429,8 @@ function simpanData(status) {
             keterangan:inpKeterangan.val(),
             status:status,
             ref_produksi: valProduksi,
-            statusFrom:inpStatus.val()
+            statusFrom:inpStatus.val(),
+            
         },
         dataType: "json",
         beforeSend: function () {

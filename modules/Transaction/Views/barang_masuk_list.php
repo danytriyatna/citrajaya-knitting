@@ -46,7 +46,7 @@
                 </div>
               <?php } ?>
             </div>
-            <div class="col-sm-2 mb-3">
+            <div class="col-sm-1 mb-3">
               <a href="trans/incoming-goods/form" type="button" class="btn btn-sm btn-success" id="btn-add"> <i class="fa fa-plus"></i> Tambah</a>
             </div>
             <div class="col-sm-2 mb-3">

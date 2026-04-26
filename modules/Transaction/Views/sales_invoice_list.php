@@ -28,7 +28,7 @@
       <div class="card">
         <div class="card-body">
           <div class="row">
-            <div class="col-sm-2 mb-3">
+            <div class="col-sm-1 mb-3">
               <a href="/trans/sales-invoice/add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
             </div>
             <div class="col-sm-2 mb-3">

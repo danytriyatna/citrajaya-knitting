@@ -548,7 +548,7 @@
                 </div>
               <?php } ?>
             </div>
-            <div class="col-sm-2 mb-3">
+            <div class="col-sm-1 mb-3">
               <button type="button" class="btn btn-sm btn-success" id="btn-add"> <i class="fa fa-plus"></i> Tambah</button>
               <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
             </div>

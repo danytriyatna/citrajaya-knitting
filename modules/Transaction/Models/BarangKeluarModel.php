@@ -294,4 +294,27 @@ class BarangKeluarModel extends \App\Models\PrModel
             throw $e;
         }
     }
+
+    function get_export($from_date = null, $to_date = null){
+        $builder = $this->db->table("trans_barang_detail tbd");
+        $builder->join("trans_barang_header tbh", "tbh.id = CAST(tbd.id_header AS INTEGER)", "inner");
+        $builder->join("ref_kategori_persediaan rkp", "rkp.id = tbh.id_kategori", "inner");
+        $builder->join("ref_gudang rg", "rg.id = tbh.id_gudang", "inner");
+        $builder->join("ref_barang rb", "rb.id = tbd.id_barang", "inner");
+        $builder->join("ref_satuan rs", "rs.id = rb.id_satuan", "inner");
+
+        $builder->select("tbh.kode_transaksi, tbh.tanggal, rkp.kategori, rg.nama_gudang, 
+                            tbh.no_ref_trf, tbh.no_ref_wo, rb.kode_barang, rb.nama_barang, 
+                            tbd.lot_no, tbd.qty, rs.nama_satuan, tbd.price");
+
+        $builder->where('tbh.active', 1);
+        $builder->where('tbh.jenis_transaksi', 2);
+        $builder->where('tbh.id_kategori', 5);
+
+        $builder->where("tbh.tanggal BETWEEN'$from_date' AND '$to_date'");
+        $builder->orderBy("tbh.tanggal", "asc");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
 }

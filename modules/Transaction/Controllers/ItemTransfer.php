@@ -656,60 +656,60 @@ class ItemTransfer extends BaseController
   }
 
   public function lists_persediaan()
-    {
-        $start      = $this->request->getPost('start');
-        $limit      = $this->request->getPost('length');
-        $filters    = $this->request->getPost('filter');
-        $order      = $this->request->getPost('sort');
+  {
+      $start      = $this->request->getPost('start');
+      $limit      = $this->request->getPost('length');
+      $filters    = $this->request->getPost('filter');
+      $order      = $this->request->getPost('sort');
 
-        $idGudang      = $this->request->getPost('idGudang');
+      $idGudang      = $this->request->getPost('idGudang');
 
-        $params = [];
-        if ($idGudang != "") {
+      $params = [];
+      if ($idGudang != "") {
 
-            $params['id_gudang'] = $idGudang;
-        } else {
-            $build_array = array(
-                "data" => array()
-            );
-            return $this->response->setJSON($build_array);
-        }
+          $params['id_gudang'] = $idGudang;
+      } else {
+          $build_array = array(
+              "data" => array()
+          );
+          return $this->response->setJSON($build_array);
+      }
 
-        $results = $this->mRefPersediaan->getDataPersediaanBarang(null, $start, $limit, $order, $filters, $params);
-        $totalfiltered = $this->mRefPersediaan->getDataPersediaanBarangCnt($filters, $params);
-        $totaldata = $this->mRefPersediaan->getDataPersediaanBarangCnt(null, $params);
-        $maxpage = ceil($totalfiltered / $limit);
+      $results = $this->mRefPersediaan->getDataPersediaanBarang(null, $start, $limit, $order, $filters, $params);
+      $totalfiltered = $this->mRefPersediaan->getDataPersediaanBarangCnt($filters, $params);
+      $totaldata = $this->mRefPersediaan->getDataPersediaanBarangCnt(null, $params);
+      $maxpage = ceil($totalfiltered / $limit);
 
-        $build_array = array(
-            "last_page" => $maxpage,
-            "recordsTotal" => $totaldata,
-            "recordsFiltered" => $totalfiltered,
-            "data" => array()
-        );
+      $build_array = array(
+          "last_page" => $maxpage,
+          "recordsTotal" => $totaldata,
+          "recordsFiltered" => $totalfiltered,
+          "data" => array()
+      );
 
-        foreach ($results as $row) {
-            $id = encrypt($row->id_barang);
-            $harga = !empty($row->price) ? $row->price * $row->qty : 0;
-            $harga_satuan = !empty($row->price) ? $row->price : 0;
-            array_push(
-                $build_array["data"],
-                array(
-                    "id"   => $row->id_barang,
-                    "nama_barang" => $row->nama_barang,
-                    "kode_barang" => $row->kode_barang,
-                    "nama_satuan" => $row->nama_satuan,
-                    "harga_satuan" => $harga_satuan,
-                    "total_harga" => $harga,
-                    "qty" => $row->qty,
-                    "lot_no" => $row->lot_no,
-                    "lot_id" => $row->lot_id,
-                    "id_barang" => $row->id_barang,
-                    "month" => $row->month,
-                )
-            );
-        }
-        return $this->response->setJSON($build_array);
-    }
+      foreach ($results as $row) {
+          $id = encrypt($row->id_barang);
+          $harga = !empty($row->price) ? $row->price * $row->qty : 0;
+          $harga_satuan = !empty($row->price) ? $row->price : 0;
+          array_push(
+              $build_array["data"],
+              array(
+                  "id"   => $row->id_barang,
+                  "nama_barang" => $row->nama_barang,
+                  "kode_barang" => $row->kode_barang,
+                  "nama_satuan" => $row->nama_satuan,
+                  "harga_satuan" => $harga_satuan,
+                  "total_harga" => $harga,
+                  "qty" => $row->qty,
+                  "lot_no" => $row->lot_no,
+                  "lot_id" => $row->lot_id,
+                  "id_barang" => $row->id_barang,
+                  "month" => $row->month,
+              )
+          );
+      }
+      return $this->response->setJSON($build_array);
+  }
 
 
     function getDataProduksiItem(){

@@ -143,4 +143,5 @@ $routes->group('trans/outgoing-goods', ['namespace' => 'Modules\Transaction\Cont
   $routes->get('edit/(:any)', 'BarangKeluar::form/$1');
   $routes->post('save', 'BarangKeluar::save');
   $routes->get('print/(:any)', 'BarangKeluar::print/$1');
+  $routes->get('print_excel_lists/(:any)/(:any)', 'BarangKeluar::print_excel_lists/$1/$2');
 });

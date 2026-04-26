@@ -94,10 +94,10 @@ $(document).ready(function () {
     }
 
     let btnExcel = $("#btn_excel");
-    btnExcel.on("click", function(){
+    btnExcel.on("click", function() {
         let from_date = $("#from_date").val();
         let to_date = $("#to_date").val();
-        
+        let export_type = $("#export_type").val(); // Ambil value 1 atau 2 dari dropdown
 
         if (from_date == null || from_date == "" || from_date == undefined) {
             Swal.fire({
@@ -107,7 +107,7 @@ $(document).ready(function () {
                 timer: 2000
             });
             return false;
-        }
+        } 
         else if (to_date == null || to_date == "" || to_date == undefined) {
             Swal.fire({
                 text: "To Date Export Harus Diisi!",
@@ -116,7 +116,7 @@ $(document).ready(function () {
                 timer: 2000
             });
             return false;
-        }
+        } 
         else if (parseDate(from_date) > parseDate(to_date)) {
             Swal.fire({
                 text: "From Date tidak boleh lebih besar dari To Date!",
@@ -125,10 +125,27 @@ $(document).ready(function () {
                 timer: 2000
             });
             return false;
-        }
-
+        } 
         else {
-            let url = "/trans/item-transfer/print_excel_lists/" + from_date + "/" + to_date;
+            let url = "";
+
+            if (export_type == "1") {
+                // Jika Monitoring
+                url = "/trans/item-transfer/print_excel_lists/" + from_date + "/" + to_date;
+            } else if (export_type == "2") {
+                // Jika Transaksi
+                url = "/trans/item-transfer/print_excel_trans/" + from_date + "/" + to_date;
+            } else {
+                // Jaga-jaga jika tipe belum dipilih
+                Swal.fire({
+                    text: "Silahkan pilih tipe export!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                return false;
+            }
+
             window.open(url, '_blank');
         }
     });

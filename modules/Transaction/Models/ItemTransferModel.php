@@ -1129,5 +1129,48 @@ class ItemTransferModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function get_export_bahan_jadi($from_date = null, $to_date = null){
+        $builder = $this->db->table("trans_barang_trf_so_det tbtd");
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtd.id_header", "inner");
+        $builder->join("_jenis_proses_produksi jpp", "jpp.id = tbth.id_proses", "left");
+        $builder->join("ref_operator ro", "ro.id = tbth.id_cmt", "left");
+        $builder->join("ref_gudang rg", "rg.id = tbth.id_gudang_asal", "left");
+        $builder->join("ref_gudang rg2", "rg2.id = tbth.id_gudang_tujuan", "left");
+
+        $builder->select("tbth.kode_transaksi, tbth.tanggal, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
+                        jpp.nama as proses, ro.nama_operator, tbtd.kode_sales_order, tbtd.style, tbtd.color, tbtd.kode_ukuran, 
+                        tbtd.qty, tbtd.keterangan");
+
+        $builder->where('tbth.active', 1);
+
+        $builder->where("tbth.tanggal BETWEEN'$from_date' AND '$to_date'");
+        $builder->orderBy("tbth.tanggal", "asc");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
+    function get_export_bahan_baku($from_date = null, $to_date = null){
+        $builder = $this->db->table("trans_barang_trf_detail tbtd");
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = CAST(tbtd.id_header AS INTEGER)", "inner");
+        $builder->join("_jenis_proses_produksi jpp", "jpp.id = tbth.id_proses", "left");
+        $builder->join("ref_operator ro", "ro.id = tbth.id_cmt", "left");
+        $builder->join("ref_gudang rg", "rg.id = tbth.id_gudang_asal", "left");
+        $builder->join("ref_gudang rg2", "rg2.id = tbth.id_gudang_tujuan", "left");
+        $builder->join("ref_barang rb", "rb.id = tbtd.id_barang", "inner");
+        $builder->join("ref_satuan rs", "rs.id = rb.id_satuan", "inner");
+
+        $builder->select("tbth.kode_transaksi, tbth.tanggal, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
+                        jpp.nama as proses, ro.nama_operator, rb.kode_barang, rb.nama_barang, tbtd.qty, rs.nama_satuan, tbtd.lot_no, tbtd.keterangan");
+
+        $builder->where('tbth.active', 1);
+
+        $builder->where("tbth.tanggal BETWEEN'$from_date' AND '$to_date'");
+        $builder->orderBy("tbth.tanggal", "asc");
+        
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
     
 }

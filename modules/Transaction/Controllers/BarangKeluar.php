@@ -588,37 +588,27 @@ class BarangKeluar extends BaseController
             
         $sheets->getActiveSheet()->freezePane('C5');
         $gets->getStyle('A4:L4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
-        
-        // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:L2');
-        // $sheets->getActiveSheet()->mergeCells('A4:I4');
-        // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
-        // set Center title
+        $sheets->getActiveSheet()->mergeCells('A2:L2');
         $sheets->getActiveSheet()->getStyle('A2')
                 ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
         
-        // set width
-          $gets->getColumnDimension('A')->setWidth(18);
-          $gets->getColumnDimension('B')->setWidth(17);
-          $gets->getColumnDimension('C')->setWidth(40);
-          $gets->getColumnDimension('D')->setWidth(30);
-          $gets->getColumnDimension('E')->setWidth(18);
-          $gets->getColumnDimension('F')->setWidth(18);
-          $gets->getColumnDimension('G')->setWidth(20);
-          $gets->getColumnDimension('H')->setWidth(27);
-          $gets->getColumnDimension('I')->setWidth(15);
-          $gets->getColumnDimension('J')->setWidth(15);
-          $gets->getColumnDimension('K')->setWidth(17);
-          $gets->getColumnDimension('L')->setWidth(17);
+        $gets->getColumnDimension('A')->setWidth(18);
+        $gets->getColumnDimension('B')->setWidth(20);
+        $gets->getColumnDimension('C')->setWidth(40);
+        $gets->getColumnDimension('D')->setWidth(30);
+        $gets->getColumnDimension('E')->setWidth(18);
+        $gets->getColumnDimension('F')->setWidth(18);
+        $gets->getColumnDimension('G')->setWidth(20);
+        $gets->getColumnDimension('H')->setWidth(27);
+        $gets->getColumnDimension('I')->setWidth(15);
+        $gets->getColumnDimension('J')->setWidth(15);
+        $gets->getColumnDimension('K')->setWidth(17);
+        $gets->getColumnDimension('L')->setWidth(17);
 
-        // end set width
-        //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:L4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:L4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:L4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+        $gets->getStyle('A4:L4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
@@ -628,12 +618,10 @@ class BarangKeluar extends BaseController
 
         for ($i=0; $i < 12 ; $i++) { 
 
-                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('C5D9F1');
-                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getEndColor()->setARGB('C5D9F1');
-            
-            // $sheets->getActiveSheet()->mergeCells($indexs[$i].'2');
+            $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('C5D9F1');
+            $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getEndColor()->setARGB('C5D9F1');
 
             $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
                     ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
@@ -644,9 +632,7 @@ class BarangKeluar extends BaseController
         }
 
         $ix = 5;
-        $is = 0;
-        
-        
+
         $length = $ix;
 
         if(!empty($results)){
@@ -679,19 +665,7 @@ class BarangKeluar extends BaseController
 
             $ix++;
         }
-    //     $sheets->setActiveSheetIndex(0)
-    //            ->setCellValue('A'.$length, "Total");
-
-    //     $sheets->getActiveSheet()->mergeCells('A'. $length .':K'. $length);
         
-    //     $gets->getStyle('A'.$length.':L'.$length)->applyFromArray($stylexArrayFooter);
-        
-
-    //    $sheets->setActiveSheetIndex(0)
-    //                   ->setCellValue('L' . $length, '=SUM(L' . $startRow . ':L' . $length-1 . ')');
-
-    //    $gets->getStyle("L" . $length)->getNumberFormat()
-    //            ->setFormatCode('#,##0.00');
         $gets->getStyle('A:L')->getAlignment()->setWrapText(true);
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);

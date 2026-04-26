@@ -50,24 +50,39 @@
                 </div>
               <?php } ?>
             </div>
-            <div class="col-sm-2 mb-3">
-              <a href="trans/item-transfer/form" type="button" class="btn btn-sm btn-success" id="btn-add"> <i class="fa fa-plus"></i> Tambah</a>
+
+            <div class="col-sm-1 mb-3">
+              <a href="trans/item-transfer/form" class="btn btn-sm btn-success btn-block" id="btn-add"> 
+                <i class="fa fa-plus"></i> Tambah
+              </a>
             </div>
+
             <div class="col-sm-2 mb-3">
               <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="FROM DATE">
             </div>
             <div class="col-sm-2 mb-3">
               <input type="text" id="to_date" name="to_date" class="form-control datepickerx" placeholder="TO DATE">
             </div>
+
             <div class="col-sm-2 mb-3">
-              <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Print</button>
+              <select id="export_type" class="form-control">
+                <option value="1" selected>Type: Monitoring</option>
+                <option value="2">Type: Transaksi</option>
+              </select>
             </div>
-            <div class="col-sm-4">
-              <div class="form-group">
-                <div class="input-group mb-3">
-                  <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                  <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                </div>
+
+            <div class="col-sm-2 mb-3">
+              <button id="btn_excel" class="btn btn-success" type="button">
+                <i class="fa fa-file-excel"></i> Export
+              </button>
+            </div>
+
+            <div class="col-sm-3 mb-3">
+              <div class="input-group">
+                <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;">
+                  <i class="ti-search"></i>
+                </span>
+                <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" style="border-left-width: 0px;">
               </div>
             </div>
           </div>

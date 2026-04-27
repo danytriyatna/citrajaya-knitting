@@ -94,12 +94,14 @@ class RefKaryawan extends BaseController
                     "email" => $row->email,
                     "alamat" => $row->alamat,
                     "posisi" => $row->posisi,
-                    "tgl_bergabung" => !empty($row->tgl_bergabung) ? \fdate_eng_to_ind($row->tgl_bergabung) : "",
+                    "tgl_bergabung" => !empty($row->tgl_bergabung) ? $row->tgl_bergabung : "",
                     "jenis_kelamin" => $row->jenis_kelamin,
                     "jenis_kelamint" => ($row->jenis_kelamin == 1) ? "Laki - Laki" : "Perempuan",
                     "tgl_lahir" => !empty($row->tgl_lahir) ? \fdate_eng_to_ind($row->tgl_lahir) : "",
                     "tempat_lahir" => $row->tempat_lahir,
                     "no_hp" => $row->no_hp,
+                    "no_rekening" => $row->no_rekening,
+                    "nama_bank" => $row->nama_bank,
                     "upah_lembur" => $row->upah_lembur,
                     "upah_harian" => $row->upah_harian,
                     "upah_lembur_we" => $row->upah_lembur_we,
@@ -128,6 +130,8 @@ class RefKaryawan extends BaseController
         $tgl_lahir =  $this->request->getPost('tgl_lahir');
         $tempat_lahir =  $this->request->getPost('tempat_lahir');
         $no_hp =  $this->request->getPost('no_hp');
+        $nama_bank =  $this->request->getPost('nama_bank');
+        $no_rekening =  $this->request->getPost('no_rekening');
         $upah_lembur =  $this->request->getPost('upah_lembur');
         $upah_harian =  $this->request->getPost('upah_harian');
         $upah_lembur_we =  $this->request->getPost('upah_lembur_we');
@@ -185,8 +189,8 @@ class RefKaryawan extends BaseController
         }
 
         // $tgl_lahir = \fdate_eng_to_ind_3($tgl_lahir);
-        $tgl_bergabung = \fdate_ind_to_eng($tgl_bergabung);
-        
+        // $tgl_bergabung = \fdate_ind_to_eng($tgl_bergabung);
+        // dd($tgl_bergabung);
         $arr_isi = [
             'nip' => $nip,
             'full_name' => $full_name,
@@ -198,6 +202,8 @@ class RefKaryawan extends BaseController
             // 'tgl_lahir' => $tgl_lahir,
             // 'tempat_lahir' => $tempat_lahir,
             'no_hp' => $no_hp,
+            'nama_bank' => $nama_bank,
+            'no_rekening' => $no_rekening,
             'upah_lembur' => $upah_lembur,
             'upah_harian' => $upah_harian,
             'upah_lembur_we' => $upah_lembur_we,

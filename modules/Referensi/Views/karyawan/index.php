@@ -4,188 +4,193 @@
 <div id="modal-form-add-po" class="modal fade" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Form Master Karyawan</h5>
+      <div class="modal-header bg-light">
+        <h5 class="modal-title"><i class="fa fa-user-plus me-2"></i>Form Master Karyawan</h5>
         <input type="hidden" id="data_id">
-        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="alert alert-secondary p-y-8 text-muted">
-          <i>*) Wajib diisi</i>
+      
+      <div class="modal-body p-4">
+        <div class="alert alert-secondary border-0 small mb-4">
+          <i class="fa fa-info-circle me-1"></i> Tanda bintang (<span class="text-danger">*</span>) wajib diisi.
         </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="nip">NIP<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="nip" name="nip" class="form-control" placeholder="Ketik NIP Karyawan" required>
-            <div class="invalid-feedback">
-              NIP Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="nama_konsumen">Nama<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="nama_konsumen" name="nama_konsumen" class="form-control" placeholder="Ketik Nama Karyawan" required>
-            <div class="invalid-feedback">
-              Nama Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="email">Email<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="email" name="email" class="form-control" placeholder="Ketik Email Karyawan" required>
-            <div class="invalid-feedback">
-              Email Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="posisi">Posisi<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="posisi" name="posisi" class="form-control" placeholder="Ketik Posisi Karyawan" required>
-            <div class="invalid-feedback">
-              Posisi Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tgl_bergabung">Tgl Begabung<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="tgl_bergabung" name="tgl_bergabung" class="form-control" placeholder="Ketik Tgl Begabung Karyawan" required>
-            <div class="invalid-feedback">
-              Tgl Begabung Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="jenis_kelamin">Jenis Kelamin<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <select name="jenis_kelamin" id="jenis_kelamin" class="form-control">
-              <option value="1">Laki - Laki</option>
-              <option value="2">Perempuan</option>
-            </select>
-            <div class="invalid-feedback">
-              Jenis Kelamin Karyawan tidak valid
-            </div>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="alamat">Alamat</label>
-          <div class="col-md-9">
-            <textarea name="alamat" id="alamat" class="form-control" rows="5"></textarea>
+
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Data Pribadi</h6>
+        
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="nip">NIP <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <input type="text" id="nip" name="nip" class="form-control" placeholder="Masukkan NIP" required>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="no_hp">No. Whatsapp<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="text" id="no_hp" name="no_hp" class="form-control" placeholder="Ketik No. Whatsapp" required>
-            <div class="invalid-feedback">
-              No. Whatsapp Karyawan tidak valid
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="nama_konsumen">Nama Lengkap <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <input type="text" id="nama_konsumen" name="nama_konsumen" class="form-control" placeholder="Masukkan Nama Lengkap" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="email">Email <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <input type="email" id="email" name="email" class="form-control" placeholder="contoh@perusahaan.com" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="jenis_kelamin">Jenis Kelamin <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <select name="jenis_kelamin" id="jenis_kelamin" class="form-select">
+              <option value="1">Laki - Laki</option>
+              <option value="2">Perempuan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="no_hp">No. WhatsApp <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <div class="input-group">
+              <!-- <span class="input-group-text"><i class="fa fa-whatsapp"></i></span> -->
+              <input type="text" id="no_hp" name="no_hp" class="form-control" placeholder="0812..." required>
             </div>
           </div>
         </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tipe">Tipe</label>
-          <div class="col-md-9">
-            <select id="tipe" name="tipe" class="form-select select2" data-placeholder="-- Pilih Tipe --">
+
+        <div class="row mb-4">
+          <label class="col-md-3 col-form-label text-md-end" for="alamat">Alamat</label>
+          <div class="col-md-8">
+            <textarea name="alamat" id="alamat" class="form-control" rows="3" placeholder="Alamat lengkap..."></textarea>
+          </div>
+        </div>
+
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Penempatan & Jabatan</h6>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="posisi">Posisi <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <input type="text" id="posisi" name="posisi" class="form-control" placeholder="Jabatan saat ini" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="tgl_bergabung">Tgl Bergabung <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <input type="date" id="tgl_bergabung" name="tgl_bergabung" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="tipe">Tipe Karyawan</label>
+          <div class="col-md-8">
+            <select id="tipe" name="tipe" class="form-select select2">
               <option value="1">NON CMT</option>
               <option value="2">CMT</option>
             </select>
           </div>
-
         </div>
-        <div class="form-group row d-none" id="div-cmt">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="nama_jenis_barang">CMT<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <select id="id_cmt" name="id_cmt" class="form-control custom-select select2" data-placeholder="-- Pilih CMT --">
+
+        <div class="row mb-3 d-none" id="div-cmt">
+          <label class="col-md-3 col-form-label text-md-end" for="id_cmt">CMT <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <select id="id_cmt" name="id_cmt" class="form-control custom-select select2">
               <?php foreach ($cmt as $rowData) : ?>
                 <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
               <?php endforeach ?>
             </select>
-            <div class="invalid-feedback">
-              CMT tidak valid
-            </div>
           </div>
         </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_harian">Upah Harian<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <!-- <input type="email" id="upah_harian" name="upah_harian" class="form-control" placeholder="Ketik Upah Harian" required> -->
-            <input type="number" name="upah_harian" value="" id="upah_harian" min="0" step="1" pattern="[0-9]*" class="form-control" 
-                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
-                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
-            <div class="invalid-feedback">
-              Upah Harian Karyawan tidak valid
+
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Informasi Upah & Rekening</h6>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-6 col-form-label text-md-end" for="nama_bank">Nama Bank</label>
+              <div class="col-md-6">
+                <input type="text" name="nama_bank" id="nama_bank" class="form-control" placeholder="Contoh: BCA, Mandiri, dll">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-5 col-form-label text-md-end" for="no_rekening">No. Rekening</label>
+              <div class="col-md-6">
+                <input type="text" name="no_rekening" id="no_rekening" class="form-control" placeholder="Ketik nomor rekening">
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_lembur">Upah Lembur<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="number" name="upah_lembur" value="" id="upah_lembur" min="0" step="1" pattern="[0-9]*" class="form-control" 
-                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
-                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
-            <div class="invalid-feedback">
-              Upah Lembur Karyawan tidak valid
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-6 col-form-label text-md-end" for="upah_harian">Upah Harian <span class="text-danger">*</span></label>
+              <div class="col-md-6">
+                <input type="number" name="upah_harian" id="upah_harian" class="form-control text-end" placeholder="0" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-5 col-form-label text-md-end" for="upah_jam">Upah Perjam <span class="text-danger">*</span></label>
+              <div class="col-md-6">
+                <input type="number" name="upah_jam" id="upah_jam" class="form-control text-end" placeholder="0" required>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_lembur_we">Upah Lembur Weekend<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="number" name="upah_lembur_we" value="" id="upah_lembur_we" min="0" step="1" pattern="[0-9]*" class="form-control" 
-                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
-                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
-            <div class="invalid-feedback">
-              Upah Weekend Karyawan tidak valid
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-6 col-form-label text-md-end" for="upah_lembur">Upah Lembur <span class="text-danger">*</span></label>
+              <div class="col-md-6">
+                <input type="number" name="upah_lembur" id="upah_lembur" class="form-control text-end" placeholder="0" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-5 col-form-label text-md-end" for="upah_lembur_we">Lembur WE <span class="text-danger">*</span></label>
+              <div class="col-md-6">
+                <input type="number" name="upah_lembur_we" id="upah_lembur_we" class="form-control text-end" placeholder="0" required>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="upah_jam">Upah Perjam<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="number" name="upah_jam" value="" id="upah_jam" min="0" step="1" pattern="[0-9]*" class="form-control" 
-                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
-                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
-            <div class="invalid-feedback">
-              Upah Perjam tidak valid
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-6 col-form-label text-md-end" for="upah_lembur">Premi Kehadiran <span class="text-danger">*</span></label>
+              <div class="col-md-6">
+                <input type="number" name="premi_kehadiran" id="premi_kehadiran" class="form-control text-end" placeholder="0" required>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="premi_kehadiran">Permi Kehadiran<span class="text-danger">*</span></label>
-          <div class="col-md-9">
-            <input type="number" name="premi_kehadiran" value="" id="premi_kehadiran" min="0" step="1" pattern="[0-9]*" class="form-control" 
-                 placeholder="[0-9]" data-politespace="" data-politespace-grouplength="3" data-politespace-delimiter="," 
-                 data-politespace-reverse="" data-politespace-decimal-mark="." required>
-            <div class="invalid-feedback">
-              Permi Kehadiran tidak valid
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="foto_style">Foto</label>
-          <div class="col-md-9">
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Foto Karyawan</h6>
+        <div class="row">
+          <label class="col-md-3 col-form-label text-md-end" for="fileKaryawan">Upload Foto</label>
+          <div class="col-md-8">
             <input type="hidden" id="fileKaryawanOld">
-            <input type="file" id="fileKaryawan" onchange="readURL(this,'#fileKaryawan')" name="fileKaryawan" class="form-control file-drag-drop" accept=".jpg, .jpeg, .png">
-            <small class="form-text">Format file *.JPG, *.JPEG, *.PNG, ukuran maks. 1 MB</small>
-            <br>
-            <img class="m-t-10 w-40 d-none" id="linkFileKaryawan" alt="Foto Sales Order">
+            <input type="file" id="fileKaryawan" onchange="readURL(this,'#fileKaryawan')" name="fileKaryawan" class="form-control" accept=".jpg, .jpeg, .png">
+            <div class="form-text mt-2 text-muted">Format: JPG, PNG. Maksimal 1MB.</div>
+            <div class="mt-3">
+               <img class="img-thumbnail d-none" id="linkFileKaryawan" style="max-height: 150px;" alt="Preview">
+            </div>
           </div>
         </div>
-
-        
-        
       </div>
-      <div class="modal-footer">
-        <button id="btn-save" type="button" class="m-s-5 btn btn-success"> <i class="fa fa-save"></i> Simpan</button>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button id="btn-save" type="button" class="btn btn-primary px-4">
+          <i class="fa fa-save me-1"></i> Simpan Data
+        </button>
       </div>
     </div>
   </div>

@@ -12,6 +12,8 @@ $(document).ready(function () {
     let inpPosisi        = $('#posisi');
     let inpTglBergabung  = $('#tgl_bergabung');
     let inpJenisKelamin  = $('#jenis_kelamin');
+    let inpBank    = $('#nama_bank');
+    let inpRekening    = $('#no_rekening');
     let inpUpahHarian    = $('#upah_harian');
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
@@ -85,6 +87,8 @@ $(document).ready(function () {
 
 
                         setTimeout(() => {
+                            inpBank.val(data_row.nama_bank).trigger('change');
+                            inpRekening.val(data_row.no_rekening).trigger('change');
                             inpUpahHarian.val(data_row.upah_harian).trigger('change');
                             inpUpahLembur.val(data_row.upah_lembur).trigger('change');
                             inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
@@ -210,6 +214,8 @@ $(document).ready(function () {
         linkFileKaryawan.attr('src', '');
 
         setTimeout(() => {
+            inpBank.val("").trigger('change');
+            inpRekening.val("").trigger('change');
             inpUpahHarian.val("").trigger('change');
             inpUpahLembur.val("").trigger('change');
             inpUpahLemburWe.val("").trigger('change');
@@ -262,9 +268,12 @@ $(document).ready(function () {
             formData.append("alamat",inpAlamat.val());
             formData.append("fileKaryawan",fileKaryawan[0].files[0]);
             formData.append("fileKaryawanOld",fileKaryawanOld.val());
-            formData.append("tgl_bergabung",formatLocaleDate(inpTglBergabung.val()));
+            formData.append("tgl_bergabung",inpTglBergabung.val());
+            // formData.append("tgl_bergabung",formatLocaleDate(inpTglBergabung.val()));
             formData.append("jenis_kelamin",inpJenisKelamin.val());
             formData.append("no_hp",inpNoHP.val());
+            formData.append("nama_bank", inpBank.val())
+            formData.append("no_rekening", inpRekening.val())
             formData.append("upah_harian", inpUpahHarian.val())
             formData.append("upah_lembur", inpUpahLembur.val());
             formData.append("upah_lembur_we", inpUpahLemburWe.val());

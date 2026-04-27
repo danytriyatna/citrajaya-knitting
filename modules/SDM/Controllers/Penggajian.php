@@ -668,7 +668,6 @@ class Penggajian extends BaseController
   }
 
   public function printSlipExcel_gaji(){
-
         $fileName = "list-slip-gaji.xlsx";
 
         $id = $this->request->getGet('data_id');
@@ -702,19 +701,22 @@ class Penggajian extends BaseController
                ->setCellValue('A4', 'NIK')
                ->setCellValue('B4', 'NAMA')
                ->setCellValue('C4', 'POSISI')
-               ->setCellValue('D4', 'HADIR')
-               ->setCellValue('E4', 'IZIN')
-               ->setCellValue('F4', 'SAKIT')
-               ->setCellValue('G4', 'JAM KERJA')
-               ->setCellValue('H4', 'GAJI/UPAH')
-               ->setCellValue('I4', 'SAMPLE/PERBAIKAN')
-               ->setCellValue('J4', 'LEMBUR HK')
-               ->setCellValue('K4', 'LEMBUR HL')
-               ->setCellValue('L4', 'PREMI KEHADIRAN')
-               ->setCellValue('M4', 'LEMBUR')
-               ->setCellValue('N4', 'PENAMBAHAN')
-               ->setCellValue('O4', 'POTONGAN')
-               ->setCellValue('P4', 'GAJI/UPAH');
+               ->setCellValue('D4', 'BANK')
+               ->setCellValue('E4', 'NO REKENING')
+               ->setCellValue('F4', 'EMAIL')
+               ->setCellValue('G4', 'HADIR')
+               ->setCellValue('H4', 'IZIN')
+               ->setCellValue('I4', 'SAKIT')
+               ->setCellValue('J4', 'JAM KERJA')
+               ->setCellValue('K4', 'GAJI/UPAH')
+               ->setCellValue('L4', 'SAMPLE/PERBAIKAN')
+               ->setCellValue('M4', 'LEMBUR HK')
+               ->setCellValue('N4', 'LEMBUR HL')
+               ->setCellValue('O4', 'PREMI KEHADIRAN')
+               ->setCellValue('P4', 'LEMBUR')
+               ->setCellValue('Q4', 'PENAMBAHAN')
+               ->setCellValue('R4', 'POTONGAN')
+               ->setCellValue('S4', 'GAJI/UPAH');
 
             $styleArray = [
                 'borders' => [
@@ -833,15 +835,9 @@ class Penggajian extends BaseController
                     ],
                 ],
             ];
-            
-        $gets->getStyle('A4:P4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
-        
-        // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('K2:P2');
-        // $sheets->getActiveSheet()->mergeCells('A4:I4');
-        // $sheets->getActiveSheet()->mergeCells('A5:C5');
+        $sheets->getActiveSheet()->freezePane('C5');
+        $gets->getStyle('A4:R4')->applyFromArray($styleArray_header);
+        $sheets->getActiveSheet()->mergeCells('K2:R2');
 
         // set Center title
         $sheets->getActiveSheet()->getStyle('K2')
@@ -852,32 +848,35 @@ class Penggajian extends BaseController
           $gets->getColumnDimension('A')->setWidth(20);
           $gets->getColumnDimension('B')->setWidth(45);
           $gets->getColumnDimension('C')->setWidth(35);
-          $gets->getColumnDimension('D')->setWidth(15);
-          $gets->getColumnDimension('E')->setWidth(15);
-          $gets->getColumnDimension('F')->setWidth(15);
+          $gets->getColumnDimension('D')->setWidth(20);
+          $gets->getColumnDimension('E')->setWidth(20);
+          $gets->getColumnDimension('F')->setWidth(25);
           $gets->getColumnDimension('G')->setWidth(15);
-          $gets->getColumnDimension('H')->setWidth(30);
-          $gets->getColumnDimension('I')->setWidth(20);
+          $gets->getColumnDimension('H')->setWidth(15);
+          $gets->getColumnDimension('I')->setWidth(15);
           $gets->getColumnDimension('J')->setWidth(15);
-          $gets->getColumnDimension('K')->setWidth(15);
+          $gets->getColumnDimension('K')->setWidth(30);
           $gets->getColumnDimension('L')->setWidth(20);
-          $gets->getColumnDimension('M')->setWidth(20);
-          $gets->getColumnDimension('N')->setWidth(20);
+          $gets->getColumnDimension('M')->setWidth(15);
+          $gets->getColumnDimension('N')->setWidth(15);
           $gets->getColumnDimension('O')->setWidth(20);
-          $gets->getColumnDimension('P')->setWidth(30);
+          $gets->getColumnDimension('P')->setWidth(20);
+          $gets->getColumnDimension('Q')->setWidth(20);
+          $gets->getColumnDimension('R')->setWidth(20);
+          $gets->getColumnDimension('S')->setWidth(30);
 
         // end set width
         //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:P4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:P4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+          $gets->getStyle('A4:S4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+          $gets->getStyle('A4:S4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
-        $gets->setTitle('Detail');
+        $gets->setTitle('List Gaji');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I','J','K','L','M','N','O','P'
+            'A','B','C','D', 'E','F','G', 'H','I','J','K','L','M','N','O','P','Q','R','S'
         );
 
-        for ($i=0; $i < 16 ; $i++) { 
+        for ($i=0; $i < 19 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -896,25 +895,6 @@ class Penggajian extends BaseController
 
         $ix = 5;
         $is = 0;
-        // for ($i=1; $i <= 4 ; $i++) { 
-        //     // declaration image
-        //     $isR = $ix * $is;
-        //     if($is > 0){
-        //         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-        //         $drawing->setName('Paid');
-        //         $drawing->setDescription('Paid');
-        //         $drawing->setPath(ROOTPATH . 'public/assets/images/text-excel.png');
-        //         $drawing->setCoordinates('C'.$isR);
-        //         $drawing->setOffsetX(85);
-        //         $drawing->setRotation(-35);
-        //         // $drawing->getShadow()->setVisible(false);
-        //         // $drawing->getShadow()->setDirection(45);
-        //         $drawing->setHeight(65);
-        //         $drawing->setWorksheet($gets);
-        //     }
-
-        //     $is += $ix;
-        // }
         
         
         $length = $ix;
@@ -936,7 +916,7 @@ class Penggajian extends BaseController
         $potongan = 0;
         $total_pendapatan_total = 0;
         $premi = 0;
-        
+        $startRow = $ix;
         for ($xx = 0; $xx < count($results) ; $xx++) { 
             
             $r = $results[$xx];
@@ -966,79 +946,66 @@ class Penggajian extends BaseController
                     ->setCellValue('A'.$ix, !empty($r->nip) ? $r->nip : "-")
                     ->setCellValue('B'.$ix, !empty($r->full_name) ? $r->full_name : "-")
                     ->setCellValue('C'.$ix, !empty($r->posisi) ? $r->posisi : "-")
-                    ->setCellValue('D'.$ix, !empty($r->hadir) ? $r->hadir : 0)
-                    ->setCellValue('E'.$ix, !empty($r->izin) ? $r->izin : 0)
-                    ->setCellValue('F'.$ix, !empty($r->sakit) ? $r->sakit : 0)
-                    ->setCellValue('G'.$ix, !empty($r->jam_kerja) ? $r->jam_kerja : 0)
-                    ->setCellValue('H'.$ix, !empty($r->gaji_harian) ? $r->gaji_harian : 0)
-                    ->setCellValue('I'.$ix, !empty($r->jml_sample) ? $r->jml_sample : 0)
-                    ->setCellValue('J'.$ix, !empty($r->lembur) ? $r->lembur : 0)
-                    ->setCellValue('K'.$ix, !empty($r->lembur_we) ? $r->lembur_we : 0)
-                    ->setCellValue('L'.$ix, !empty($r->premi) ? $r->premi : 0)
-                    ->setCellValue('M'.$ix, !empty($r->uang_lembur) ? $r->uang_lembur : 0)
-                    ->setCellValue('N'.$ix, !empty($r->bonus) ? $r->bonus : 0)
-                    ->setCellValue('O'.$ix, !empty($r->potongan) ? $r->potongan : 0)
-                    ->setCellValue('P'.$ix, !empty($total_pendapatan) ? $total_pendapatan : 0);
+                    ->setCellValue('D'.$ix, !empty($r->nama_bank) ? $r->nama_bank : "-")
+                    ->setCellValue('E'.$ix, !empty($r->no_rekening) ? $r->no_rekening : "-")
+                    ->setCellValue('F'.$ix, !empty($r->email) ? $r->email : "-")
+                    ->setCellValue('G'.$ix, !empty($r->hadir) ? $r->hadir : 0)
+                    ->setCellValue('H'.$ix, !empty($r->izin) ? $r->izin : 0)
+                    ->setCellValue('I'.$ix, !empty($r->sakit) ? $r->sakit : 0)
+                    ->setCellValue('J'.$ix, !empty($r->jam_kerja) ? $r->jam_kerja : 0)
+                    ->setCellValue('K'.$ix, !empty($r->gaji_harian) ? $r->gaji_harian : 0)
+                    ->setCellValue('L'.$ix, !empty($r->jml_sample) ? $r->jml_sample : 0)
+                    ->setCellValue('M'.$ix, !empty($r->lembur) ? $r->lembur : 0)
+                    ->setCellValue('N'.$ix, !empty($r->lembur_we) ? $r->lembur_we : 0)
+                    ->setCellValue('O'.$ix, !empty($r->premi) ? $r->premi : 0)
+                    ->setCellValue('P'.$ix, !empty($r->uang_lembur) ? $r->uang_lembur : 0)
+                    ->setCellValue('Q'.$ix, !empty($r->bonus) ? $r->bonus : 0)
+                    ->setCellValue('R'.$ix, !empty($r->potongan) ? $r->potongan : 0)
+                    ->setCellValue('S'.$ix, !empty($total_pendapatan) ? $total_pendapatan : 0);
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':P'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':S'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("H" . $ix .":I" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
-            $sheets->getActiveSheet()->getStyle("K" . $ix .":P" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
+            $sheets->getActiveSheet()->getStyle("K" . $ix .":L" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0');
+            $sheets->getActiveSheet()->getStyle("N" . $ix .":S" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0');
 
             $ix++;
         }
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':F'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
         
-        $gets->getStyle('A'.$length.':P'.$length)->applyFromArray($stylexArrayFooter);
-        
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('G'.$length, $jam_kerja);
-
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('H'.$length, $gaji_harian);
-
-       $gets->getStyle("H" . $length .":I" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
-
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('I'.$length, $sample);
-
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('J'.$length, $lembur);
-
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('K'.$length, $lembur_we);
-        
-        $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('L'.$length, $premi);
+        $gets->getStyle('A'.$length.':S'.$length)->applyFromArray($stylexArrayFooter);
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('M'.$length, $uang_lembur);
+                      ->setCellValue('J' . $length, '=SUM(J' . $startRow . ':J' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('N'.$length, $bonus);
+                      ->setCellValue('K' . $length, '=SUM(K' . $startRow . ':K' . $length-1 . ')');
 
         $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('O'.$length, $potongan);
-        $sheets->setActiveSheetIndex(0)
+                      ->setCellValue('L' . $length, '=SUM(L' . $startRow . ':L' . $length-1 . ')');
 
-                    ->setCellValue('P'.$length, $total_pendapatan_total);
+       $gets->getStyle("K" . $length .":L" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0');
 
-        $gets->getStyle("K" . $length .":P" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
-        
-        
-        
+       $sheets->setActiveSheetIndex(0)->setCellValue('M' . $length, '=SUM(M' . $startRow . ':M' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('N' . $length, '=SUM(N' . $startRow . ':N' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('O' . $length, '=SUM(O' . $startRow . ':O' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('P' . $length, '=SUM(P' . $startRow . ':P' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('Q' . $length, '=SUM(Q' . $startRow . ':Q' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('R' . $length, '=SUM(R' . $startRow . ':R' . $length-1 . ')');
+       $sheets->setActiveSheetIndex(0)->setCellValue('S' . $length, '=SUM(S' . $startRow . ':S' . $length-1 . ')');
+
+        $gets->getStyle("N" . $length .":S" . $length )->getNumberFormat()
+               ->setFormatCode('#,##0');
         
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);

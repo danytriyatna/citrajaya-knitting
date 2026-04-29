@@ -60,7 +60,7 @@ class SalesOrder extends BaseController
 
   public function index()
   {
-    if (!$this->auth->loggedIn()) {
+    if (!$this->auth->loggedIn() || !$this->_view) {
       return redirect()->to('/auth/login');
     }
 
@@ -71,6 +71,11 @@ class SalesOrder extends BaseController
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
     $this->data['rekening_list'] = $this->mRekening->where("active", 1)->findAll();
     $this->data['role_id'] = session()->get('role_id');
+    $this->data['new_access'] = $this->_new;
+    $this->data['edit_access'] = $this->_edit;
+    $this->data['delete_access'] = $this->_delete;
+    $this->data['print_access'] = $this->_print;
+    $this->data['approve_access'] = $this->_approve;
     
     return view($this->views . '\sales_order_list', $this->data);
   }
@@ -257,7 +262,17 @@ class SalesOrder extends BaseController
 
   function save()
   {
-    $id         = $this->request->getPost('id');
+    $id = $this->request->getPost('id');
+    if (!$this->auth->loggedIn() || (!$this->_new && empty($id))) {
+      $build_array['message'] = 'Anda tidak memiliki akses untuk tambah data!';
+      $build_array['status']  = false;
+      return $this->response->setJSON($build_array);
+    }
+    else if (!$this->_edit) {
+      $build_array['message'] = 'Anda tidak memiliki akses untuk edit data!';
+      $build_array['status']  = false;
+      return $this->response->setJSON($build_array);
+    }
     $idKonsumen         = $this->request->getPost('idKonsumen');
     $tglTransaksi = $this->request->getPost('tglTransaksi');
     $tglDeadline = $this->request->getPost('tglDeadline');
@@ -268,6 +283,11 @@ class SalesOrder extends BaseController
     $noSalesOrder = $this->request->getPost('noSalesOrder');
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
+    if (!$this->_approve && $submit_data == 1) {
+      $build_array['message'] = 'Anda tidak memiliki akses untuk APPROVE data!';
+      $build_array['status']  = false;
+      return $this->response->setJSON($build_array);
+    }
     $uang_dp = $this->request->getPost('uang_dp');
     $uang_dp_2 = $this->request->getPost('uang_dp_2');
     $pengiriman = $this->request->getPost('pengiriman');
@@ -1007,6 +1027,11 @@ class SalesOrder extends BaseController
 
   function saveDetail()
   {
+    if (!$this->auth->loggedIn() || !$this->_edit) {
+      $build_array['message'] = 'Anda tidak memiliki akses untuk edit data!';
+      $build_array['status']  = false;
+      return $this->response->setJSON($build_array);
+    }
     $msg    = "Data gagal disimpan !";
     $status = false;
     $idSalesOrder = $this->request->getPost('idSalesOrder');
@@ -1279,8 +1304,9 @@ class SalesOrder extends BaseController
 
   public function print($id = null)
   {
-    if (!$this->auth->loggedIn()) {
-      return redirect()->to('/auth/login');
+    if (!$this->auth->loggedIn() || !$this->_print) {
+      $this->session->setFlashdata('err', 'Anda tidak memiliki akses untuk print data.');
+      return redirect()->to($this->urlv);
     }
     $dompdf = new \Dompdf\Dompdf();
     // Set Dompdf options for portrait orientation
@@ -1381,7 +1407,10 @@ class SalesOrder extends BaseController
   }
 
   public function print_excel_lists($from_date, $to_date, $buyer){
-
+        if (!$this->auth->loggedIn() || !$this->_print) {
+          $this->session->setFlashdata('err', 'Anda tidak memiliki akses untuk print data.');
+          return redirect()->to($this->urlv);
+        }
         $fileName = "SO-List.xlsx";
 
         if ($buyer == 'all') {

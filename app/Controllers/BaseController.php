@@ -43,7 +43,7 @@ class BaseController extends Controller
 	protected $role = null;
 	protected $encrypter = null;
 	protected $crud;
-	protected $_new, $_edit, $_delete, $_print, $_approve;
+	protected $_new, $_edit, $_delete, $_print, $_approve, $_view;
 	protected $session;
 	protected $validation;
 	protected $data;
@@ -96,6 +96,7 @@ class BaseController extends Controller
 	protected function _checkAuthorization($MOD_ALIAS)
 	{
 		$this->MOD_ALIAS = $MOD_ALIAS;
+		$this->_view = false;
 		$isAuthorized = false;
 		$user_id = $this->session->get('user_id');
 		$role_id = $this->session->get('role_id');
@@ -105,6 +106,7 @@ class BaseController extends Controller
 		} else {
 			if ($this->MOD_ALIAS == "MOD_HOME" or $this->mcommon->checkMenuAccess($role_id, $this->MOD_ALIAS)) {
 				$isAuthorized = true;
+				$this->_view = true;
 			}
 		}
 

@@ -65,7 +65,7 @@ $(document).ready(function () {
         let fmBtnEdit = "";        
      
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
-        fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
+        fmBtnEdit = ` <button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
@@ -276,20 +276,23 @@ $(document).ready(function () {
         let status = '';
         let aksi = '';
         if(data.status == 'Draft'){
-         status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
+             status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
                     <span class="f-w-700 text-muted">`+data.status+`</span>`
 
-         aksi = `<button type="button" class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
-                 <button type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
+            aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
+                 <button type="button" ${deleteButton == true ? '' : 'hidden'} class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
                  <button type="button" hidden  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
-        }else{
-         status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
+        
+        }
+        
+        else{
+            status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
                     <span class="f-w-700 text-success">`+data.status+`</span>`
 
 
-        aksi = `<button type="button" class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
+            aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
                 <button hidden type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
-                <button type="button"   class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+                <button type="button" ${printButton == true ? '' : 'hidden'}  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
         }
         
         // HTML Card Layout

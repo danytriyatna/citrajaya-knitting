@@ -2,6 +2,14 @@
 
 $(document).ready(function () {
 
+    if (typeof flashError !== 'undefined' && flashError !== '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: flashError,
+        });
+    }
+
     $("[data-politespace]").politespace();
 
     const inpData           = $('#data_id');
@@ -345,9 +353,20 @@ $(document).ready(function () {
                 window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
             });
             document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
-                if (confirm("Anda yakin akan menghapus data?")) {
-                    window.location.replace(baseUrl + "/trans/sales-order/delete/list/" + data.id);
-                }
+                Swal.fire({
+                    title: 'Hapus Data?',
+                    text: 'Data yang dihapus tidak dapat dikembalikan!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.replace(baseUrl + "/trans/sales-order/delete/list/" + data.id);
+                    }
+                });
             });
             
             let isColumn = [

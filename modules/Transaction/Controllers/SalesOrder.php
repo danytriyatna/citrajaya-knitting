@@ -1051,10 +1051,10 @@ class SalesOrder extends BaseController
 
   public function deleteList($id = NULL)
   {
-    if (!$this->auth->loggedIn() or (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
-      throw new \Exception('You must be an administrator to view this page.');
+    if (!$this->auth->loggedIn() or !$this->_delete) {
+      $this->session->setFlashdata('err', 'Anda tidak memiliki akses untuk menghapus data.');
+      return redirect()->to($this->urlv);
     }
-
     if ($id != null && $id != "") {
       $id = decrypt($id);
     }
@@ -1080,9 +1080,6 @@ class SalesOrder extends BaseController
         $this->session->setFlashdata('err', "SalesOrder gagal dihapus");
       }
     }
-    
-
-
     return redirect()->to($this->urlv);
   }
   public function deleteDetailList($id = NULL)

@@ -2,26 +2,27 @@
 
 namespace Modules\Transaction\Controllers;
 
-use CodeIgniter\Controller;
-use App\Libraries\DompdfGenerator;
 use App\Controllers\BaseController;
-use Modules\Transaction\Models\SampleModel;
-use Modules\Referensi\Models\KonsumenModel;
-use Modules\Referensi\Models\UkuranModel;
-use Modules\Referensi\Models\WarnaModel;
+use App\Libraries\DompdfGenerator;
 use App\Models\FileModel;
+use CodeIgniter\Controller;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Label\Label;
 use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Writer\ValidationException;
-use Modules\Transaction\Models\WalkorderModel;
-use Modules\Transaction\Models\ProductionModel;
+use Modules\Referensi\Models\BarangModel;
+use Modules\Referensi\Models\KonsumenModel;
 use Modules\Referensi\Models\RekeningModel;
+use Modules\Referensi\Models\UkuranModel;
+use Modules\Referensi\Models\WarnaModel;
+use Modules\Transaction\Models\ProductionModel;
+use Modules\Transaction\Models\SampleModel;
+use Modules\Transaction\Models\WalkorderModel;
 
 class Sample extends BaseController
 {
@@ -33,6 +34,7 @@ class Sample extends BaseController
   protected $mworkOrder;
   protected $mRekening;
   protected $mProduksi;
+  protected $mBarang;
 
   protected $views = '\Modules\Transaction\Views';
   protected $urlv  = 'trans/sample';
@@ -48,6 +50,7 @@ class Sample extends BaseController
     $this->mworkOrder = new WalkorderModel();
     $this->mRekening   = new RekeningModel();
     $this->mProduksi = new ProductionModel();
+    $this->mBarang = new BarangModel();
   }
 
 
@@ -61,6 +64,7 @@ class Sample extends BaseController
     $this->data['buyer'] = $this->mkonsumen->where("active", 1)->findAll();
     $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
+    $this->data['barang'] = $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
     return view($this->views . '\sample_list', $this->data);
   }
 
@@ -681,21 +685,39 @@ class Sample extends BaseController
     $warna6 = $this->request->getPost('warna6');
     $warna7 = $this->request->getPost('warna7');
     $warna8 = $this->request->getPost('warna8');
+    $warna1 = $this->request->getPost('warna1');
+    $barang1 = $this->request->getPost('barang1');
+    $barang2 = $this->request->getPost('barang2');
+    $barang3 = $this->request->getPost('barang3');
+    $barang4 = $this->request->getPost('barang4');
+    $barang5 = $this->request->getPost('barang5');
+    $barang6 = $this->request->getPost('barang6');
+    $barang7 = $this->request->getPost('barang7');
+    $barang8 = $this->request->getPost('barang8');
     $dataUkuran = $this->request->getPost('dataUkuran');
     $dataGram = $this->request->getPost('dataGram');
     $dataWarna = [
-      "id_warna_1" => !empty($warna1) ? $warna1 : null,
-      "id_warna_2" => !empty($warna2) ? $warna2 : null,
-      "id_warna_3" => !empty($warna3) ? $warna3 : null,
-      "id_warna_4" => !empty($warna4) ? $warna4 : null,
-      "id_warna_5" => !empty($warna5) ? $warna5 : null,
-      "id_warna_6" => !empty($warna6) ? $warna6 : null,
-      "id_warna_7" => !empty($warna7) ? $warna7 : null,
-      "id_warna_8" => !empty($warna8) ? $warna8 : null,
+      "id_barang_1" => !empty($barang1) ? $barang1 : null,
+      "id_barang_2" => !empty($barang2) ? $barang2 : null,
+      "id_barang_3" => !empty($barang3) ? $barang3 : null,
+      "id_barang_4" => !empty($barang4) ? $barang4 : null,
+      "id_barang_5" => !empty($barang5) ? $barang5 : null,
+      "id_barang_6" => !empty($barang6) ? $barang6 : null,
+      "id_barang_7" => !empty($barang7) ? $barang7 : null,
+      "id_barang_8" => !empty($barang8) ? $barang8 : null,
+
+      // "id_warna_1" => !empty($warna1) ? $warna1 : null,
+      // "id_warna_2" => !empty($warna2) ? $warna2 : null,
+      // "id_warna_3" => !empty($warna3) ? $warna3 : null,
+      // "id_warna_4" => !empty($warna4) ? $warna4 : null,
+      // "id_warna_5" => !empty($warna5) ? $warna5 : null,
+      // "id_warna_6" => !empty($warna6) ? $warna6 : null,
+      // "id_warna_7" => !empty($warna7) ? $warna7 : null,
+      // "id_warna_8" => !empty($warna8) ? $warna8 : null,
 
       "id_sample" => (int)decrypt($idSample),
-      "id" => !empty($idSampleDet) ? $idSampleDet :  null,
-    ];
+      "id"        => !empty($idSampleDet) ? $idSampleDet : null,
+  ];
     $res = $this->mSample->trxInsertUpdateRecord($dataWarna, $dataUkuran, $dataGram);
 
     if ($res === true) {
@@ -717,18 +739,27 @@ class Sample extends BaseController
     if (!$this->auth->loggedIn() or (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
       throw new \Exception('You must be an administrator to view this page.');
     }
-
+    $this->db->transStart();
     if ($id != null && $id != "") {
       $id = decrypt($id);
     }
 
     $id = (int)$id;
 
-    $res = $this->mSample->deleteRecord($this->mSample->table, 'id', $id);
+    $getDet = $this->mSample->getDataDetailSampleIdByIdSample($id);
+
+    foreach ($getDet as $key => $value) {
+         $this->mSample->deleteRecord('trans_sample_gram', 'id_sample_det', $value->id);
+    }
+
+    $this->mSample->deleteRecord('trans_sample_det', 'id_sample', $id);
+    $res =$this->mSample->deleteRecord($this->mSample->table, 'id', $id);
     if ($res) {
       $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "Sample Dihapus");
       $this->session->setFlashdata('message', "Sample berhasil dihapus");
+      $this->db->transComplete();
     } else {
+      $this->db->transRollback();
       $this->session->setFlashdata('err', "Sample gagal dihapus");
     }
 

@@ -242,135 +242,112 @@ class SalesOrderModel extends \App\Models\PrModel
 
     function getDataDetailSalesOrder_crostab($id)
     {
-
-
-        // get data ukuran 
-        $pru['use'] = 1; // ambil ukuran yang digunakan order 
+        $pru['use'] = 1;
         $pru['id_sales_order'] = $id;
         $dtUkuran = $this->getUkuranTrans($pru);
 
-        // Dynamic Columns
-        $col11 = "";
-        $col12 = "";
-        $col21 = "";
-        $col22 = "";
-        $col3  = "";
-        $col_harga  = "";
+        $col11     = "";
+        $col21     = "";
+        $col3      = "";
+        $col_harga = "";
 
         foreach ($dtUkuran as $item) {
-            $key = $item->key_ukuran;
+            $key    = $item->key_ukuran;
             if ($key == 'all') $key = 'all_';
-            $hrg = $key . '_hrg';
-
-            
-            $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
-
-            $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql,  0) as $keySql" : ",coalesce(tbl.$keySql, 0) as $keySql";
+            $keySql  = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
             $codeSub = $keySql;
             $keySql == 'all_' ? $codeSub = 'all' : $codeSub = $codeSub;
-            $col_harga .= ($col_harga == "") ? 
-            "COALESCE(
-                    ( 
-                        SELECT tsou.harga_satuan
-                        FROM trans_sales_order_ukuran tsou 
-                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
-                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
-                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
-                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
-                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
-                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
-                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
-                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
-                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
-                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
-                        WHERE tsou.id_sales_order_det = tbl.id
-                        AND ru.key_ukuran = '$codeSub' 
-                        AND CONCAT_WS('~', 
-                        NULLIF(rw1.kode_warna, ''), 
-                        NULLIF(rw2.kode_warna, ''), 
-                        NULLIF(rw3.kode_warna, ''),
-                        NULLIF(rw4.kode_warna, ''),
-                        NULLIF(rw5.kode_warna, ''),
-                        NULLIF(rw6.kode_warna, ''),
-                        NULLIF(rw7.kode_warna, ''),
-                        NULLIF(rw8.kode_warna, '')
-                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
-                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
-                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
-                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
-                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
-                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
-                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
-                )
-                    ), 0
-            ) AS harga_satuan_$codeSub" 
 
-            : ",COALESCE(
-                    ( 
-                        SELECT tsou.harga_satuan
-                        FROM trans_sales_order_ukuran tsou 
-                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
-                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
-                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
-                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
-                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
-                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
-                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
-                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
-                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
-                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
-                        WHERE tsou.id_sales_order_det = tbl.id
-                        AND ru.key_ukuran = '$codeSub' 
-                        AND CONCAT_WS('~', 
-                        NULLIF(rw1.kode_warna, ''), 
-                        NULLIF(rw2.kode_warna, ''), 
-                        NULLIF(rw3.kode_warna, ''),
-                        NULLIF(rw4.kode_warna, ''),
-                        NULLIF(rw5.kode_warna, ''),
-                        NULLIF(rw6.kode_warna, ''),
-                        NULLIF(rw7.kode_warna, ''),
-                        NULLIF(rw8.kode_warna, '')
-                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
-                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
-                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
-                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
-                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
-                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
-                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
-                )
-                    ), 0
-            ) AS harga_satuan_$codeSub";
-            //  $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg" : ",coalesce(tbl.$hrg,0) as $hrg";
-            
+            $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql, 0) as $keySql" : ",coalesce(tbl.$keySql, 0) as $keySql";
             $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+            $col3  .= ($col3  == "") ? $keySql : "," . $keySql;
 
-            $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
-            //  $col22 .= ($col22 == "") ? "$hrg Float" : ",$hrg Float";
-            }
+            $subHarga = "
+                COALESCE(
+                    (
+                        SELECT tsou.harga_satuan
+                        FROM trans_sales_order_ukuran tsou 
+                        INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                        INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det
+
+                        -- JOIN ref_barang untuk subquery
+                        LEFT JOIN ref_barang bsub1 ON bsub1.id = tsod.id_barang_1
+                        LEFT JOIN ref_barang bsub2 ON bsub2.id = tsod.id_barang_2
+                        LEFT JOIN ref_barang bsub3 ON bsub3.id = tsod.id_barang_3
+                        LEFT JOIN ref_barang bsub4 ON bsub4.id = tsod.id_barang_4
+                        LEFT JOIN ref_barang bsub5 ON bsub5.id = tsod.id_barang_5
+                        LEFT JOIN ref_barang bsub6 ON bsub6.id = tsod.id_barang_6
+                        LEFT JOIN ref_barang bsub7 ON bsub7.id = tsod.id_barang_7
+                        LEFT JOIN ref_barang bsub8 ON bsub8.id = tsod.id_barang_8
+
+                        -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke tsod
+                        LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(bsub1.id_warna, tsod.id_warna_1)
+                        LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(bsub2.id_warna, tsod.id_warna_2)
+                        LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(bsub3.id_warna, tsod.id_warna_3)
+                        LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(bsub4.id_warna, tsod.id_warna_4)
+                        LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(bsub5.id_warna, tsod.id_warna_5)
+                        LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(bsub6.id_warna, tsod.id_warna_6)
+                        LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(bsub7.id_warna, tsod.id_warna_7)
+                        LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(bsub8.id_warna, tsod.id_warna_8)
+
+                        WHERE tsou.id_sales_order_det = tbl.id
+                        AND ru.key_ukuran = '$codeSub' 
+                        AND CONCAT_WS('~', 
+                            NULLIF(rw1.kode_warna, ''), 
+                            NULLIF(rw2.kode_warna, ''), 
+                            NULLIF(rw3.kode_warna, ''),
+                            NULLIF(rw4.kode_warna, ''),
+                            NULLIF(rw5.kode_warna, ''),
+                            NULLIF(rw6.kode_warna, ''),
+                            NULLIF(rw7.kode_warna, ''),
+                            NULLIF(rw8.kode_warna, '')
+                        ) = TRIM(BOTH '~' FROM
+                            COALESCE(w1.kode_warna, '') ||
+                            CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
+                            CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
+                            CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
+                            CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
+                            CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
+                            CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
+                            CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END
+                        )
+                    ), 0
+                ) AS harga_satuan_$codeSub";
+
+            $col_harga .= ($col_harga == "") ? $subHarga : "," . $subHarga;
+        }
+
         $sql = "
             SELECT 
                 tbl.id,
                 ROW_NUMBER() OVER (ORDER BY tbl.id) AS no,
-                COALESCE(w1.kode_warna, '') as colorDasar,
-                TRIM(BOTH ' - ' FROM COALESCE(w1.kode_warna, '') ||
+
+                -- Flag sumber warna
+                CASE
+                    WHEN td.id_barang_1 IS NOT NULL THEN 'via_barang'
+                    ELSE 'via_warna'
+                END AS sumber_warna,
+
+                w1.kode_warna AS colorDasar,
+                TRIM(BOTH ' - ' FROM
+                    COALESCE(w1.kode_warna, '') ||
                     CASE WHEN w2.kode_warna IS NOT NULL THEN ' - ' || w2.kode_warna ELSE '' END ||
                     CASE WHEN w3.kode_warna IS NOT NULL THEN ' - ' || w3.kode_warna ELSE '' END ||
                     CASE WHEN w4.kode_warna IS NOT NULL THEN ' - ' || w4.kode_warna ELSE '' END ||
                     CASE WHEN w5.kode_warna IS NOT NULL THEN ' - ' || w5.kode_warna ELSE '' END ||
                     CASE WHEN w6.kode_warna IS NOT NULL THEN ' - ' || w6.kode_warna ELSE '' END ||
                     CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
-                TRIM(BOTH ' ~ ' FROM COALESCE(w1.keterangan, '') ||
+                TRIM(BOTH ' ~ ' FROM
+                    COALESCE(w1.keterangan, '') ||
                     CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
                     CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
                     CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
                     CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
                     CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
                     CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
+                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
                 ) AS keterangan,
                 {$col11},
                 (
@@ -384,8 +361,9 @@ class SalesOrderModel extends \App\Models\PrModel
                     SELECT SUM(x.harga_total)
                     FROM trans_sales_order_ukuran x
                     WHERE x.id_sales_order_det = tbl.id
-                ), 0) as total_harga,
+                ), 0) AS total_harga,
                 {$col_harga}
+
             FROM 
                 CROSSTAB(
                     $$
@@ -414,155 +392,150 @@ class SalesOrderModel extends \App\Models\PrModel
                     {$col21}
                 )
             INNER JOIN trans_sales_order_det td ON td.id = tbl.id
-            INNER JOIN ref_warna w1 ON td.id_warna_1 = w1.id
-            LEFT JOIN ref_warna w2 ON td.id_warna_2 = w2.id
-            LEFT JOIN ref_warna w3 ON td.id_warna_3 = w3.id
-            LEFT JOIN ref_warna w4 ON td.id_warna_4 = w4.id
-            LEFT JOIN ref_warna w5 ON td.id_warna_5 = w5.id
-            LEFT JOIN ref_warna w6 ON td.id_warna_6 = w6.id
-            LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
-            LEFT JOIN ref_warna w8 ON td.id_warna_8 = w8.id;
+
+            -- JOIN ref_barang untuk query utama
+            LEFT JOIN ref_barang b1 ON b1.id = td.id_barang_1
+            LEFT JOIN ref_barang b2 ON b2.id = td.id_barang_2
+            LEFT JOIN ref_barang b3 ON b3.id = td.id_barang_3
+            LEFT JOIN ref_barang b4 ON b4.id = td.id_barang_4
+            LEFT JOIN ref_barang b5 ON b5.id = td.id_barang_5
+            LEFT JOIN ref_barang b6 ON b6.id = td.id_barang_6
+            LEFT JOIN ref_barang b7 ON b7.id = td.id_barang_7
+            LEFT JOIN ref_barang b8 ON b8.id = td.id_barang_8
+
+            -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di trans_sales_order_det
+            LEFT JOIN ref_warna w1 ON w1.id = COALESCE(b1.id_warna, td.id_warna_1)
+            LEFT JOIN ref_warna w2 ON w2.id = COALESCE(b2.id_warna, td.id_warna_2)
+            LEFT JOIN ref_warna w3 ON w3.id = COALESCE(b3.id_warna, td.id_warna_3)
+            LEFT JOIN ref_warna w4 ON w4.id = COALESCE(b4.id_warna, td.id_warna_4)
+            LEFT JOIN ref_warna w5 ON w5.id = COALESCE(b5.id_warna, td.id_warna_5)
+            LEFT JOIN ref_warna w6 ON w6.id = COALESCE(b6.id_warna, td.id_warna_6)
+            LEFT JOIN ref_warna w7 ON w7.id = COALESCE(b7.id_warna, td.id_warna_7)
+            LEFT JOIN ref_warna w8 ON w8.id = COALESCE(b8.id_warna, td.id_warna_8);
         ";
+
         $query = $this->db->query($sql);
         $this->_data = $query->getResult();
         return $this->_data;
-
     }
 
     function getDataDetailSalesOrder_crostab_si($id, $idInvoice = null)
     {
-        // get data ukuran 
-        $pru['use'] = 1; // ambil ukuran yang digunakan order 
+        $pru['use'] = 1;
         $pru['id_sales_order'] = $id;
         $dtUkuran = $this->getUkuranTrans($pru);
-        
-        // Dynamic Columns
-        $col11 = "";
-        $col21 = "";
-        $col3  = "";
+
+        $col11      = "";
+        $col21      = "";
+        $col3       = "";
         $tddInvoice = "";
         $col_harga  = "";
+
         if (!empty($idInvoice)) {
-            $tddInvoice = " and td_head.id_invoice = $idInvoice" ;
-            $idInvoice = " and td_head.id_invoice = $idInvoice";
-        }
-        else {
+            $tddInvoice = " AND td_head.id_invoice = $idInvoice";
+            $idInvoice  = " AND td_head.id_invoice = $idInvoice";
+        } else {
             $idInvoice = "";
         }
 
         foreach ($dtUkuran as $item) {
-            $key = $item->key_ukuran;
+            $key    = $item->key_ukuran;
             if ($key == 'all') $key = 'all_';
-            
-            $keySql = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
-
-            // 👉 sekarang qty ambil dari delivery (tdd)
-            $col11 .= ($col11 == "") 
-                ? "coalesce(tbl.$keySql,0) as $keySql" 
-                : ",coalesce(tbl.$keySql,0) as $keySql";
-            
-            $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
-
-            $col3 .= ($col3 == "") ? $keySql : "," . $keySql;
+            $keySql  = preg_match('/^[a-zA-Z_]+$/', $key) ? $key : "\"$key\"";
             $codeSub = $keySql;
             $keySql == 'all_' ? $codeSub = 'all' : $codeSub = $codeSub;
-            $col_harga .= ($col_harga == "") ? 
-            "COALESCE(
-                    ( 
-                        SELECT tsou.harga_satuan
-                        FROM trans_sales_order_ukuran tsou 
-                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
-                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
-                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
-                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
-                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
-                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
-                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
-                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
-                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
-                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
-                        WHERE tsou.id_sales_order_det = tbl.id
-                        AND ru.key_ukuran = '$codeSub' 
-                        AND CONCAT_WS('~', 
-                        NULLIF(rw1.kode_warna, ''), 
-                        NULLIF(rw2.kode_warna, ''), 
-                        NULLIF(rw3.kode_warna, ''),
-                        NULLIF(rw4.kode_warna, ''),
-                        NULLIF(rw5.kode_warna, ''),
-                        NULLIF(rw6.kode_warna, ''),
-                        NULLIF(rw7.kode_warna, ''),
-                        NULLIF(rw8.kode_warna, '')
-                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
-                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
-                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
-                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
-                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
-                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
-                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
-                )
-                    ), 0
-            ) AS harga_satuan_$codeSub" 
 
-            : ",COALESCE(
-                    ( 
+            $col11 .= ($col11 == "") ? "coalesce(tbl.$keySql,0) as $keySql" : ",coalesce(tbl.$keySql,0) as $keySql";
+            $col21 .= ($col21 == "") ? "$keySql INT" : ",$keySql INT";
+            $col3  .= ($col3  == "") ? $keySql : "," . $keySql;
+
+            // Subquery col_harga juga disesuaikan dengan COALESCE ref_barang
+            $subHarga = "
+                COALESCE(
+                    (
                         SELECT tsou.harga_satuan
                         FROM trans_sales_order_ukuran tsou 
-                        inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
-                        inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
-                        left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
-                        left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
-                        left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
-                        left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
-                        left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
-                        left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
-                        left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
-                        left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
+                        INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                        INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det
+
+                        -- JOIN ref_barang untuk subquery col_harga
+                        LEFT JOIN ref_barang bsub1 ON bsub1.id = tsod.id_barang_1
+                        LEFT JOIN ref_barang bsub2 ON bsub2.id = tsod.id_barang_2
+                        LEFT JOIN ref_barang bsub3 ON bsub3.id = tsod.id_barang_3
+                        LEFT JOIN ref_barang bsub4 ON bsub4.id = tsod.id_barang_4
+                        LEFT JOIN ref_barang bsub5 ON bsub5.id = tsod.id_barang_5
+                        LEFT JOIN ref_barang bsub6 ON bsub6.id = tsod.id_barang_6
+                        LEFT JOIN ref_barang bsub7 ON bsub7.id = tsod.id_barang_7
+                        LEFT JOIN ref_barang bsub8 ON bsub8.id = tsod.id_barang_8
+
+                        -- JOIN ref_warna dengan COALESCE ref_barang, fallback ke tsod
+                        LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(bsub1.id_warna, tsod.id_warna_1)
+                        LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(bsub2.id_warna, tsod.id_warna_2)
+                        LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(bsub3.id_warna, tsod.id_warna_3)
+                        LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(bsub4.id_warna, tsod.id_warna_4)
+                        LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(bsub5.id_warna, tsod.id_warna_5)
+                        LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(bsub6.id_warna, tsod.id_warna_6)
+                        LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(bsub7.id_warna, tsod.id_warna_7)
+                        LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(bsub8.id_warna, tsod.id_warna_8)
+
                         WHERE tsou.id_sales_order_det = tbl.id
                         AND ru.key_ukuran = '$codeSub' 
                         AND CONCAT_WS('~', 
-                        NULLIF(rw1.kode_warna, ''), 
-                        NULLIF(rw2.kode_warna, ''), 
-                        NULLIF(rw3.kode_warna, ''),
-                        NULLIF(rw4.kode_warna, ''),
-                        NULLIF(rw5.kode_warna, ''),
-                        NULLIF(rw6.kode_warna, ''),
-                        NULLIF(rw7.kode_warna, ''),
-                        NULLIF(rw8.kode_warna, '')
-                        ) = TRIM(BOTH '~' FROM COALESCE(w1.kode_warna, '') ||
-                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
-                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
-                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
-                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
-                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
-                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END 
-                )
+                            NULLIF(rw1.kode_warna, ''), 
+                            NULLIF(rw2.kode_warna, ''), 
+                            NULLIF(rw3.kode_warna, ''),
+                            NULLIF(rw4.kode_warna, ''),
+                            NULLIF(rw5.kode_warna, ''),
+                            NULLIF(rw6.kode_warna, ''),
+                            NULLIF(rw7.kode_warna, ''),
+                            NULLIF(rw8.kode_warna, '')
+                        ) = TRIM(BOTH '~' FROM
+                            COALESCE(w1.kode_warna, '') ||
+                            CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
+                            CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
+                            CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
+                            CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
+                            CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
+                            CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
+                            CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END
+                        )
                     ), 0
-            ) AS harga_satuan_$codeSub";
+                ) AS harga_satuan_$codeSub";
+
+            $col_harga .= ($col_harga == "") ? $subHarga : "," . $subHarga;
         }
+
         $sql = "
             SELECT 
                 tbl.id,
                 ROW_NUMBER() OVER (ORDER BY tbl.id) AS no,
-                COALESCE(w1.kode_warna, '') as colorDasar,
-                TRIM(BOTH ' - ' FROM COALESCE(w1.kode_warna, '') ||
+
+                -- Flag sumber warna
+                CASE
+                    WHEN td.id_barang_1 IS NOT NULL THEN 'via_barang'
+                    ELSE 'via_warna'
+                END AS sumber_warna,
+
+                COALESCE(w1.kode_warna, '') AS colorDasar,
+                TRIM(BOTH ' - ' FROM
+                    COALESCE(w1.kode_warna, '') ||
                     CASE WHEN w2.kode_warna IS NOT NULL THEN ' - ' || w2.kode_warna ELSE '' END ||
                     CASE WHEN w3.kode_warna IS NOT NULL THEN ' - ' || w3.kode_warna ELSE '' END ||
                     CASE WHEN w4.kode_warna IS NOT NULL THEN ' - ' || w4.kode_warna ELSE '' END ||
                     CASE WHEN w5.kode_warna IS NOT NULL THEN ' - ' || w5.kode_warna ELSE '' END ||
                     CASE WHEN w6.kode_warna IS NOT NULL THEN ' - ' || w6.kode_warna ELSE '' END ||
                     CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
-                    CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
-                TRIM(BOTH ' ~ ' FROM COALESCE(w1.keterangan, '') ||
+                TRIM(BOTH ' ~ ' FROM
+                    COALESCE(w1.keterangan, '') ||
                     CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
                     CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
                     CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
                     CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
                     CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
                     CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END 
+                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
                 ) AS keterangan,
                 {$col11},
                 COALESCE((
@@ -570,13 +543,14 @@ class SalesOrderModel extends \App\Models\PrModel
                     FROM trans_delivery_detail tdd
                     INNER JOIN trans_delivery_prod tdp 
                         ON tdp.id_delivery = tdd.id_delivery 
-                    AND tdp.id_ukuran = tdd.id_ukuran 
-                    AND tdp.ref_detail_id = tdd.ref_detail_id
+                        AND tdp.id_ukuran = tdd.id_ukuran 
+                        AND tdp.ref_detail_id = tdd.ref_detail_id
                     INNER JOIN trans_delivery td_head 
                         ON td_head.id = tdd.id_delivery
                     WHERE tdd.ref_detail_id = tbl.id {$tddInvoice}
                 ), 0) AS total_harga,
                 {$col_harga}
+
             FROM 
                 CROSSTAB(
                     $$
@@ -585,7 +559,7 @@ class SalesOrderModel extends \App\Models\PrModel
                         ru.seq,
                         (CASE WHEN ru.key_ukuran = 'all' THEN 'all_' ELSE 
                             LOWER(REGEXP_REPLACE(ru.key_ukuran, '[^a-zA-Z0-9]+', '_', 'g')) END) AS key_ukuran,
-                        SUM(COALESCE(tdd.qty,0)) AS qty_do
+                        SUM(COALESCE(tdd.qty, 0)) AS qty_do
                     FROM 
                         trans_delivery_detail tdd
                     INNER JOIN trans_delivery td_head ON td_head.id = tdd.id_delivery
@@ -605,14 +579,26 @@ class SalesOrderModel extends \App\Models\PrModel
                     {$col21}
                 )
             INNER JOIN trans_sales_order_det td ON td.id = tbl.id
-            INNER JOIN ref_warna w1 ON td.id_warna_1 = w1.id
-            LEFT JOIN ref_warna w2 ON td.id_warna_2 = w2.id
-            LEFT JOIN ref_warna w3 ON td.id_warna_3 = w3.id
-            LEFT JOIN ref_warna w4 ON td.id_warna_4 = w4.id
-            LEFT JOIN ref_warna w5 ON td.id_warna_5 = w5.id
-            LEFT JOIN ref_warna w6 ON td.id_warna_6 = w6.id
-            LEFT JOIN ref_warna w7 ON td.id_warna_7 = w7.id
-            LEFT JOIN ref_warna w8 ON td.id_warna_8 = w8.id;
+
+            -- JOIN ref_barang untuk query utama
+            LEFT JOIN ref_barang b1 ON b1.id = td.id_barang_1
+            LEFT JOIN ref_barang b2 ON b2.id = td.id_barang_2
+            LEFT JOIN ref_barang b3 ON b3.id = td.id_barang_3
+            LEFT JOIN ref_barang b4 ON b4.id = td.id_barang_4
+            LEFT JOIN ref_barang b5 ON b5.id = td.id_barang_5
+            LEFT JOIN ref_barang b6 ON b6.id = td.id_barang_6
+            LEFT JOIN ref_barang b7 ON b7.id = td.id_barang_7
+            LEFT JOIN ref_barang b8 ON b8.id = td.id_barang_8
+
+            -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di trans_sales_order_det
+            LEFT JOIN ref_warna w1 ON w1.id = COALESCE(b1.id_warna, td.id_warna_1)
+            LEFT JOIN ref_warna w2 ON w2.id = COALESCE(b2.id_warna, td.id_warna_2)
+            LEFT JOIN ref_warna w3 ON w3.id = COALESCE(b3.id_warna, td.id_warna_3)
+            LEFT JOIN ref_warna w4 ON w4.id = COALESCE(b4.id_warna, td.id_warna_4)
+            LEFT JOIN ref_warna w5 ON w5.id = COALESCE(b5.id_warna, td.id_warna_5)
+            LEFT JOIN ref_warna w6 ON w6.id = COALESCE(b6.id_warna, td.id_warna_6)
+            LEFT JOIN ref_warna w7 ON w7.id = COALESCE(b7.id_warna, td.id_warna_7)
+            LEFT JOIN ref_warna w8 ON w8.id = COALESCE(b8.id_warna, td.id_warna_8);
         ";
 
         $query = $this->db->query($sql);
@@ -1119,26 +1105,46 @@ class SalesOrderModel extends \App\Models\PrModel
 
     function getDataDetailSalesOrderUkuranById($params)
     {
-
         $builder = $this->db->table("trans_sales_order_ukuran tu");
-        $builder->select(" tu.id as id_ukuran_so, tu.id_ukuran,ru.kode_ukuran, ru.key_ukuran, 
-                           w1.kode_warna as warna_1, w2.kode_warna as warna_2, w3.kode_warna as warna_3,
-                           w4.kode_warna as warna_4, w5.kode_warna as warna_5, w6.kode_warna as warna_6,
-                           w7.kode_warna as warna_7, w8.kode_warna as warna_8,
-                           tod.kode_sales_order, tod.style, tod.deskripsi, tu.id_sales_order");
+        $builder->select(" 
+            tu.id as id_ukuran_so, 
+            tu.id_ukuran,
+            ru.kode_ukuran, 
+            ru.key_ukuran, 
+            w1.kode_warna as warna_1, w2.kode_warna as warna_2, w3.kode_warna as warna_3,
+            w4.kode_warna as warna_4, w5.kode_warna as warna_5, w6.kode_warna as warna_6,
+            w7.kode_warna as warna_7, w8.kode_warna as warna_8,
+            tod.kode_sales_order, tod.style, tod.deskripsi, tu.id_sales_order,
+            -- Flag sumber warna
+            CASE 
+                WHEN td.id_barang_1 IS NOT NULL THEN 'via_barang'
+                ELSE 'via_warna'
+            END AS sumber_warna
+        ");
 
         $builder->join("trans_sales_order_det td", "td.id = tu.id_sales_order_det", "inner");
-        $builder->join("trans_sales_order tod", "tod.id = td.id_sales_order", "inner");
-        $builder->join("ref_ukuran ru", "tu.id_ukuran = ru.id", "left");
-        $builder->join("ref_warna w1", "td.id_warna_1 = w1.id", "left");
-        $builder->join("ref_warna w2", "td.id_warna_2 = w2.id", "left");
-        $builder->join("ref_warna w3", "td.id_warna_3 = w3.id", "left");
-        $builder->join("ref_warna w4", "td.id_warna_4 = w4.id", "left");
-        $builder->join("ref_warna w5", "td.id_warna_5 = w5.id", "left");
-        $builder->join("ref_warna w6", "td.id_warna_6 = w6.id", "left");
-        $builder->join("ref_warna w7", "td.id_warna_7 = w7.id", "left");
-        $builder->join("ref_warna w8", "td.id_warna_8 = w8.id", "left");
-        // $builder->where("abx.id", $id);
+        $builder->join("trans_sales_order tod",    "tod.id = td.id_sales_order",    "inner");
+        $builder->join("ref_ukuran ru",            "tu.id_ukuran = ru.id",          "left");
+
+        // JOIN ref_barang (nullable)
+        $builder->join("ref_barang b1", "td.id_barang_1 = b1.id", "left");
+        $builder->join("ref_barang b2", "td.id_barang_2 = b2.id", "left");
+        $builder->join("ref_barang b3", "td.id_barang_3 = b3.id", "left");
+        $builder->join("ref_barang b4", "td.id_barang_4 = b4.id", "left");
+        $builder->join("ref_barang b5", "td.id_barang_5 = b5.id", "left");
+        $builder->join("ref_barang b6", "td.id_barang_6 = b6.id", "left");
+        $builder->join("ref_barang b7", "td.id_barang_7 = b7.id", "left");
+        $builder->join("ref_barang b8", "td.id_barang_8 = b8.id", "left");
+
+        // JOIN ref_warna dengan COALESCE: prioritaskan warna dari ref_barang, fallback ke trans_sales_order_det
+        $builder->join("ref_warna w1", "COALESCE(b1.id_warna, td.id_warna_1) = w1.id", "left");
+        $builder->join("ref_warna w2", "COALESCE(b2.id_warna, td.id_warna_2) = w2.id", "left");
+        $builder->join("ref_warna w3", "COALESCE(b3.id_warna, td.id_warna_3) = w3.id", "left");
+        $builder->join("ref_warna w4", "COALESCE(b4.id_warna, td.id_warna_4) = w4.id", "left");
+        $builder->join("ref_warna w5", "COALESCE(b5.id_warna, td.id_warna_5) = w5.id", "left");
+        $builder->join("ref_warna w6", "COALESCE(b6.id_warna, td.id_warna_6) = w6.id", "left");
+        $builder->join("ref_warna w7", "COALESCE(b7.id_warna, td.id_warna_7) = w7.id", "left");
+        $builder->join("ref_warna w8", "COALESCE(b8.id_warna, td.id_warna_8) = w8.id", "left");
 
         if (!empty($params['id_ukuran_so'])) {
             $builder->where("tu.id", $params['id_ukuran_so']);

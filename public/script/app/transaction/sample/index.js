@@ -16,6 +16,14 @@ $(document).ready(function () {
     let inpPoWarna6      = $('#po_warna6');
     let inpPoWarna7      = $('#po_warna7');
     let inpPoWarna8      = $('#po_warna8');
+    let inpPoBarang1      = $('#po_barang1');
+    let inpPoBarang2      = $('#po_barang2');
+    let inpPoBarang3      = $('#po_barang3');
+    let inpPoBarang4      = $('#po_barang4');
+    let inpPoBarang5      = $('#po_barang5');
+    let inpPoBarang6      = $('#po_barang6');
+    let inpPoBarang7      = $('#po_barang7');
+    let inpPoBarang8      = $('#po_barang8');
 
     let fileSample       = $('#fileSample');
     let fileSampleOld    = $('#fileSampleOld');
@@ -36,6 +44,32 @@ $(document).ready(function () {
     var status           = null
 
     const brcStyle            = $("#style_input");
+
+    const mapping = {
+        'po_barang1': 'po_warna1',
+        'po_barang2': 'po_warna2',
+        'po_barang3': 'po_warna3',
+        'po_barang4': 'po_warna4',
+        'po_barang5': 'po_warna5',
+        'po_barang6': 'po_warna6',
+        'po_barang7': 'po_warna7',
+        'po_barang8': 'po_warna8',
+    };
+
+    $.each(mapping, function (barangId, warnaId) {
+        $('#' + barangId).on('change', function () {
+        // Ambil data-warna dari option yang dipilih
+        const selectedOption = $(this).find('option:selected');
+        const idWarna = selectedOption.data('warna');
+
+        const $warna = $('#' + warnaId);
+
+        if (idWarna) {
+            // Set value select2 warna lalu trigger
+            $warna.val(idWarna).trigger('change');
+        } 
+        });
+    });
 
 
     // conf function 
@@ -488,7 +522,7 @@ $(document).ready(function () {
                         } 
                     }
                 },
-                {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
+                {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colorsampledasar"}
             ]
 
             for (const el of data.key_ukuran) {
@@ -575,6 +609,14 @@ $(document).ready(function () {
         inpPoWarna6.val('').trigger('change');
         inpPoWarna7.val('').trigger('change');
         inpPoWarna8.val('').trigger('change');
+        inpPoBarang1.val('').trigger('change');
+        inpPoBarang2.val('').trigger('change');
+        inpPoBarang3.val('').trigger('change');
+        inpPoBarang4.val('').trigger('change');
+        inpPoBarang5.val('').trigger('change');
+        inpPoBarang6.val('').trigger('change');
+        inpPoBarang7.val('').trigger('change');
+        inpPoBarang8.val('').trigger('change');
         getDetailQty(inpData.val(),0)
     });
 
@@ -769,6 +811,14 @@ $(document).ready(function () {
                     inpPoWarna6.val(data.detail.id_warna_6).trigger('change');
                     inpPoWarna7.val(data.detail.id_warna_7).trigger('change');
                     inpPoWarna8.val(data.detail.id_warna_8).trigger('change');
+                    inpPoBarang1.val(data.detail.id_barang_1).trigger('change');
+                    inpPoBarang2.val(data.detail.id_barang_2).trigger('change');
+                    inpPoBarang3.val(data.detail.id_barang_3).trigger('change');
+                    inpPoBarang4.val(data.detail.id_barang_4).trigger('change');
+                    inpPoBarang5.val(data.detail.id_barang_5).trigger('change');
+                    inpPoBarang6.val(data.detail.id_barang_6).trigger('change');
+                    inpPoBarang7.val(data.detail.id_barang_7).trigger('change');
+                    inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
                 }
                
                 dtListDetailQty.setData(data.detailUkuran)
@@ -1100,10 +1150,10 @@ $(document).ready(function () {
     }
 
     function simpanDataDetail() {
-        if(inpPoWarna1.val() == "")
+        if(inpPoBarang1.val() == "")
         {
             return Swal.fire({
-                text: "Warna 1 Belum terpilih!",
+                text: "Barang 1 Belum terpilih!",
                 icon: 'warning',
                 showConfirmButton: false,
                 timer: 2000
@@ -1135,6 +1185,14 @@ $(document).ready(function () {
                     warna6:inpPoWarna6.val(),
                     warna7:inpPoWarna7.val(),
                     warna8:inpPoWarna8.val(),
+                    barang1:inpPoBarang1.val(),
+                    barang2:inpPoBarang2.val(),
+                    barang3:inpPoBarang3.val(),
+                    barang4:inpPoBarang4.val(),
+                    barang5:inpPoBarang5.val(),
+                    barang6:inpPoBarang6.val(),
+                    barang7:inpPoBarang7.val(),
+                    barang8:inpPoBarang8.val(),
                     dataGram: dtGram,
                     dataUkuran: dataUkuran,
                     idSample:idSample,
@@ -1265,7 +1323,9 @@ $(document).ready(function () {
         let gramIsi = {
             'qty' : detailQty,
             'loss' : loss,
+            'id' : '',
             'id_warna' : '',
+            'id_barang' : '',
             'kode_warna' : '',
             'persen' : 0,
             'gram' : 0,
@@ -1283,7 +1343,9 @@ $(document).ready(function () {
             arrW1.kode_warna = text1
 
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna1.val(),
+                'id_barang' : inpPoBarang1.val(),
                 'kode_warna' : text1,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1302,7 +1364,9 @@ $(document).ready(function () {
             arrW2.id_warna = inpPoWarna2.val()
             arrW2.kode_warna = text2
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna2.val(),
+                'id_barang' : inpPoBarang2.val(),
                 'kode_warna' : text2,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1321,7 +1385,9 @@ $(document).ready(function () {
             arrW3.id_warna = inpPoWarna3.val()
             arrW3.kode_warna = text3
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna3.val(),
+                'id_barang' : inpPoBarang3.val(),
                 'kode_warna' : text3,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1340,7 +1406,9 @@ $(document).ready(function () {
             arrW4.id_warna = inpPoWarna4.val()
             arrW4.kode_warna = text4
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna4.val(),
+                'id_barang' : inpPoBarang4.val(),
                 'kode_warna' : text4,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1359,7 +1427,9 @@ $(document).ready(function () {
             arrW5.id_warna = inpPoWarna5.val()
             arrW5.kode_warna = text5
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna5.val(),
+                'id_barang' : inpPoBarang5.val(),
                 'kode_warna' : text5,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1378,7 +1448,9 @@ $(document).ready(function () {
             arrW6.id_warna = inpPoWarna6.val()
             arrW6.kode_warna = text6
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna6.val(),
+                'id_barang' : inpPoBarang6.val(),
                 'kode_warna' : text6,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1397,7 +1469,9 @@ $(document).ready(function () {
             arrW7.id_warna = inpPoWarna7.val()
             arrW7.kode_warna = text7
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna7.val(),
+                'id_barang' : inpPoBarang7.val(),
                 'kode_warna' : text7,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1416,7 +1490,9 @@ $(document).ready(function () {
             arrW8.id_warna = inpPoWarna8.val()
             arrW8.kode_warna = text8
             gramData.push({
+                'id' : '',
                 'id_warna' : inpPoWarna8.val(),
+                'id_barang' : inpPoBarang8.val(),
                 'kode_warna' : text8,
                 'qty' : detailQty,
                 'loss' : loss,
@@ -1440,6 +1516,10 @@ $(document).ready(function () {
                  {
                      title: "Colour", field: "kode_warna",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
                      width:"16%"
+                 },
+                 {
+                     title: "ID", field: "id",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end",
+                     visible: false
                  },
                  {
                      title: "%", field: "persen",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end",

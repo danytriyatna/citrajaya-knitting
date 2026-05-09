@@ -679,7 +679,6 @@ class WorkOrder extends BaseController
 
   function getQrcode()
   {
-    
     $ukuran = $this->request->getGet("ukuran");
     $ukuran_text = $this->request->getGet("ukuran_text");
     $qty = $this->request->getGet("qty");
@@ -720,19 +719,19 @@ class WorkOrder extends BaseController
         }
       }
     }
+    
 
     $dateTime = [];
 
     $save_name = [];
     $warnaNew = str_replace('/', '_', $warna);
-    
+    // dd($warna, $warnaNew);
     for ($i = 0; $i < $qtyp; $i++) {
       $now = new DateTime();
       $dateTime[] = $now->format('Y m d H-i-s-u');
       $save_name[]  = $warnaNew . '-' . $noSample .'-'. time() . '-' . $dateTime[$i] . '(' . $print_type . ')' . '.png';
     }
-
-
+        
     $path = FCPATH . "uploads/media/qrcode/";
 
     // Hapus semua file di dalam folder dalam satu baris
@@ -790,6 +789,7 @@ class WorkOrder extends BaseController
     else {
       $params['data']     = $noSample . ';' . $ukuran . ';' . $warna . ';' . $qty;
     }
+    
     /* QR Data  */
     $params['level']    = 'L';
     $params['size']     = 5;
@@ -799,7 +799,7 @@ class WorkOrder extends BaseController
     for ($i = 0; $i < $qtyp; $i++) {
       $kodeQR[] = $save_name[$i];
       $params['savename'] = FCPATH . $config['imagedir'] . $save_name[$i];  
-      $params['data'] = $dataPrams . ';' . $dateTime[$i] . '(' . $print_type . ')';  
+      $params['data'] = $dataPrams . ';' . $dateTime[$i] . '(' . $print_type . ')';
       $oks = $this->ciqrcode->generate($params);
     }
     /* Return Data */

@@ -139,52 +139,90 @@ class DeliveryModel extends \App\Models\PrModel
 
     function getDataProduksi($params = null, $id = null){
         $builder = $this->db->table("trans_delivery_detail tdd");
-        $builder->select("tdd.id, tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
-                          rk.kode_ukuran, rk.key_ukuran, TRIM ( BOTH ' - ' FROM
-                        COALESCE(rw1.kode_warna, '') ||
-                        CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
-                        CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
-                        CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
-                        CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
-                        CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
-                        CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
-                        CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
-                    ) AS kode_warna, 
-                     TRIM ( BOTH ' ~ ' FROM
-                        COALESCE(rw1.keterangan, '') ||
-                        CASE WHEN rw2.keterangan IS NOT NULL THEN ' ~ ' || rw2.keterangan ELSE '' END ||
-                        CASE WHEN rw3.keterangan IS NOT NULL THEN ' ~ ' || rw3.keterangan ELSE '' END ||
-                        CASE WHEN rw4.keterangan IS NOT NULL THEN ' ~ ' || rw4.keterangan ELSE '' END ||
-                        CASE WHEN rw5.keterangan IS NOT NULL THEN ' ~ ' || rw5.keterangan ELSE '' END ||
-                        CASE WHEN rw6.keterangan IS NOT NULL THEN ' ~ ' || rw6.keterangan ELSE '' END ||
-                        CASE WHEN rw7.keterangan IS NOT NULL THEN ' ~ ' || rw7.keterangan ELSE '' END ||
-                        CASE WHEN rw8.keterangan IS NOT NULL THEN ' ~ ' || rw8.keterangan ELSE '' END
-                    ) AS keterangan");
-        $builder->join('ref_ukuran rk', 'tdd.id_ukuran = rk.id');
-        $builder->join('trans_delivery td', 'tdd.id_delivery = td.id');
-        $builder->join('trans_walkorder tw', 'td.id_walkorder = tw.id');
-        $builder->join("trans_sample_det tsd", "tdd.ref_detail_id = tsd.id and tw.tipe_id = 1", "left");
-        $builder->join("trans_sales_order_det tsod", "tdd.ref_detail_id = tsod.id and tw.tipe_id = 2", "left");
-        $builder->join("ref_warna rw1", "rw1.id = (case when tw.tipe_id = 1 then tsd.id_warna_1 when tw.tipe_id = 2 then tsod.id_warna_1 else -1 end)", "left");
-        $builder->join("ref_warna rw2", "rw2.id = (case when tw.tipe_id = 1 then tsd.id_warna_2 when tw.tipe_id = 2 then tsod.id_warna_2 else -1 end)", "left");
-        $builder->join("ref_warna rw3", "rw3.id = (case when tw.tipe_id = 1 then tsd.id_warna_3 when tw.tipe_id = 2 then tsod.id_warna_3 else -1 end)", "left");
-        $builder->join("ref_warna rw4", "rw4.id = (case when tw.tipe_id = 1 then tsd.id_warna_4 when tw.tipe_id = 2 then tsod.id_warna_4 else -1 end)", "left");
-        $builder->join("ref_warna rw5", "rw5.id = (case when tw.tipe_id = 1 then tsd.id_warna_5 when tw.tipe_id = 2 then tsod.id_warna_5 else -1 end)", "left");
-        $builder->join("ref_warna rw6", "rw6.id = (case when tw.tipe_id = 1 then tsd.id_warna_6 when tw.tipe_id = 2 then tsod.id_warna_6 else -1 end)", "left");
-        $builder->join("ref_warna rw7", "rw7.id = (case when tw.tipe_id = 1 then tsd.id_warna_7 when tw.tipe_id = 2 then tsod.id_warna_7 else -1 end)", "left");
-        $builder->join("ref_warna rw8", "rw8.id = (case when tw.tipe_id = 1 then tsd.id_warna_8 when tw.tipe_id = 2 then tsod.id_warna_8 else -1 end)", "left");
+        $builder->select("
+            tdd.id, tdd.id_ukuran, tdd.qty, tdd.ref_detail_id, tdd.id_delivery,
+            rk.kode_ukuran, rk.key_ukuran,
 
-        if(!empty($params['id_delivery'])){
+            -- Flag sumber warna
+            CASE
+                WHEN tw.tipe_id = 1 AND tsd.id_barang_1  IS NOT NULL THEN 'via_barang'
+                WHEN tw.tipe_id = 2 AND tsod.id_barang_1 IS NOT NULL THEN 'via_barang'
+                ELSE 'via_warna'
+            END AS sumber_warna,
+
+            TRIM(BOTH ' - ' FROM
+                COALESCE(rw1.kode_warna, '') ||
+                CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+            ) AS kode_warna,
+
+            TRIM(BOTH ' ~ ' FROM
+                COALESCE(rw1.keterangan, '') ||
+                CASE WHEN rw2.keterangan IS NOT NULL THEN ' ~ ' || rw2.keterangan ELSE '' END ||
+                CASE WHEN rw3.keterangan IS NOT NULL THEN ' ~ ' || rw3.keterangan ELSE '' END ||
+                CASE WHEN rw4.keterangan IS NOT NULL THEN ' ~ ' || rw4.keterangan ELSE '' END ||
+                CASE WHEN rw5.keterangan IS NOT NULL THEN ' ~ ' || rw5.keterangan ELSE '' END ||
+                CASE WHEN rw6.keterangan IS NOT NULL THEN ' ~ ' || rw6.keterangan ELSE '' END ||
+                CASE WHEN rw7.keterangan IS NOT NULL THEN ' ~ ' || rw7.keterangan ELSE '' END ||
+                CASE WHEN rw8.keterangan IS NOT NULL THEN ' ~ ' || rw8.keterangan ELSE '' END
+            ) AS keterangan
+        ");
+
+        $builder->join('ref_ukuran rk',       'tdd.id_ukuran = rk.id');
+        $builder->join('trans_delivery td',   'tdd.id_delivery = td.id');
+        $builder->join('trans_walkorder tw',  'td.id_walkorder = tw.id');
+
+        // JOIN trans_sample_det (tipe_id = 1)
+        $builder->join("trans_sample_det tsd",       "tdd.ref_detail_id = tsd.id AND tw.tipe_id = 1",  "left");
+
+        // JOIN ref_barang untuk sample
+        $builder->join("ref_barang bs1", "bs1.id = tsd.id_barang_1", "left");
+        $builder->join("ref_barang bs2", "bs2.id = tsd.id_barang_2", "left");
+        $builder->join("ref_barang bs3", "bs3.id = tsd.id_barang_3", "left");
+        $builder->join("ref_barang bs4", "bs4.id = tsd.id_barang_4", "left");
+        $builder->join("ref_barang bs5", "bs5.id = tsd.id_barang_5", "left");
+        $builder->join("ref_barang bs6", "bs6.id = tsd.id_barang_6", "left");
+        $builder->join("ref_barang bs7", "bs7.id = tsd.id_barang_7", "left");
+        $builder->join("ref_barang bs8", "bs8.id = tsd.id_barang_8", "left");
+
+        // JOIN trans_sales_order_det (tipe_id = 2)
+        $builder->join("trans_sales_order_det tsod",  "tdd.ref_detail_id = tsod.id AND tw.tipe_id = 2", "left");
+
+        // JOIN ref_barang untuk SO
+        $builder->join("ref_barang bso1", "bso1.id = tsod.id_barang_1", "left");
+        $builder->join("ref_barang bso2", "bso2.id = tsod.id_barang_2", "left");
+        $builder->join("ref_barang bso3", "bso3.id = tsod.id_barang_3", "left");
+        $builder->join("ref_barang bso4", "bso4.id = tsod.id_barang_4", "left");
+        $builder->join("ref_barang bso5", "bso5.id = tsod.id_barang_5", "left");
+        $builder->join("ref_barang bso6", "bso6.id = tsod.id_barang_6", "left");
+        $builder->join("ref_barang bso7", "bso7.id = tsod.id_barang_7", "left");
+        $builder->join("ref_barang bso8", "bso8.id = tsod.id_barang_8", "left");
+
+        // JOIN ref_warna: COALESCE dari ref_barang masing-masing tipe, fallback ke id_warna di det
+        $builder->join("ref_warna rw1", "rw1.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs1.id_warna  WHEN tw.tipe_id = 2 THEN bso1.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_1  WHEN tw.tipe_id = 2 THEN tsod.id_warna_1  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw2", "rw2.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs2.id_warna  WHEN tw.tipe_id = 2 THEN bso2.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_2  WHEN tw.tipe_id = 2 THEN tsod.id_warna_2  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw3", "rw3.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs3.id_warna  WHEN tw.tipe_id = 2 THEN bso3.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_3  WHEN tw.tipe_id = 2 THEN tsod.id_warna_3  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw4", "rw4.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs4.id_warna  WHEN tw.tipe_id = 2 THEN bso4.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_4  WHEN tw.tipe_id = 2 THEN tsod.id_warna_4  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw5", "rw5.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs5.id_warna  WHEN tw.tipe_id = 2 THEN bso5.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_5  WHEN tw.tipe_id = 2 THEN tsod.id_warna_5  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw6", "rw6.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs6.id_warna  WHEN tw.tipe_id = 2 THEN bso6.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_6  WHEN tw.tipe_id = 2 THEN tsod.id_warna_6  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw7", "rw7.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs7.id_warna  WHEN tw.tipe_id = 2 THEN bso7.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_7  WHEN tw.tipe_id = 2 THEN tsod.id_warna_7  ELSE NULL END)", "left");
+        $builder->join("ref_warna rw8", "rw8.id = COALESCE(CASE WHEN tw.tipe_id = 1 THEN bs8.id_warna  WHEN tw.tipe_id = 2 THEN bso8.id_warna  ELSE NULL END, CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_8  WHEN tw.tipe_id = 2 THEN tsod.id_warna_8  ELSE NULL END)", "left");
+
+        if (!empty($params['id_delivery'])) {
             $builder->where('id_delivery', $params['id_delivery']);
             $builder->orderBy('rk.seq asc');
             $this->_data = $builder->get()->getResult();
-        }
-        else if(!empty($id)){
+        } else if (!empty($id)) {
             $builder->where('tdd.id', $id);
             $builder->orderBy('rk.seq asc');
             $this->_data = $builder->get()->getRow();
         }
-        
+
         return $this->_data;
     }
 
@@ -192,63 +230,71 @@ class DeliveryModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table2 . " tdd");
 
-        $builder->select("tdd.id, td.delivery_kode, td.tgl_transaksi, tso.kode_sales_order, rk.nama, tso.style, 
-                            TRIM ( BOTH ' - ' FROM
-                                COALESCE(rw1.kode_warna, '') ||
-                                CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
-                                CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
-                                CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
-                                CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
-                                CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
-                                CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
-                                CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
-                            ) AS kode_warna,
-                            tso.id as id_so,
-                            tsod.id as id_so_det,
-                            ru.id as id_ukuran,
-                            ru.kode_ukuran,
-                            tsou.qty as qty_so,
-                            tdd.qty as qty_do
-                            ");
-        $builder->join("trans_delivery td", "td.id = tdd.id_delivery", "inner");
-        $builder->join("ref_konsumen rk", "rk.id = td.id_konsumen", "inner");
-        $builder->join("ref_ukuran ru", "ru.id = tdd.id_ukuran", "inner");
-        $builder->join("trans_walkorder tw", "tw.id = td.id_walkorder", "inner");
-        $builder->join("trans_sales_order_ukuran tsou", "tsou.id_sales_order_det = tdd.ref_detail_id and tsou.id_ukuran = tdd.id_ukuran", "inner");
-        $builder->join("trans_sales_order_det tsod", "tsod.id = tdd.ref_detail_id", "inner");
-        $builder->join("trans_sales_order tso", "tso.id = tsod.id_sales_order", "inner");
-        $builder->join("ref_warna rw1", "rw1.id = tsod.id_warna_1", "left");
-        $builder->join("ref_warna rw2", "rw2.id = tsod.id_warna_2", "left");
-        $builder->join("ref_warna rw3", "rw3.id = tsod.id_warna_3", "left");
-        $builder->join("ref_warna rw4", "rw4.id = tsod.id_warna_4", "left");
-        $builder->join("ref_warna rw5", "rw5.id = tsod.id_warna_5", "left");
-        $builder->join("ref_warna rw6", "rw6.id = tsod.id_warna_6", "left");
-        $builder->join("ref_warna rw7", "rw7.id = tsod.id_warna_7", "left");
-        $builder->join("ref_warna rw8", "rw8.id = tsod.id_warna_8", "left");
-       
+        $builder->select("
+            tdd.id, td.delivery_kode, td.tgl_transaksi, tso.kode_sales_order, rk.nama, tso.style,
+
+            -- Flag sumber warna
+            CASE
+                WHEN tsod.id_barang_1 IS NOT NULL THEN 'via_barang'
+                ELSE 'via_warna'
+            END AS sumber_warna,
+
+            TRIM(BOTH ' - ' FROM
+                COALESCE(rw1.kode_warna, '') ||
+                CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
+                CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
+                CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
+                CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
+                CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
+                CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
+                CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
+            ) AS kode_warna,
+
+            tso.id as id_so,
+            tsod.id as id_so_det,
+            ru.id as id_ukuran,
+            ru.kode_ukuran,
+            tsou.qty as qty_so,
+            tdd.qty as qty_do
+        ");
+
+        $builder->join("trans_delivery td",              "td.id = tdd.id_delivery",                                                "inner");
+        $builder->join("ref_konsumen rk",                "rk.id = td.id_konsumen",                                                 "inner");
+        $builder->join("ref_ukuran ru",                  "ru.id = tdd.id_ukuran",                                                  "inner");
+        $builder->join("trans_walkorder tw",             "tw.id = td.id_walkorder",                                                "inner");
+        $builder->join("trans_sales_order_det tsod",     "tsod.id = tdd.ref_detail_id",                                            "inner");
+        $builder->join("trans_sales_order tso",          "tso.id = tsod.id_sales_order",                                           "inner");
+        $builder->join("trans_sales_order_ukuran tsou",  "tsou.id_sales_order_det = tdd.ref_detail_id AND tsou.id_ukuran = tdd.id_ukuran", "inner");
+
+        // JOIN ref_barang untuk SO
+        $builder->join("ref_barang bso1", "bso1.id = tsod.id_barang_1", "left");
+        $builder->join("ref_barang bso2", "bso2.id = tsod.id_barang_2", "left");
+        $builder->join("ref_barang bso3", "bso3.id = tsod.id_barang_3", "left");
+        $builder->join("ref_barang bso4", "bso4.id = tsod.id_barang_4", "left");
+        $builder->join("ref_barang bso5", "bso5.id = tsod.id_barang_5", "left");
+        $builder->join("ref_barang bso6", "bso6.id = tsod.id_barang_6", "left");
+        $builder->join("ref_barang bso7", "bso7.id = tsod.id_barang_7", "left");
+        $builder->join("ref_barang bso8", "bso8.id = tsod.id_barang_8", "left");
+
+        // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di tsod
+        $builder->join("ref_warna rw1", "rw1.id = COALESCE(bso1.id_warna, tsod.id_warna_1)", "left");
+        $builder->join("ref_warna rw2", "rw2.id = COALESCE(bso2.id_warna, tsod.id_warna_2)", "left");
+        $builder->join("ref_warna rw3", "rw3.id = COALESCE(bso3.id_warna, tsod.id_warna_3)", "left");
+        $builder->join("ref_warna rw4", "rw4.id = COALESCE(bso4.id_warna, tsod.id_warna_4)", "left");
+        $builder->join("ref_warna rw5", "rw5.id = COALESCE(bso5.id_warna, tsod.id_warna_5)", "left");
+        $builder->join("ref_warna rw6", "rw6.id = COALESCE(bso6.id_warna, tsod.id_warna_6)", "left");
+        $builder->join("ref_warna rw7", "rw7.id = COALESCE(bso7.id_warna, tsod.id_warna_7)", "left");
+        $builder->join("ref_warna rw8", "rw8.id = COALESCE(bso8.id_warna, tsod.id_warna_8)", "left");
+
         $builder->where('tw.tipe_id = 2');
         $builder->where("td.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
-        // $builder->where("
-        //     COALESCE((
-        //         SELECT SUM(tsou.harga_total)
-        //         FROM trans_sales_order_ukuran tsou
-        //         WHERE tsou.id_sales_order = td.id
-        //     ), 0)
-        //     >
-        //     (
-        //         td.uang_dp +
-        //         COALESCE((
-        //             SELECT SUM(tidd.grand_total)
-        //             FROM trans_invoice_detail tidd
-        //             WHERE tidd.id_ref = td.id AND tidd.tipe_id = 2 AND tidd.payment_status = 1
-        //         ), 0)
-        //     )
-        // ");
+
         if (!empty($buyer)) {
             $builder->where("td.id_konsumen", $buyer);
         }
+
         $builder->orderBy("td.tgl_transaksi", 'desc');
-        
+
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }

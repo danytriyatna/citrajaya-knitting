@@ -32,12 +32,18 @@ class PrModel extends Model
         return $result;
     }
 
-    public function deleteRecord($table, $column, $id)
+    public function deleteRecord($table, $column, $id, $condition = null)
     {
         $builder = $this->db->table($table);
 
         if (is_array($id)) {
-            $builder->whereIn($column, $id);
+            if (!empty($condition)) {
+                $builder->whereNotIn($column, $id);
+                $builder->where($condition['column'], $condition['value']);
+            }
+            else {
+                $builder->whereIn($column, $id);
+            }
         } else {
             $builder->where($column, $id);
         }

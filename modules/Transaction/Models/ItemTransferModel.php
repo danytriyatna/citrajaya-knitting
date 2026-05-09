@@ -752,7 +752,7 @@ class ItemTransferModel extends \App\Models\PrModel
     function get_export($from_date = null, $to_date = null)
     {
         $db = $this->db;
-
+        
         /*
         |--------------------------------------------------------------------------
         | SUBQUERY (x) – hitung qty_terima per TRF
@@ -788,53 +788,79 @@ class ItemTransferModel extends \App\Models\PrModel
                 ( 
                     SELECT tsu.qty
                     FROM trans_sample_ukuran tsu 
-                    inner JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
-                    inner join trans_sample_det tsd on tsd.id = tsu.id_sample_det 
-                    left join ref_warna rw1 on rw1.id = tsd.id_warna_1 
-                    left join ref_warna rw2 on rw2.id = tsd.id_warna_2 
-                    left join ref_warna rw3 on rw3.id = tsd.id_warna_3 
-                    left join ref_warna rw4 on rw4.id = tsd.id_warna_4 
-                    left join ref_warna rw5 on rw5.id = tsd.id_warna_5 
-                    left join ref_warna rw6 on rw6.id = tsd.id_warna_6 
-                    left join ref_warna rw7 on rw7.id = tsd.id_warna_7 
-                    left join ref_warna rw8 on rw8.id = tsd.id_warna_8 
+                    INNER JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
+                    INNER JOIN trans_sample_det tsd ON tsd.id = tsu.id_sample_det
+
+                    -- JOIN ref_barang untuk sample
+                    LEFT JOIN ref_barang bsub1 ON bsub1.id = tsd.id_barang_1
+                    LEFT JOIN ref_barang bsub2 ON bsub2.id = tsd.id_barang_2
+                    LEFT JOIN ref_barang bsub3 ON bsub3.id = tsd.id_barang_3
+                    LEFT JOIN ref_barang bsub4 ON bsub4.id = tsd.id_barang_4
+                    LEFT JOIN ref_barang bsub5 ON bsub5.id = tsd.id_barang_5
+                    LEFT JOIN ref_barang bsub6 ON bsub6.id = tsd.id_barang_6
+                    LEFT JOIN ref_barang bsub7 ON bsub7.id = tsd.id_barang_7
+                    LEFT JOIN ref_barang bsub8 ON bsub8.id = tsd.id_barang_8
+
+                    -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di tsd
+                    LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(bsub1.id_warna, tsd.id_warna_1)
+                    LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(bsub2.id_warna, tsd.id_warna_2)
+                    LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(bsub3.id_warna, tsd.id_warna_3)
+                    LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(bsub4.id_warna, tsd.id_warna_4)
+                    LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(bsub5.id_warna, tsd.id_warna_5)
+                    LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(bsub6.id_warna, tsd.id_warna_6)
+                    LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(bsub7.id_warna, tsd.id_warna_7)
+                    LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(bsub8.id_warna, tsd.id_warna_8)
+
                     WHERE tsu.id_sample = ts.id
                     AND ru.kode_ukuran = tbtsd.kode_ukuran
                     AND CONCAT_WS('~', 
-                    NULLIF(rw1.kode_warna, ''), 
-                    NULLIF(rw2.kode_warna, ''), 
-                    NULLIF(rw3.kode_warna, ''),
-                    NULLIF(rw4.kode_warna, ''),
-                    NULLIF(rw5.kode_warna, ''),
-                    NULLIF(rw6.kode_warna, ''),
-                    NULLIF(rw7.kode_warna, ''),
-                    NULLIF(rw8.kode_warna, '')
+                        NULLIF(rw1.kode_warna, ''), 
+                        NULLIF(rw2.kode_warna, ''), 
+                        NULLIF(rw3.kode_warna, ''),
+                        NULLIF(rw4.kode_warna, ''),
+                        NULLIF(rw5.kode_warna, ''),
+                        NULLIF(rw6.kode_warna, ''),
+                        NULLIF(rw7.kode_warna, ''),
+                        NULLIF(rw8.kode_warna, '')
                     ) = tbtsd.color
                 ), 
                 ( 
                     SELECT tsou.qty
                     FROM trans_sales_order_ukuran tsou 
-                    inner JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
-                    inner join trans_sales_order_det tsod on tsod.id = tsou.id_sales_order_det 
-                    left join ref_warna rw1 on rw1.id = tsod.id_warna_1 
-                    left join ref_warna rw2 on rw2.id = tsod.id_warna_2 
-                    left join ref_warna rw3 on rw3.id = tsod.id_warna_3 
-                    left join ref_warna rw4 on rw4.id = tsod.id_warna_4 
-                    left join ref_warna rw5 on rw5.id = tsod.id_warna_5 
-                    left join ref_warna rw6 on rw6.id = tsod.id_warna_6 
-                    left join ref_warna rw7 on rw7.id = tsod.id_warna_7 
-                    left join ref_warna rw8 on rw8.id = tsod.id_warna_8 
+                    INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
+                    INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det
+
+                    -- JOIN ref_barang untuk SO
+                    LEFT JOIN ref_barang bsub1 ON bsub1.id = tsod.id_barang_1
+                    LEFT JOIN ref_barang bsub2 ON bsub2.id = tsod.id_barang_2
+                    LEFT JOIN ref_barang bsub3 ON bsub3.id = tsod.id_barang_3
+                    LEFT JOIN ref_barang bsub4 ON bsub4.id = tsod.id_barang_4
+                    LEFT JOIN ref_barang bsub5 ON bsub5.id = tsod.id_barang_5
+                    LEFT JOIN ref_barang bsub6 ON bsub6.id = tsod.id_barang_6
+                    LEFT JOIN ref_barang bsub7 ON bsub7.id = tsod.id_barang_7
+                    LEFT JOIN ref_barang bsub8 ON bsub8.id = tsod.id_barang_8
+
+                    -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di tsod
+                    LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(bsub1.id_warna, tsod.id_warna_1)
+                    LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(bsub2.id_warna, tsod.id_warna_2)
+                    LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(bsub3.id_warna, tsod.id_warna_3)
+                    LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(bsub4.id_warna, tsod.id_warna_4)
+                    LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(bsub5.id_warna, tsod.id_warna_5)
+                    LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(bsub6.id_warna, tsod.id_warna_6)
+                    LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(bsub7.id_warna, tsod.id_warna_7)
+                    LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(bsub8.id_warna, tsod.id_warna_8)
+
                     WHERE tsou.id_sales_order = tso.id
                     AND ru.kode_ukuran = tbtsd.kode_ukuran
                     AND CONCAT_WS('~', 
-                    NULLIF(rw1.kode_warna, ''), 
-                    NULLIF(rw2.kode_warna, ''), 
-                    NULLIF(rw3.kode_warna, ''),
-                    NULLIF(rw4.kode_warna, ''),
-                    NULLIF(rw5.kode_warna, ''),
-                    NULLIF(rw6.kode_warna, ''),
-                    NULLIF(rw7.kode_warna, ''),
-                    NULLIF(rw8.kode_warna, '')
+                        NULLIF(rw1.kode_warna, ''), 
+                        NULLIF(rw2.kode_warna, ''), 
+                        NULLIF(rw3.kode_warna, ''),
+                        NULLIF(rw4.kode_warna, ''),
+                        NULLIF(rw5.kode_warna, ''),
+                        NULLIF(rw6.kode_warna, ''),
+                        NULLIF(rw7.kode_warna, ''),
+                        NULLIF(rw8.kode_warna, '')
                     ) = tbtsd.color
                 )
             ) AS qty_ref"

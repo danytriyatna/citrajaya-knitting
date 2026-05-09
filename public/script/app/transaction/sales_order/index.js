@@ -30,14 +30,22 @@ $(document).ready(function () {
     const inpTglDP2         = $('#tgl_dp_2');
     const inpTypeDP2         = $('#select_type_2');
     const inpPengiriman         = $('#pengiriman');
-    const inpPoWarna1       = $('#po_warna1');
-    const inpPoWarna2       = $('#po_warna2');
-    const inpPoWarna3       = $('#po_warna3');
-    const inpPoWarna4       = $('#po_warna4');
-    const inpPoWarna5       = $('#po_warna5');
-    const inpPoWarna6       = $('#po_warna6');
-    const inpPoWarna7       = $('#po_warna7');
-    const inpPoWarna8       = $('#po_warna8');
+    let inpPoWarna1      = $('#po_warna1');
+    let inpPoWarna2      = $('#po_warna2');
+    let inpPoWarna3      = $('#po_warna3');
+    let inpPoWarna4      = $('#po_warna4');
+    let inpPoWarna5      = $('#po_warna5');
+    let inpPoWarna6      = $('#po_warna6');
+    let inpPoWarna7      = $('#po_warna7');
+    let inpPoWarna8      = $('#po_warna8');
+    let inpPoBarang1      = $('#po_barang1');
+    let inpPoBarang2      = $('#po_barang2');
+    let inpPoBarang3      = $('#po_barang3');
+    let inpPoBarang4      = $('#po_barang4');
+    let inpPoBarang5      = $('#po_barang5');
+    let inpPoBarang6      = $('#po_barang6');
+    let inpPoBarang7      = $('#po_barang7');
+    let inpPoBarang8      = $('#po_barang8');
 
     const fileSalesOrder     = $('#fileSalesOrder');
     const fileSalesOrderOld  = $('#fileSalesOrderOld');
@@ -59,6 +67,32 @@ $(document).ready(function () {
     const btnSend            = $("#btn-send");
     const brcStyle            = $("#style_input");
     let qty_ukuran            = [];
+
+    const mapping = {
+        'po_barang1': 'po_warna1',
+        'po_barang2': 'po_warna2',
+        'po_barang3': 'po_warna3',
+        'po_barang4': 'po_warna4',
+        'po_barang5': 'po_warna5',
+        'po_barang6': 'po_warna6',
+        'po_barang7': 'po_warna7',
+        'po_barang8': 'po_warna8',
+    };
+
+    $.each(mapping, function (barangId, warnaId) {
+        $('#' + barangId).on('change', function () {
+        // Ambil data-warna dari option yang dipilih
+        const selectedOption = $(this).find('option:selected');
+        const idWarna = selectedOption.data('warna');
+
+        const $warna = $('#' + warnaId);
+
+        if (idWarna) {
+            // Set value select2 warna lalu trigger
+            $warna.val(idWarna).trigger('change');
+        } 
+        });
+    });
 
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
@@ -556,6 +590,14 @@ $(document).ready(function () {
         inpPoWarna6.val('').trigger('change');
         inpPoWarna7.val('').trigger('change');
         inpPoWarna8.val('').trigger('change');
+        inpPoBarang1.val('').trigger('change');
+        inpPoBarang2.val('').trigger('change');
+        inpPoBarang3.val('').trigger('change');
+        inpPoBarang4.val('').trigger('change');
+        inpPoBarang5.val('').trigger('change');
+        inpPoBarang6.val('').trigger('change');
+        inpPoBarang7.val('').trigger('change');
+        inpPoBarang8.val('').trigger('change');
         getDetailQty(inpData.val(),0)
     });
 
@@ -766,6 +808,15 @@ $(document).ready(function () {
                     inpPoWarna6.val(data.detail.id_warna_6).trigger('change');
                     inpPoWarna7.val(data.detail.id_warna_7).trigger('change');
                     inpPoWarna8.val(data.detail.id_warna_8).trigger('change');
+
+                    inpPoBarang1.val(data.detail.id_barang_1).trigger('change');
+                    inpPoBarang2.val(data.detail.id_barang_2).trigger('change');
+                    inpPoBarang3.val(data.detail.id_barang_3).trigger('change');
+                    inpPoBarang4.val(data.detail.id_barang_4).trigger('change');
+                    inpPoBarang5.val(data.detail.id_barang_5).trigger('change');
+                    inpPoBarang6.val(data.detail.id_barang_6).trigger('change');
+                    inpPoBarang7.val(data.detail.id_barang_7).trigger('change');
+                    inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
                 }
                 
                 dtListDetailQty.setData(data.detailUkuran)
@@ -929,10 +980,10 @@ $(document).ready(function () {
     }
 
     function simpanDataDetail() {
-        if(inpPoWarna1.val() == "")
+        if(inpPoBarang1.val() == "")
         {
             return Swal.fire({
-                text: "Warna 1 Belum terpilih!",
+                text: "Barang 1 Belum terpilih!",
                 icon: 'warning',
                 showConfirmButton: false,
                 timer: 2000
@@ -953,14 +1004,14 @@ $(document).ready(function () {
                 type: 'POST',
                 url: '/trans/sales-order/save-detail',
                 data: {
-                    warna1:inpPoWarna1.val(),
-                    warna2:inpPoWarna2.val(),
-                    warna3:inpPoWarna3.val(),
-                    warna4:inpPoWarna4.val(),
-                    warna5:inpPoWarna5.val(),
-                    warna6:inpPoWarna6.val(),
-                    warna7:inpPoWarna7.val(),
-                    warna8:inpPoWarna8.val(),
+                    barang1:inpPoBarang1.val(),
+                    barang2:inpPoBarang2.val(),
+                    barang3:inpPoBarang3.val(),
+                    barang4:inpPoBarang4.val(),
+                    barang5:inpPoBarang5.val(),
+                    barang6:inpPoBarang6.val(),
+                    barang7:inpPoBarang7.val(),
+                    barang8:inpPoBarang8.val(),
                     dataUkuran: dataUkuran,
                     idSalesOrder:idSalesOrder,
                     idSalesOrderDet:idSalesOrderDet,

@@ -548,26 +548,41 @@ class BarangMasukModel extends \App\Models\PrModel
 
         if ($tipe == 1) {
 
-               if(!empty($params['kode_sales_order'])){
-                    $prms .= " AND so.kode_sample = '" . $params['kode_sales_order'] . "'";
-                }
-
+            if(!empty($params['kode_sales_order'])){
+                $prms .= " AND so.kode_sample = '" . $params['kode_sales_order'] . "'";
+            }
 
             $builder = $this->db->table('trans_sample_ukuran ou');
             $builder->select("
-            ou.id,
-            ou.id_sample as id_sales_order,
-            ou.id_sample_det as id_sales_order_det,
-            sod.id_warna_1,
-            sod.id_warna_2,
-            rw1.keterangan as color1,
-            rw2.keterangan as color2
+                ou.id,
+                ou.id_sample as id_sales_order,
+                ou.id_sample_det as id_sales_order_det,
+                sod.id_warna_1,
+                sod.id_warna_2,
+
+                -- Flag sumber warna
+                CASE 
+                    WHEN sod.id_barang_1 IS NOT NULL THEN 'via_barang'
+                    ELSE 'via_warna'
+                END AS sumber_warna,
+
+                rw1.keterangan as color1,
+                rw2.keterangan as color2
             ");
+
             $builder->join('trans_sample_det sod', 'sod.id = ou.id_sample_det', 'inner');
             $builder->join('trans_sample so', 'so.id = sod.id_sample', 'inner');
-            $builder->join('ref_warna rw1', 'rw1.id = sod.id_warna_1', 'inner');
-            $builder->join('ref_warna rw2', 'rw2.id = sod.id_warna_2', 'left');
             $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
+
+            // JOIN ref_barang
+            $builder->join('ref_barang b1', 'b1.id = sod.id_barang_1', 'left');
+            $builder->join('ref_barang b2', 'b2.id = sod.id_barang_2', 'left');
+
+            // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di sod
+            // rw1 diubah dari inner ke left agar tidak hilang jika warna via ref_barang
+            $builder->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, sod.id_warna_1)', 'left');
+            $builder->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, sod.id_warna_2)', 'left');
+
             $builder->where('1 = 1' . $prms);
         } elseif ($tipe == 2) {
             if(!empty($params['kode_sales_order'])){
@@ -577,19 +592,35 @@ class BarangMasukModel extends \App\Models\PrModel
 
             $builder = $this->db->table('trans_sales_order_ukuran ou');
             $builder->select("
-            ou.id,
-            ou.id_sales_order,
-            ou.id_sales_order_det,
-            sod.id_warna_1,
-            sod.id_warna_2,
-            rw1.keterangan as color1,
-            rw2.keterangan as color2
+                ou.id,
+                ou.id_sales_order,
+                ou.id_sales_order_det,
+                sod.id_warna_1,
+                sod.id_warna_2,
+
+                -- Flag sumber warna
+                CASE 
+                    WHEN sod.id_barang_1 IS NOT NULL THEN 'via_barang'
+                    ELSE 'via_warna'
+                END AS sumber_warna,
+
+                rw1.keterangan as color1,
+                rw2.keterangan as color2
             ");
+
             $builder->join('trans_sales_order_det sod', 'sod.id = ou.id_sales_order_det', 'inner');
-            $builder->join('trans_sales_order so', 'so.id = sod.id_sales_order', 'inner');
-            $builder->join('ref_warna rw1', 'rw1.id = sod.id_warna_1', 'inner');
-            $builder->join('ref_warna rw2', 'rw2.id = sod.id_warna_2', 'left');
-            $builder->join('ref_ukuran rk', 'rk.id = ou.id_ukuran', 'inner');
+            $builder->join('trans_sales_order so',      'so.id = sod.id_sales_order',     'inner');
+            $builder->join('ref_ukuran rk',             'rk.id = ou.id_ukuran',           'inner');
+
+            // JOIN ref_barang
+            $builder->join('ref_barang b1', 'b1.id = sod.id_barang_1', 'left');
+            $builder->join('ref_barang b2', 'b2.id = sod.id_barang_2', 'left');
+
+            // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di sod
+            // rw1 diubah dari inner ke left agar tidak hilang jika warna via ref_barang
+            $builder->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, sod.id_warna_1)', 'left');
+            $builder->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, sod.id_warna_2)', 'left');
+
             $builder->where('1 = 1' . $prms);
         }
 

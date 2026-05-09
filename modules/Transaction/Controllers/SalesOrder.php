@@ -2,30 +2,30 @@
 
 namespace Modules\Transaction\Controllers;
 
-use App\Models\FileModel;
-
-use Endroid\QrCode\QrCode;
-use CodeIgniter\Controller;
-use Endroid\QrCode\Logo\Logo;
-use Endroid\QrCode\Color\Color;
-use Endroid\QrCode\Label\Label;
-use App\Libraries\DompdfGenerator;
 use App\Controllers\BaseController;
-use Endroid\QrCode\Writer\PngWriter;
+use App\Libraries\DompdfGenerator;
+use App\Models\FileModel;
+use CodeIgniter\Controller;
+use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\ErrorCorrectionLevel;
-use Modules\Referensi\Models\WarnaModel;
-use Modules\Referensi\Models\UkuranModel;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Endroid\QrCode\Label\Label;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\ValidationException;
+use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\KonsumenModel;
 use Modules\Referensi\Models\RekeningModel;
-use Modules\Transaction\Models\SampleModel;
-use Endroid\QrCode\Writer\ValidationException;
-use Modules\Transaction\Models\WalkorderModel;
+use Modules\Referensi\Models\UkuranModel;
+use Modules\Referensi\Models\WarnaModel;
 use Modules\Transaction\Models\ProductionModel;
 use Modules\Transaction\Models\SalesOrderModel;
+use Modules\Transaction\Models\SampleModel;
+use Modules\Transaction\Models\WalkorderModel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class SalesOrder extends BaseController
 {
@@ -38,6 +38,7 @@ class SalesOrder extends BaseController
   protected $mworkOrder;
   protected $mRekening;
   protected $mProduksi;
+  protected $mBarang;
 
   protected $views = '\Modules\Transaction\Views';
   protected $urlv  = 'trans/sales-order';
@@ -55,6 +56,7 @@ class SalesOrder extends BaseController
     $this->mworkOrder = new WalkorderModel();
     $this->mRekening   = new RekeningModel();
     $this->mProduksi = new ProductionModel();
+    $this->mBarang = new BarangModel();
   }
 
 
@@ -76,6 +78,7 @@ class SalesOrder extends BaseController
     $this->data['delete_access'] = $this->_delete;
     $this->data['print_access'] = $this->_print;
     $this->data['approve_access'] = $this->_approve;
+    $this->data['barang'] = $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
     
     return view($this->views . '\sales_order_list', $this->data);
   }
@@ -405,14 +408,14 @@ class SalesOrder extends BaseController
             $arr_isid = [
               'id_sales_order' => $hid,
               'keterangan' => '',
-              'id_warna_1' => $r->id_warna_1,
-              'id_warna_2' => $r->id_warna_2,
-              'id_warna_3' => $r->id_warna_3,
-              'id_warna_4' => $r->id_warna_4,
-              'id_warna_5' => $r->id_warna_5,
-              'id_warna_6' => $r->id_warna_6,
-              'id_warna_7' => $r->id_warna_7,
-              'id_warna_8' => $r->id_warna_8,
+              'id_barang_1' => $r->id_barang_1,
+              'id_barang_2' => $r->id_barang_2,
+              'id_barang_3' => $r->id_barang_3,
+              'id_barang_4' => $r->id_barang_4,
+              'id_barang_5' => $r->id_barang_5,
+              'id_barang_6' => $r->id_barang_6,
+              'id_barang_7' => $r->id_barang_7,
+              'id_barang_8' => $r->id_barang_8,
               'total_harga' => $r->total_harga,
             ];
             $hidd = $this->mSalesOrder->insertRecordGetid('trans_sales_order_det', $arr_isid);
@@ -493,12 +496,17 @@ class SalesOrder extends BaseController
                 foreach ($data_warna as $xrow) {
 
                   // get detail wo 
-                  $prms_sample['id_warna_1'] = $xrow->id_warna_1;
-                  // $prms_sample['id_warna_2'] = $xrow->id_warna_2;
-                  if (!empty($xrow->id_warna_2)) $prms_sample['id_warna_2'] = $xrow->id_warna_2;
-                  if (!empty($xrow->id_warna_3)) $prms_sample['id_warna_3'] = $xrow->id_warna_3;
-                  if (!empty($xrow->id_warna_4)) $prms_sample['id_warna_4'] = $xrow->id_warna_4;
+                  $prms_sample['id_barang_1'] = $xrow->id_barang_1;
+                  // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
+                  if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
+                  if (!empty($xrow->id_barang_3)) $prms_sample['id_barang_3'] = $xrow->id_barang_3;
+                  if (!empty($xrow->id_barang_4)) $prms_sample['id_barang_4'] = $xrow->id_barang_4;
+                  if (!empty($xrow->id_barang_5)) $prms_sample['id_barang_5'] = $xrow->id_barang_5;
+                  if (!empty($xrow->id_barang_6)) $prms_sample['id_barang_6'] = $xrow->id_barang_6;
+                  if (!empty($xrow->id_barang_7)) $prms_sample['id_barang_7'] = $xrow->id_barang_7;
+                  if (!empty($xrow->id_barang_8)) $prms_sample['id_barang_8'] = $xrow->id_barang_8;
                   $data_detail = $this->mSample->getDataDetailSample_ori($sampleId, $prms_sample);
+                 
                   if (!empty($data_detail)) {
                     $params_wod['ref_detail_id'] = $data_detail[0]->id;
                     $params_wod['tipe_id'] = 1;
@@ -559,11 +567,11 @@ class SalesOrder extends BaseController
                         $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                         for ($i = 0; $i < 8; $i++) {
-                          $field_name = 'id_warna_' . ($i + 1);
+                          $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
 
                             $params_d['id_walkorder_detail'] = $data_detail_wo->id;
-                            $params_d['id_warna'] = $xrow->$field_name;
+                            $params_d['id_barang'] = $xrow->$field_name;
                             $data_detail = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_d);
 
                             $xgram = 0;
@@ -590,7 +598,7 @@ class SalesOrder extends BaseController
       
                               $isi_warna = [
                                 'id_walkorder_detail' => $wo_det_id,
-                                'id_warna' => $xrow->$field_name,
+                                'id_barang' => $xrow->$field_name,
                                 'persen'       => $data_detail[0]->persen,
                                 'gram'         => $xgram,
                                 'gram_nd'      => $xgram_nd,
@@ -607,7 +615,7 @@ class SalesOrder extends BaseController
                             }else{
                               $isi_warna = [
                                 'id_walkorder_detail' => $wo_det_id,
-                                'id_warna' => $xrow->$field_name,
+                                'id_barang' => $xrow->$field_name,
                                 'created_at' => date("Y-m-d H:i:s")
                               ];
                               $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
@@ -634,18 +642,18 @@ class SalesOrder extends BaseController
                         $this->mworkOrder->updateRecord($this->mworkOrder->table2, $detail_wo, 'id', $data_detail_wo->id);
 
                         for ($i = 0; $i < 8; $i++) {
-                          $field_name = 'id_warna_' . ($i + 1);
+                          $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
                             $params_warna = [
                               'id_walkorder_detail' => $data_detail_wo->id,
-                              'id_warna' => $xrow->$field_name,
+                              'id_barang' => $xrow->$field_name,
                               'single' => true,
                             ];
                             $data_detail_warna = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_warna);
                             if (!empty($data_detail_warna)) {
                               $isi_warna = [
                                 'id_walkorder_detail' => $data_detail_wo->id,
-                                'id_warna' => $xrow->$field_name,
+                                'id_barang' => $xrow->$field_name,
                               ];
                               $this->mworkOrder->updateRecord($this->mworkOrder->table5, $isi_warna, 'id', $data_detail_warna->id);
                             }
@@ -656,14 +664,14 @@ class SalesOrder extends BaseController
                         $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                         for ($i = 0; $i < 8; $i++) {
-                          $field_name = 'id_warna_' . ($i + 1);
+                          $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
-                            $isi_warna = [
+                            $isi_barang = [
                               'id_walkorder_detail' => $wo_det_id,
-                              'id_warna' => $xrow->$field_name,
+                              'id_barang' => $xrow->$field_name,
                               'created_at' => date("Y-m-d H:i:s")
                             ];
-                            $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                            $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                           }
                         }
                       }
@@ -688,14 +696,14 @@ class SalesOrder extends BaseController
                       $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                       for ($i = 0; $i < 8; $i++) {
-                        $field_name = 'id_warna_' . ($i + 1);
+                        $field_name = 'id_barang_' . ($i + 1);
                         if (!empty($xrow->$field_name)) {
-                          $isi_warna = [
+                          $isi_barang = [
                             'id_walkorder_detail' => $wo_det_id,
-                            'id_warna' => $xrow->$field_name,
+                            'id_barang' => $xrow->$field_name,
                             'created_at' => date("Y-m-d H:i:s")
                           ];
-                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                         }
                       }
                     }
@@ -726,14 +734,14 @@ class SalesOrder extends BaseController
                   $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                   for ($i = 0; $i < 8; $i++) {
-                    $field_name = 'id_warna_' . ($i + 1);
+                    $field_name = 'id_barang_' . ($i + 1);
                     if (!empty($xrow->$field_name)) {
-                      $isi_warna = [
+                      $isi_barang = [
                         'id_walkorder_detail' => $wo_det_id,
-                        'id_warna' => $xrow->$field_name,
+                        'id_barang' => $xrow->$field_name,
                         'created_at' => date("Y-m-d H:i:s")
                       ];
-                      $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                      $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                     }
                   }
                 }
@@ -817,11 +825,15 @@ class SalesOrder extends BaseController
               foreach ($data_warna as $xrow) {
 
                 // get detail wo 
-                $prms_sample['id_warna_1'] = $xrow->id_warna_1;
-                // $prms_sample['id_warna_2'] = $xrow->id_warna_2;
-                if (!empty($xrow->id_warna_2)) $prms_sample['id_warna_2'] = $xrow->id_warna_2;
-                if (!empty($xrow->id_warna_3)) $prms_sample['id_warna_3'] = $xrow->id_warna_3;
-                if (!empty($xrow->id_warna_4)) $prms_sample['id_warna_4'] = $xrow->id_warna_4;
+                $prms_sample['id_barang_1'] = $xrow->id_barang_1;
+                // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
+                if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
+                if (!empty($xrow->id_barang_3)) $prms_sample['id_barang_3'] = $xrow->id_barang_3;
+                if (!empty($xrow->id_barang_4)) $prms_sample['id_barang_4'] = $xrow->id_barang_4;
+                if (!empty($xrow->id_barang_5)) $prms_sample['id_barang_5'] = $xrow->id_barang_5;
+                if (!empty($xrow->id_barang_6)) $prms_sample['id_barang_6'] = $xrow->id_barang_6;
+                if (!empty($xrow->id_barang_7)) $prms_sample['id_barang_7'] = $xrow->id_barang_7;
+                if (!empty($xrow->id_barang_8)) $prms_sample['id_barang_8'] = $xrow->id_barang_8;
                 $data_detail = $this->mSample->getDataDetailSample_ori($sampleId, $prms_sample);
 
                 if (!empty($data_detail)) {
@@ -877,11 +889,11 @@ class SalesOrder extends BaseController
                     $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                     for ($i = 0; $i < 8; $i++) {
-                      $field_name = 'id_warna_' . ($i + 1);
+                      $field_name = 'id_barang_' . ($i + 1);
                       if (!empty($xrow->$field_name)) {
 
                         $params_d['id_walkorder_detail'] = $data_detail_wo[0]->id;
-                        $params_d['id_warna'] = $xrow->$field_name;
+                        $params_d['id_barang'] = $xrow->$field_name;
                         $data_detail = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_d);
 
                         $xgram = 0;
@@ -906,9 +918,9 @@ class SalesOrder extends BaseController
                             $xkuota_tambah = $xkuota - $xtotal;
                           }
   
-                          $isi_warna = [
+                          $isi_barang = [
                             'id_walkorder_detail' => $wo_det_id,
-                            'id_warna' => $xrow->$field_name,
+                            'id_barang' => $xrow->$field_name,
                             'persen'       => $data_detail[0]->persen,
                             'gram'         => $xgram,
                             'gram_nd'      => $xgram_nd,
@@ -921,14 +933,14 @@ class SalesOrder extends BaseController
                             'created_at' => date("Y-m-d H:i:s")
                           ];
   
-                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                         }else{
-                          $isi_warna = [
+                          $isi_barang = [
                             'id_walkorder_detail' => $wo_det_id,
-                            'id_warna' => $xrow->$field_name,
+                            'id_barang' => $xrow->$field_name,
                             'created_at' => date("Y-m-d H:i:s")
                           ];
-                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                         }
                       }
                     }
@@ -944,14 +956,14 @@ class SalesOrder extends BaseController
                     $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                     for ($i = 0; $i < 8; $i++) {
-                      $field_name = 'id_warna_' . ($i + 1);
+                      $field_name = 'id_barang_' . ($i + 1);
                       if (!empty($xrow->$field_name)) {
-                        $isi_warna = [
+                        $isi_barang = [
                           'id_walkorder_detail' => $wo_det_id,
-                          'id_warna' => $xrow->$field_name,
+                          'id_barang' => $xrow->$field_name,
                           'created_at' => date("Y-m-d H:i:s")
                         ];
-                        $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                        $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                       }
                     }
                   }
@@ -967,14 +979,14 @@ class SalesOrder extends BaseController
                   $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
                   for ($i = 0; $i < 8; $i++) {
-                    $field_name = 'id_warna_' . ($i + 1);
+                    $field_name = 'id_barang_' . ($i + 1);
                     if (!empty($xrow->$field_name)) {
-                      $isi_warna = [
+                      $isi_barang = [
                         'id_walkorder_detail' => $wo_det_id,
-                        'id_warna' => $xrow->$field_name,
+                        'id_barang' => $xrow->$field_name,
                         'created_at' => date("Y-m-d H:i:s")
                       ];
-                      $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                      $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                     }
                   }
                 }
@@ -995,14 +1007,14 @@ class SalesOrder extends BaseController
               $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
               for ($i = 0; $i < 8; $i++) {
-                $field_name = 'id_warna_' . ($i + 1);
+                $field_name = 'id_barang_' . ($i + 1);
                 if (!empty($xrow->$field_name)) {
-                  $isi_warna = [
+                  $isi_barang = [
                     'id_walkorder_detail' => $wo_det_id,
-                    'id_warna' => $xrow->$field_name,
+                    'id_barang' => $xrow->$field_name,
                     'created_at' => date("Y-m-d H:i:s")
                   ];
-                  $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                  $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                 }
               }
             }
@@ -1036,24 +1048,24 @@ class SalesOrder extends BaseController
     $status = false;
     $idSalesOrder = $this->request->getPost('idSalesOrder');
     $idSalesOrderDet = $this->request->getPost('idSalesOrderDet');
-    $warna1 = $this->request->getPost('warna1');
-    $warna2 = $this->request->getPost('warna2');
-    $warna3 = $this->request->getPost('warna3');
-    $warna4 = $this->request->getPost('warna4');
-    $warna5 = $this->request->getPost('warna5');
-    $warna6 = $this->request->getPost('warna6');
-    $warna7 = $this->request->getPost('warna7');
-    $warna8 = $this->request->getPost('warna8');
+    $barang1 = $this->request->getPost('barang1');
+    $barang2 = $this->request->getPost('barang2');
+    $barang3 = $this->request->getPost('barang3');
+    $barang4 = $this->request->getPost('barang4');
+    $barang5 = $this->request->getPost('barang5');
+    $barang6 = $this->request->getPost('barang6');
+    $barang7 = $this->request->getPost('barang7');
+    $barang8 = $this->request->getPost('barang8');
     $dataUkuran = $this->request->getPost('dataUkuran');
     $dataWarna = [
-      "id_warna_1" => !empty($warna1) ? $warna1 : null,
-      "id_warna_2" => !empty($warna2) ? $warna2 : null,
-      "id_warna_3" => !empty($warna3) ? $warna3 : null,
-      "id_warna_4" => !empty($warna4) ? $warna4 : null,
-      "id_warna_5" => !empty($warna5) ? $warna5 : null,
-      "id_warna_6" => !empty($warna6) ? $warna6 : null,
-      "id_warna_7" => !empty($warna7) ? $warna7 : null,
-      "id_warna_8" => !empty($warna8) ? $warna8 : null,
+      "id_barang_1" => !empty($barang1) ? $barang1 : null,
+      "id_barang_2" => !empty($barang2) ? $barang2 : null,
+      "id_barang_3" => !empty($barang3) ? $barang3 : null,
+      "id_barang_4" => !empty($barang4) ? $barang4 : null,
+      "id_barang_5" => !empty($barang5) ? $barang5 : null,
+      "id_barang_6" => !empty($barang6) ? $barang6 : null,
+      "id_barang_7" => !empty($barang7) ? $barang7 : null,
+      "id_barang_8" => !empty($barang8) ? $barang8 : null,
 
       "id_sales_order" => (int)decrypt($idSalesOrder),
       "id" => !empty($idSalesOrderDet) ? $idSalesOrderDet :  null,

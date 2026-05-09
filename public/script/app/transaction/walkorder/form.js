@@ -368,7 +368,7 @@ $(document).ready(function () {
                 },
 
                 {
-                    title: "QTY<br>ON HAND", field: "kuota",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end",
+                    title: "QTY<br>ON HAND", field: "kuota_history",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end",
                     width:"12%", bottomCalc:"sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
                 },
 

@@ -838,6 +838,18 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getWoWarna($id_barang = null, $ref_detail_id = null)
+    {
+        $builder = $this->db->table("trans_walkorder_warna abx");
+        $builder->select("abx.id, abx.id_barang, abx.id_walkorder_detail");
+        $builder->join("trans_walkorder_detail twd", "twd.id = abx.id_walkorder_detail", 'inner');
+        $builder->where("twd.ref_detail_id", $ref_detail_id);
+        $builder->where("twd.tipe_id", 2);
+        $builder->where("abx.id_barang", $id_barang);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
     function trxInsertUpdateRecord($dataWarna, $dataUkuran)
     {
         $this->db->transStart();
@@ -845,6 +857,21 @@ class SalesOrderModel extends \App\Models\PrModel
 
             if (!empty($dataWarna['id'])) {
                 $dataWarna['updated_at'] = date("Y-m-d H:i:s");
+                
+                $getOldWarna = $this->getDataDetailSampleWarna($dataWarna['id_sales_order'], $dataWarna['id']);
+                for ($i=0; $i < 8; $i++) { 
+                    $barangId = 'id_barang_' . ($i+1);
+                    if (!empty($getOldWarna->$barangId)) {
+                        $getWOWarna = $this->getWoWarna($getOldWarna->$barangId, $dataWarna['id']);
+                        if (!empty($getWOWarna)) {
+                            $dataUPdateWO = [
+                                "id_barang" => $dataWarna[$barangId],
+                                "updated_at" => date("Y-m-d H:i:s")
+                            ];
+                            $this->updateRecord("trans_walkorder_warna", $dataUPdateWO, 'id', $getWOWarna->id);
+                        }
+                    }
+                }
                 $this->updateRecord("trans_sales_order_det", $dataWarna, 'id', $dataWarna['id']);
             } else {
                 unset($dataWarna['id']);

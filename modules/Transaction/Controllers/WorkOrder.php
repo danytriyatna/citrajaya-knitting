@@ -322,7 +322,7 @@ class WorkOrder extends BaseController
           "kg_loss" => $row->kg_loss,
           "total"   => $row->total,
           "loss"    => $row->loss,
-          "kuota"   => $row->qty - $row->qty_do,
+          "kuota"   => $row->total_kuota_history,
           "kuota_tambah"    => $row->kuota_tambah,
           'details' => !empty($data_detail) ? $data_detail : []
         )
@@ -364,7 +364,7 @@ class WorkOrder extends BaseController
           $det_kg = $det_kg + $r['kg'];
           $det_kg_loss = $det_kg_loss + $r['kg_loss'];
           $det_total = $det_total + $r['total'];
-          $det_kuota = $det_kuota + $r['kuota'];
+          $det_kuota = $det_kuota + $r['kuota_history'];
           $det_kuotat = $det_kuotat + $r['kuota_tambah'];
 
           $warna_isi = [
@@ -374,7 +374,7 @@ class WorkOrder extends BaseController
             'kg'           => $r['kg'],
             'kg_loss'      => $r['kg_loss'],
             'total'        => $r['total'],
-            'kuota'        => $r['kuota'],
+            'kuota'        => $r['kuota_history'],
             'kuota_tambah' => $r['kuota_tambah'],
             'loss'         => $detail_loss,
             'updated_at'   => date('Y-m-d H:i:s')

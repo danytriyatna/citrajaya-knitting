@@ -185,11 +185,27 @@ class WalkorderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table2 . " abx");
 
+        // --- LOGIKA STOK HISTORY 8 BARANG ---
+        $id_gudang = !empty($params['id_gudang']) ? $params['id_gudang'] : null;
+        $gudangFilter = !empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "";
+
+        $sq = [];
+        for ($i = 1; $i <= 8; $i++) {
+            $sq[] = "COALESCE((
+                SELECT tbh.jumlah FROM trans_barang_history tbh 
+                WHERE tbh.id_barang = (CASE WHEN abx.tipe_id = 2 THEN tso.id_barang_$i ELSE ts.id_barang_$i END)
+                $gudangFilter 
+                ORDER BY tbh.year DESC, tbh.month DESC LIMIT 1
+            ), 0)";
+        }
+        $totalHistoryQuery = "(" . implode(" + ", $sq) . ") AS total_kuota_history";
+        $builder = $this->db->table($this->table2 . " abx");
+
         $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, abx.gram, abx.gram_nd, abx.kg, abx.loss,
                         abx.kg_loss, abx.total, abx.tipe_id, abx.kuota, abx.kuota_tambah,
 
                         (case when abx.tipe_id = 2 then tso.id_warna_1 else ts.id_warna_1 end) as id_wdasar,
-
+                        {$totalHistoryQuery},
                         -- Flag sumber warna
                         CASE
                             WHEN abx.tipe_id = 2 AND tso.id_barang_1 IS NOT NULL THEN 'via_barang'
@@ -693,6 +709,17 @@ class WalkorderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table5 . " abx");
 
+        $id_gudang = !empty($params['id_gudang']) ? $params['id_gudang'] : null;
+
+        $subQtyOnHand = "COALESCE((
+            SELECT tbh.jumlah
+            FROM trans_barang_history tbh
+            WHERE tbh.id_barang = abx.id_barang
+            " . (!empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "") . "
+            ORDER BY tbh.year DESC, tbh.month DESC
+            LIMIT 1
+        ), 0) AS kuota_history";
+
         $builder->select(" 
             abx.id, 
             abx.id_walkorder_detail, 
@@ -708,7 +735,10 @@ class WalkorderModel extends \App\Models\PrModel
             CASE 
                 WHEN abx.id_barang IS NOT NULL THEN 'via_barang'
                 ELSE 'via_warna'
-            END AS sumber_warna
+            END AS sumber_warna,
+
+            -- Qty on hand dari trans_barang_history
+            {$subQtyOnHand}
         ");
 
         // JOIN ref_barang (nullable)

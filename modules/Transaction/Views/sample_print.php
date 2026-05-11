@@ -188,7 +188,7 @@
             foreach ($detail as $row) : ?>
                 <tr>
                     <td><?= $i++ ?></td>
-                    <td><?= $row->colordasar ?></td>
+                    <td><?= $row->keterangan ?></td>
                     <?php foreach ($ukuran as $u) : ?>
                         <td class="text-right"><?= $row->$u ?></td>
                     <?php endforeach; ?>

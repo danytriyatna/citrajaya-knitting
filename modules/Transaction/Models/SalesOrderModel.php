@@ -340,14 +340,21 @@ class SalesOrderModel extends \App\Models\PrModel
                     CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
                 TRIM(BOTH ' ~ ' FROM
-                    COALESCE(w1.keterangan, '') ||
-                    CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
-                    CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
-                    CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
-                    CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
-                    CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
-                    CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
+                    CASE WHEN b1.id IS NOT NULL THEN COALESCE(b1.keterangan, '') ELSE COALESCE(w1.keterangan, '') END ||
+                    CASE WHEN b2.id IS NOT NULL AND b2.keterangan IS NOT NULL THEN ' ~ ' || b2.keterangan
+                        WHEN b2.id IS NULL AND w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
+                    CASE WHEN b3.id IS NOT NULL AND b3.keterangan IS NOT NULL THEN ' ~ ' || b3.keterangan
+                        WHEN b3.id IS NULL AND w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
+                    CASE WHEN b4.id IS NOT NULL AND b4.keterangan IS NOT NULL THEN ' ~ ' || b4.keterangan
+                        WHEN b4.id IS NULL AND w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
+                    CASE WHEN b5.id IS NOT NULL AND b5.keterangan IS NOT NULL THEN ' ~ ' || b5.keterangan
+                        WHEN b5.id IS NULL AND w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
+                    CASE WHEN b6.id IS NOT NULL AND b6.keterangan IS NOT NULL THEN ' ~ ' || b6.keterangan
+                        WHEN b6.id IS NULL AND w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
+                    CASE WHEN b7.id IS NOT NULL AND b7.keterangan IS NOT NULL THEN ' ~ ' || b7.keterangan
+                        WHEN b7.id IS NULL AND w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
+                    CASE WHEN b8.id IS NOT NULL AND b8.keterangan IS NOT NULL THEN ' ~ ' || b8.keterangan
+                        WHEN b8.id IS NULL AND w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
                 ) AS keterangan,
                 {$col11},
                 (
@@ -528,14 +535,21 @@ class SalesOrderModel extends \App\Models\PrModel
                     CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
                 TRIM(BOTH ' ~ ' FROM
-                    COALESCE(w1.keterangan, '') ||
-                    CASE WHEN w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
-                    CASE WHEN w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
-                    CASE WHEN w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
-                    CASE WHEN w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
-                    CASE WHEN w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
-                    CASE WHEN w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
+                    CASE WHEN b1.id IS NOT NULL THEN COALESCE(b1.keterangan, '') ELSE COALESCE(w1.keterangan, '') END ||
+                    CASE WHEN b2.id IS NOT NULL AND b2.keterangan IS NOT NULL THEN ' ~ ' || b2.keterangan
+                        WHEN b2.id IS NULL AND w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
+                    CASE WHEN b3.id IS NOT NULL AND b3.keterangan IS NOT NULL THEN ' ~ ' || b3.keterangan
+                        WHEN b3.id IS NULL AND w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
+                    CASE WHEN b4.id IS NOT NULL AND b4.keterangan IS NOT NULL THEN ' ~ ' || b4.keterangan
+                        WHEN b4.id IS NULL AND w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
+                    CASE WHEN b5.id IS NOT NULL AND b5.keterangan IS NOT NULL THEN ' ~ ' || b5.keterangan
+                        WHEN b5.id IS NULL AND w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
+                    CASE WHEN b6.id IS NOT NULL AND b6.keterangan IS NOT NULL THEN ' ~ ' || b6.keterangan
+                        WHEN b6.id IS NULL AND w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
+                    CASE WHEN b7.id IS NOT NULL AND b7.keterangan IS NOT NULL THEN ' ~ ' || b7.keterangan
+                        WHEN b7.id IS NULL AND w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
+                    CASE WHEN b8.id IS NOT NULL AND b8.keterangan IS NOT NULL THEN ' ~ ' || b8.keterangan
+                        WHEN b8.id IS NULL AND w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
                 ) AS keterangan,
                 {$col11},
                 COALESCE((

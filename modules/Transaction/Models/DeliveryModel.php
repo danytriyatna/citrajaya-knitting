@@ -162,14 +162,46 @@ class DeliveryModel extends \App\Models\PrModel
             ) AS kode_warna,
 
             TRIM(BOTH ' ~ ' FROM
-                COALESCE(rw1.keterangan, '') ||
-                CASE WHEN rw2.keterangan IS NOT NULL THEN ' ~ ' || rw2.keterangan ELSE '' END ||
-                CASE WHEN rw3.keterangan IS NOT NULL THEN ' ~ ' || rw3.keterangan ELSE '' END ||
-                CASE WHEN rw4.keterangan IS NOT NULL THEN ' ~ ' || rw4.keterangan ELSE '' END ||
-                CASE WHEN rw5.keterangan IS NOT NULL THEN ' ~ ' || rw5.keterangan ELSE '' END ||
-                CASE WHEN rw6.keterangan IS NOT NULL THEN ' ~ ' || rw6.keterangan ELSE '' END ||
-                CASE WHEN rw7.keterangan IS NOT NULL THEN ' ~ ' || rw7.keterangan ELSE '' END ||
-                CASE WHEN rw8.keterangan IS NOT NULL THEN ' ~ ' || rw8.keterangan ELSE '' END
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs1.id  IS NOT NULL THEN COALESCE(bs1.keterangan,  '')
+                    WHEN tw.tipe_id = 2 AND bso1.id IS NOT NULL THEN COALESCE(bso1.keterangan, '')
+                    ELSE COALESCE(rw1.keterangan, '') 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs2.id  IS NOT NULL AND bs2.keterangan  IS NOT NULL THEN ' ~ ' || bs2.keterangan
+                    WHEN tw.tipe_id = 2 AND bso2.id IS NOT NULL AND bso2.keterangan IS NOT NULL THEN ' ~ ' || bso2.keterangan
+                    WHEN rw2.keterangan IS NOT NULL THEN ' ~ ' || rw2.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs3.id  IS NOT NULL AND bs3.keterangan  IS NOT NULL THEN ' ~ ' || bs3.keterangan
+                    WHEN tw.tipe_id = 2 AND bso3.id IS NOT NULL AND bso3.keterangan IS NOT NULL THEN ' ~ ' || bso3.keterangan
+                    WHEN rw3.keterangan IS NOT NULL THEN ' ~ ' || rw3.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs4.id  IS NOT NULL AND bs4.keterangan  IS NOT NULL THEN ' ~ ' || bs4.keterangan
+                    WHEN tw.tipe_id = 2 AND bso4.id IS NOT NULL AND bso4.keterangan IS NOT NULL THEN ' ~ ' || bso4.keterangan
+                    WHEN rw4.keterangan IS NOT NULL THEN ' ~ ' || rw4.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs5.id  IS NOT NULL AND bs5.keterangan  IS NOT NULL THEN ' ~ ' || bs5.keterangan
+                    WHEN tw.tipe_id = 2 AND bso5.id IS NOT NULL AND bso5.keterangan IS NOT NULL THEN ' ~ ' || bso5.keterangan
+                    WHEN rw5.keterangan IS NOT NULL THEN ' ~ ' || rw5.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs6.id  IS NOT NULL AND bs6.keterangan  IS NOT NULL THEN ' ~ ' || bs6.keterangan
+                    WHEN tw.tipe_id = 2 AND bso6.id IS NOT NULL AND bso6.keterangan IS NOT NULL THEN ' ~ ' || bso6.keterangan
+                    WHEN rw6.keterangan IS NOT NULL THEN ' ~ ' || rw6.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs7.id  IS NOT NULL AND bs7.keterangan  IS NOT NULL THEN ' ~ ' || bs7.keterangan
+                    WHEN tw.tipe_id = 2 AND bso7.id IS NOT NULL AND bso7.keterangan IS NOT NULL THEN ' ~ ' || bso7.keterangan
+                    WHEN rw7.keterangan IS NOT NULL THEN ' ~ ' || rw7.keterangan ELSE '' 
+                END ||
+                CASE 
+                    WHEN tw.tipe_id = 1 AND bs8.id  IS NOT NULL AND bs8.keterangan  IS NOT NULL THEN ' ~ ' || bs8.keterangan
+                    WHEN tw.tipe_id = 2 AND bso8.id IS NOT NULL AND bso8.keterangan IS NOT NULL THEN ' ~ ' || bso8.keterangan
+                    WHEN rw8.keterangan IS NOT NULL THEN ' ~ ' || rw8.keterangan ELSE '' 
+                END
             ) AS keterangan
         ");
 

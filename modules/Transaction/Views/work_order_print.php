@@ -4,11 +4,21 @@
   <meta charset="UTF-8">
   <title>PO PRODUKSI</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      margin: 30px;
-    }
+    <?php 
+            $pathWatermark = FCPATH . 'assets/images/watermark.png'; // Pastikan PNG sudah transparan
+            $typeWatermark = pathinfo($pathWatermark, PATHINFO_EXTENSION);
+            $dataWatermark = file_get_contents($pathWatermark);
+            $base64Watermark = 'data:image/' . $typeWatermark . ';base64,' . base64_encode($dataWatermark);
+        ?>
+
+        body {
+            font-family: "Arial", "Calibri", sans-serif;
+            background-image: url('<?= $base64Watermark ?>');
+            background-repeat: no-repeat;
+            background-size: 50%; /* sesuaikan ukuran watermark */
+
+            background-position: center 30%;
+        }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -201,7 +211,7 @@
                 echo "<tr>";
                 if ($index == 0) {
                     echo "<td rowspan='{$rowspan}' style='width: 6%;'>{$no}</td>";
-                    echo "<td rowspan='{$rowspan}' style='width: 30%;'>{$item->colour}</td>";
+                    echo "<td rowspan='{$rowspan}' style='width: 30%;'>{$item->keterangan}</td>";
                 }
 
                 echo "<td style='width: 16%;'>{$row['size']}</td>";

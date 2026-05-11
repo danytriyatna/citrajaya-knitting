@@ -277,7 +277,7 @@
                     foreach ($ukuran as $u) : ?>
                     <td class="text-center"><?= $row->$u ?></td>
                 <?php 
-                    $total_qty += $row->$u; 
+                    $total_qty += (float)$row->$u; 
                     endforeach; $sub_total_qty += $total_qty; 
                 ?>
                     <td class="text-center"><?= !empty($row->total_satuan) ? $total_qty : null ?></td>

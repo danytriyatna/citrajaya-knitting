@@ -1336,7 +1336,7 @@ class SalesOrder extends BaseController
       $resDataDetail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
       $keysUkuran = !empty($resDataDetail) ? array_keys(get_object_vars($resDataDetail[0])) : [];
 
-      $excludeKeys = ["id", "no", "colordasar", "keterangan", "colour", "total_harga", "total_satuan"];
+      $excludeKeys = ["id", "no", "colordasar", "keterangan", "colour", "total_harga", "total_satuan", "sumber_warna"];
 
       $ukuranKeysInc = array_diff($keysUkuran, $excludeKeys);
 

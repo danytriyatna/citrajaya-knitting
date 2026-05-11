@@ -985,7 +985,7 @@ class Sample extends BaseController
       $keysUkuran = !empty($resDataDetail) ? array_keys(get_object_vars($resDataDetail[0])) : [];
 
       // Tentukan key mana yang merupakan ukuran (filter selain `id`, `no`, `colordasar`, `colour`, dan `total_harga`)
-      $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga"];
+      $excludeKeys = ["id", "no", "colordasar", "colour", "total_harga", 'sumber_warna', 'colorsampledasar'];
       $ukuranKeysInc = array_values(array_diff($keysUkuran, $excludeKeys));
 
       $this->data['data'] = !empty($resData) ? $resData : [];

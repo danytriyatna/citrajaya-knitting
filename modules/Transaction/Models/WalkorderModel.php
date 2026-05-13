@@ -823,23 +823,36 @@ class WalkorderModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table5 . " abx");
 
         $builder->select(" 
-            abx.id_warna, 
-            rw.kode_warna,
-            SUM(abx.gram) as gram,
-            SUM(abx.kg) as kg,
-            SUM(abx.loss) as loss,
-            SUM(abx.kg_loss) as kg_loss,
-            SUM(abx.total) as total,
-            SUM(abx.kuota) as kuota,
+            abx.id_warna,
+            abx.id_barang,
+
+            CASE 
+                WHEN abx.id_barang IS NOT NULL THEN 'via_barang'
+                ELSE 'via_warna'
+            END AS sumber_warna,
+
+            COALESCE(rb.keterangan, rw.keterangan) AS kode_warna,
+
+            SUM(abx.gram)        as gram,
+            SUM(abx.kg)          as kg,
+            SUM(abx.loss)        as loss,
+            SUM(abx.kg_loss)     as kg_loss,
+            SUM(abx.total)       as total,
+            SUM(abx.kuota)       as kuota,
             SUM(abx.kuota_tambah) as kuota_tambah
         ");
 
-        $builder->join("ref_warna rw", "rw.id = abx.id_warna", "inner");
+        // JOIN ref_barang (nullable)
+        $builder->join("ref_barang rb", "rb.id = abx.id_barang", "left");
+
+        // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di abx
+        $builder->join("ref_warna rw", "rw.id = COALESCE(rb.id_warna, abx.id_warna)", "left");
+
         $builder->join("trans_walkorder_detail wodet", "wodet.id = abx.id_walkorder_detail", "inner");
-        $builder->join("trans_walkorder wo", "wo.id = wodet.id_walkorder", "inner");
+        $builder->join("trans_walkorder wo",           "wo.id = wodet.id_walkorder",          "inner");
 
         $builder->where('wo.id', $id);
-        $builder->groupBy('abx.id_warna, rw.kode_warna');
+        $builder->groupBy('abx.id_warna, abx.id_barang, rb.nama_barang, rb.keterangan, rw.kode_warna, rw.keterangan');
 
         $this->_data = $builder->get()->getResult();
 

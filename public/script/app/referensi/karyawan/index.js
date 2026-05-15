@@ -125,11 +125,11 @@ $(document).ready(function () {
             },
             {
                 title: "Nama", field: "full_name", headerSort: false,
-                
+                width: "20%",
             },
             {
                 title: "Posisi", field: "posisi", headerSort: false,
-                width: "20%"
+                width: "17%"
             },
             // {
             //     title: "Alamat", field: "alamat", formatter: "html", headerSort: false,
@@ -137,11 +137,15 @@ $(document).ready(function () {
             // },
             {
                 title: "Email", field: "email", headerSort: false,
-                width: "20%", cssClass : 'text-center'
+                width: "16%", cssClass : 'text-center'
             },
             {
                 title: "No. HP", field: "no_hp", headerSort: false,
-                width: "20%", cssClass : 'text-center'
+                width: "15%", cssClass : 'text-center'
+            },
+            {
+                title: "Perusahaan", field: "nama_perusahaan", headerSort: false,
+                width: "15%"
             },
         ],
         locale: 'id',    

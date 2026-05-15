@@ -291,6 +291,24 @@
                   </div>
                 </div>
                 <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-3 col-form-label" for="select_perusahaan">Perusahaan</label>
+                    <div class="col-md-9">
+                      <select id="select_perusahaan" name="select_perusahaan" class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
+                          <option value="" selected disabled>-- Pilih Perusahaan --</option>
+                        <?php foreach ($perusahaan as $item) : ?>
+                          <?php if (!empty($resData->id_perusahaan) && $resData->id_perusahaan == $item->id) { ?>
+                            <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                          <?php } else { ?>
+                            <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                          <?php } ?>
+
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
                   <div class="form-group row d-none" id="divNamaKonsumen">
                     <label id="labelNama" class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">Buyer<span class="text-danger">*</span></label>
                     <div class="col-md-9">

@@ -55,6 +55,10 @@ $(document).ready(function () {
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
+    $("#filter_perusahaan").on("change", function () {
+        dtList.setPage(1); // balik ke halaman 1, otomatis trigger ajax baru
+    });
+
     let dtList = new Tabulator("#dt-list", {
         columns: [
             {
@@ -155,6 +159,11 @@ $(document).ready(function () {
         sortMode: "remote",
         filterMode: "remote",
         placeholder: "Tidak ada data",
+        ajaxParams: function () {
+            return {
+                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
+            };
+        },
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;

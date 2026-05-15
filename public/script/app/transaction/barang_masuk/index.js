@@ -47,6 +47,11 @@ $(document).ready(function () {
         sortMode: "remote",
         filterMode: "remote",
         minHeight: 300,
+        ajaxParams: function () {
+            return {
+                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
+            };
+        },
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -87,6 +92,10 @@ $(document).ready(function () {
         selectableRows: false,
     });
 
+    $("#filter_perusahaan").on("change", function () {
+        dtList.setPage(1); // balik ke halaman 1, otomatis trigger ajax baru
+    });
+
     let searchThread = null;
     let elSearch = $("#tb-search");
     if (elSearch != null) {
@@ -105,7 +114,7 @@ $(document).ready(function () {
     btnExcel.on("click", function(){
         let from_date = $("#from_date").val();
         let to_date = $("#to_date").val();
-        
+        let id_perusahaan = $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val();
 
         if (from_date == null || from_date == "" || from_date == undefined) {
             Swal.fire({
@@ -136,7 +145,7 @@ $(document).ready(function () {
         }
 
         else {
-            let url = "/trans/incoming-goods/print_excel_lists/" + from_date + "/" + to_date;
+            let url = "/trans/incoming-goods/print_excel_lists/" + from_date + "/" + to_date + "?id_perusahaan=" + id_perusahaan;
             window.open(url, '_blank');
         }
     });

@@ -59,8 +59,11 @@ class RefKaryawan extends BaseController
         $limit      = $this->request->getPost('length');
         $filters    = $this->request->getPost('filter');
         $order      = $this->request->getPost('sort');
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
 
-        $params = [];
+        $params = [
+            'id_perusahaan' => $id_perusahaan
+        ];
 
         $results = $this->mkaryawan->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mkaryawan->getDataCnt($filters, $params);
@@ -120,6 +123,7 @@ class RefKaryawan extends BaseController
                     "type" => $row->type,
                     "id_operator" => $row->id_operator,
                     "id_perusahaan" => $row->id_perusahaan,
+                    "nama_perusahaan" => $row->nama_perusahaan,
                     "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/karyawan/"  . $row->file_name : "",
                 )
             );

@@ -625,82 +625,82 @@
         <div class="card-body">
           <div class="row align-items-center g-2 mb-3">
 
-  <!-- Tambah Button - paling kiri -->
-  <div class="col-sm-auto <?= $new_access == true ? '' : 'd-none' ?>">
-    <input type="hidden" id="role_id" value="<?= !empty($role_id) ? $role_id : null ?>">
-    <button type="button" class="btn btn-sm btn-success" id="btn-add">
-      <i class="fa fa-plus me-1"></i> Tambah
-    </button>
-  </div>
+            <!-- Tambah Button - paling kiri -->
+            <div class="col-sm-auto <?= $new_access == true ? '' : 'd-none' ?>">
+              <input type="hidden" id="role_id" value="<?= !empty($role_id) ? $role_id : null ?>">
+              <button type="button" class="btn btn-sm btn-success" id="btn-add">
+                <i class="fa fa-plus me-1"></i> Tambah
+              </button>
+            </div>
 
-  <!-- Filter Buyer -->
-  <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
-    <select id="filter_buyer" name="filter_buyer"
-      class="form-select select2" data-placeholder="-- Pilih Buyer --">
-      <option value="all" selected>Semua Buyer</option>
-      <?php foreach ($buyer as $item) : ?>
-        <option value="<?= $item['id'] ?>"><?= $item['nama'] ?></option>
-      <?php endforeach; ?>
-    </select>
-  </div>
+            <!-- Filter Buyer -->
+            <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
+              <select id="filter_buyer" name="filter_buyer"
+                class="form-select select2" data-placeholder="-- Pilih Buyer --">
+                <option value="all" selected>Semua Buyer</option>
+                <?php foreach ($buyer as $item) : ?>
+                  <option value="<?= $item['id'] ?>"><?= $item['nama'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
 
-  <!-- From Date -->
-  <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
-    <input type="text" id="from_date" name="from_date"
-      class="form-control datepickerx" placeholder="From Date">
-  </div>
+            <!-- From Date -->
+            <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
+              <input type="text" id="from_date" name="from_date"
+                class="form-control datepickerx" placeholder="From Date">
+            </div>
 
-  <!-- To Date -->
-  <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
-    <input type="text" id="to_date" name="to_date"
-      class="form-control datepickerx" placeholder="To Date">
-  </div>
+            <!-- To Date -->
+            <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
+              <input type="text" id="to_date" name="to_date"
+                class="form-control datepickerx" placeholder="To Date">
+            </div>
 
-  <!-- Print Button -->
-  <div class="col-sm-auto <?= $print_access == true ? '' : 'd-none' ?>">
-    <button id="btn_excel" class="btn btn-success" type="button">
-      <i class="fa fa-file-excel me-1"></i> Print
-    </button>
-  </div>
+            <!-- Print Button -->
+            <div class="col-sm-auto <?= $print_access == true ? '' : 'd-none' ?>">
+              <button id="btn_excel" class="btn btn-success" type="button">
+                <i class="fa fa-file-excel me-1"></i> Print
+              </button>
+            </div>
 
-  <!-- Spacer -->
-  <div class="col"></div>
+            <!-- Spacer -->
+            <div class="col"></div>
 
-  <!-- Search - selalu paling kanan -->
-  <div class="col-sm-2">
-    <div class="input-group">
-      <span class="input-group-text bg-white border-end-0">
-        <i class="ti-search text-muted"></i>
-      </span>
-      <input type="text" class="form-control border-start-0 ps-0" id="tb-search"
-        placeholder="Pencarian...">
-    </div>
-  </div>
+            <!-- Search - selalu paling kanan -->
+            <div class="col-sm-2">
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="ti-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0" id="tb-search"
+                  placeholder="Pencarian...">
+              </div>
+            </div>
 
-</div>
+          </div>
 
-<!-- Flash Message -->
-<?php if (isset($_SESSION['message'])) : ?>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="fa fa-check-circle me-1"></i>
-    <?= $_SESSION['message'] ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  <script>
-    setTimeout(() => document.querySelector('.alert-success')?.remove(), 3000);
-  </script>
-<?php endif; ?>
+          <!-- Flash Message -->
+          <?php if (isset($_SESSION['message'])) : ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="fa fa-check-circle me-1"></i>
+              <?= $_SESSION['message'] ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <script>
+              setTimeout(() => document.querySelector('.alert-success')?.remove(), 3000);
+            </script>
+          <?php endif; ?>
 
-<?php if (isset($_SESSION['err'])) : ?>
-  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="fa fa-exclamation-triangle me-1"></i>
-    <strong>Warning!</strong> <?= $_SESSION['err'] ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  <script>
-    setTimeout(() => document.querySelector('.alert-danger')?.remove(), 5000);
-  </script>
-<?php endif; ?>
+          <?php if (isset($_SESSION['err'])) : ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="fa fa-exclamation-triangle me-1"></i>
+              <strong>Warning!</strong> <?= $_SESSION['err'] ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <script>
+              setTimeout(() => document.querySelector('.alert-danger')?.remove(), 5000);
+            </script>
+          <?php endif; ?>
 
           <div class="row">
             <div class="col-sm-12">

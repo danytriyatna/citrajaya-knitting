@@ -18,16 +18,38 @@ class OperatorModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " uk");
 
-        $builder->select("uk.id, uk.nama_operator, uk.alamat, uk.no_hp, uk.tgl_bergabung,uk.harga");
+        $builder->select("uk.id, uk.nama_operator, uk.alamat, uk.no_hp, uk.tgl_bergabung, uk.harga");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
+
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                 $builder->where('LOWER(uk.nama_operator) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(uk.alamat) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(uk.no_hp) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
+            }
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->whereIn('uk.id', function($subquery) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->groupStart()
+                                    ->where('id_perusahaan', 1)
+                                    ->orWhere('id_perusahaan IS NULL')
+                                ->groupEnd()
+                                ->where('id_operator IS NOT NULL');
+                    });
+                } else {
+                    $builder->whereIn('uk.id', function($subquery) use ($params) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->where('id_perusahaan', $params['id_perusahaan'])
+                                ->where('id_operator IS NOT NULL');
+                    });
+                }
             }
 
             if (!empty($order)) {
@@ -65,6 +87,27 @@ class OperatorModel extends \App\Models\PrModel
             $builder->orWhere('LOWER(uk.alamat) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(uk.no_hp) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->whereIn('uk.id', function($subquery) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->groupStart()
+                                    ->where('id_perusahaan', 1)
+                                    ->orWhere('id_perusahaan IS NULL')
+                                ->groupEnd()
+                                ->where('id_operator IS NOT NULL');
+                    });
+                } else {
+                    $builder->whereIn('uk.id', function($subquery) use ($params) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->where('id_perusahaan', $params['id_perusahaan'])
+                                ->where('id_operator IS NOT NULL');
+                    });
+                }
+            }
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

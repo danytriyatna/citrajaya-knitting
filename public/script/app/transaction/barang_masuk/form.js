@@ -14,6 +14,7 @@ let inpUnit = $('#unit');
 let inpEdit = $('#edit');
 let spanBarang = $('#spanBarang');
 let selectGudang = $('#select_warehouse');
+let selectPerusahaan = $('#select_perusahaan');
 let selectKategori = $('#select_kategori');
 let selectProses = $('#select_proses');
 let selectOperator = $('#select_operator');
@@ -39,6 +40,7 @@ const divRefProduk = $(".div_produksi");
 if(inpIdHeader.val().length == 0){
     selectGudang.val("").trigger("change")
     selectKategori.val("").trigger("change")
+    selectPerusahaan.val("").trigger("change")
 }
 
 
@@ -252,10 +254,17 @@ dtListBarang.on("rowClick", function(e, row){
             timer: 2000
         });
     }
-    
     if(selectGudang.val() == 0){
         return Swal.fire({
             text: "Gudang Tujuan harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if(selectPerusahaan.val() == 0){
+        return Swal.fire({
+            text: "Perusahaan harus dipilih",
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
@@ -1015,6 +1024,14 @@ function submitData(status,message){
             timer: 2000
         });
     }
+    if(selectPerusahaan.val() == null){
+        return Swal.fire({
+            text: "Perusahaan harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     if(inpIdKonsumen.val().length == 0 && selectKategori.val() ==3){
         return Swal.fire({
             text: "Buyer harus dipilih",
@@ -1209,6 +1226,14 @@ function openModalDetail(row = null){
                 timer: 2000
             });
         }
+        if(selectPerusahaan.val()  == null){
+            return Swal.fire({
+                text: "Perusahaan harus dipilih",
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
 
         if(row){
             row.update({
@@ -1254,6 +1279,7 @@ function simpanData(status) {
         data: {
             id:inpIdHeader.val(),
             id_gudang:selectGudang.val(),
+            id_perusahaan:selectPerusahaan.val(),
             tanggal:formatLocaleDate(inpTglReceive.val()),
             id_kategori:selectKategori.val(),
             nama:inpKonsumen.val(),
@@ -1384,6 +1410,46 @@ function simpanData(status) {
           $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
           $( "#text_barcode" ).val("");
         }
+    });
+
+    $("#select_perusahaan").on("change", function () {
+        let id_perusahaan = $(this).val();
+
+        // Reset select operator
+        $("#select_operator").val(null).trigger("change");
+        $(".preloader").css("opacity", "0.7").show();
+
+        $.ajax({
+            url: baseUrl + "/master-data/operator/get_operator", // sesuaikan url
+            type: "POST",
+            data: {
+                id_perusahaan: id_perusahaan
+            },
+            beforeSend: function () {
+                $("#select_operator").prop("disabled", true);
+            },
+            success: function (res) {
+                let selectedId = $("#select_operator").data("selected") ?? ""; // simpan nilai lama
+                let options = '<option value="">-- Pilih CMT --</option>';
+
+                if (res.status && res.data.length > 0) {
+                    $.each(res.data, function (i, item) {
+                        let isSelected = item.id == selectedId ? "selected" : "";
+                        options += `<option value="${item.id}" ${isSelected}>${item.nama_operator}</option>`;
+                    });
+                }
+
+                $("#select_operator").html(options).trigger("change");
+                $(".preloader").hide().css("opacity", "1");
+            },
+            error: function () {
+                alert("Gagal memuat data operator.");
+                $(".preloader").hide().css("opacity", "1");
+            },
+            complete: function () {
+                $("#select_operator").prop("disabled", false);
+            }
+        });
     });
 
 

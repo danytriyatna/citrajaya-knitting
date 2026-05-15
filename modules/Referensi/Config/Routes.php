@@ -51,6 +51,7 @@ $routes->group("master-data/operator", ['namespace' => 'Modules\Referensi\Contro
 
     $routes->post('list', 'RefOperator::lists');
     $routes->post('simpan', 'RefOperator::save');
+    $routes->post('get_operator', 'RefOperator::getOperator');
     $routes->get('delete/(:any)', 'RefOperator::deactivate/$1');
 });
 $routes->group("master-data/gudang", ['namespace' => 'Modules\Referensi\Controllers'], static function ($routes) {

@@ -36,7 +36,7 @@ class BarangMasukModel extends \App\Models\PrModel
 
         $builder->select("uk.no_ref_trf,uk.id, uk.id_buyer,uk.status, uk.id_kategori, uk.keterangan, abx.nama_gudang,  uk.tanggal, ebx.nama,
                           uk.kode_transaksi, dbx.kategori, uk.id_gudang, uk.nilai_mesin, uk.nomor_mesin, uk.jam_mesin, uk.id_cmt, uk.id_proses,
-                          jp.nama as proses, rp.nama_operator, rp.alamat as alamat_cmt");
+                          jp.nama as proses, rp.nama_operator, rp.alamat as alamat_cmt, uk.id_perusahaan");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -47,7 +47,21 @@ class BarangMasukModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(abx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(ebx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(uk.no_ref_trf) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(rp.nama_operator) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(jp.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(dbx.kategori) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
+            }
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->groupStart();
+                        $builder->where('uk.id_perusahaan', 1);
+                        $builder->orWhere('uk.id_perusahaan IS NULL');
+                    $builder->groupEnd();
+                } else {
+                    $builder->where('uk.id_perusahaan', $params['id_perusahaan']);
+                }
             }
 
             if (!empty($order)) {
@@ -77,6 +91,8 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->join($this->tblGudang . " abx", "uk.id_gudang = abx.id", "left");
         $builder->join($this->tblKategori . " dbx", "uk.id_kategori = dbx.id", "inner");
         $builder->join($this->tblBuyer . " ebx", "uk.id_buyer = ebx.id", "left");
+        $builder->join('_jenis_proses_produksi jp', 'jp.id = uk.id_proses', 'left');
+        $builder->join('ref_operator rp', 'rp.id = uk.id_cmt', 'left');
         $builder->select("count(1) as _cnt");
         $builder->where('uk.jenis_transaksi', $this->kd);
         $builder->where('uk.active = 1');
@@ -86,7 +102,22 @@ class BarangMasukModel extends \App\Models\PrModel
             $builder->Where('LOWER(uk.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(abx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(ebx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(uk.no_ref_trf) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(rp.nama_operator) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(jp.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(dbx.kategori) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->groupStart();
+                        $builder->where('uk.id_perusahaan', 1);
+                        $builder->orWhere('uk.id_perusahaan IS NULL');
+                    $builder->groupEnd();
+                } else {
+                    $builder->where('uk.id_perusahaan', $params['id_perusahaan']);
+                }
+            }
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
@@ -94,7 +125,7 @@ class BarangMasukModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function get_export($from_date = null, $to_date = null){
+    function get_export($from_date = null, $to_date = null, $id_perusahaan = null){
         $builder = $this->db->table("trans_barang_masuk_produksi tbmp");
         $builder->join($this->table . " uk", "tbmp.id_header = uk.id", "inner");
         $builder->join($this->tblGudang . " abx", "uk.id_gudang = abx.id", "left");
@@ -110,42 +141,86 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->where("tbmp.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
         $builder->orderBy("tbmp.tgl_transaksi", "desc");
         
+        if (!empty($id_perusahaan)) {
+            if ($id_perusahaan == 1) {
+                $builder->groupStart();
+                    $builder->where('uk.id_perusahaan', 1);
+                    $builder->orWhere('uk.id_perusahaan IS NULL');
+                $builder->groupEnd();
+            } else {
+                $builder->where('uk.id_perusahaan', $id_perusahaan);
+            }
+        }
+
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
 
-    function generateKodePersediaan($type = null)
+    function generateKodePersediaan($type = null, $id_perusahaan = null)
     {
         $kd = "BTM";
         $builder = $this->db->table($this->table . ' a');
-        if (!empty($type)) {
-            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 5 ) AS kode ");
-        }
-        else {
-            $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
-        }
-        $builder->where("LEFT(kode_transaksi, 3) = '$kd'");
-
-        $builder->orderBy('a.id', "DESC");
-        $builder->limit(1);
-        $query = $builder->get()->getRow();
-
-        if ($query != NULL) {
-            if ($query->tgl == $kd . date('y') . date('m')) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
-                //jika tahun dan bulan ternyata sudah ada.      
-                // $data = $query->row();
-                $kode = intval($query->kode) + 1;
+        if (!empty($id_perusahaan) && $id_perusahaan != 1) {
+            $kd = "BTMC";
+            if (!empty($type)) {
+                $builder->select("LEFT(kode_transaksi, 8) AS tgl, RIGHT( kode_transaksi, 5 ) AS kode ");
+            }
+            else {
+                $builder->select("LEFT(kode_transaksi, 8) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+            }
+            $builder->where("LEFT(kode_transaksi, 4) = '$kd'");
+    
+            $builder->orderBy('a.id', "DESC");
+            $builder->limit(1);
+            $query = $builder->get()->getRow();
+    
+            if ($query != NULL) {
+                if ($query->tgl == $kd . date('y') . date('m')) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
+                    //jika tahun dan bulan ternyata sudah ada.      
+                    // $data = $query->row();
+                    $kode = intval($query->kode) + 1;
+                } else {
+                    //jika tahun dan belum ada      
+                    $kode = 1;
+                }
             } else {
-                //jika tahun dan belum ada      
                 $kode = 1;
             }
-        } else {
-            $kode = 1;
+    
+            $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
+            $kodejadi = $kd . date('y') . date('m') . $kodemax;
         }
-
-        $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
-        $kodejadi = $kd . date('y') . date('m') . $kodemax;
-
+        else {
+            if (!empty($type)) {
+                $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 5 ) AS kode ");
+            }
+            else {
+                $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+            }
+            $builder->where("LEFT(kode_transaksi, 3) = '$kd'");
+            $builder->where("LEFT(kode_transaksi, 4) != 'BTMC'");
+    
+            $builder->orderBy('a.id', "DESC");
+            $builder->limit(1);
+            $query = $builder->get()->getRow();
+    
+            if ($query != NULL) {
+                if ($query->tgl == $kd . date('y') . date('m')) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
+                    //jika tahun dan bulan ternyata sudah ada.      
+                    // $data = $query->row();
+                    $kode = intval($query->kode) + 1;
+                } else {
+                    //jika tahun dan belum ada      
+                    $kode = 1;
+                }
+            } else {
+                $kode = 1;
+            }
+    
+            $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
+            $kodejadi = $kd . date('y') . date('m') . $kodemax;
+        }
+        dd($kodejadi);
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }
@@ -171,7 +246,7 @@ class BarangMasukModel extends \App\Models\PrModel
                 ];
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
-                $data['kode_transaksi'] = $this->generateKodePersediaan("BTM");
+                $data['kode_transaksi'] = $this->generateKodePersediaan("BTM", $data['id_perusahaan']);
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 

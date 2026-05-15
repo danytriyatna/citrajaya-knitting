@@ -31,7 +31,19 @@ class KaryawanModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(ky.email) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(ky.posisi) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(ky.alamat) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->orWhere('LOWER(rp.nama_perusahaan) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
+            }
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->groupStart();
+                        $builder->where('ky.id_perusahaan', 1);
+                        $builder->orWhere('ky.id_perusahaan IS NULL');
+                    $builder->groupEnd();
+                } else {
+                    $builder->where('ky.id_perusahaan', $params['id_perusahaan']);
+                }
             }
 
             if(!empty($params['nip'])){
@@ -71,13 +83,27 @@ class KaryawanModel extends \App\Models\PrModel
 
         $builder->where('ky.active = 1');
 
+        $builder->join("ref_perusahaan rp", "ky.id_perusahaan = rp.id", "left");
+
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
             $builder->where('LOWER(ky.full_name) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(ky.email) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(ky.posisi) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(ky.alamat) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(rp.nama_perusahaan) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+        }
+
+        if (!empty($params['id_perusahaan'])) {
+            if ($params['id_perusahaan'] == 1) {
+                $builder->groupStart();
+                    $builder->where('ky.id_perusahaan', 1);
+                    $builder->orWhere('ky.id_perusahaan IS NULL');
+                $builder->groupEnd();
+            } else {
+                $builder->where('ky.id_perusahaan', $params['id_perusahaan']);
+            }
         }
 
         if(!empty($params['nip'])){

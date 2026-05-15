@@ -23,50 +23,82 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
-          <div class="row">
-            <div class="col-md-12 mb-3">
-              <?php if (isset($_SESSION['message'])) { ?>
-                <script type="text/javascript">
-                  window.setTimeout(function() {
-                    $(".alert").alert('close');
-                  }, 3000);
-                </script>
-                <div class="alert alert-success">
-                  <?php echo $_SESSION['message']; ?>
-                </div>
-              <?php } ?>
-              <?php if (isset($_SESSION['err'])) { ?>
-                <script type="text/javascript">
-                  window.setTimeout(function() {
-                    $(".alert").alert('close');
-                  }, 5000);
-                </script>
-                <div class="alert alert-error">
-                  <strong>Warning! </strong><?php echo $_SESSION['err']; ?>
-                </div>
-              <?php } ?>
-            </div>
-            <div class="col-sm-1 mb-3">
+
+          <div class="row align-items-center g-2 mb-3">
+
+            <!-- Tambah Button - paling kiri -->
+            <div class="col-sm-auto">
               <a href="trans/incoming-goods/form" type="button" class="btn btn-sm btn-success" id="btn-add"> <i class="fa fa-plus"></i> Tambah</a>
             </div>
-            <div class="col-sm-2 mb-3">
-              <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="FROM DATE">
+
+            <!-- Filter Buyer -->
+            <div class="col-sm-2">
+              <select id="filter_perusahaan" name="filter_perusahaan"
+                class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
+                <option value="all" selected>Semua Perusahaan</option>
+                <?php foreach ($perusahaan as $item) : ?>
+                  <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
-            <div class="col-sm-2 mb-3">
-              <input type="text" id="to_date" name="to_date" class="form-control datepickerx" placeholder="TO DATE">
+
+            <!-- From Date -->
+            <div class="col-sm-2">
+              <input type="text" id="from_date" name="from_date"
+                class="form-control datepickerx" placeholder="FROM DATE">
             </div>
-            <div class="col-sm-2 mb-3">
-              <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Print</button>
+
+            <!-- To Date -->
+            <div class="col-sm-2">
+              <input type="text" id="to_date" name="to_date"
+                class="form-control datepickerx" placeholder="TO DATE">
             </div>
-            <div class="col-sm-4">
-              <div class="form-group">
-                <div class="input-group mb-3">
-                  <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                  <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                </div>
+
+            <!-- Print Button -->
+            <div class="col-sm-auto">
+              <button id="btn_excel" class="btn btn-success open_form" type="button">
+                <i class="fa fa-file-excel me-1"></i> Print
+              </button>
+            </div>
+
+            <!-- Spacer -->
+            <div class="col"></div>
+
+            <!-- Search - selalu paling kanan -->
+            <div class="col-sm-2">
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="ti-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0" id="tb-search"
+                  placeholder="Pencarian...">
               </div>
             </div>
+
           </div>
+
+          <!-- Flash Message -->
+          <?php if (isset($_SESSION['message'])) : ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="fa fa-check-circle me-1"></i>
+              <?= $_SESSION['message'] ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <script>
+              setTimeout(() => document.querySelector('.alert-success')?.remove(), 3000);
+            </script>
+          <?php endif; ?>
+
+          <?php if (isset($_SESSION['err'])) : ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="fa fa-exclamation-triangle me-1"></i>
+              <strong>Warning!</strong> <?= $_SESSION['err'] ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <script>
+              setTimeout(() => document.querySelector('.alert-danger')?.remove(), 5000);
+            </script>
+          <?php endif; ?>
 
           <div class="row">
             <div class="col-sm-12">

@@ -202,4 +202,20 @@ class RefOperator extends BaseController
         }
         return redirect()->to($this->urlv);
     }
+
+    public function getOperator()
+    {
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
+
+        $params = [
+            'id_perusahaan' => $id_perusahaan
+        ];
+
+        $data = $this->mOperator->getData(null, 0, 99999, null, null, $params);
+
+        return $this->response->setJSON([
+            'status' => true,
+            'data'   => $data
+        ]);
+    }
 }

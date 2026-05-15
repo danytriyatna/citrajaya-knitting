@@ -2,23 +2,24 @@
 
 namespace Modules\Transaction\Controllers;
 
-use App\Models\FileModel;
-use App\Libraries\DompdfGenerator;
 use App\Controllers\BaseController;
+use App\Libraries\DompdfGenerator;
+use App\Models\FileModel;
 use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\GudangModel;
-use Modules\Referensi\Models\SatuanModel;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Referensi\Models\KonsumenModel;
 use Modules\Referensi\Models\OperatorModel;
-use Modules\Referensi\Models\JenisBarangModel;
-use Modules\Transaction\Models\BarangMasukModel;
+use Modules\Referensi\Models\PerusahaanModel;
 use Modules\Referensi\Models\ProsesProduksiModel;
-use Modules\Transaction\Models\ItemTransferModel;
-use Modules\Transaction\Models\IncomingGoodsModel;
+use Modules\Referensi\Models\SatuanModel;
 use Modules\Transaction\Models\BarangMasukDetailModel;
+use Modules\Transaction\Models\BarangMasukModel;
+use Modules\Transaction\Models\IncomingGoodsModel;
 use Modules\Transaction\Models\ItemTransferDetailModel;
+use Modules\Transaction\Models\ItemTransferModel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 
 class BarangMasuk extends BaseController
@@ -35,6 +36,7 @@ class BarangMasuk extends BaseController
     protected $mOperator;
     protected $mkonsumen;
     protected $mProses;
+    protected $mPerusahaan;
 
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/incoming-goods';
@@ -55,6 +57,7 @@ class BarangMasuk extends BaseController
         $this->mOperator = new OperatorModel();
         $this->mkonsumen = new KonsumenModel();
         $this->mProses = new ProsesProduksiModel();
+        $this->mPerusahaan = new PerusahaanModel();
     }
 
     public function index()
@@ -78,11 +81,18 @@ class BarangMasuk extends BaseController
                 'dir' => 'ASC'
             ]
         ];
+        $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
 
         $dataSatuan = $this->mSatuan->getData(null, 0, 99999, $sortSatuan);
         $dataJenisBarang = $this->mJenisBarang->getData(null, 0, 99999, $sortJenisBarang);
         $this->data['satuan'] = $dataSatuan;
         $this->data['jenisBarang'] = $dataJenisBarang;
+        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
         return view($this->views . '\barang_masuk_list', $this->data);
     }
 
@@ -94,7 +104,11 @@ class BarangMasuk extends BaseController
         $filters    = $this->request->getPost('filter');
         $order      = $this->request->getPost('sort');
 
-        $params = [];
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
+
+        $params = [
+            'id_perusahaan' => $id_perusahaan
+        ];
 
         $results = $this->mRef->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mRef->getDataCnt($filters, $params);
@@ -246,11 +260,19 @@ class BarangMasuk extends BaseController
             [
                 'field' => 'nama_operator',
                 'dir' => 'ASC'
-                ]
-            ];
-        $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
+            ]
+        ];
+        $sortPerusahaan = [
+        [
+            'field' => 'nama_perusahaan',
+            'dir' => 'ASC'
+            ]
+        ];
+        $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator, null, array("id_perusahaan" => $resData->id_perusahaan ?? null));
+        $resDataPerusahaan = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
         $this->data['kategori']    = $reDataKategori;
         $this->data['gudang']    = $resDataGudang;
+        $this->data['perusahaan']    = $resDataPerusahaan;
         $this->data['proses']    = $resDataProses;
         $this->data['data_cmt']    = $resDataOperator;
         // dd($this->data['resData']);
@@ -278,6 +300,7 @@ class BarangMasuk extends BaseController
         $tanggal = $this->request->getPost('tanggal');
         $statusData = $this->request->getPost('status');
         $id_gudang = $this->request->getPost('id_gudang');
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
         $id_buyer = $this->request->getPost('id_buyer');
         $id_kategori = $this->request->getPost('id_kategori');
         $nama = $this->request->getPost('nama');
@@ -306,6 +329,7 @@ class BarangMasuk extends BaseController
             "status" => $statusData,
             "jenis_transaksi" => 1,
             "id_gudang" => $id_gudang,
+            "id_perusahaan" => $id_perusahaan,
             "id_kategori" => $id_kategori,
             "no_ref_trf" => $no_ref_trf,
             "keterangan" => $keterangan,
@@ -533,13 +557,13 @@ class BarangMasuk extends BaseController
 
         $fileName = "BTM-List.xlsx";
 
-        $id = $this->request->getGet('data_id');
+        $id_perusahaan = $this->request->getGet('id_perusahaan');
 
         $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
         $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
+        $id_perusahaan = !empty($id_perusahaan) ? $id_perusahaan : null;
 
-        $results = $this->mRef->get_export($tanggal_sql_from, $tanggal_sql_to);
-        
+        $results = $this->mRef->get_export($tanggal_sql_from, $tanggal_sql_to, $id_perusahaan);
 
         //start phpspreadsheet
         $sheets    = new Spreadsheet;

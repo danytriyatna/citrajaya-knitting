@@ -28,6 +28,10 @@ class PerusahaanModel extends \App\Models\PrModel
                 $builder->groupEnd();
             }
 
+            if(!empty($params['id'])){
+                $builder->where('uk.id', $params['id']);
+            }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -61,6 +65,10 @@ class PerusahaanModel extends \App\Models\PrModel
             $builder->groupStart();
             $builder->where('LOWER(uk.nama_perusahaan) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+
+            if(!empty($params['id'])){
+                $builder->where('uk.id', $params['id']);
+            }
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

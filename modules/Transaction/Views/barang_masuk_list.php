@@ -35,9 +35,14 @@
             <div class="col-sm-2">
               <select id="filter_perusahaan" name="filter_perusahaan"
                 class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
-                <option value="all" selected>Semua Perusahaan</option>
+                <?php if ($superadmin == true) : ?>
+                  <option value="all" selected>Semua Perusahaan</option>
+                <?php endif; ?>
                 <?php foreach ($perusahaan as $item) : ?>
-                  <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                  <option <?= $user_perusahaan == $item->id ? 'selected' : '' ?>
+                    value="<?= $item->id ?>">
+                    <?= $item->nama_perusahaan ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
             </div>

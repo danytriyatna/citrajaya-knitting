@@ -50,7 +50,20 @@ class Penggajian extends BaseController
                 'dir' => 'ASC'
             ]
         ];
-    $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+    $this->data['superadmin'] = $this->auth->isSuperadmin();
+    if (!$this->auth->isSuperadmin()) {
+        if (empty($this->currentUser->id_perusahaan)) {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+        }
+        $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+    }
+    else {
+        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+        $this->data['user_perusahaan'] = null;
+    }
     
     return view($this->views . '\penggajian_list', $this->data);
   }
@@ -302,8 +315,20 @@ class Penggajian extends BaseController
         'dir' => 'ASC'
         ]
     ];
-    $resDataPerusahaan = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
-    $this->data['perusahaan'] = $resDataPerusahaan;
+    $this->data['superadmin'] = $this->auth->isSuperadmin();
+    if (!$this->auth->isSuperadmin()) {
+        if (empty($this->currentUser->id_perusahaan)) {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+        }
+        $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+    }
+    else {
+        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+        $this->data['user_perusahaan'] = null;
+    }
     $this->data['disabled_input'] = $is_read;
     $show_approve_btn = false; 
     $show_reject_btn = false; 

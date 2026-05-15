@@ -132,7 +132,7 @@ class UserModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " u");
 
         $builder->select("u.id, u.username, u.prefix,u.full_name, u.email, u.created_on, u.last_login, u.active, u.nip,u.file_id_photo, 
-            ur.role_id, r.name as role_name, u.phone");
+            ur.role_id, r.name as role_name, u.phone, u.id_perusahaan ");
         $builder->join("sec_user_role ur", "ur.user_id=u.id", "inner");
         $builder->join("sec_role r", "r.id=ur.role_id", "inner");
 

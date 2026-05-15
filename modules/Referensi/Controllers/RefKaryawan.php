@@ -47,8 +47,21 @@ class RefKaryawan extends BaseController
         $dataCMT = $this->mOperator->getData(null, 0, 99999, $sortCMT);
         $this->data['titlehead'] = "Master Data Karyawan";
         $this->data['cmt'] = $dataCMT;
-        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
-
+        
+        $this->data['superadmin'] = $this->auth->isSuperadmin();
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+            }
+            else {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+            $this->data['user_perusahaan'] = null;
+        }
         return view($this->views.'\karyawan\index', $this->data);
     }
 
@@ -64,6 +77,16 @@ class RefKaryawan extends BaseController
         $params = [
             'id_perusahaan' => $id_perusahaan
         ];
+
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $params['id_perusahaan'] = 1;
+            }
+            else {
+                $params['id_perusahaan'] = $this->currentUser->id_perusahaan;
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
 
         $results = $this->mkaryawan->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mkaryawan->getDataCnt($filters, $params);

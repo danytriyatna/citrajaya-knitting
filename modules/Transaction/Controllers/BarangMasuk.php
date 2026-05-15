@@ -92,7 +92,20 @@ class BarangMasuk extends BaseController
         $dataJenisBarang = $this->mJenisBarang->getData(null, 0, 99999, $sortJenisBarang);
         $this->data['satuan'] = $dataSatuan;
         $this->data['jenisBarang'] = $dataJenisBarang;
-        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+        $this->data['superadmin'] = $this->auth->isSuperadmin();
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+            }
+            else {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+            $this->data['user_perusahaan'] = null;
+        }
         return view($this->views . '\barang_masuk_list', $this->data);
     }
 
@@ -109,6 +122,16 @@ class BarangMasuk extends BaseController
         $params = [
             'id_perusahaan' => $id_perusahaan
         ];
+
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $params['id_perusahaan'] = 1;
+            }
+            else {
+                $params['id_perusahaan'] = $this->currentUser->id_perusahaan;
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
 
         $results = $this->mRef->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mRef->getDataCnt($filters, $params);
@@ -269,10 +292,22 @@ class BarangMasuk extends BaseController
             ]
         ];
         $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator, null, array("id_perusahaan" => $resData->id_perusahaan ?? null));
-        $resDataPerusahaan = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
         $this->data['kategori']    = $reDataKategori;
         $this->data['gudang']    = $resDataGudang;
-        $this->data['perusahaan']    = $resDataPerusahaan;
+        $this->data['superadmin'] = $this->auth->isSuperadmin();
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+            }
+            else {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+            $this->data['user_perusahaan'] = null;
+        }
         $this->data['proses']    = $resDataProses;
         $this->data['data_cmt']    = $resDataOperator;
         // dd($this->data['resData']);

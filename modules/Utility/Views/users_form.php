@@ -140,6 +140,26 @@
                             </div>
 
                             <div class="row form-group">
+                                <?php echo form_label('Perusahaan*', 'idperusahaan', $label) ?>
+                                <div class="col-md-8">
+                                    <?php
+                                    $attr = 'id="id_perusahaan" class="form-control select2" data-placeholder="-- Pilih Perusahaan --" required ';
+                                    $selected_perusahaan = '';
+                                    if (isset($user->id_perusahaan) && trim($user->id_perusahaan) != '') $selected_perusahaan = $user->id_perusahaan;
+                                    echo form_dropdown('id_perusahaan', $perusahaan, $selected_perusahaan, $attr);
+                                    ?>
+                                    <div class="invalid-feedback">
+                                        Harap pilih Perusahaan
+                                    </div>
+                                    <?php if ($selected_perusahaan == '') : ?>
+                                    <script>
+                                        document.getElementById("id_perusahaan").value = null;
+                                    </script>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="row form-group">
                                 <?php echo form_label('User Role*', 'userrole', $label) ?>
                                 <div class="col-md-8">
                                     <?php

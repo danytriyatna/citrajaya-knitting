@@ -85,7 +85,9 @@
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="id_perusahaan">&nbsp;</label>
                   <select <?= empty($id) ? '' : 'disabled' ?> id="id_perusahaan" name="id_perusahaan" class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
-                    <option value="" selected disabled>-- Pilih Perusahaan --</option>
+                    <?php if ($superadmin == true) : ?>
+                            <option value="" selected disabled>-- Pilih Perusahaan --</option>
+                    <?php endif; ?>
                     <?php foreach ($perusahaan as $item) : ?>
                       <?php if (!empty($row->id_perusahaan) && $row->id_perusahaan == $item->id) { ?>
                         <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>

@@ -6,11 +6,13 @@ use App\Controllers\BaseController;
 use App\Models\FileModel;
 use Modules\Utility\Models\ModuleModel;
 use Modules\Utility\Models\UserModel;
+use Modules\Referensi\Models\PerusahaanModel;
 
 class Users extends BaseController
 {
     protected $users;
     protected $modules;
+    protected $mPerusahaan;
 
     function __construct()
     {
@@ -18,6 +20,7 @@ class Users extends BaseController
      
         $this->users = new UserModel();
         $this->modules = new ModuleModel();
+        $this->mPerusahaan = new PerusahaanModel();
         $this->files = new FileModel();
     }
 
@@ -30,7 +33,7 @@ class Users extends BaseController
         $this->data['titlehead'] = "Daftar Pengguna";
 
         $this->data['list_roles'] = $this->modules->getRoles();
-
+        
         return view('\Modules\Utility\Views\users', $this->data);
     }
 
@@ -315,6 +318,7 @@ class Users extends BaseController
             $password       = $this->request->getPost('password');
             $email          = $this->request->getPost('email');
             $role_id        = $this->request->getPost('role_id');
+            $id_perusahaan  = $this->request->getPost('id_perusahaan');
             $file_id_photo_old  = $this->request->getPost('file_id_photo_old');
                                    
             if( $id > 0 AND $this->request->getPost('id')) { // update
@@ -324,6 +328,7 @@ class Users extends BaseController
                     'username' => $username,
                     'nip' => $nip,
                     'full_name' => $full_name,
+                    'id_perusahaan' => $id_perusahaan,
                     //'prefix' => $prefix,
                     'email' => $email,
                 );
@@ -455,6 +460,7 @@ class Users extends BaseController
                     //$user->prefix = $this->request->getPost('prefix');
                     $user->email = $this->request->getPost('email');
                     $user->role_id = $this->request->getPost('role_id');
+                    $user->id_perusahaan = $this->request->getPost('id_perusahaan');
                     $user->photo = $this->request->getPost('photo');
                    // $user->prefix = $this->request->getPost('prefix');
 
@@ -534,6 +540,18 @@ class Users extends BaseController
             'class' => 'form-control',
             'accept' => 'image/webp, image/jpeg, image/png'
         );
+
+        $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
+        $perusahaan = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+        foreach ($perusahaan as $row) {
+            $list_perusahaan[$row->id] = $row->nama_perusahaan;
+        }
+        $this->data['perusahaan'] = $list_perusahaan;
         
         $this->data['file_id_photo_old'] = ($user->file_id_photo)?$user->file_id_photo:"";
         $this->data['view_photo'] = $showPhoto;

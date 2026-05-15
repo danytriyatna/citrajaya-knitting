@@ -80,6 +80,24 @@
                 </div>
               </div>
             </div>
+            <div class="col-sm-2">
+              <div class="form-group row mb-3">
+                <div class="col-md-12">
+                  <label class="control-label text-start col-form-label" for="id_perusahaan">&nbsp;</label>
+                  <select <?= empty($id) ? '' : 'disabled' ?> id="id_perusahaan" name="id_perusahaan" class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
+                    <option value="" selected disabled>-- Pilih Perusahaan --</option>
+                    <?php foreach ($perusahaan as $item) : ?>
+                      <?php if (!empty($row->id_perusahaan) && $row->id_perusahaan == $item->id) { ?>
+                        <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                      <?php } else { ?>
+                        <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                      <?php } ?>
+
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+            </div>
             <?php if(empty($id) || $row->status != 2) {?>
               <div class="col-sm-3 align-self-end mb-3">
                 <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button>

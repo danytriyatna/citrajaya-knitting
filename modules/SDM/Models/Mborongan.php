@@ -65,6 +65,27 @@ class Mborongan extends \App\Models\PrModel
                 $builder->where('pd.id_proses', $params['id_proses']);
             }
 
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->whereIn('rp.id', function($subquery) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->groupStart()
+                                    ->where('id_perusahaan', 1)
+                                    ->orWhere('id_perusahaan IS NULL')
+                                ->groupEnd()
+                                ->where('id_operator IS NOT NULL');
+                    });
+                } else {
+                    $builder->whereIn('rp.id', function($subquery) use ($params) {
+                        $subquery->select('id_operator')
+                                ->from('ref_karyawan')
+                                ->where('id_perusahaan', $params['id_perusahaan'])
+                                ->where('id_operator IS NOT NULL');
+                    });
+                }
+            }
+
             // $builder->where('(pd.active = 1 and tp.active = 1)');
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
@@ -82,7 +103,7 @@ class Mborongan extends \App\Models\PrModel
             $this->_data = $builder->get()->getResult();
             // print_r($this->_data);exit;
         } else {
-            $builder->where("uk.id", $id);
+            $builder->where("pd.id", $id);
 
             $this->_data = $builder->get()->getRow();
         }
@@ -120,6 +141,27 @@ class Mborongan extends \App\Models\PrModel
 
         if(!empty($params['id_proses'])){
             $builder->where('pd.id_proses', $params['id_proses']);
+        }
+
+        if (!empty($params['id_perusahaan'])) {
+            if ($params['id_perusahaan'] == 1) {
+                $builder->whereIn('rp.id', function($subquery) {
+                    $subquery->select('id_operator')
+                            ->from('ref_karyawan')
+                            ->groupStart()
+                                ->where('id_perusahaan', 1)
+                                ->orWhere('id_perusahaan IS NULL')
+                            ->groupEnd()
+                            ->where('id_operator IS NOT NULL');
+                });
+            } else {
+                $builder->whereIn('rp.id', function($subquery) use ($params) {
+                    $subquery->select('id_operator')
+                            ->from('ref_karyawan')
+                            ->where('id_perusahaan', $params['id_perusahaan'])
+                            ->where('id_operator IS NOT NULL');
+                });
+            }
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

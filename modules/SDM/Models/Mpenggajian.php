@@ -19,8 +19,8 @@ class Mpenggajian extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " sdm");
 
-        $builder->select("sdm.id, sdm.periode_awal, sdm.periode_akhir, sdm.status, sdm.keterangan, sdm.kode_gaji, sdm.type");
-
+        $builder->select("sdm.id, sdm.periode_awal, sdm.periode_akhir, sdm.status, sdm.keterangan, sdm.kode_gaji, sdm.type, sdm.id_perusahaan, rp.nama_perusahaan");
+        $builder->join("ref_perusahaan rp", "sdm.id_perusahaan = rp.id", 'left');
         if ($id == null or $id == "") {
             $builder->where('sdm.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
@@ -28,6 +28,17 @@ class Mpenggajian extends \App\Models\PrModel
                 $builder->where('LOWER(sdm.kode_gaji) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(sdm.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
+            }
+
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $builder->groupStart();
+                        $builder->where('sdm.id_perusahaan', 1);
+                        $builder->orWhere('sdm.id_perusahaan IS NULL');
+                    $builder->groupEnd();
+                } else {
+                    $builder->where('sdm.id_perusahaan', $params['id_perusahaan']);
+                }
             }
             
             if(!empty($params['periode_awal'])){
@@ -71,6 +82,17 @@ class Mpenggajian extends \App\Models\PrModel
             $builder->groupStart();
             $builder->where('LOWER(sdm.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+        }
+
+        if (!empty($params['id_perusahaan'])) {
+            if ($params['id_perusahaan'] == 1) {
+                $builder->groupStart();
+                    $builder->where('sdm.id_perusahaan', 1);
+                    $builder->orWhere('sdm.id_perusahaan IS NULL');
+                $builder->groupEnd();
+            } else {
+                $builder->where('sdm.id_perusahaan', $params['id_perusahaan']);
+            }
         }
  
         if(!empty($params['periode_awal'])){

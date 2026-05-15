@@ -3,37 +3,41 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "aksi", headerSort: false, formatter: "html",
-                width: 100
+                width: "7%"
             },
             
 			{
 				title: 'Kode', field: 'kode_gaji', headerSort:false, sorter: 'string',
-				width: 160, formatter : "html"
+				width: "10%", formatter : "html"
 			}, 
 				
 			{
 				title: 'Periode Awal', field: 'periode_awal', headerSort:false, sorter: 'string',
-				width: 140
+				width: "10%"
 			}, 
 
             {
 				title: 'Periode Akhir', field: 'periode_akhir', headerSort:false, sorter: 'string',
-				width: 140
+				width: "10%"
 			}, 
 
             {
 				title: 'Tipe', field: 'type', headerSort:false, sorter: 'string',
-				width: 140
+				width: "8%"
 			}, 
+            {
+				title: 'Perusahaan', field: 'nama_perusahaan', headerSort:false, sorter: 'string',
+				width: "15%"
+			},
 
             {
 				title: 'Keterangan', field: 'keterangan', headerSort:false, sorter: 'string',
-				formatter : "html"
+				width: "30%", formatter : "html"
 			},
 
             {
 				title: 'Status', field: 'status', headerSort:false, sorter: 'string',
-				width: 120, align:'center',
+				width: "10%", align:'center',
 			},
 				
         ],
@@ -46,6 +50,11 @@ $(document).ready(function () {
         sortMode: "remote",
         filterMode: "remote",
         minHeight: 300,
+        ajaxParams: function () {
+            return {
+                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
+            };
+        },
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -84,6 +93,10 @@ $(document).ready(function () {
             sorters: "order"
         },
         selectableRows: false,
+    });
+
+    $("#filter_perusahaan").on("change", function () {
+        dtList.setPage(1); // balik ke halaman 1, otomatis trigger ajax baru
     });
 
     let searchThread = null;

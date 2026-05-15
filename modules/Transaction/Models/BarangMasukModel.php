@@ -220,7 +220,6 @@ class BarangMasukModel extends \App\Models\PrModel
             $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
             $kodejadi = $kd . date('y') . date('m') . $kodemax;
         }
-        dd($kodejadi);
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }

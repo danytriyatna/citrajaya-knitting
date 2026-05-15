@@ -3,6 +3,7 @@ $(document).ready(function () {
     const inpKeterangan = $("#keterangan");
     const inpTglAwal = $("#filter_tgl_from");
     const inpTglAkhir = $("#filter_tgl_to");
+    let inpPerusahaan = $("#id_perusahaan");
     const inpid = $("#id_transaksi");
     const inpDet = $("#detailData");
 
@@ -247,10 +248,20 @@ $(document).ready(function () {
         const tglA = inpTglA.val();
         const tglZ = inpTglS.val();
         const cmt = inpCmt.val();
+        const perusahaan = inpPerusahaan.val();
+        if (perusahaan == null || perusahaan.length == 0) {
+            Swal.fire({
+                text: "Harap Pilih Perusahaan Dahulu!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            return false;
+        }
         $.ajax({
             url: 'sdm/penggajian/get_laporan', // point to server-side controller method
             dataType: 'json', // what to expect back from the server
-            data: {tgl_mulai : tglA, tgl_akhir : tglZ, type : cmt},
+            data: {tgl_mulai : tglA, tgl_akhir : tglZ, type : cmt, id_perusahaan : perusahaan},
             type : 'post',
             beforeSend: function () {
                 Swal.fire({

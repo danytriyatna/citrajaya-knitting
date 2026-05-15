@@ -43,6 +43,19 @@
                 </div>
               </div>
             </div>
+            <div class="col-sm-2">
+              <div class="form-group m-b-0 d-flex align-items-center">
+                <div class="col-md-12">
+                  <label class="control-label text-start col-form-label" for="filter_perusahaan">Perusahaan</label>
+                  <select id="filter_perusahaan" name="filter_perusahaan" class="form-control custom-select select2">
+                    <option value="all" selected>Semua Perusahaan</option>
+                    <?php foreach ($perusahaan as $item) : ?>
+                      <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+            </div>
             <div class="col-sm-2" hidden>
               <div class="form-group m-b-0 d-flex align-items-center">
                 <div class="col-md-12">

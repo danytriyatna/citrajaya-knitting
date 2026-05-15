@@ -184,6 +184,17 @@ class Mabsensi extends \App\Models\PrModel
             $builder->where("sdm.tgl_absen <=", $params['tgl_akhir']);
         }
 
+        if (!empty($params['id_perusahaan'])) {
+            if ($params['id_perusahaan'] == 1) {
+                $builder->groupStart();
+                    $builder->where('rk.id_perusahaan', 1);
+                    $builder->orWhere('rk.id_perusahaan IS NULL');
+                $builder->groupEnd();
+            } else {
+                $builder->where('rk.id_perusahaan', $params['id_perusahaan']);
+            }
+        }
+
         if (!empty($params['type']) && $params['type'] == 2) {
             if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
                 $startDate = $params['tgl_mulai'];

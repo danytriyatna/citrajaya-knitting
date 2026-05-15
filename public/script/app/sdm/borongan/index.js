@@ -231,6 +231,7 @@ $(document).ready(function () {
             params.tgl_akhir = formatLocaleDate(inpTglAkhir.val())
             params.id_operator = (inpOperator.val())
             params.id_proses = (inpProses.val())
+            params.id_perusahaan = $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();
@@ -274,7 +275,6 @@ $(document).ready(function () {
 
     $(".btn-print-new").on("click", function() {
         // Ambil data dari atribut tombol
-        alert("wewe");
         var id_proses = $(this).data("id_proses");
         var id_operator = $(this).data("id_operator");
 

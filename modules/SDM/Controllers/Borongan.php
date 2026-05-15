@@ -14,6 +14,7 @@ use Modules\SDM\Models\Mborongan;
 use Modules\Referensi\Models\ShiftModel;
 use Modules\Referensi\Models\ProsesProduksiModel;
 use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\PerusahaanModel;
 
 // user library spreadsheet for excel
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -34,6 +35,7 @@ class Borongan extends BaseController
   protected $mborongan;
   protected $mproses;
   protected $moperator;
+  protected $mPerusahaan;
 
   function __construct()
   {
@@ -44,6 +46,7 @@ class Borongan extends BaseController
       $this->mborongan = new Mborongan();
       $this->mproses = new ProsesProduksiModel();
       $this->moperator = new OperatorModel();
+      $this->mPerusahaan = new PerusahaanModel;
   }
 
   public function index()
@@ -59,6 +62,13 @@ class Borongan extends BaseController
     $this->data['dnow'] = date('d-m-Y');
     $this->data['proses']    = $dataProses;
     $this->data['operator']    = $dataOperator;
+    $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
+    $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
     return view($this->views . '\borongan_list', $this->data);
   }
 
@@ -72,6 +82,7 @@ class Borongan extends BaseController
       $tgl_akhir      = $this->request->getPost('tgl_akhir');
       $id_operator = $this->request->getPost('id_operator');
       $id_proses = $this->request->getPost('id_proses');
+      $id_perusahaan = $this->request->getPost('id_perusahaan');
 
       // $params = [];
 
@@ -79,6 +90,9 @@ class Borongan extends BaseController
       $params['tgl_akhir'] = \fdate_ind_to_eng($tgl_akhir);
       $params['id_operator'] = $id_operator;
       $params['id_proses'] = $id_proses;    
+      if(!empty($id_perusahaan)){
+        $params['id_perusahaan'] = $id_perusahaan;
+      }
 
       $results = $this->mborongan->getData(null, 0, 99999, $order, $filters, $params);
       $totalfiltered = $this->mborongan->getDataCnt($filters, $params);

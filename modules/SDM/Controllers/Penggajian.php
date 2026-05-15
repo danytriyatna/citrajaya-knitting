@@ -12,6 +12,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Modules\Referensi\Models\KaryawanModel;
 use Modules\Referensi\Models\JenisBarangModel;
+use Modules\Referensi\Models\PerusahaanModel;
 
 class Penggajian extends BaseController
 {
@@ -22,6 +23,7 @@ class Penggajian extends BaseController
   protected $mkaryawan;
   protected $mgaji;
   protected $dnow;
+  protected $mPerusahaan;
 
   function __construct()
   {
@@ -30,6 +32,7 @@ class Penggajian extends BaseController
       $this->mabsen = new Mabsensi();
       $this->mkaryawan = new KaryawanModel();
       $this->mgaji = new Mpenggajian();
+      $this->mPerusahaan = new PerusahaanModel;
       $this->dnow        = date('Y-m-d H:i:s');
   }
 
@@ -40,6 +43,14 @@ class Penggajian extends BaseController
     }
 
     $this->data['titlehead'] = "Penggajian";
+
+    $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
+    $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
     
     return view($this->views . '\penggajian_list', $this->data);
   }
@@ -50,11 +61,11 @@ class Penggajian extends BaseController
       $limit   = $this->request->getPost('length');
       $filters = $this->request->getPost('filter');
       $order   = $this->request->getPost('order');
-      // $tahun   = $this->request->getPost('tahun');
+      $id_perusahaan = $this->request->getPost('id_perusahaan');
 
-      // $params['tahun'] = $tahun;
-      
-      $params = [];
+    $params = [
+        'id_perusahaan' => $id_perusahaan
+    ];
       $results = $this->mgaji->getData(null, $start, $limit, $order, $filters, $params);
       $totalfiltered = $this->mgaji->getDataCnt($filters, $params);
       $totaldata = $this->mgaji->getDataCnt(null, $params);
@@ -116,6 +127,7 @@ class Penggajian extends BaseController
               'periode_awal' => $periode_awal,
               'periode_akhir' => $periode_akhir,
               'keterangan' => $row->keterangan,
+              'nama_perusahaan' => $row->nama_perusahaan,
               'status' => $status,
               'type' => $type,
           ));
@@ -141,6 +153,7 @@ class Penggajian extends BaseController
       $stdData->periode_akhir = date('d-m-Y');
       $stdData->keterangan = '';
       $stdData->type = null;
+      $stdData->id_perusahaan = null;
       $stdData->status = 1;
 
       $Ldetail = "";
@@ -153,6 +166,7 @@ class Penggajian extends BaseController
         $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
         $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
         $stdData->type  = $stdData->type;
+        $stdData->id_perusahaan = $stdData->id_perusahaan;
         $this->data['row'] = $stdData;
 
         // set detail array
@@ -200,6 +214,7 @@ class Penggajian extends BaseController
             $stdData->periode_akhir = trim($this->request->getPost('filter_tgl_to'));
             $stdData->keterangan = trim($this->request->getPost('keterangan'));
             $stdData->type = trim($this->request->getPost('filter_cmt'));
+            $stdData->id_perusahaan = trim($this->request->getPost('id_perusahaan'));
 
             $action  =  trim($this->request->getPost('actionf'));
             $Ldetail =  trim($this->request->getPost('detailData'));
@@ -214,6 +229,7 @@ class Penggajian extends BaseController
                 $dataIn["periode_awal"] = fdate_ind_to_eng($stdData->periode_awal);
                 $dataIn["periode_akhir"] = fdate_ind_to_eng($stdData->periode_akhir);
                 $dataIn["type"] = $stdData->type;
+                $dataIn["id_perusahaan"] = $stdData->id_perusahaan;
                 $dataIn["keterangan"] = $stdData->keterangan;
                 $dataIn["status"] = $stdData->status;
 
@@ -280,6 +296,14 @@ class Penggajian extends BaseController
         $show_approve_btn = false; 
         $show_reject_btn = false; 
     }
+    $sortPerusahaan = [
+    [
+        'field' => 'nama_perusahaan',
+        'dir' => 'ASC'
+        ]
+    ];
+    $resDataPerusahaan = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+    $this->data['perusahaan'] = $resDataPerusahaan;
     $this->data['disabled_input'] = $is_read;
     $show_approve_btn = false; 
     $show_reject_btn = false; 
@@ -425,6 +449,7 @@ class Penggajian extends BaseController
     $tgl_mulai = $this->request->getPost('tgl_mulai');
     $tgl_akhir = $this->request->getPost('tgl_akhir');
     $type = $this->request->getPost('type');
+    $id_perusahaan = $this->request->getPost('id_perusahaan');
     $status = false;
     $msg = "Laporan Penggajian tidak ditemukan !";
     $data = [];
@@ -433,6 +458,7 @@ class Penggajian extends BaseController
     $params['tgl_mulai'] = \fdate_ind_to_eng($tgl_mulai);
     $params['tgl_akhir'] = \fdate_ind_to_eng($tgl_akhir);
     $params['type'] = $type;
+    $params['id_perusahaan'] = $id_perusahaan;
     $data_laporan = $this->mabsen->laporan_penggajian($params);
     // print_r($data_laporan);exit;
     if(!empty($data_laporan)){

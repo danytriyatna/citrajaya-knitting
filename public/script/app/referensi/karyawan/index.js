@@ -21,6 +21,7 @@ $(document).ready(function () {
     let inpPremiKehadiran    = $('#premi_kehadiran');
     let selectTipe = $('#tipe');
     let selectCMT = $('#id_cmt');
+    let selectPerusahaan = $('#id_perusahaan');
     let divCMT = $('#div-cmt');
 
     const fileKaryawan     = $('#fileKaryawan');
@@ -28,6 +29,23 @@ $(document).ready(function () {
     const linkFileKaryawan = $('#linkFileKaryawan');
 
     let isModal       = $("#modal-form-add-po");
+
+
+    $('#modal-form-add-po').on('hidden.bs.modal', function () {
+        var $modal = $(this);
+
+        // Reset input biasa
+        $modal.find('input[type="text"], input[type="number"], input[type="email"], textarea').val('');
+
+        // Reset checkbox & radio
+        $modal.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
+
+        // Reset select ke opsi pertama
+        $modal.find('select').prop('selectedIndex', 0).trigger('change');
+
+        // Reset file input
+        $modal.find('input[type="file"]').val('');
+    });
 
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
@@ -70,6 +88,7 @@ $(document).ready(function () {
                         inpTglBergabung.val(data_row.tgl_bergabung)
                         inpJenisKelamin.val(data_row.jenis_kelamin).trigger('change');
                         selectTipe.val(data_row.type).trigger("change")
+                        selectPerusahaan.val(data_row.id_perusahaan).trigger("change")
                         if(data_row.type == 1){
                             divCMT.addClass("d-none")
                             selectCMT.val("").trigger("change")
@@ -257,6 +276,8 @@ $(document).ready(function () {
         console.log("masuk inpPremiKehadiran", inpPremiKehadiran.val())
         if(selectTipe.val().length == 0) validation = false
         console.log("masuk selectTipe", selectTipe.val())
+        if(selectPerusahaan.val().length == 0) validation = false
+        console.log("masuk selectPerusahaan", selectPerusahaan.val())
 
         if(validation){
             var formData = new FormData();
@@ -280,6 +301,7 @@ $(document).ready(function () {
             formData.append("upah_jam", inpUpahPerjam.val());
             formData.append("premi_kehadiran", inpPremiKehadiran.val());
             formData.append("type", selectTipe.val());
+            formData.append("id_perusahaan", selectPerusahaan.val());
             formData.append("id_operator", selectCMT.val());
             $.ajax({
                 type: 'POST',

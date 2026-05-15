@@ -85,8 +85,21 @@
           <label class="col-md-3 col-form-label text-md-end" for="tipe">Tipe Karyawan</label>
           <div class="col-md-8">
             <select id="tipe" name="tipe" class="form-select select2">
+              <option value="" selected disabled>Pilih Tipe</option>
               <option value="1">NON CMT</option>
               <option value="2">CMT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="id_perusahaan">Perusahaan</label>
+          <div class="col-md-8">
+            <select id="id_perusahaan" name="id_perusahaan" class="form-control custom-select select2">
+              <option value="" selected disabled>Pilih Perusahaan</option>
+              <?php foreach ($perusahaan as $rowData) : ?>
+                <option value="<?= $rowData->id ?>"><?= $rowData->nama_perusahaan ?></option>
+              <?php endforeach ?>
             </select>
           </div>
         </div>
@@ -95,6 +108,7 @@
           <label class="col-md-3 col-form-label text-md-end" for="id_cmt">CMT <span class="text-danger">*</span></label>
           <div class="col-md-8">
             <select id="id_cmt" name="id_cmt" class="form-control custom-select select2">
+              <option value="" selected disabled>Pilih CMT</option>
               <?php foreach ($cmt as $rowData) : ?>
                 <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
               <?php endforeach ?>

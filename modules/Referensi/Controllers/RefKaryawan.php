@@ -6,11 +6,13 @@ use App\Models\FileModel;
 use App\Controllers\BaseController;
 use Modules\Referensi\Models\KaryawanModel;
 use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\PerusahaanModel;
 
 class RefKaryawan extends BaseController
 {
     protected $mkaryawan;
     protected $mOperator;
+    protected $mPerusahaan;
 
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/karyawan';
@@ -21,6 +23,7 @@ class RefKaryawan extends BaseController
      
         $this->mkaryawan = new KaryawanModel();
         $this->mOperator = new OperatorModel();
+        $this->mPerusahaan = new PerusahaanModel();
         $this->files  = new FileModel();
     }
 
@@ -35,9 +38,16 @@ class RefKaryawan extends BaseController
                 'dir' => 'ASC'
             ]
         ];
+        $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
         $dataCMT = $this->mOperator->getData(null, 0, 99999, $sortCMT);
         $this->data['titlehead'] = "Master Data Karyawan";
         $this->data['cmt'] = $dataCMT;
+        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
 
         return view($this->views.'\karyawan\index', $this->data);
     }
@@ -109,6 +119,7 @@ class RefKaryawan extends BaseController
                     "premi_kehadiran" => $row->premi_kehadiran,
                     "type" => $row->type,
                     "id_operator" => $row->id_operator,
+                    "id_perusahaan" => $row->id_perusahaan,
                     "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/karyawan/"  . $row->file_name : "",
                 )
             );
@@ -139,6 +150,7 @@ class RefKaryawan extends BaseController
         $premi_kehadiran =  $this->request->getPost('premi_kehadiran');
         $type =  $this->request->getPost('type');
         $id_operator =  $this->request->getPost('id_operator');
+        $id_perusahaan =  $this->request->getPost('id_perusahaan');
         $fileIdKaryawanOld = $this->request->getPost('fileIdKaryawanOld');
         if ($id_operator == "" || $id_operator=='null') {
             $id_operator = null;
@@ -211,6 +223,7 @@ class RefKaryawan extends BaseController
             'premi_kehadiran' => $premi_kehadiran,
             'type' => $type,
             'id_operator' => $id_operator,
+            'id_perusahaan' => $id_perusahaan,
             'gambar_id' => !empty($fileIdKaryawan) ? $fileIdKaryawan : null
         ];
 

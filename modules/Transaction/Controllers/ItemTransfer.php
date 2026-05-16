@@ -436,7 +436,7 @@ class ItemTransfer extends BaseController
       $results = $this->mRef->getDataByNoTrf($noSO);
     }
     else {
-      $results = $this->mRef->getDataByProsesAndOperator($id_proses, $id_cmt);
+      $results = $this->mRef->getDataByProsesAndOperatorArray($id_proses, $id_cmt);
       // $results = $this->mRef->get_trf_data(null, null, $id_proses, $id_cmt, 1);
       // // $grouped = [];
 
@@ -475,8 +475,6 @@ class ItemTransfer extends BaseController
       // return $this->response->setJSON($data);
     }
     $data = [];
-    
-
 
     $data['status'] = true;
     if (isset($noSO)) {
@@ -488,28 +486,25 @@ class ItemTransfer extends BaseController
     else {
       $resDataDetSO = [];
       $resDataDetSODet = [];
-
+      
       if (!empty($results)) {
-          foreach ($results as $value) {
-              $dataDetSO = $this->mRefDet->getDataDetSORef($value->id);
-              $dataDetSODet = $this->mRefDet->getDataDetail($value->id);
+        $dataDetSO = $this->mRefDet->getDataDetSORef($results, true);
+        $dataDetSODet = $this->mRefDet->getDataDetail($results, true);
 
-              if (!empty($dataDetSO)) {
-                  if (is_array($dataDetSO)) {
-                      $resDataDetSO = array_merge($resDataDetSO, $dataDetSO);
-                  } else {
-                      $resDataDetSO[] = $dataDetSO;
-                  }
-              }
-
-              if (!empty($dataDetSODet)) {
-                  if (is_array($dataDetSODet)) {
-                      $resDataDetSODet = array_merge($resDataDetSODet, $dataDetSODet);
-                  } else {
-                      $resDataDetSODet[] = $dataDetSODet;
-                  }
-              }
-          }
+        if (!empty($dataDetSO)) {
+            if (is_array($dataDetSO)) {
+                $resDataDetSO = array_merge($resDataDetSO, $dataDetSO);
+            } else {
+                $resDataDetSO[] = $dataDetSO;
+            }
+        }
+        if (!empty($dataDetSODet)) {
+            if (is_array($dataDetSODet)) {
+                $resDataDetSODet = array_merge($resDataDetSODet, $dataDetSODet);
+            } else {
+                $resDataDetSODet[] = $dataDetSODet;
+            }
+        }
       }
       $grouped = [];
 

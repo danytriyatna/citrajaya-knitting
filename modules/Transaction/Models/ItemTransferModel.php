@@ -369,6 +369,16 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataByProsesAndOperatorArray($idProses = null, $idOperator = null)
+    {
+        $builder = $this->db->table("trans_barang_trf_header abx");
+        $builder->select("abx.id");
+        $builder->where("id_proses", $idProses);
+        $builder->where("id_cmt", $idOperator);
+
+        return array_column($builder->get()->getResultArray(), 'id');
+    }
+
 
     function generateKodePersediaan()
     {

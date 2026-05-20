@@ -147,6 +147,7 @@ class RefKaryawan extends BaseController
                     "id_operator" => $row->id_operator,
                     "id_perusahaan" => $row->id_perusahaan,
                     "nama_perusahaan" => $row->nama_perusahaan,
+                    "nama_operator" => $row->nama_operator,
                     "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/karyawan/"  . $row->file_name : "",
                 )
             );

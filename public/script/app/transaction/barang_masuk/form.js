@@ -489,7 +489,8 @@ function loadDataSo() {
     else if (selectProses.val() != null && selectOperator.val() != null) {
         const params = new URLSearchParams({
             id_proses: selectProses.val(),
-            id_cmt: selectOperator.val()
+            id_cmt: selectOperator.val(),
+            id_perusahaan: selectPerusahaan.val(),
         });
         url_dis = `/trans/item-transfer/data-so?${params.toString()}`;
     }
@@ -782,7 +783,6 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
     ],
     placeholder: "Tidak ada data",
 });
-
 
 
 const modalRefpo = $("#modal-ref-po");
@@ -1414,6 +1414,12 @@ function simpanData(status) {
 
     $("#select_perusahaan").on("change", function () {
         let id_perusahaan = $(this).val();
+
+        if (id_perusahaan == 2) {
+            dtListProduksi.hideColumn("qty_kirim");
+        } else {
+            dtListProduksi.showColumn("qty_kirim");
+        }
 
         // Reset select operator
         $("#select_operator").val(null).trigger("change");

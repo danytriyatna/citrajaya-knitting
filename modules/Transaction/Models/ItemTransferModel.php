@@ -369,12 +369,14 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataByProsesAndOperatorArray($idProses = null, $idOperator = null)
+    function getDataByProsesAndOperatorArray($idProses = null, $idOperator = null, $idPerusahaan = null)
     {
         $builder = $this->db->table("trans_barang_trf_header abx");
         $builder->select("abx.id");
         $builder->where("id_proses", $idProses);
-        $builder->where("id_cmt", $idOperator);
+        if ($idPerusahaan != 2) {
+            $builder->where("id_cmt", $idOperator);
+        }
 
         return array_column($builder->get()->getResultArray(), 'id');
     }
@@ -440,6 +442,7 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->where("tbmp.id_konsumen", $id_konsumen);
         $builder->where("tbh.id_proses",  $id_proses);
         $builder->where("tbh.id_cmt", $id_cmt);
+        $builder->where("tbh.id_perusahaan != 2");
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
@@ -466,6 +469,7 @@ class ItemTransferModel extends \App\Models\PrModel
             SET qty_kirim = tbmp.qty_kirim $operator :value:
             FROM trans_barang_header AS tbh
             WHERE tbh.id = tbmp.id_header 
+            AND tbh.id_perusahaan != 2
             AND tbmp.kode_sales_order = :kode_so:
             AND tbmp.kode_ukuran = :ukuran:
             AND tbmp.color = :color:

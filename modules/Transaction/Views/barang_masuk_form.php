@@ -302,9 +302,9 @@
                           <?php if (!empty($resData->id_perusahaan) && $resData->id_perusahaan == $item->id) { ?>
                             <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
                           <?php } else { ?>
-                            <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                            <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
                           <?php } ?>
-
+                          
                         <?php endforeach; ?>
                       </select>
                     </div>

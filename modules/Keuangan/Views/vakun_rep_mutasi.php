@@ -29,9 +29,23 @@
             <div class="card">
               <div class="card-body">
                 <div class="form-group row">
-                  <div class="col-sm-2">
+                  <div class="col-sm-1">
                     <label class="control-label text-start col-form-label">Periode</label>
                    <?= (isset($slc_tahun) && !empty($slc_tahun)) ? form_dropdown($slc_tahun) : ""; ?>
+                  </div>
+                  <div class="col-sm-2">
+                    <label class="control-label text-start col-form-label" for="filter_perusahaan">Perusahaan</label>
+                      <select id="filter_perusahaan" name="filter_perusahaan" class="form-select select2" data-placeholder="-- Semua Perusahaan --">
+                        <?php if ($superadmin == true) : ?>
+                          <option value="all" selected>Semua Perusahaan</option>
+                        <?php endif; ?>
+                        <?php foreach ($perusahaan as $item) : ?>
+                          <option <?= $user_perusahaan == $item->id ? 'selected' : '' ?>
+                            value="<?= $item->id ?>">
+                            <?= $item->nama_perusahaan ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
                   </div>
                   <div class="col-sm-2">
                     <label class="control-label text-start col-form-label" style="color: transparent;">From Date Export</label>
@@ -41,19 +55,17 @@
                       <button id="btn_excel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i>
                       Print</button>
                   </div>
-                  <div class="col-sm-2">
+                  <div class="col-sm-1">
                     <label class="control-label text-start col-form-label" for="select_type_export">Export Type</label>
-                      <div class="col-md-9">
-                        <select id="select_type_export" name="select_type_export" class="form-select select2" data-placeholder="-- Pilih Export Type --">
-                          <option value=""> - Pilih Payment Type - </option>
-                          <option value="0"> Beban Biaya </option>
-                          <option value="1"> Mutasi Biaya </option>
-                      </select>
-                      </div>
+                    <select id="select_type_export" name="select_type_export" class="form-select select2" data-placeholder="-- Pilih Export Type --">
+                      <option value=""> - Pilih Payment Type - </option>
+                      <option value="0"> Beban Biaya </option>
+                      <option value="1"> Mutasi Biaya </option>
+                    </select>
                   </div>
                   <div class="col-sm-2 type-export-mutasi" hidden>
                     <div class="form-group m-b-0">
-                      <label class="ccontrol-label text-start col-form-label" for="filter_penguji">Bulan</label>
+                      <label class="control-label text-start col-form-label" for="filter_penguji">Bulan</label>
                       <select id="filter_bulan" name="filter_bulan" class="form-select select2" data-placeholder="-- Pilih Bulan --">
                         <option value="">Semua Bulan</option>
                         <?php foreach ($bulan as $item) : ?>
@@ -64,7 +76,7 @@
                   </div>
                   <div class="col-sm-2 type-export-mutasi" hidden>
                     <div class="form-group m-b-0">
-                      <label class="ccontrol-label text-start col-form-label" for="filter_penguji">Tahun</label>
+                      <label class="control-label text-start col-form-label" for="filter_penguji">Tahun</label>
                       <select id="filter_tahun" name="filter_tahun" class="form-select select2" data-placeholder="-- Pilih Tahun --">
                         <option value="">Semua Tahun</option>
                         <?php foreach ($tahun as $item) : ?>
@@ -104,13 +116,13 @@
                       </select>
                       </div>
                   </div>
-                  <div hidden class="col-sm-3 offset-sm-6">
+                  <!-- <div hidden class="col-sm-3 offset-sm-6">
                     <div class="input-group">
                       <input type="text" class="form-control" id="tb-search" placeholder="Pencarian . . .">
                       <div class="input-group-append"><span class="input-group-text h-100"><i class="ti-search"></i></span>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
                 </div>
                 <hr>
                 <div class="table-responsive">

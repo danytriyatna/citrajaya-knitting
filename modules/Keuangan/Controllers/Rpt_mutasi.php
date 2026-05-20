@@ -18,6 +18,7 @@ use Modules\Referensi\Models\RekeningModel;
 use Modules\Keuangan\Models\Mtrans_akun_det;
 use Modules\Laporan\Models\LaporanStockCardModel;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as Xlsx_r;
+use Modules\Referensi\Models\PerusahaanModel;
 
 
 class Rpt_mutasi extends BaseController
@@ -31,6 +32,7 @@ class Rpt_mutasi extends BaseController
     protected $mrekening;
     protected $mRekening;
     protected $mLaporan;
+    protected $mPerusahaan;
 
 	function __construct()
     {
@@ -41,6 +43,7 @@ class Rpt_mutasi extends BaseController
         $this->mrekening = new RekeningModel();
         $this->mRekening   = new RekeningModel();
         $this->mLaporan = new LaporanStockCardModel();
+        $this->mPerusahaan = new PerusahaanModel;
     }
 
 	public function index()
@@ -69,6 +72,26 @@ class Rpt_mutasi extends BaseController
 		$this->data['titlehead'] = "Laporan Mutasi Beban Biaya";
         $this->data['rekening_list'] = $this->mRekening->getData(null, 0, 9999);
         $this->data['coa_list'] = $this->mcoa->getData(null, 0, 9999, null, null, null, null, null, 8);
+        $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
+        $this->data['superadmin'] = $this->auth->isSuperadmin();
+        if (!$this->auth->isSuperadmin()) {
+            if (empty($this->currentUser->id_perusahaan)) {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+            }
+            else {
+                $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+            }
+            $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
+        }
+        else {
+            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+            $this->data['user_perusahaan'] = null;
+        }
 		return view($this->url_v.'\vakun_rep_mutasi', $this->data);
 	}
 
@@ -766,8 +789,11 @@ class Rpt_mutasi extends BaseController
         $ref_rekening = "all";
         $fileName = "laporan-mutasi.xlsx";
 
+        $id_perusahaan = $this->request->getGet('id_perusahaan');
+
         $date = DateTime::createFromFormat('!m', $bulan); // !m → hanya bulan
         $nama_bulan = $date->format('F');
+        $id_perusahaan = !empty($id_perusahaan) ? $id_perusahaan : null;
 
         $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun, $ref_masuk);
         $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun, $ref_masuk);

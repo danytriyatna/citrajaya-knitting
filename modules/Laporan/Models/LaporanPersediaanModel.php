@@ -636,48 +636,70 @@ $query = $this->db->query($sql, $params);
 
     function getDataPersediaanBarang($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
+        $where = "WHERE 1=1";
 
-        $subQuery = $this->db->table('trans_barang_history')
-                            ->select("id_barang, MAX(year * 100 + month) as max_period")
-                            ->groupBy("id_barang");
-
-        $builder = $this->db->table("trans_barang_history a");
-        $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
-        $builder->join("ref_satuan c", "b.id_satuan = c.id", "inner");
-        $builder->join("ref_jenis_barang d", "b.id_jenis_barang = d.id", "inner");
-        $builder->join("({$subQuery->getCompiledSelect()}) e", 
-                        'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
-                        'inner');
-        $builder->select("a.id_barang, a.month, a.year, c.nama_satuan, b.nama_barang, b.kode_barang, a.lot_id, a.lot_no, a.jumlah as qty, a.price, b.harga_satuan");
         if (!empty($params['id_gudang'])) {
-            $builder->where('a.id_gudang', $params['id_gudang']);
+            $where .= " AND a.id_gudang = " . intval($params['id_gudang']);
         }
-        if ($id == null or $id == "") {
-            // $builder->where('a.active = 1');
-            if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-                $builder->groupStart();
-                $builder->Where('LOWER(b.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(b.nama_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->groupEnd();
-            }
 
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $keyword = strtolower($filters[0]['value']);
+            $keyword = $this->db->escapeLikeString($keyword);
+            $where .= " AND (
+                LOWER(b.kode_barang) LIKE '%{$keyword}%'
+                OR LOWER(b.nama_barang) LIKE '%{$keyword}%'
+                OR LOWER(a.lot_no) LIKE '%{$keyword}%'
+            )";
+        }
+
+        $innerSql = "
+            SELECT DISTINCT ON (a.id_barang, a.lot_no)
+                a.id_barang,
+                a.month,
+                a.year,
+                a.lot_id,
+                a.lot_no,
+                a.jumlah AS qty,
+                a.price,
+                c.nama_satuan,
+                b.nama_barang,
+                b.kode_barang,
+                b.harga_satuan
+            FROM trans_barang_history a
+            INNER JOIN ref_barang b         ON a.id_barang = b.id
+            INNER JOIN ref_satuan c         ON b.id_satuan = c.id
+            INNER JOIN ref_jenis_barang d   ON b.id_jenis_barang = d.id
+            {$where}
+            ORDER BY a.id_barang, a.lot_no, (a.year * 100 + a.month) DESC
+        ";
+
+        if ($id == null || $id == "") {
+
+            $orderBy = "sub.nama_barang ASC";
             if (!empty($order)) {
-                $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
-            } else {
-                $builder->orderBy('a.id');
+                $field = $order[0]['field'];
+                $dir   = strtoupper($order[0]['dir']) === 'DESC' ? 'DESC' : 'ASC';
+                $orderBy = "sub.{$field} {$dir}";
             }
 
             if (empty($offset)) $offset = 0;
-            if (empty($limit)) $limit = 10;
+            if (empty($limit))  $limit  = 10;
 
-            $builder->limit($limit, $offset);
+            $sql = "
+                SELECT * FROM ({$innerSql}) sub
+                ORDER BY {$orderBy}
+                LIMIT {$limit} OFFSET {$offset}
+            ";
 
-            $this->_data = $builder->get()->getResult();
+            $this->_data = $this->db->query($sql)->getResult();
+
         } else {
-            $builder->where("a.id", $id);
+            $sql = "
+                SELECT * FROM ({$innerSql}) sub
+                WHERE sub.id_barang = " . intval($id) . "
+            ";
 
-            $this->_data = $builder->get()->getRow();
+            $this->_data = $this->db->query($sql)->getRow();
         }
 
         return $this->_data;

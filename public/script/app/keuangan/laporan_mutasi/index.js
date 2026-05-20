@@ -104,6 +104,7 @@ $(document).ready(function () {
         let filter_tahun = $("#filter_tahun").val();
         let select_payment_type_one = $("#select_payment_type_one").val();
         let select_payment_type_one_text = $("#select_payment_type_one").find(':selected').text();
+        let id_perusahaan = $("#id_perusahaan").val();
 
         if (select_type_export == 0) {
             if (from_date == null || from_date == "" || from_date == undefined) {
@@ -178,7 +179,7 @@ $(document).ready(function () {
             }
 
             else {
-                let url = "/keuangan/laporan_mutasi/getExcelAll/" + filter_bulan + "/" + filter_tahun + "/" + select_payment_type_one + "/" + select_payment_type_one_text;
+                let url = "/keuangan/laporan_mutasi/getExcelAll/" + filter_bulan + "/" + filter_tahun + "/" + select_payment_type_one + "/" + select_payment_type_one_text + "?id_perusahaan=" + id_perusahaan;
                 window.open(url, '_blank');
             }
         }

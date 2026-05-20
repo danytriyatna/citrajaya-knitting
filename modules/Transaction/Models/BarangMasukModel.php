@@ -378,8 +378,13 @@ class BarangMasukModel extends \App\Models\PrModel
                         }
 
                         // print_r($xrow);exit;
-                        if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1 && $isi_kurung != 2) {
+                        if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1 && $isi_kurung != 2 && $data['id_perusahaan'] != 2) {
                             throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
+                        }
+
+                        $qty_kirim_perusahaan = $xrow['qty_kirim'];
+                        if ($data['id_perusahaan'] == 2) {
+                            $qty_kirim_perusahaan = null;
                         }
 
 
@@ -393,7 +398,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "style" => !empty($xrow['style']) ? $xrow['style'] : null,
                             "qty" => !empty($xrow['qty']) ? $xrow['qty'] : null,
                             "berat" => !empty($xrow['berat']) ? $xrow['berat'] : null,
-                            "qty_kirim" => !empty($xrow['qty_kirim']) ? $xrow['qty_kirim'] : null,
+                            "qty_kirim" => $qty_kirim_perusahaan,
                             "id_konsumen" => $xrow['id_konsumen'],
                             "kode_sales_order" => $xrow['kode_sales_order'],
                             "kode_ukuran" => $xrow['kode_ukuran'],
@@ -409,38 +414,41 @@ class BarangMasukModel extends \App\Models\PrModel
                         ];
 
                         if (!empty($xrow['id_mp'])) {
-                            $arrParamMP =  [
-                                "id_mp" => $xrow['id_mp'],
-                            ];
-
-                            $qtyNew = !empty($xrow['qty']) ? $xrow['qty'] : 0;
-
-                            $getDataDetSo = $this->getDataDetSO(null, $arrParamMP);
-
-                            $arrParamMPOther =  [
-                                'id_proses' => $id_proses, 
-                                'id_cmt' => $id_cmt, 
-                                'id_ref' => $idSo, 
-                                'color' => $xrow['color'], 
-                                'kode_ukuran' => $xrow['kode_ukuran'],
-                                'id_konsumen' => $xrow['id_konsumen'],
-                                'current_id_mp' => $xrow['id_mp'],
-                            ];
-                            $getDataDetSoOther = $this->getDataDetSO(null, $arrParamMPOther);
-                            if ($getDataDetSo->qty != $qtyNew) {
-                                
-                                foreach ($getDataDetSoOther as $key_so => $value_so) {
-                                    if ($getDataDetSo->qty < $qtyNew) {
-                                        $newQTYUpdate = $value_so->qty_kirim - ($qtyNew - $getDataDetSo->qty);
+                            if ($data['id_perusahaan'] != 2) {
+                                $arrParamMP =  [
+                                    "id_mp" => $xrow['id_mp'],
+                                ];
+    
+                                $qtyNew = !empty($xrow['qty']) ? $xrow['qty'] : 0;
+    
+                                $getDataDetSo = $this->getDataDetSO(null, $arrParamMP);
+    
+                                $arrParamMPOther =  [
+                                    'id_proses' => $id_proses, 
+                                    'id_cmt' => $id_cmt, 
+                                    'id_ref' => $idSo, 
+                                    'color' => $xrow['color'], 
+                                    'kode_ukuran' => $xrow['kode_ukuran'],
+                                    'id_konsumen' => $xrow['id_konsumen'],
+                                    'current_id_mp' => $xrow['id_mp'],
+                                    'id_perusahaan' => $data['id_perusahaan'],
+                                ];
+                                $getDataDetSoOther = $this->getDataDetSO(null, $arrParamMPOther);
+                                if ($getDataDetSo->qty != $qtyNew) {
+                                    
+                                    foreach ($getDataDetSoOther as $key_so => $value_so) {
+                                        if ($getDataDetSo->qty < $qtyNew) {
+                                            $newQTYUpdate = $value_so->qty_kirim - ($qtyNew - $getDataDetSo->qty);
+                                        }
+                                        else {
+                                            $newQTYUpdate = $value_so->qty_kirim + ($getDataDetSo->qty - $qtyNew);
+                                            // if ($value_so->id_mp == 71258) {
+                                            //     # code...
+                                            //     dd($value_so->qty_kirim, $getDataDetSo->qty, $qtyNew, $value_so->id_mp, $newQTYUpdate);
+                                            // }
+                                        }
+                                        $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQTYUpdate], 'id', $value_so->id_mp);
                                     }
-                                    else {
-                                        $newQTYUpdate = $value_so->qty_kirim + ($getDataDetSo->qty - $qtyNew);
-                                        // if ($value_so->id_mp == 71258) {
-                                        //     # code...
-                                        //     dd($value_so->qty_kirim, $getDataDetSo->qty, $qtyNew, $value_so->id_mp, $newQTYUpdate);
-                                        // }
-                                    }
-                                    $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQTYUpdate], 'id', $value_so->id_mp);
                                 }
                             }
 
@@ -450,21 +458,24 @@ class BarangMasukModel extends \App\Models\PrModel
                             $idMP[] = $xrow['id_mp'];
                         }
                         else {
-                            $arrParamMPOther =  [
-                                'id_proses' => $id_proses, 
-                                'id_cmt' => $id_cmt, 
-                                'id_ref' => $idSo, 
-                                'color' => $xrow['color'], 
-                                'kode_ukuran' => $xrow['kode_ukuran'],
-                                'id_konsumen' => $xrow['id_konsumen'],
-                            ];
-                            
-                            $qtyMinus = !empty($xrow['qty']) ? $xrow['qty'] : 0;
-
-                            $getDataDetSo = $this->getDataDetSO(null, $arrParamMPOther);
-                            foreach ($getDataDetSo as $key_so => $value_so) {
-                                $newQty = $value_so->qty_kirim - $qtyMinus;
-                                $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQty], 'id', $value_so->id_mp);
+                            if ($data['id_perusahaan'] != 2) {
+                                $arrParamMPOther =  [
+                                    'id_proses' => $id_proses, 
+                                    'id_cmt' => $id_cmt, 
+                                    'id_ref' => $idSo, 
+                                    'color' => $xrow['color'], 
+                                    'kode_ukuran' => $xrow['kode_ukuran'],
+                                    'id_konsumen' => $xrow['id_konsumen'],
+                                    'id_perusahaan' => $data['id_perusahaan'],
+                                ];
+                                
+                                $qtyMinus = !empty($xrow['qty']) ? $xrow['qty'] : 0;
+    
+                                $getDataDetSo = $this->getDataDetSO(null, $arrParamMPOther);
+                                foreach ($getDataDetSo as $key_so => $value_so) {
+                                    $newQty = $value_so->qty_kirim - $qtyMinus;
+                                    $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQty], 'id', $value_so->id_mp);
+                                }
                             }
 
                             $idMP[] = $this->insertRecordGetid('trans_barang_masuk_produksi', $dataDetail);
@@ -554,24 +565,26 @@ class BarangMasukModel extends \App\Models\PrModel
                     }
 
                     $getDataDetSo = $this->getDataDetSO($id, null, true, $idMP);
-
-                    foreach ($getDataDetSo as $keyDel => $valueDel) {
-                        $arrParamMPOther =  [
-                            'id_proses' => $id_proses, 
-                            'id_cmt' => $id_cmt, 
-                            'id_ref' => $valueDel->id_ref, 
-                            'color' => $valueDel->color, 
-                            'kode_ukuran' => $valueDel->kode_ukuran,
-                            'id_konsumen' => $valueDel->id_konsumen,
-                            'current_id_mp' => $valueDel->id_mp,
-                        ];
-
-                        $qtyMinus = !empty($valueDel->qty) ? $valueDel->qty : 0;
-
-                        $getDataDetSoOther = $this->getDataDetSO(null, $arrParamMPOther);
-                        foreach ($getDataDetSoOther as $key_so => $value_so) {
-                            $newQty = $value_so->qty_kirim + $qtyMinus;
-                            $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQty], 'id', $value_so->id_mp);
+                    if ($data['id_perusahaan'] != 2) {
+                        foreach ($getDataDetSo as $keyDel => $valueDel) {
+                            $arrParamMPOther =  [
+                                'id_proses' => $id_proses, 
+                                'id_cmt' => $id_cmt, 
+                                'id_ref' => $valueDel->id_ref, 
+                                'color' => $valueDel->color, 
+                                'kode_ukuran' => $valueDel->kode_ukuran,
+                                'id_konsumen' => $valueDel->id_konsumen,
+                                'current_id_mp' => $valueDel->id_mp,
+                                'id_perusahaan' => $data['id_perusahaan'],
+                            ];
+    
+                            $qtyMinus = !empty($valueDel->qty) ? $valueDel->qty : 0;
+    
+                            $getDataDetSoOther = $this->getDataDetSO(null, $arrParamMPOther);
+                            foreach ($getDataDetSoOther as $key_so => $value_so) {
+                                $newQty = $value_so->qty_kirim + $qtyMinus;
+                                $this->updateRecord('trans_barang_masuk_produksi', ['qty_kirim' => $newQty], 'id', $value_so->id_mp);
+                            }
                         }
                     }
                     $this->deleteRecordCondition('trans_barang_masuk_produksi', 'id', $idMP, 'id_header', $id);
@@ -759,7 +772,7 @@ class BarangMasukModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetSO($idHeader = null, $params = null, $condition = null, $idMP = null)
+    function getDataDetSO($idHeader = null, $params = null, $condition = null, $idMP = null, $id_perusahaan = null)
     {
         $builder = $this->db->table("trans_barang_masuk_produksi abx");
 
@@ -787,6 +800,9 @@ class BarangMasukModel extends \App\Models\PrModel
         else {
             if (!empty($params['id_proses'])) {
                 $builder->where("head.id_proses", $params['id_proses']);
+            }
+            if (!empty($params['id_perusahaan'])) {
+                $builder->where("head.id_perusahaan", $params['id_perusahaan']);
             }
             if (!empty($params['id_cmt'])) {
                 $builder->where("head.id_cmt", $params['id_cmt']);

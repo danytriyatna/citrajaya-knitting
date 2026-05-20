@@ -432,11 +432,12 @@ class ItemTransfer extends BaseController
     $noSO = $this->request->getGet("noSO");
     $id_proses = $this->request->getGet("id_proses");
     $id_cmt = $this->request->getGet("id_cmt");
+    $id_perusahaan = $this->request->getGet("id_perusahaan");
     if (isset($noSO)) {
       $results = $this->mRef->getDataByNoTrf($noSO);
     }
     else {
-      $results = $this->mRef->getDataByProsesAndOperatorArray($id_proses, $id_cmt);
+      $results = $this->mRef->getDataByProsesAndOperatorArray($id_proses, $id_cmt, $id_perusahaan);
       // $results = $this->mRef->get_trf_data(null, null, $id_proses, $id_cmt, 1);
       // // $grouped = [];
 

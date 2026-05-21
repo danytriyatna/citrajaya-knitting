@@ -249,12 +249,12 @@ class BarangMasuk extends BaseController
             $this->data['detail'] = json_encode($resDataDetail);
 
             if($resData->id_kategori == 12 || $resData->id_kategori == 1){
-                if (isset($resData->no_ref_trf)) {
+                if (!empty($resData->no_ref_trf)) {
                 # code...
                     $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
                 }
                 else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
-                    $resDataDetSO = count($results) > 0 ? $this->mRef->getDataDetSO($id) : null;
+                    $resDataDetSO =  $this->mRef->getDataDetSO($id);
                 }
                 $this->data['dataSO'] = json_encode($resDataDetSO);
             }else{

@@ -294,7 +294,7 @@ if (!function_exists('fdate_eng_to_ind_4')) {
 }
 
 if(!function_exists('formatTanggalIndonesia')){
-    function formatTanggalIndonesia($tanggal) {
+    function formatTanggalIndonesia($tanggal, $use_long_format = true) {
        // Pisahkan tanggal, bulan, dan tahun
         $tanggalArray = explode('-', $tanggal);  // format input: Y-m-d
         $tahun = $tanggalArray[0];
@@ -302,7 +302,11 @@ if(!function_exists('formatTanggalIndonesia')){
         $hari = $tanggalArray[2];
 
         // Dapatkan nama bulan dalam bahasa Indonesia
-        $bulanNama = bulan((int)$bulanAngka);
+        if ($use_long_format) {
+            $bulanNama = bulan((int)$bulanAngka);
+        } else {
+            $bulanNama = bulans((int)$bulanAngka);
+        }
 
         // Gabungkan hasilnya dalam format 'd F Y'
         return $hari . ' ' . $bulanNama . ' ' . $tahun;

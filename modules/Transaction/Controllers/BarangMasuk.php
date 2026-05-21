@@ -567,7 +567,7 @@ class BarangMasuk extends BaseController
             $results = $this->mTrf->getDataByProsesAndOperator($resData->id_proses, $resData->id_cmt);
             
             $dtKonsumen = [];
-            $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
+            $resDataDetSO = $this->mRef->getDataDetSO($id);
             if(!empty($resDataDetSO)){
                 $id_konsumen = $resDataDetSO[0]->id_konsumen;
                 $dtKonsumen = $this->mkonsumen->getData($id_konsumen);

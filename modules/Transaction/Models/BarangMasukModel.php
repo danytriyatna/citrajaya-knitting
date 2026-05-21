@@ -396,6 +396,8 @@ class BarangMasukModel extends \App\Models\PrModel
                             "print_type" => !empty($isi_kurung) ? $isi_kurung : null,
                             "deskripsi" => $xrow['deskripsi'],
                             "style" => !empty($xrow['style']) ? $xrow['style'] : null,
+                            "keterangan" => !empty($xrow['keterangan']) ? $xrow['keterangan'] : null,
+                            "total_scanned" => !empty($xrow['total_scanned']) ? $xrow['total_scanned'] : null,
                             "qty" => !empty($xrow['qty']) ? $xrow['qty'] : null,
                             "berat" => !empty($xrow['berat']) ? $xrow['berat'] : null,
                             "qty_kirim" => $qty_kirim_perusahaan,
@@ -779,7 +781,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->select("abx.id as id_mp,abx.qty, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
                           abx.color,abx.amount, abx.tgl_scan, abx.print_type, cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, abx.id_ref, abx.qty_kirim,
                           abx.nomor_mesin, abx, abx.tgl_transaksi, abx.jam_mesin, abx.nilai_mesin, abx.harga,
-                          (abx.qty - abx.qty_kirim) as qty_sisa, abx.berat");
+                          (abx.qty - abx.qty_kirim) as qty_sisa, abx.berat, abx.total_scanned");
 
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
         $builder->join("trans_barang_header head", "abx.id_header = head.id", "inner");

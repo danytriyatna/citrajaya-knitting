@@ -776,6 +776,8 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             symbol: "Rp",  // Simbol mata uang Rupiah
             precision: 0,   // Tidak ada desimal
         }},
+        {title: "Keterangan", field: "keterangan", width: "10%"},
+        {title: "Total Scanned", field: "total_scanned", width: "10%", visible:false},
         {title: "Tgl<br>Scan", field: "tgl_scan", width: "10%", visible:false
         },
         {title: "Print Type", field: "print_type", width: "10%", visible:false
@@ -1459,7 +1461,7 @@ function simpanData(status) {
     });
 
 
-    function addItem(data, typeAction = null){
+    function addItem(data, typeAction = null, isScan = false) {
         let produksi_data = dtListProduksi.getData();
         let index = -1;
         if (produksi_data.some(x=>x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
@@ -1470,6 +1472,10 @@ function simpanData(status) {
             );
         }
         if(index !== -1){
+            if (isScan) {
+                produksi_data[index].total_scanned = parseFloat(produksi_data[index].total_scanned || 0) + 1;
+                produksi_data[index].keterangan = (parseFloat(produksi_data[index].total_scanned || 0)).toString() + ' Ikat';
+            }
             produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
             produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
             dtListProduksi.setData(produksi_data);
@@ -1510,6 +1516,11 @@ function simpanData(status) {
             const hargaFix = (parseFloat(data.harga) || 0) > 0 ? parseFloat(data.harga) : hargaRata;
             data.harga = hargaFix;
             data.amount = (parseFloat(data.qty) || 0) * hargaFix;
+
+            if (isScan) {
+                data.total_scanned = 1;
+                data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
+            }
             
             console.log("data yang ditambahkan", data)
             
@@ -1591,8 +1602,8 @@ function simpanData(status) {
                 if (hasil.length > 0) {
                     hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                     hasil[0].tgl_scan = arrKunci[arrKunci.length - 1] ? arrKunci[arrKunci.length - 1] : null;
-                    addItem(hasil[0], 'scan');
-
+                    addItem(hasil[0], 'scan', true);
+                    
                     setTimeout(() => {
                         $( "#text_barcode" ).val("");
                         refData = xrefData;

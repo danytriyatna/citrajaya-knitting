@@ -9,7 +9,7 @@
     <style>
         html {
             margin: 10px 32px;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         body * {
@@ -102,7 +102,7 @@
         .table-bordered>thead>tr>td {
             border: 1px solid #333;
             padding: 1px 6px;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .kop-surat img {
@@ -118,6 +118,10 @@
 
         .kop-surat div p {
             margin-top: 10px;
+        }
+
+        .font-footer {
+            font-size: 13px;
         }
     </style>
 </head>
@@ -172,7 +176,7 @@
     <hr>
 
     <!-- <h1 class="uppercase text-lg mb-6 mt-0">BARANG MASUK</h1> -->
-    <table class="mb-6" style="width:100%;">
+    <table class="mb-6 font-footer" style="width:100%;">
         <tr>
             <td style="width: 152px; text-align: left; vertical-align: top;">Nama CMT</td>
             <td style="width: 8px; text-align: center; vertical-align: top;">:</td>
@@ -195,15 +199,16 @@
                 <th colspan="2" style="border:0;text-align:left;"><?= $data->kode_transaksi ?></th>
             </tr>
             <tr>
-                <th class="text-center" style="width: 5%;">No.</th>
-                <th class="text-center" style="width: 20%;">No. SO</th>
-                <th class="text-center" style="width: 20%;">Style</th>
-                <th class="text-center" style="width: 20%;">Tanggal</th>
-                <th class="text-center" style="width: 20%;">Proses</th>
-                <th class="text-center" style="width: 10%;">Qty</th>
-                <th class="text-center" style="width: 10%;">Qty Kirim</th>
-                <th class="text-center" style="width: 20%;">Price</th>
-                <th class="text-center" style="width: 20%;">Amount</th>
+                <th class="text-center" style="width: 3%;">No.</th>
+                <th class="text-center" style="width: 14%;">No. SO</th>
+                <th class="text-center" style="width: 9%;">Style</th>
+                <th class="text-center" style="width: 11%;">Tanggal</th>
+                <th class="text-center" style="width: 13%;">Proses</th>
+                <th class="text-center" style="width: 7%;">Qty</th>
+                <th class="text-center" style="width: 8%;">Qty Kirim</th>
+                <th class="text-center" style="width: 12%;">Price</th>
+                <th class="text-center" style="width: 14%;">Amount</th>
+                <th class="text-center" style="width: 9%;">Ket.</th>
             </tr>
         </thead>
         <tbody>
@@ -217,18 +222,20 @@
                 $qty_kirim = 0;
                 $harga = 0;
                 $amount = 0;
+                $scanned = 0;
 
                 foreach ($dataSO as $row) : ?>
                     <tr>
                         <td><?= $i++ ?></td>
                         <td><?= $row->kode_sales_order ?></td>
                         <td><?= !empty($row->style) ? $row->style : $row->deskripsi ?></td>
-                        <td class="text-left"><?= formatTanggalIndonesia($row->tgl_transaksi) ?></td>
+                        <td class="text-left"><?= formatTanggalIndonesia($row->tgl_transaksi, false) ?></td>
                         <td class="text-center"><?= $data->proses ?></td>
                         <td class="text-right"><?= $row->qty ?></td>
                         <td class="text-right"><?= $row->qty_kirim ?></td>
-                        <td class="text-right"><?= !empty($row->harga) ? "Rp. " . number_format(round($row->harga)) : "Rp. 0" ?></td>
-                        <td class="text-right"><?= !empty($row->amount) ? "Rp. " . number_format(round($row->amount)) : "Rp. 0" ?></td>
+                        <td class="text-right"><?= !empty($row->harga) ? "Rp" . number_format(round($row->harga)) : "Rp0" ?></td>
+                        <td class="text-right"><?= !empty($row->amount) ? "Rp" . number_format(round($row->amount)) : "Rp0" ?></td>
+                        <td class="text-right"><?= $row->keterangan ?></td>
                     </tr>
                     <?php 
                     // Update total accumulator
@@ -236,6 +243,7 @@
                     $qty_kirim += $row->qty_kirim;
                     $harga += !empty($row->harga) ? $row->harga : 0;
                     $amount += !empty($row->amount) ? $row->amount : 0;
+                    $scanned += !empty($row->total_scanned) ? $row->total_scanned : 0;
                 endforeach; 
             else : ?>
                 <tr>
@@ -255,8 +263,9 @@
                 <th colspan="5">Total</th>
                 <th class="text-right"><?= !empty($qty) ? $qty : 0 ?></th>
                 <th class="text-right"><?= !empty($qty_kirim) ? $qty_kirim : 0 ?></th>
-                <th class="text-right"><?= !empty($harga) ? "Rp. " . number_format(round($harga)) : "Rp. 0" ?></th>
-                <th class="text-right"><?= !empty($amount) ? "Rp. " . number_format(round($amount)) : "Rp. 0" ?></th>
+                <th class="text-right"><?= !empty($harga) ? "Rp" . number_format(round($harga)) : "Rp0" ?></th>
+                <th class="text-right"><?= !empty($amount) ? "Rp" . number_format(round($amount)) : "Rp0" ?></th>
+                <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : 0 ?></th>
             </tr>
         </tfoot>
     </table>
@@ -270,7 +279,7 @@
     </table>
     <br>
 
-    <table class="w-100">
+    <table class="w-100 font-footer">
         <tbody>
             <tr>
                 <td class="w-50 text-center">&nbsp;</td>

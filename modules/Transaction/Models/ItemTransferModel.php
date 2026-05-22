@@ -535,6 +535,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         "color" => $rowData['color'],
                         "tipe" => !empty($rowData['tipe']) ? $rowData['tipe'] : null,
                         "print_type" => !empty($rowData['print_type']) ? $rowData['print_type'] : null,
+                        "total_scanned" => !empty($rowData['total_scanned']) ? $rowData['total_scanned'] : null,
                         "ref_detail_id" => !empty($rowData['ref_detail_id']) ? $rowData['ref_detail_id'] : null,
                         "deskripsi" => $rowData['deskripsi'],
                         "style" => !empty($rowData['style']) ? $rowData['style'] : null,
@@ -543,7 +544,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         "id_konsumen" => $rowData['id_konsumen'],
                         "kode_sales_order" => $rowData['kode_sales_order'],
                         "kode_ukuran" => $rowData['kode_ukuran'],
-                        "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : '',
+                        "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
                     ];
 
                     $idDet = !empty($rowData['id']) ? $rowData['id'] : null;

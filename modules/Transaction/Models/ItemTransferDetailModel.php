@@ -178,7 +178,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
         $builder->select("abx.id, abx.print_type, trfhead.id as id_header, abx.qty, abx.tipe, abx.ref_detail_id, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
-                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.keterangan, rk.key_ukuran, trfhead.id_proses,
+                          abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.total_scanned, abx.keterangan, rk.key_ukuran, trfhead.id_proses,
                           (
                             CASE 
                                 WHEN abx.tipe = 1 THEN 

@@ -123,7 +123,7 @@ class Absensi extends BaseController
           if ($row->tanggal_merah == 1) {
             $tanggal_merah = "<input type='checkbox' name='tanggal_merah[]' value='1' checked>";
           }
-
+              
           $tgl_absen = \fdate_eng_to_ind($row->tgl_absen);
           array_push(
               $build_array["data"],
@@ -153,7 +153,7 @@ class Absensi extends BaseController
                   "potongan" => $row->potongan,
                   "potongan_keterangan" => $row->potongan_keterangan,
                   "bonus" => $row->bonus,
-                  "bonus_keterangan" => $row->bonus,
+                  "bonus_keterangan" => $row->bonus_keterangan,
                   "tanggal_merah" => $row->tanggal_merah,
               )
           );

@@ -25,7 +25,7 @@ class PaymentModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblVendor . " dbx", "uk.id_vendor = dbx.id", "inner");
         $builder->join($this->tblRekening . " ebx", "uk.id_rek = ebx.id", "inner");
-        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, (uk.total_bayar + COALESCE(uk.diskon, 0) + uk.sisa_bayar) as sisa_bayar, uk.diskon ");
+        $builder->select("uk.id,uk.status, uk.pay_date,uk.pay_no, uk.id_vendor, dbx.nama as nama_vendor, uk.id_rek,ebx.rekening_no, ebx.rekening_bank,uk.hutang, uk.total_bayar, (uk.hutang - (uk.total_bayar + COALESCE(uk.diskon, 0))) as sisa_bayar, uk.diskon ");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');

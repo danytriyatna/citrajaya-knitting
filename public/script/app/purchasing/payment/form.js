@@ -446,23 +446,25 @@ btnApprove.on("click",function(e){
 })
 
 function simpanData(type) {
-    let totalBayar = dtListPayment.getData().reduce((sum, item) => {
+    let filteredData = dtListPayment.getData().filter(item => parseFloat(item.total_bayar) > 0);
+
+    let totalBayar = filteredData.reduce((sum, item) => {
         let total = parseFloat(item.total_bayar);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);
-    let grandTotal = dtListPayment.getData().reduce((sum, item) => {
+    let grandTotal = filteredData.reduce((sum, item) => {
         let total = parseFloat(item.grand_total);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);
-    let hutang = dtListPayment.getData().reduce((sum, item) => {
+    let hutang = filteredData.reduce((sum, item) => {
         let total = parseFloat(item.hutang);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);
-    let sisaBayar = dtListPayment.getData().reduce((sum, item) => {
+    let sisaBayar = filteredData.reduce((sum, item) => {
         let total = parseFloat(item.sisa_bayar);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);
-    let diskon = dtListPayment.getData().reduce((sum, item) => {
+    let diskon = filteredData.reduce((sum, item) => {
         let total = parseFloat(item.diskon);
         return sum + (isNaN(total) ? 0 : total);
     }, 0);

@@ -373,8 +373,8 @@ class ItemTransferModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_barang_trf_header abx");
         $builder->select("abx.id");
-        $builder->where("id_proses", $idProses);
         if ($idPerusahaan != 2) {
+            $builder->where("id_proses", $idProses);
             $builder->where("id_cmt", $idOperator);
         }
 

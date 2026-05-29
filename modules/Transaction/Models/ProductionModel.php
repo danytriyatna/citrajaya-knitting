@@ -154,6 +154,10 @@ class ProductionModel extends \App\Models\PrModel
         if(!empty($id)){
             $builder->where('tp.id', $id);
         }
+        
+        // $builder->where("tpo.kode_transaksi LIKE", "BTM%");
+        $builder->where("tpo.kode_transaksi NOT LIKE", "BTMC%");
+
         $builder->groupBy("jpp.nama, jpp.seq, jpp.id");
         if ($last_proses == true) {
             $builder->orderBy("jpp.seq", "DESC");
@@ -219,7 +223,7 @@ class ProductionModel extends \App\Models\PrModel
         if (!empty($id_proses)) {
             $builder->where('abx.id_proses', $id_proses);
         }
-        
+        $builder->where("abx.kode_transaksi NOT LIKE", "BTMC%");
         $builder->orderBy("abx.id", "ASC");
         $this->_data = $builder->get()->getResult();
 

@@ -296,7 +296,7 @@ class ItemTransfer extends BaseController
 
   public function form_static($id = null)
   {
-
+        
     if (!$this->auth->loggedIn()) {
       return redirect()->to('/auth/login');
     }

@@ -606,42 +606,42 @@ class ItemTransferModel extends \App\Models\PrModel
                         }
                         $IncludedIDSO[] = $this->insertRecordGetid($this->tblDetailSO, $dataDetail);
                     }
-                    
-                    if (count($IncludedIDSO) > 0) {
+                }
+
+                if (count($IncludedIDSO) > 0) {
                         $getToDelete = $this->getRecordConditionDelete($IncludedIDSO, $id);
                         foreach ($getToDelete as $idSO) {
                             $getCurrentDet = $this->getDetailItem($idSO->id);
-                            if (!empty($getCurrentDet) && $getCurrentDet->status == 1) {
-                                $getQtySumTfSo = $this->getTransferSOSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                            if (!empty($getCurrentDet) && $getCurrentDet->status == 1 && $oldStatus != 0) {
+                                $getQtySumTfSo = $this->getTransferSOSUMQty($getCurrentDet->kode_sales_order, $getCurrentDet->kode_ukuran, 
+                                                            $getCurrentDet->color, $getCurrentDet->id_konsumen, $getCurrentDet->id_proses, 
                                                             $getCurrentDet->id_cmt);
 
-                                $getQtySumBtm = $this->getBTMSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                $getQtySumBtm = $this->getBTMSUMQty($getCurrentDet->kode_sales_order, $getCurrentDet->kode_ukuran, 
+                                                                $getCurrentDet->color, $getCurrentDet->id_konsumen, $getCurrentDet->id_proses, 
                                                                 $getCurrentDet->id_cmt);
                                 // dd($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty']));
-                                if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
-                                    $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                                $getCurrentDet->id_cmt, 'minus', $getCurrentDet->qty - $rowData['qty'], true);
+                                if ($getCurrentDet->get_qty_terima < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $getCurrentDet->get_qty_terima)) {
+                                    $this->updateDataBTMQtyKirim($getCurrentDet->kode_sales_order, $getCurrentDet->kode_ukuran, 
+                                                                $getCurrentDet->color, $getCurrentDet->id_konsumen, $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt, 'minus', $getCurrentDet->qty - $getCurrentDet->get_qty_terima, true);
                                 }
-                                else if ($rowData['qty'] > $getCurrentDet->qty) {
-                                    $updatePlus = $rowData['qty'] - $getCurrentDet->qty;
-                                    $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                else if ($getCurrentDet->get_qty_terima > $getCurrentDet->qty) {
+                                    $updatePlus = $getCurrentDet->get_qty_terima - $getCurrentDet->qty;
+                                    $this->updateDataBTMQtyKirim($getCurrentDet->kode_sales_order, $getCurrentDet->kode_ukuran, 
+                                                                $getCurrentDet->color, $getCurrentDet->id_konsumen, $getCurrentDet->id_proses, 
                                                                 $getCurrentDet->id_cmt, 'plus', $updatePlus);
                                 }
-                                else if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm > $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
+                                else if ($getCurrentDet->get_qty_terima < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm > $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $getCurrentDet->get_qty_terima)) {
                                     $total_selisih = $getQtySumTfSo->total_qty_transfer - $getQtySumBtm->total_qty_btm;
                                     $total_selisih = $getCurrentDet->qty - $total_selisih;
-                                    throw new \Exception("QTY tidak dapat diubah lebih kecil dari {$total_selisih} pada ({$rowData['kode_sales_order']})");
+                                    throw new \Exception("QTY tidak dapat diubah lebih kecil dari {$total_selisih} pada ({$getCurrentDet->kode_sales_order}) - ({$getCurrentDet->color}) - ({$getCurrentDet->kode_ukuran})");
                                     break;
                                 }
                             }
                         }
                         $this->deleteRecordCondition('trans_barang_trf_so_det', 'id', $IncludedIDSO, 'id_header', $id);
                     }
-                }
             }
             
             if(!empty($detail)){
@@ -1184,6 +1184,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
         $builder->where('tbh.id_proses', 1);
         $builder->where('tbh.status', 1);
+        $builder->where('tbh.id_perusahaan', 1);
         $builder->where('tbmp.id_konsumen', $id_konsumen);
         $builder->where('tbmp.kode_ukuran', $kode_ukuran);
         $builder->where('tbmp.kode_sales_order', $kode_so);

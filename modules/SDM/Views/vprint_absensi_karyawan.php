@@ -171,53 +171,29 @@
             </thead>
             <tbody>
               <?php foreach ($detail_absensi as $absen) : ?>
-                  <?php 
-                    // 1. Cek apakah baris ini adalah hari Minggu
-                    $isMinggu = false;
-                    if (!empty($absen->tgl_absen)) {
-                        // date('N') mengembalikan angka 1 (Senin) sampai 7 (Minggu)
-                        if (date('N', strtotime($absen->tgl_absen)) == 7) {
-                            $isMinggu = true;
-                        }
-                    }
-
-                    // 2. Tentukan class warna status jika bukan hari minggu
-                    $statusClass = '';
-                    if (!$isMinggu) {
-                        if ($absen->status_text == 'Hadir') {
-                            $statusClass = 'status-hadir';
-                        } elseif ($absen->status_text == 'Telat') {
-                            $statusClass = 'status-telat';
-                        } elseif ($absen->status_text == 'Sakit') {
-                            $statusClass = 'status-sakit';
-                        } elseif ($absen->status_text == 'Izin') {
-                            $statusClass = 'status-izin';
-                        } elseif ($absen->status_text == 'Tanpa Keterangan') {
-                            $statusClass = 'status-alpa';
-                        }
-                    }
-                  ?>
-
-                  <?php if ($isMinggu) : ?>
-                      <tr class="row-empty">
-                          <td class="text-center"><?php echo !empty($absen->tgl_absen) ? date('d-m-Y', strtotime($absen->tgl_absen)) : '-'; ?></td>
-                          <td class="text-center"></td>
-                          <td class="text-center"></td>
-                          <td class="text-center">0</td>
-                          <td class="text-center"></td>
-                      </tr>
-                  <?php else : ?>
-                      <tr>
-                          <td class="text-center"><?php echo !empty($absen->tgl_absen) ? date('d-m-Y', strtotime($absen->tgl_absen)) : '-'; ?></td>
-                          
-                          <td class="text-center"><?php echo !empty($absen->jam_masuk) ? date('H:i:s', strtotime($absen->jam_masuk)) : ''; ?></td>
-                          <td class="text-center"><?php echo !empty($absen->jam_keluar) ? date('H:i:s', strtotime($absen->jam_keluar)) : ''; ?></td>
-                          
-                          <td class="text-center"><?php echo !empty($absen->terlambat) ? (int)$absen->terlambat : '0'; ?></td>
-                          <td class="text-center <?php echo $statusClass; ?>"><?php echo !empty($absen->status_text) ? $absen->status_text : ''; ?></td>
-                      </tr>
-                  <?php endif; ?>
-
+                <tr>
+                    <td class="text-center"><?php echo !empty($absen->tgl_absen) ? $absen->tgl_absen : '-'; ?></td>
+                    <td class="text-center"><?php echo !empty($absen->jam_masuk) ? date('H:i:s', strtotime($absen->jam_masuk)) : ''; ?></td>
+                    <td class="text-center"><?php echo !empty($absen->jam_keluar) ? date('H:i:s', strtotime($absen->jam_keluar)) : ''; ?></td>
+                    <td class="text-center"><?php echo !empty($absen->terlambat) ? $absen->terlambat : '0'; ?></td>
+                    <?php 
+                      $statusClass = '';
+                      if ($absen->status_text == 'Hadir') {
+                          $statusClass = 'status-hadir';
+                      } elseif ($absen->status_text == 'Telat') {
+                          $statusClass = 'status-telat';
+                      } elseif ($absen->status_text == 'Sakit') {
+                          $statusClass = 'status-sakit';
+                      }
+                      else if ($absen->status_text == 'Izin') {
+                          $statusClass = 'status-izin';
+                      }
+                      else if ($absen->status_text == 'Tanpa Keterangan') {
+                          $statusClass = 'status-alpa';
+                      }
+                    ?>
+                    <td class="text-center <?php echo $statusClass; ?>"><?php echo !empty($absen->status_text) ? $absen->status_text : '-'; ?></td>
+                </tr>
               <?php endforeach; ?>
             </tbody>
         </table>

@@ -254,6 +254,123 @@ class Mabsensi extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function laporan_penggajian_new($params = null) {
+        $builder = $this->db->table($this->table . " sdm");
+
+        // Definisikan tanggal awal & akhir untuk binding subquery agar aman
+        $startDate = !empty($params['tgl_mulai']) ? $params['tgl_mulai'] : '1970-01-01';
+        $endDate   = !empty($params['tgl_akhir']) ? $params['tgl_akhir'] : '2030-12-31';
+
+        // Struktur SELECT Dasar yang sama untuk type 2 maupun non-type 2
+        $selectFields = [
+            'rk.nip',
+            'rk.full_name',
+            'rk.posisi',
+            'rk.id AS id_karyawan',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2) AS izin',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha',
+            'rk.upah_harian',
+            '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) AS gaji_harian',
+            'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja',
+            'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam',
+            'rk.upah_lembur',
+            'rk.upah_lembur_we',
+            'rk.upah_jam',
+            'SUM(COALESCE(sdm.bonus, 0)) AS bonus',
+            'SUM(COALESCE(sdm.potongan, 0)) AS potongan',
+            'SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1) AS lembur',
+            'SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2) AS lembur_we',
+            '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 1), 0) * rk.upah_lembur) AS gaji_lembur',
+            '(COALESCE(SUM(COALESCE(sdm.jml_lembur, 0)) FILTER (WHERE sdm.status_lembur = 2), 0) * rk.upah_lembur_we) AS gaji_lembur_we',
+            'latest_bonus.bonus_keterangan AS bonus_keterangan',
+            'rk.premi_kehadiran AS premi',
+            
+            // --- KOREKSI DI SINI ---
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 AND EXTRACT(HOUR FROM sdm.jam_masuk) >= 8) AS terlambat',
+            'COALESCE(SUM(sdm.terlambat), 0) AS total_menit_terlambat'
+        ];
+
+        if (!empty($params['type']) && $params['type'] == 2) {
+            // Gabungkan kolom tambahan khusus tipe 2
+            $selectFields[] = 'COALESCE(th.harga_total, 0) AS harga_total';
+            $selectFields[] = 'COALESCE(tp1.jml_sample, 0) AS jml_sample';
+            $builder->select($selectFields);
+        } else {
+            // Default kolom tambahan untuk tipe non-2 agar struktur objek identik
+            $selectFields[] = '0 AS harga_total';
+            $selectFields[] = '0 AS jml_sample';
+            $builder->select($selectFields);
+        }
+
+        $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
+
+        // Join subquery untuk mengambil bonus_keterangan terakhir
+        if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
+            $builder->join(
+                "(SELECT id_karyawan, bonus_keterangan 
+                FROM sdm_absensi 
+                WHERE tgl_absen BETWEEN '{$startDate}' AND '{$endDate}' AND bonus_keterangan IS NOT NULL  
+                ORDER BY tgl_absen DESC, id DESC 
+                LIMIT 1) latest_bonus",
+                'sdm.id_karyawan = latest_bonus.id_karyawan',
+                'left'
+            );
+        }
+
+        $builder->where('sdm.active', 1);
+
+        if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
+            $builder->where("sdm.tgl_absen >=", $params['tgl_mulai']);
+            $builder->where("sdm.tgl_absen <=", $params['tgl_akhir']);
+        }
+
+        if (!empty($params['id_perusahaan'])) {
+            if ($params['id_perusahaan'] == 1) {
+                $builder->groupStart()
+                        ->where('rk.id_perusahaan', 1)
+                        ->orWhere('rk.id_perusahaan IS NULL')
+                        ->groupEnd();
+            } else {
+                $builder->where('rk.id_perusahaan', $params['id_perusahaan']);
+            }
+        }
+
+        // Blok kondisional Join & Group By untuk tipe 2 vs non-tipe 2
+        if (!empty($params['type']) && $params['type'] == 2) {
+            $builder->join(
+                "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
+                FROM trans_produksi_operator 
+                WHERE tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                AND (print_type = 1 OR print_type IS NULL)
+                GROUP BY id_operator) th",
+                'rk.id_operator = th.id_operator',
+                'left'
+            );
+
+            $builder->join(
+                "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
+                FROM trans_produksi_operator
+                WHERE tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                AND print_type = 2
+                GROUP BY id_operator) tp1",
+                'rk.id_operator = tp1.id_operator',
+                'left'
+            );
+
+            $builder->where("rk.type", $params['type']);
+            $builder->groupBy('rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, th.harga_total, latest_bonus.bonus_keterangan, tp1.jml_sample');
+        } else {
+            $builder->where('(rk.type <> 2 OR rk.type IS NULL)', null, false);
+            $builder->groupBy("rk.nip, rk.full_name, rk.posisi, rk.id, rk.upah_harian, rk.upah_lembur, rk.upah_lembur_we, rk.upah_jam, latest_bonus.bonus_keterangan");
+        }
+
+        $builder->orderBy("rk.nip ASC");
+
+        return $builder->get()->getResult();
+    }
+
     function getAbsensiByKaryawanAndDate($id_karyawan, $from, $to)
     {
         $builder = $this->db->table($this->table . " sdm");

@@ -2,24 +2,23 @@
 
 namespace Modules\SDM\Controllers;
 
-use CodeIgniter\Controller;
 use App\Controllers\BaseController;
 use App\Models\FileModel;
+use CodeIgniter\Controller;
+use DateTime;
 use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\JenisBarangModel;
-use Modules\Referensi\Models\SatuanModel;
 use Modules\Referensi\Models\KaryawanModel;
-use Modules\SDM\Models\Mabsensi;
+use Modules\Referensi\Models\SatuanModel;
 use Modules\Referensi\Models\ShiftModel;
-
-// user library spreadsheet for excel
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-use PhpOffice\PhpSpreadsheet\NamedRange;
+use Modules\SDM\Models\Mabsensi;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\NamedRange;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Absensi extends BaseController
 {
@@ -47,6 +46,17 @@ class Absensi extends BaseController
 
     $this->data['titlehead'] = "Absensi";
     $this->data['dnow'] = date('d-m-Y');
+    $sortKaryawan = [
+          [
+              'field' => 'full_name',
+              'dir' => 'ASC'
+          ]
+      ];
+    $dataKaryawan = $this->mkaryawan->getData(null, 0, 99999, $sortKaryawan);
+    foreach ($dataKaryawan as $key => $value) {
+      $value->id = encrypt($value->id);
+    }
+    $this->data['karyawan'] = $dataKaryawan;
     return view($this->views . '\absensi_list', $this->data);
   }
 
@@ -579,5 +589,58 @@ class Absensi extends BaseController
 
       return $this->response->setJSON($build_array);
 
+  }
+
+  function print_absensi_karyawan(){
+    $id = $this->request->getGet('id_karyawan');
+    $from = $this->request->getGet('from');
+    $to = $this->request->getGet('to');
+
+    $id = decrypt($id);
+    
+    $data_karyawan = $this->mkaryawan->getData($id);  
+
+    if (empty($data_karyawan)) {
+      $this->session->setFlashdata('err', "User tidak ditemukan !");
+      return redirect()->to('/sdm/absensi');
+    }
+
+    $formatTanggalIndo = function($dateString) {
+        if (empty($dateString)) return '-';
+        
+        // Mengantisipasi jika pemisah tanggal menggunakan '/' atau '-'
+        $dateString = str_replace('/', '-', $dateString); 
+        
+        // Buat objek DateTime dari format asal dd-mm-yyyy
+        $date = DateTime::createFromFormat('d-m-Y', $dateString);
+        
+        if (!$date) return $dateString; // Kembalikan string asli jika gagal parsing
+
+        // Daftar nama bulan singkat Indonesia
+        $bulanIndo = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+        ];
+
+        $hari  = $date->format('d');
+        $bulan = $bulanIndo[(int)$date->format('n')]; // 'n' menghasilkan angka bulan 1-12 tanpa angka 0 di depan
+        $tahun = $date->format('Y');
+
+        return "{$hari} {$bulan} {$tahun}";
+    };
+
+    $data_karyawan->periode_awal  = $formatTanggalIndo($from); // Hasil: "01 Mei 2026"
+    $data_karyawan->periode_akhir = $formatTanggalIndo($to);
+    $this->data['karyawan'] = $data_karyawan;
+    $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate($id, $from, $to);
+    $this->data['detail_absensi'] = $this->mabsen->getDetailAbsensiByKaryawanAndDate($id, $from, $to);
+
+    // $data_rekap_absensi = $this->mabsen->getData(null, 0, 9999, null, null, ['id_karyawan' => $id, 'tgl_absen_from' => $from, 'tgl_absen_to' => $to]);
+    // $this->data['rekap_absensi'] = $data_rekap_absensi;
+
+    // $params_det['id_sdm_gaji'] = $id;
+    // $params_det['nip'] = $nip;
+    // $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+    return view($this->views.'\vprint_absensi_karyawan', $this->data);
   }
 }

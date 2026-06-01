@@ -428,4 +428,58 @@ $(document).ready(function () {
             });
         }
     }
+
+    $('#btn-download-pdf').on('click', function(e) {
+        e.preventDefault();
+
+        let karyawanId = $('#pdf_karyawan').val();
+        let fromDate   = $('#pdf_from').val();
+        let toDate     = $('#pdf_to').val();
+        
+        let chkJam     = $('#chk_jam').is(':checked') ? 1 : 0;
+        let chkKet     = $('#chk_ket').is(':checked') ? 1 : 0;
+        let chkRekap   = $('#chk_rekap').is(':checked') ? 1 : 0;
+
+        // 1. Validasi Wajib Isi (Karyawan, Dari Tanggal, Sampai Tanggal)
+        if (!karyawanId) {
+            toastr.warning('Silakan pilih karyawan terlebih dahulu!', "Gagal", {
+                positionClass: "toast-top-right"
+            });
+            return;
+        }
+        if (!fromDate || !toDate) {
+            toastr.warning('Silakan isi rentang tanggal dengan lengkap!', "Gagal", {
+                positionClass: "toast-top-right"
+            });
+            return;
+        }
+
+        if (parseDate(toDate) < parseDate(fromDate)) {
+            toastr.warning('Tanggal "Sampai Tanggal" tidak boleh lebih kecil dari "Dari Tanggal"!', "Gagal", {
+                positionClass: "toast-top-right"
+            });
+            return;
+        }
+
+        // 3. Proses Export jika lolos validasi
+        let urlExport = "/sdm/absensi/export_absensi"; 
+
+        let params = $.param({
+            id_karyawan: karyawanId,
+            from: fromDate,
+            to: toDate,
+            jam: chkJam,
+            ket: chkKet,
+            rekap: chkRekap
+        });
+        
+        window.open(urlExport + '?' + params, '_blank');
+    });
+
+    function parseDate(str) {
+        // format dd-mm-yyyy
+        let parts = str.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]); 
+        // year, monthIndex (0=Jan), day
+    }
 });

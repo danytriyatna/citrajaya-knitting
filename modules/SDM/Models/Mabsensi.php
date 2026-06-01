@@ -253,5 +253,74 @@ class Mabsensi extends \App\Models\PrModel
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
+
+    function getAbsensiByKaryawanAndDate($id_karyawan, $from, $to)
+    {
+        $builder = $this->db->table($this->table . " sdm");
+        $builder->select("sdm.*, rk.nip, rk.full_name, rk.posisi");
+        $builder->join("ref_karyawan rk", "sdm.id_karyawan = rk.id");
+        $builder->where('sdm.active', 1);
+        $builder->where('sdm.id_karyawan', $id_karyawan);
+        $builder->where('sdm.tgl_absen', $tgl_absen);
+        return $builder->get()->getRow();
+    }
+
+    public function getRekapAbsensiByKaryawanAndDate($id_karyawan, $from, $to)
+    {
+        $builder = $this->db->table($this->table . " sa");
+        
+        $builder->select("
+            rk.full_name,
+            rk.nip,
+            SUM(CASE WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) < 8 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
+            SUM(CASE WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) >= 8 THEN 1 ELSE 0 END) AS total_telat,
+            SUM(CASE WHEN sa.status_kehadiran = 2 THEN 1 ELSE 0 END) AS total_izin,
+            SUM(CASE WHEN sa.status_kehadiran = 3 THEN 1 ELSE 0 END) AS total_sakit,
+            SUM(CASE WHEN sa.status_kehadiran = 4 THEN 1 ELSE 0 END) AS total_alpa,
+            COALESCE(SUM(sa.terlambat), 0) AS total_menit_terlambat
+        ");
+        
+        $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
+        
+        $builder->where('sa.id_karyawan', $id_karyawan);
+        $builder->where('sa.tgl_absen >=', $from);
+        $builder->where('sa.tgl_absen <=', $to);
+        
+        
+        $builder->groupBy("rk.full_name, rk.nip");
+
+        return $builder->get()->getRow();
+    }
+
+    public function getDetailAbsensiByKaryawanAndDate($id_karyawan, $from, $to)
+    {
+        $builder = $this->db->table($this->table . " sa");
+        
+        $builder->select("
+            rk.full_name,
+            sa.tgl_absen,
+            sa.jam_masuk,
+            sa.jam_keluar,
+            sa.terlambat,
+            CASE 
+                WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) >= 8 THEN 'Telat'
+                WHEN sa.status_kehadiran = 1 THEN 'Hadir'
+                WHEN sa.status_kehadiran = 2 THEN 'Izin'
+                WHEN sa.status_kehadiran = 3 THEN 'Sakit'
+                WHEN sa.status_kehadiran = 4 THEN 'Tanpa Keterangan'
+                ELSE '-' 
+            END AS status_text
+        ");
+        
+        $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
+        
+        $builder->where('sa.id_karyawan', $id_karyawan);
+        $builder->where('sa.tgl_absen >=', $from);
+        $builder->where('sa.tgl_absen <=', $to);
+        
+        $builder->orderBy('sa.tgl_absen', 'ASC');
+        
+        return $builder->get()->getResult();
+    }
     
 }

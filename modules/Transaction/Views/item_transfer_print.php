@@ -237,8 +237,8 @@
             <tr>
                 <td colspan="4" class="text-right"><b>Jumlah</b></td>
                 <td class="text-right"><b><?= !empty($xqty1) ? $xqty1 : 0 ?></b></td>
-                <td></td>
-                <td><?= $scanned != 0 ? $scanned." Ikat" : null ?></td>
+                <!-- <td></td> -->
+                <!-- <td><?= $scanned != 0 ? $scanned." Ikat" : null ?></td> -->
             </tr>
         </tfoot>
     </table>

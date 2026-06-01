@@ -787,7 +787,7 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                 precision: 0,   // Tidak ada desimal
             }
         },
-        { title: "Keterangan", field: "keterangan", width: "10%" },
+        { title: "Keterangan", field: "keterangan", width: "10%", editor: "input" },
         { title: "Total Scanned", field: "total_scanned", width: "10%", visible: false },
         {
             title: "Tgl<br>Scan", field: "tgl_scan", width: "10%", visible: false
@@ -815,6 +815,7 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
         { title: "Colour", field: "color", width: "20%" },
         { title: "Qty", field: "qty_kirim", width: "10%" },
         { title: "Ukuran", field: "kode_ukuran", width: "15%" },
+        { title: "Harga", field: "harga", width: "15%", visible:false },
     ],
     placeholder: "Tidak ada data",
 });
@@ -1487,7 +1488,7 @@ function addItem(data, typeAction = null, isScan = false) {
     if (index !== -1) {
         if (isScan) {
             produksi_data[index].total_scanned = parseFloat(produksi_data[index].total_scanned || 0) + 1;
-            produksi_data[index].keterangan = (parseFloat(produksi_data[index].total_scanned || 0)).toString() + ' Ikat';
+            // produksi_data[index].keterangan = (parseFloat(produksi_data[index].total_scanned || 0)).toString() + ' Ikat';
         }
         produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
         produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
@@ -1532,7 +1533,7 @@ function addItem(data, typeAction = null, isScan = false) {
 
         if (isScan) {
             data.total_scanned = 1;
-            data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
+            // data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
         }
 
         console.log("data yang ditambahkan", data)

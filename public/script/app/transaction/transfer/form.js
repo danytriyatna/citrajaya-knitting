@@ -1569,13 +1569,13 @@ function addItem(data, isScan = false) {
         row[index].qty = parseFloat(row[index].qty) + parseFloat(data.qty);
         if (isScan) {
             row[index].total_scanned = parseFloat(row[index].total_scanned) + 1;
-            row[index].keterangan = (parseFloat(row[index].total_scanned)).toString() + ' Ikat';
+            // row[index].keterangan = (parseFloat(row[index].total_scanned)).toString() + ' Ikat';
         }
         dtList.setData(row)
     } else {
         if (isScan) {
             data.total_scanned = 1;
-            data.keterangan = (data.total_scanned).toString() + ' Ikat';
+            // data.keterangan = (data.total_scanned).toString() + ' Ikat';
         }
         dtList.addRow(data)
     }

@@ -511,25 +511,50 @@ class ItemTransfer extends BaseController
 
       foreach ($resDataDetSO as $row) {
 
-          // buat key unik berdasarkan identitas barang
-          $key = implode('|', [
-              $row->kode_sales_order,
-              $row->id_konsumen,
-              $row->style,
-              $row->color,
-              $row->kode_ukuran,
-              $row->id_proses
-          ]);
+          if ($id_perusahaan == 2) {
+            $key = implode('|', [
+                $row->kode_sales_order,
+                $row->id_konsumen,
+                $row->style,
+                $row->color,
+                $row->kode_ukuran
+            ]);
+          }
+
+          else {
+            $key = implode('|', [
+                $row->kode_sales_order,
+                $row->id_konsumen,
+                $row->style,
+                $row->color,
+                $row->kode_ukuran,
+                $row->id_proses
+            ]);
+          }
 
           if (!isset($grouped[$key])) {
               // simpan baris pertama
               $grouped[$key] = $row;
               $grouped[$key]->qty_kirim = (int)$row->qty_kirim;
               $grouped[$key]->qty = (int)$row->qty;
+
+              if ($id_perusahaan == 2) {
+                  $grouped[$key]->harga = ((int)$row->id_proses === (int)$id_proses)
+                      ? $row->harga
+                      : 0;
+              }
           } else {
               // jumlahkan qty jika sudah ada
               $grouped[$key]->qty_kirim += (int)$row->qty_kirim;
               $grouped[$key]->qty += (int)$row->qty;
+
+              if ($id_perusahaan == 2) {
+                  if ((int)$row->id_proses === (int)$id_proses) {
+                      $grouped[$key]->harga = $row->harga;
+                  } elseif (!isset($grouped[$key]->harga) || $grouped[$key]->harga == 0) {
+                      $grouped[$key]->harga = 0;
+                  }
+              }
           }
 
           // qty_terima tetap satu (sama untuk semua header)

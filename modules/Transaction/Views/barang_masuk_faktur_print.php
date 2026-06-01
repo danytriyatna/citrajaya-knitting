@@ -225,6 +225,12 @@
                 $scanned = 0;
 
                 foreach ($dataSO as $row) : ?>
+                    <?php
+                    $keterangan = !empty($row->keterangan) ? $row->keterangan : null;
+                    // if ($keterangan == null && !empty($row->total_scanned)) {
+                    //     $keterangan = (float)$row->total_scanned . ' Ikat';
+                    // }
+                    ?>
                     <tr>
                         <td><?= $i++ ?></td>
                         <td><?= $row->kode_sales_order ?></td>
@@ -235,7 +241,7 @@
                         <td class="text-right"><?= $row->qty_kirim ?></td>
                         <td class="text-right"><?= !empty($row->harga) ? "Rp" . number_format(round($row->harga)) : "Rp0" ?></td>
                         <td class="text-right"><?= !empty($row->amount) ? "Rp" . number_format(round($row->amount)) : "Rp0" ?></td>
-                        <td class="text-right"><?= $row->keterangan ?></td>
+                        <td class="text-right"><?= $keterangan ?></td>
                     </tr>
                     <?php 
                     // Update total accumulator
@@ -265,7 +271,7 @@
                 <th class="text-right"><?= !empty($qty_kirim) ? $qty_kirim : 0 ?></th>
                 <th class="text-right"><?= !empty($harga) ? "Rp" . number_format(round($harga)) : "Rp0" ?></th>
                 <th class="text-right"><?= !empty($amount) ? "Rp" . number_format(round($amount)) : "Rp0" ?></th>
-                <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : 0 ?></th>
+                <!-- <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : 0 ?></th> -->
             </tr>
         </tfoot>
     </table>

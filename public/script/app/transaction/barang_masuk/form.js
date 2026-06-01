@@ -525,11 +525,21 @@ function loadDataSo() {
 }
 
 selectProses.on('change', function () {
-    loadDataSo();
+    if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
+        loadDataSo();
+    }
+    else {
+        refData = [];
+    }
 });
 
 selectOperator.on('change', function () {
-    loadDataSo();
+    if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
+        loadDataSo();
+    }
+    else {
+        refData = [];
+    }
 });
 
 setTimeout(() => {
@@ -1430,6 +1440,7 @@ $("#text_barcode").autocomplete({
 
 $("#select_perusahaan").on("change", function () {
     let id_perusahaan = $(this).val();
+    selectOperator.val(null).trigger('change');
 
     if (id_perusahaan == 2) {
         dtListProduksi.hideColumn("qty_kirim");
@@ -1478,6 +1489,7 @@ $("#select_perusahaan").on("change", function () {
 function addItem(data, typeAction = null, isScan = false) {
     let produksi_data = dtListProduksi.getData();
     let index = -1;
+    
     if (produksi_data.some(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
         index = produksi_data.findIndex(x =>
 
@@ -1485,7 +1497,7 @@ function addItem(data, typeAction = null, isScan = false) {
             (x.color ? x.color.split('~')[0] : '') == (data.color ? data.color.split('~')[0] : '') && (x.color ? x.color.split('~')[1] : '') == (data.color ? data.color.split('~')[1] : '') && x.kode_ukuran == data.kode_ukuran
         );
     }
-    if (index !== -1) {
+    if (index !== -1 && selectPerusahaan.val() != 2) {
         if (isScan) {
             produksi_data[index].total_scanned = parseFloat(produksi_data[index].total_scanned || 0) + 1;
             // produksi_data[index].keterangan = (parseFloat(produksi_data[index].total_scanned || 0)).toString() + ' Ikat';
@@ -1577,6 +1589,7 @@ $("#text_barcode").on("keypress", function (e) {
 
         if (refData.length > 0) {
             const arrKunci = kataKunci.split(";");
+            console.log(arrKunci);
             let hasil = refData.map(item => ({ ...item }));
 
             if (arrKunci[0] != undefined && arrKunci[0] != '') {
@@ -1609,6 +1622,14 @@ $("#text_barcode").on("keypress", function (e) {
                     return false;
                 });
             }
+            else {
+                return Swal.fire({
+                    text: "Scan Kosong!.",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
 
 
 
@@ -1617,7 +1638,6 @@ $("#text_barcode").on("keypress", function (e) {
                 hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                 hasil[0].tgl_scan = arrKunci[arrKunci.length - 1] ? arrKunci[arrKunci.length - 1] : null;
                 addItem(hasil[0], 'scan', true);
-
                 setTimeout(() => {
                     $("#text_barcode").val("");
                     refData = xrefData;
@@ -1638,5 +1658,12 @@ $("#text_barcode").on("keypress", function (e) {
                 timer: 2000
             });
         }
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const idPerusahaan = $(selectPerusahaan).val();
+    if (idPerusahaan == 2) {
+        dtListProduksi.hideColumn("qty_kirim");
     }
 });

@@ -510,7 +510,7 @@ class ItemTransfer extends BaseController
       $grouped = [];
 
       foreach ($resDataDetSO as $row) {
-
+          $row->keterangan = null;
           if ($id_perusahaan == 2) {
             $key = implode('|', [
                 $row->kode_sales_order,

@@ -215,7 +215,11 @@
             $scanned = 0;
             foreach ($dataSO as $row) {
                 $xqty1 = $xqty1 + (int) $row->qty;
-                $scanned = $scanned + (int) $row->total_scanned; ?>
+                if (!empty($row->keterangan) && preg_match('/\d+\s*Ikat/i', $row->keterangan)) {
+                    // mengandung pola seperti "1 Ikat", "10 Ikat", "5Ikat", dll
+                    $scanned = $scanned + (int) $row->total_scanned;
+                }
+                 ?>
                 <tr>
                     <td><?= $i++ ?></td>
                     <td>
@@ -237,8 +241,8 @@
             <tr>
                 <td colspan="4" class="text-right"><b>Jumlah</b></td>
                 <td class="text-right"><b><?= !empty($xqty1) ? $xqty1 : 0 ?></b></td>
-                <!-- <td></td> -->
-                <!-- <td><?= $scanned != 0 ? $scanned." Ikat" : null ?></td> -->
+                <td></td>
+                <td><?= $scanned != 0 ? $scanned." Ikat" : null ?></td>
             </tr>
         </tfoot>
     </table>

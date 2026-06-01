@@ -226,10 +226,10 @@
 
                 foreach ($dataSO as $row) : ?>
                     <?php
-                    $keterangan = !empty($row->keterangan) ? $row->keterangan : null;
-                    // if ($keterangan == null && !empty($row->total_scanned)) {
-                    //     $keterangan = (float)$row->total_scanned . ' Ikat';
-                    // }
+                    if (!empty($row->keterangan) && preg_match('/\d+\s*Ikat/i', $row->keterangan)) {
+                        // mengandung pola seperti "1 Ikat", "10 Ikat", "5Ikat", dll
+                        $scanned = $scanned + (int) $row->total_scanned;
+                    }
                     ?>
                     <tr>
                         <td><?= $i++ ?></td>
@@ -241,7 +241,7 @@
                         <td class="text-right"><?= $row->qty_kirim ?></td>
                         <td class="text-right"><?= !empty($row->harga) ? "Rp" . number_format(round($row->harga)) : "Rp0" ?></td>
                         <td class="text-right"><?= !empty($row->amount) ? "Rp" . number_format(round($row->amount)) : "Rp0" ?></td>
-                        <td class="text-right"><?= $keterangan ?></td>
+                        <td class="text-right"><?= !empty($row->keterangan) ? $row->keterangan : '-' ?></td>
                     </tr>
                     <?php 
                     // Update total accumulator
@@ -249,7 +249,6 @@
                     $qty_kirim += $row->qty_kirim;
                     $harga += !empty($row->harga) ? $row->harga : 0;
                     $amount += !empty($row->amount) ? $row->amount : 0;
-                    $scanned += !empty($row->total_scanned) ? $row->total_scanned : 0;
                 endforeach; 
             else : ?>
                 <tr>
@@ -271,7 +270,7 @@
                 <th class="text-right"><?= !empty($qty_kirim) ? $qty_kirim : 0 ?></th>
                 <th class="text-right"><?= !empty($harga) ? "Rp" . number_format(round($harga)) : "Rp0" ?></th>
                 <th class="text-right"><?= !empty($amount) ? "Rp" . number_format(round($amount)) : "Rp0" ?></th>
-                <!-- <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : 0 ?></th> -->
+                <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : null ?></th>
             </tr>
         </tfoot>
     </table>

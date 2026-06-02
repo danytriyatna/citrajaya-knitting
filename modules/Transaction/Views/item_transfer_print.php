@@ -215,10 +215,10 @@
             $scanned = 0;
             foreach ($dataSO as $row) {
                 $xqty1 = $xqty1 + (int) $row->qty;
-                if (!empty($row->keterangan) && preg_match('/\d+\s*Ikat/i', $row->keterangan)) {
-                    // mengandung pola seperti "1 Ikat", "10 Ikat", "5Ikat", dll
-                    $scanned = $scanned + (int) $row->total_scanned;
-                }
+                // if (!empty($row->keterangan) && preg_match('/\d+\s*Ikat/i', $row->keterangan)) {
+                //     // mengandung pola seperti "1 Ikat", "10 Ikat", "5Ikat", dll
+                // }
+                $scanned = $scanned + (int) $row->total_scanned;
                  ?>
                 <tr>
                     <td><?= $i++ ?></td>

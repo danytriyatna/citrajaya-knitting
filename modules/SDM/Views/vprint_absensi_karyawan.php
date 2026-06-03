@@ -172,7 +172,7 @@
             <tbody>
               <?php foreach ($detail_absensi as $absen) : ?>
                 <tr>
-                    <td class="text-center"><?php echo !empty($absen->tgl_absen) ? $absen->tgl_absen : '-'; ?></td>
+                    <td class="text-center"><?php echo !empty($absen->tgl_absen) ? fdate_eng_to_ind($absen->tgl_absen) : '-'; ?></td>
                     <td class="text-center"><?php echo !empty($absen->jam_masuk) ? date('H:i:s', strtotime($absen->jam_masuk)) : ''; ?></td>
                     <td class="text-center"><?php echo !empty($absen->jam_keluar) ? date('H:i:s', strtotime($absen->jam_keluar)) : ''; ?></td>
                     <td class="text-center"><?php echo !empty($absen->terlambat) ? $absen->terlambat : '0'; ?></td>

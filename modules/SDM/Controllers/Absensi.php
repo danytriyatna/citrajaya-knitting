@@ -631,6 +631,9 @@ class Absensi extends BaseController
 
     $data_karyawan->periode_awal  = $formatTanggalIndo($from); // Hasil: "01 Mei 2026"
     $data_karyawan->periode_akhir = $formatTanggalIndo($to);
+
+    $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
+    $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
     $this->data['karyawan'] = $data_karyawan;
     $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate($id, $from, $to);
     $this->data['detail_absensi'] = $this->mabsen->getDetailAbsensiByKaryawanAndDate($id, $from, $to);

@@ -825,7 +825,7 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
         { title: "Colour", field: "color", width: "20%" },
         { title: "Qty", field: "qty_kirim", width: "10%" },
         { title: "Ukuran", field: "kode_ukuran", width: "15%" },
-        { title: "Harga", field: "harga", width: "15%", visible:false },
+        { title: "Harga", field: "harga", width: "15%", visible: false },
     ],
     placeholder: "Tidak ada data",
 });
@@ -1489,7 +1489,7 @@ $("#select_perusahaan").on("change", function () {
 function addItem(data, typeAction = null, isScan = false) {
     let produksi_data = dtListProduksi.getData();
     let index = -1;
-    
+
     if (produksi_data.some(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
         index = produksi_data.findIndex(x =>
 
@@ -1585,11 +1585,9 @@ $("#text_barcode").on("keypress", function (e) {
 
 
         const kataKunci = $("#text_barcode").val()
-        const arrKunvi = kataKunci.split(";");
+        const arrKunci = kataKunci.split(";");
 
         if (refData.length > 0) {
-            const arrKunci = kataKunci.split(";");
-            console.log(arrKunci);
             let hasil = refData.map(item => ({ ...item }));
 
             if (arrKunci[0] != undefined && arrKunci[0] != '') {
@@ -1600,29 +1598,33 @@ $("#text_barcode").on("keypress", function (e) {
             }
             if (arrKunci[2] != undefined && arrKunci[2] != '') {
                 const normalize = str => str.replace(/\s+/g, ' ').trim();
-                const inputColor = normalize(arrKunci[2]);
-                const inputColor2 = (arrKunci[4]) ? normalize(arrKunci[4]) : null;
+                const inputColor1 = normalize(arrKunci[2].toUpperCase());
+                const inputColor2 = arrKunci[4] ? normalize(arrKunci[4].toUpperCase()) : null;
+                const inputColor3 = arrKunci[5] ? normalize(arrKunci[5].toUpperCase()) : null;
+
                 hasil = hasil.filter(item => {
                     if (item.color) {
-                        const firstColor = item.color.toString().split('~')[0].toUpperCase();
-                        const pertamaWarna = normalize(firstColor);
+                        const colorParts = item.color.toString().split('~');
+                        const warna1 = normalize(colorParts[0].toUpperCase());
+                        const warna2 = colorParts[1] ? normalize(colorParts[1].toUpperCase()) : null;
+                        const warna3 = colorParts[2] ? normalize(colorParts[2].toUpperCase()) : null;
 
-                        const secondColor = item.color.toString().split('~')[1];
-                        if (secondColor != undefined && secondColor != "" && secondColor != null) {
-                            const secondColor2 = secondColor.toUpperCase();
-                            const kode_ukuranWarna = normalize(secondColor2);
-                            return pertamaWarna == inputColor && kode_ukuranWarna == inputColor2;
+                        // 3 warna
+                        if (warna3 && inputColor3) {
+                            return warna1 == inputColor1 && warna2 == inputColor2 && warna3 == inputColor3;
                         }
-
+                        // 2 warna
+                        else if (warna2 && inputColor2) {
+                            return warna1 == inputColor1 && warna2 == inputColor2;
+                        }
+                        // 1 warna
                         else {
-                            return pertamaWarna == inputColor;
+                            return warna1 == inputColor1;
                         }
-
                     }
                     return false;
                 });
-            }
-            else {
+            } else {
                 return Swal.fire({
                     text: "Scan Kosong!.",
                     icon: 'warning',
@@ -1631,10 +1633,8 @@ $("#text_barcode").on("keypress", function (e) {
                 });
             }
 
-
-
-
             if (hasil.length > 0) {
+                // qty tetap di [3], tgl_scan ambil index terakhir
                 hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
                 hasil[0].tgl_scan = arrKunci[arrKunci.length - 1] ? arrKunci[arrKunci.length - 1] : null;
                 addItem(hasil[0], 'scan', true);

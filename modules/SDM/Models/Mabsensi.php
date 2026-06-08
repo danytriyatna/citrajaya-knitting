@@ -390,7 +390,7 @@ class Mabsensi extends \App\Models\PrModel
             rk.full_name,
             rk.nip,
             SUM(CASE WHEN sa.status_kehadiran = 1 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
-            SUM(CASE WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) >= 8 THEN 1 ELSE 0 END) AS total_telat,
+            SUM(CASE WHEN sa.status_kehadiran = 1 AND sa.jam_masuk::time > '08:01:00' THEN 1 ELSE 0 END) AS total_telat,
             SUM(CASE WHEN sa.status_kehadiran = 2 THEN 1 ELSE 0 END) AS total_izin,
             SUM(CASE WHEN sa.status_kehadiran = 3 THEN 1 ELSE 0 END) AS total_sakit,
             SUM(CASE WHEN sa.status_kehadiran = 4 THEN 1 ELSE 0 END) AS total_alpa,
@@ -429,7 +429,7 @@ class Mabsensi extends \App\Models\PrModel
             sa.jam_keluar,
             sa.terlambat,
             CASE 
-                WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) >= 8 THEN 'Telat'
+                WHEN sa.status_kehadiran = 1 AND sa.jam_masuk::time > '08:01:00' THEN 'Telat'
                 WHEN sa.status_kehadiran = 1 THEN 'Hadir'
                 WHEN sa.status_kehadiran = 2 THEN 'Izin'
                 WHEN sa.status_kehadiran = 3 THEN 'Sakit'

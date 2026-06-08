@@ -831,7 +831,10 @@ class WalkorderModel extends \App\Models\PrModel
                 ELSE 'via_warna'
             END AS sumber_warna,
 
-            COALESCE(rb.keterangan, rw.keterangan) AS kode_warna,
+            CASE
+                WHEN abx.id_barang IS NOT NULL THEN COALESCE(NULLIF(rb.keterangan, ''), rw.keterangan)
+                ELSE rw.keterangan
+            END AS kode_warna,
 
             SUM(abx.gram)        as gram,
             SUM(abx.kg)          as kg,

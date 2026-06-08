@@ -317,21 +317,45 @@ class SampleModel extends \App\Models\PrModel
 
                 -- keterangan: ambil dari ref_barang jika ada, fallback ke kode_warna ref_warna
                 TRIM(BOTH ' ~ ' FROM
-                    CASE WHEN b1.id IS NOT NULL THEN COALESCE(b1.keterangan, '') ELSE COALESCE(w1.keterangan, '') END ||
-                    CASE WHEN b2.id IS NOT NULL AND b2.keterangan IS NOT NULL THEN ' ~ ' || b2.keterangan
-                        WHEN b2.id IS NULL AND w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
-                    CASE WHEN b3.id IS NOT NULL AND b3.keterangan IS NOT NULL THEN ' ~ ' || b3.keterangan
-                        WHEN b3.id IS NULL AND w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
-                    CASE WHEN b4.id IS NOT NULL AND b4.keterangan IS NOT NULL THEN ' ~ ' || b4.keterangan
-                        WHEN b4.id IS NULL AND w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
-                    CASE WHEN b5.id IS NOT NULL AND b5.keterangan IS NOT NULL THEN ' ~ ' || b5.keterangan
-                        WHEN b5.id IS NULL AND w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
-                    CASE WHEN b6.id IS NOT NULL AND b6.keterangan IS NOT NULL THEN ' ~ ' || b6.keterangan
-                        WHEN b6.id IS NULL AND w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
-                    CASE WHEN b7.id IS NOT NULL AND b7.keterangan IS NOT NULL THEN ' ~ ' || b7.keterangan
-                        WHEN b7.id IS NULL AND w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN b8.id IS NOT NULL AND b8.keterangan IS NOT NULL THEN ' ~ ' || b8.keterangan
-                        WHEN b8.id IS NULL AND w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
+                    CASE 
+                        WHEN b1.id IS NOT NULL THEN COALESCE(NULLIF(b1.keterangan, ''), COALESCE(w1.keterangan, '')) 
+                        ELSE COALESCE(w1.keterangan, '') 
+                    END ||
+                    CASE 
+                        WHEN b2.id IS NOT NULL AND NULLIF(b2.keterangan, '') IS NOT NULL THEN ' ~ ' || b2.keterangan
+                        WHEN b2.id IS NOT NULL AND NULLIF(b2.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w2.keterangan, ''), '')
+                        WHEN b2.id IS NULL     AND w2.keterangan IS NOT NULL             THEN ' ~ ' || w2.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b3.id IS NOT NULL AND NULLIF(b3.keterangan, '') IS NOT NULL THEN ' ~ ' || b3.keterangan
+                        WHEN b3.id IS NOT NULL AND NULLIF(b3.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w3.keterangan, ''), '')
+                        WHEN b3.id IS NULL     AND w3.keterangan IS NOT NULL             THEN ' ~ ' || w3.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b4.id IS NOT NULL AND NULLIF(b4.keterangan, '') IS NOT NULL THEN ' ~ ' || b4.keterangan
+                        WHEN b4.id IS NOT NULL AND NULLIF(b4.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w4.keterangan, ''), '')
+                        WHEN b4.id IS NULL     AND w4.keterangan IS NOT NULL             THEN ' ~ ' || w4.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b5.id IS NOT NULL AND NULLIF(b5.keterangan, '') IS NOT NULL THEN ' ~ ' || b5.keterangan
+                        WHEN b5.id IS NOT NULL AND NULLIF(b5.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w5.keterangan, ''), '')
+                        WHEN b5.id IS NULL     AND w5.keterangan IS NOT NULL             THEN ' ~ ' || w5.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b6.id IS NOT NULL AND NULLIF(b6.keterangan, '') IS NOT NULL THEN ' ~ ' || b6.keterangan
+                        WHEN b6.id IS NOT NULL AND NULLIF(b6.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w6.keterangan, ''), '')
+                        WHEN b6.id IS NULL     AND w6.keterangan IS NOT NULL             THEN ' ~ ' || w6.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b7.id IS NOT NULL AND NULLIF(b7.keterangan, '') IS NOT NULL THEN ' ~ ' || b7.keterangan
+                        WHEN b7.id IS NOT NULL AND NULLIF(b7.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w7.keterangan, ''), '')
+                        WHEN b7.id IS NULL     AND w7.keterangan IS NOT NULL             THEN ' ~ ' || w7.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b8.id IS NOT NULL AND NULLIF(b8.keterangan, '') IS NOT NULL THEN ' ~ ' || b8.keterangan
+                        WHEN b8.id IS NOT NULL AND NULLIF(b8.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w8.keterangan, ''), '')
+                        WHEN b8.id IS NULL     AND w8.keterangan IS NOT NULL             THEN ' ~ ' || w8.keterangan ELSE '' 
+                    END
                 ) AS keterangan,
 
                 {$col11},
@@ -503,21 +527,45 @@ class SampleModel extends \App\Models\PrModel
                     CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
                 TRIM(BOTH ' ~ ' FROM
-                    CASE WHEN b1.id IS NOT NULL THEN COALESCE(b1.keterangan, '') ELSE COALESCE(w1.keterangan, '') END ||
-                    CASE WHEN b2.id IS NOT NULL AND b2.keterangan IS NOT NULL THEN ' ~ ' || b2.keterangan
-                        WHEN b2.id IS NULL AND w2.keterangan IS NOT NULL THEN ' ~ ' || w2.keterangan ELSE '' END ||
-                    CASE WHEN b3.id IS NOT NULL AND b3.keterangan IS NOT NULL THEN ' ~ ' || b3.keterangan
-                        WHEN b3.id IS NULL AND w3.keterangan IS NOT NULL THEN ' ~ ' || w3.keterangan ELSE '' END ||
-                    CASE WHEN b4.id IS NOT NULL AND b4.keterangan IS NOT NULL THEN ' ~ ' || b4.keterangan
-                        WHEN b4.id IS NULL AND w4.keterangan IS NOT NULL THEN ' ~ ' || w4.keterangan ELSE '' END ||
-                    CASE WHEN b5.id IS NOT NULL AND b5.keterangan IS NOT NULL THEN ' ~ ' || b5.keterangan
-                        WHEN b5.id IS NULL AND w5.keterangan IS NOT NULL THEN ' ~ ' || w5.keterangan ELSE '' END ||
-                    CASE WHEN b6.id IS NOT NULL AND b6.keterangan IS NOT NULL THEN ' ~ ' || b6.keterangan
-                        WHEN b6.id IS NULL AND w6.keterangan IS NOT NULL THEN ' ~ ' || w6.keterangan ELSE '' END ||
-                    CASE WHEN b7.id IS NOT NULL AND b7.keterangan IS NOT NULL THEN ' ~ ' || b7.keterangan
-                        WHEN b7.id IS NULL AND w7.keterangan IS NOT NULL THEN ' ~ ' || w7.keterangan ELSE '' END ||
-                    CASE WHEN b8.id IS NOT NULL AND b8.keterangan IS NOT NULL THEN ' ~ ' || b8.keterangan
-                        WHEN b8.id IS NULL AND w8.keterangan IS NOT NULL THEN ' ~ ' || w8.keterangan ELSE '' END
+                    CASE 
+                        WHEN b1.id IS NOT NULL THEN COALESCE(NULLIF(b1.keterangan, ''), COALESCE(w1.keterangan, '')) 
+                        ELSE COALESCE(w1.keterangan, '') 
+                    END ||
+                    CASE 
+                        WHEN b2.id IS NOT NULL AND NULLIF(b2.keterangan, '') IS NOT NULL THEN ' ~ ' || b2.keterangan
+                        WHEN b2.id IS NOT NULL AND NULLIF(b2.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w2.keterangan, ''), '')
+                        WHEN b2.id IS NULL     AND w2.keterangan IS NOT NULL             THEN ' ~ ' || w2.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b3.id IS NOT NULL AND NULLIF(b3.keterangan, '') IS NOT NULL THEN ' ~ ' || b3.keterangan
+                        WHEN b3.id IS NOT NULL AND NULLIF(b3.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w3.keterangan, ''), '')
+                        WHEN b3.id IS NULL     AND w3.keterangan IS NOT NULL             THEN ' ~ ' || w3.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b4.id IS NOT NULL AND NULLIF(b4.keterangan, '') IS NOT NULL THEN ' ~ ' || b4.keterangan
+                        WHEN b4.id IS NOT NULL AND NULLIF(b4.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w4.keterangan, ''), '')
+                        WHEN b4.id IS NULL     AND w4.keterangan IS NOT NULL             THEN ' ~ ' || w4.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b5.id IS NOT NULL AND NULLIF(b5.keterangan, '') IS NOT NULL THEN ' ~ ' || b5.keterangan
+                        WHEN b5.id IS NOT NULL AND NULLIF(b5.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w5.keterangan, ''), '')
+                        WHEN b5.id IS NULL     AND w5.keterangan IS NOT NULL             THEN ' ~ ' || w5.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b6.id IS NOT NULL AND NULLIF(b6.keterangan, '') IS NOT NULL THEN ' ~ ' || b6.keterangan
+                        WHEN b6.id IS NOT NULL AND NULLIF(b6.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w6.keterangan, ''), '')
+                        WHEN b6.id IS NULL     AND w6.keterangan IS NOT NULL             THEN ' ~ ' || w6.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b7.id IS NOT NULL AND NULLIF(b7.keterangan, '') IS NOT NULL THEN ' ~ ' || b7.keterangan
+                        WHEN b7.id IS NOT NULL AND NULLIF(b7.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w7.keterangan, ''), '')
+                        WHEN b7.id IS NULL     AND w7.keterangan IS NOT NULL             THEN ' ~ ' || w7.keterangan ELSE '' 
+                    END ||
+                    CASE 
+                        WHEN b8.id IS NOT NULL AND NULLIF(b8.keterangan, '') IS NOT NULL THEN ' ~ ' || b8.keterangan
+                        WHEN b8.id IS NOT NULL AND NULLIF(b8.keterangan, '') IS NULL     THEN COALESCE(' ~ ' || NULLIF(w8.keterangan, ''), '')
+                        WHEN b8.id IS NULL     AND w8.keterangan IS NOT NULL             THEN ' ~ ' || w8.keterangan ELSE '' 
+                    END
                 ) AS keterangan,
                 {$col11},
                 COALESCE((

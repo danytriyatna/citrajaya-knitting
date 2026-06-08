@@ -390,7 +390,11 @@ class Mabsensi extends \App\Models\PrModel
             rk.full_name,
             rk.nip,
             SUM(CASE WHEN sa.status_kehadiran = 1 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
-            SUM(CASE WHEN sa.status_kehadiran = 1 AND sa.jam_masuk::time > '08:01:00' THEN 1 ELSE 0 END) AS total_telat,
+            SUM(CASE 
+                WHEN sa.status_kehadiran = 1 
+                AND sa.jam_masuk::time > (ms.jam_masuk + INTERVAL '1 minute')::time 
+                THEN 1 ELSE 0 
+            END) AS total_telat,
             SUM(CASE WHEN sa.status_kehadiran = 2 THEN 1 ELSE 0 END) AS total_izin,
             SUM(CASE WHEN sa.status_kehadiran = 3 THEN 1 ELSE 0 END) AS total_sakit,
             SUM(CASE WHEN sa.status_kehadiran = 4 THEN 1 ELSE 0 END) AS total_alpa,
@@ -399,6 +403,7 @@ class Mabsensi extends \App\Models\PrModel
         ");
         
         $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
+        $builder->join("m_shift ms", "ms.id = sa.id_shift"); // JOIN ke m_shift
 
         if (empty($rekap_absensi)) {
             $builder->where('sa.id_karyawan', $id_karyawan);
@@ -407,7 +412,6 @@ class Mabsensi extends \App\Models\PrModel
         $builder->where('sa.tgl_absen >=', $from);
         $builder->where('sa.tgl_absen <=', $to);
         $builder->where('rk.active', 1);
-        
         
         $builder->groupBy("rk.full_name, rk.nip");
         $builder->orderBy('rk.nip', 'ASC');
@@ -430,7 +434,8 @@ class Mabsensi extends \App\Models\PrModel
             sa.jam_keluar,
             sa.terlambat,
             CASE 
-                WHEN sa.status_kehadiran = 1 AND sa.jam_masuk::time > '08:01:00' THEN 'Telat'
+                WHEN sa.status_kehadiran = 1 
+                AND sa.jam_masuk::time > (ms.jam_masuk + INTERVAL '1 minute')::time THEN 'Telat'
                 WHEN sa.status_kehadiran = 1 THEN 'Hadir'
                 WHEN sa.status_kehadiran = 2 THEN 'Izin'
                 WHEN sa.status_kehadiran = 3 THEN 'Sakit'
@@ -441,6 +446,7 @@ class Mabsensi extends \App\Models\PrModel
         ");
         
         $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
+        $builder->join("m_shift ms", "ms.id = sa.id_shift"); // JOIN ke m_shift
         
         $builder->where('sa.id_karyawan', $id_karyawan);
         $builder->where('sa.tgl_absen >=', $from);

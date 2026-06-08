@@ -95,7 +95,11 @@
         }
         .status-alpa {
             background-color: #FFC000 !important;
-            color: red;
+            color: black;
+        }
+        .status-cuti {
+            background-color: #FFCCCC !important;
+            color: black;
         }
         .row-empty {
             background-color: #D9D9D9 !important;
@@ -190,6 +194,9 @@
                       }
                       else if ($absen->status_text == 'Tanpa Keterangan') {
                           $statusClass = 'status-alpa';
+                      }
+                      else if ($absen->status_text == 'Cuti') {
+                          $statusClass = 'status-cuti';
                       }
                     ?>
                     <td class="text-center <?php echo $statusClass; ?>"><?php echo !empty($absen->status_text) ? $absen->status_text : '-'; ?></td>

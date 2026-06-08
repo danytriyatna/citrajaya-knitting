@@ -108,9 +108,9 @@ class Mabsensi extends \App\Models\PrModel
                 'rk.posisi',
                 'rk.id AS id_karyawan',
                 'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir',
-                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2) AS izin',
+                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin',
                 'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit',
-                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha',
+                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5)) AS alpha',
                 'rk.upah_harian',
                 '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) AS gaji_harian',
                 'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja',
@@ -138,9 +138,9 @@ class Mabsensi extends \App\Models\PrModel
                           rk.posisi,
                           rk.id as id_karyawan,
                           COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2) AS izin,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin,
                           COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5)) AS alpha,
                           rk.upah_harian,
                           (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) as gaji_harian,
                           -- Perbaikan SUM() dengan FILTER
@@ -382,29 +382,38 @@ class Mabsensi extends \App\Models\PrModel
         return $builder->get()->getRow();
     }
 
-    public function getRekapAbsensiByKaryawanAndDate($id_karyawan, $from, $to)
+    public function getRekapAbsensiByKaryawanAndDate($id_karyawan = null, $from = null, $to = null, $rekap_absensi = null)
     {
         $builder = $this->db->table($this->table . " sa");
         
         $builder->select("
             rk.full_name,
             rk.nip,
-            SUM(CASE WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) < 8 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
+            SUM(CASE WHEN sa.status_kehadiran = 1 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
             SUM(CASE WHEN sa.status_kehadiran = 1 AND EXTRACT(HOUR FROM sa.jam_masuk) >= 8 THEN 1 ELSE 0 END) AS total_telat,
             SUM(CASE WHEN sa.status_kehadiran = 2 THEN 1 ELSE 0 END) AS total_izin,
             SUM(CASE WHEN sa.status_kehadiran = 3 THEN 1 ELSE 0 END) AS total_sakit,
             SUM(CASE WHEN sa.status_kehadiran = 4 THEN 1 ELSE 0 END) AS total_alpa,
+            SUM(CASE WHEN sa.status_kehadiran = 5 THEN 1 ELSE 0 END) AS total_cuti,
             COALESCE(SUM(sa.terlambat), 0) AS total_menit_terlambat
         ");
         
         $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
+
+        if (empty($rekap_absensi)) {
+            $builder->where('sa.id_karyawan', $id_karyawan);
+        } 
         
-        $builder->where('sa.id_karyawan', $id_karyawan);
         $builder->where('sa.tgl_absen >=', $from);
         $builder->where('sa.tgl_absen <=', $to);
+        $builder->where('rk.active', 1);
         
         
         $builder->groupBy("rk.full_name, rk.nip");
+
+        if (!empty($rekap_absensi)) {
+            return $builder->get()->getResult();
+        }
 
         return $builder->get()->getRow();
     }
@@ -425,6 +434,7 @@ class Mabsensi extends \App\Models\PrModel
                 WHEN sa.status_kehadiran = 2 THEN 'Izin'
                 WHEN sa.status_kehadiran = 3 THEN 'Sakit'
                 WHEN sa.status_kehadiran = 4 THEN 'Tanpa Keterangan'
+                WHEN sa.status_kehadiran = 5 THEN 'Cuti'
                 ELSE '-' 
             END AS status_text
         ");

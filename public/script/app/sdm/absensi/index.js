@@ -142,7 +142,7 @@ $(document).ready(function () {
 
             {
 				title: 'Status Kehadiran', field: 'status_kehadiran', headerSort:false, sorter: 'string',
-				width: 180, align:'center', editor:"list", editorParams:{values:{"Hadir":"Hadir", "Izin":"Izin", "Sakit":"Sakit" , "Tanpa Keterangan":"Tanpa Keterangan", "Rolling Shift":"Rolling Shift"}}
+				width: 180, align:'center', editor:"list", editorParams:{values:{"Hadir":"Hadir", "Izin":"Izin", "Sakit":"Sakit" , "Tanpa Keterangan":"Tanpa Keterangan", "Rolling Shift":"Rolling Shift", "Cuti":"Cuti"}}
 			} ,
 
             {
@@ -197,6 +197,8 @@ $(document).ready(function () {
 				
         ],
         // layout: 'fitColumns',
+        height: "800px",  // ← ini kuncinya, header akan otomatis sticky
+        layout: "fitColumns",
         ajaxURL: "/sdm/absensi/list",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
@@ -429,50 +431,67 @@ $(document).ready(function () {
         }
     }
 
-    $('#btn-download-pdf').on('click', function(e) {
+    $('#pdf_type').on('change', function () {
+        let type = $(this).val();
+
+        if (type === 'rekap') {
+            // Disable & reset pilihan karyawan
+            $('#pdf_karyawan')
+                .val(null)
+                .trigger('change')       // reset select2
+                .prop('disabled', true);
+        } else {
+            // Enable kembali pilihan karyawan
+            $('#pdf_karyawan').prop('disabled', false);
+        }
+    });
+
+    $('#btn-download-pdf').on('click', function (e) {
         e.preventDefault();
 
+        let type       = $('#pdf_type').val();
         let karyawanId = $('#pdf_karyawan').val();
         let fromDate   = $('#pdf_from').val();
         let toDate     = $('#pdf_to').val();
-        
-        let chkJam     = $('#chk_jam').is(':checked') ? 1 : 0;
-        let chkKet     = $('#chk_ket').is(':checked') ? 1 : 0;
-        let chkRekap   = $('#chk_rekap').is(':checked') ? 1 : 0;
 
-        // 1. Validasi Wajib Isi (Karyawan, Dari Tanggal, Sampai Tanggal)
-        if (!karyawanId) {
-            toastr.warning('Silakan pilih karyawan terlebih dahulu!', "Gagal", {
-                positionClass: "toast-top-right"
+        let chkJam   = $('#chk_jam').is(':checked') ? 1 : 0;
+        let chkKet   = $('#chk_ket').is(':checked') ? 1 : 0;
+        let chkRekap = $('#chk_rekap').is(':checked') ? 1 : 0;
+
+        // Validasi karyawan hanya jika tipe = karyawan
+        if (type === 'karyawan' && !karyawanId) {
+            toastr.warning('Silakan pilih karyawan terlebih dahulu!', 'Gagal', {
+                positionClass: 'toast-top-right'
             });
             return;
         }
+
         if (!fromDate || !toDate) {
-            toastr.warning('Silakan isi rentang tanggal dengan lengkap!', "Gagal", {
-                positionClass: "toast-top-right"
+            toastr.warning('Silakan isi rentang tanggal dengan lengkap!', 'Gagal', {
+                positionClass: 'toast-top-right'
             });
             return;
         }
 
         if (parseDate(toDate) < parseDate(fromDate)) {
-            toastr.warning('Tanggal "Sampai Tanggal" tidak boleh lebih kecil dari "Dari Tanggal"!', "Gagal", {
-                positionClass: "toast-top-right"
+            toastr.warning('Tanggal "Sampai Tanggal" tidak boleh lebih kecil dari "Dari Tanggal"!', 'Gagal', {
+                positionClass: 'toast-top-right'
             });
             return;
         }
 
-        // 3. Proses Export jika lolos validasi
-        let urlExport = "/sdm/absensi/export_absensi"; 
+        let urlExport = '/sdm/absensi/export_absensi';
 
         let params = $.param({
-            id_karyawan: karyawanId,
-            from: fromDate,
-            to: toDate,
-            jam: chkJam,
-            ket: chkKet,
-            rekap: chkRekap
+            type        : type,
+            id_karyawan : type === 'karyawan' ? karyawanId : '',
+            from        : fromDate,
+            to          : toDate,
+            jam         : chkJam,
+            ket         : chkKet,
+            rekap       : chkRekap
         });
-        
+
         window.open(urlExport + '?' + params, '_blank');
     });
 

@@ -237,7 +237,8 @@ $(document).ready(function () {
 			} ,
 				
         ],
-        layout: 'fitColumns',
+        height: "900px",  // ← ini kuncinya, header akan otomatis sticky
+        layout: "fitColumns",
 		locale: 'id',
 		placeholder: "Tidak ada data",
 		selectable: false

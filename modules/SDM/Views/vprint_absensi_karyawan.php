@@ -119,7 +119,7 @@
 
     <div class="page-container">
         
-        <div class="header-title">Laporan Rekap Absensi Karyawan</div>
+        <div class="header-title">Laporan Absensi Karyawan</div>
 
         <table class="meta-table">
             <tr>

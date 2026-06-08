@@ -111,6 +111,8 @@ class Absensi extends BaseController
             $status_kehadiran = "Sakit";
           } if($row->status_kehadiran == 4){
             $status_kehadiran = "Tanpa Keterangan";
+          } if($row->status_kehadiran == 5){
+            $status_kehadiran = "Cuti";
           }
 
           $status_lembur = "";
@@ -308,6 +310,8 @@ class Absensi extends BaseController
           $status_kehadiran = 3;
         } if($x['status_kehadiran'] == "Tanpa Keterangan"){
           $status_kehadiran = 4;
+        } if($x['status_kehadiran'] == "Cuti"){
+          $status_kehadiran = 5;
         }
 
         $status_lembur = $x['status_lembur'];
@@ -595,55 +599,95 @@ class Absensi extends BaseController
     $id = $this->request->getGet('id_karyawan');
     $from = $this->request->getGet('from');
     $to = $this->request->getGet('to');
+    $type = $this->request->getGet('type');
 
-    $id = decrypt($id);
-    
-    $data_karyawan = $this->mkaryawan->getData($id);  
-
-    if (empty($data_karyawan)) {
-      $this->session->setFlashdata('err', "User tidak ditemukan !");
-      return redirect()->to('/sdm/absensi');
+    if ($type == 'karyawan') {
+      $id = decrypt($id);
+      $data_karyawan = $this->mkaryawan->getData($id);  
+      if (empty($data_karyawan)) {
+        $this->session->setFlashdata('err', "User tidak ditemukan !");
+        return redirect()->to('/sdm/absensi');
+      }
+      $formatTanggalIndo = function($dateString) {
+          if (empty($dateString)) return '-';
+          
+          // Mengantisipasi jika pemisah tanggal menggunakan '/' atau '-'
+          $dateString = str_replace('/', '-', $dateString); 
+          
+          // Buat objek DateTime dari format asal dd-mm-yyyy
+          $date = DateTime::createFromFormat('d-m-Y', $dateString);
+          
+          if (!$date) return $dateString; // Kembalikan string asli jika gagal parsing
+  
+          // Daftar nama bulan singkat Indonesia
+          $bulanIndo = [
+              1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+              7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+          ];
+  
+          $hari  = $date->format('d');
+          $bulan = $bulanIndo[(int)$date->format('n')]; // 'n' menghasilkan angka bulan 1-12 tanpa angka 0 di depan
+          $tahun = $date->format('Y');
+  
+          return "{$hari} {$bulan} {$tahun}";
+      };
+  
+      $data_karyawan->periode_awal  = $formatTanggalIndo($from); // Hasil: "01 Mei 2026"
+      $data_karyawan->periode_akhir = $formatTanggalIndo($to);
+  
+      $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
+      $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
+      $this->data['karyawan'] = $data_karyawan;
+      $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate($id, $from, $to);
+      $this->data['detail_absensi'] = $this->mabsen->getDetailAbsensiByKaryawanAndDate($id, $from, $to);
+  
+      // $data_rekap_absensi = $this->mabsen->getData(null, 0, 9999, null, null, ['id_karyawan' => $id, 'tgl_absen_from' => $from, 'tgl_absen_to' => $to]);
+      // $this->data['rekap_absensi'] = $data_rekap_absensi;
+  
+      // $params_det['id_sdm_gaji'] = $id;
+      // $params_det['nip'] = $nip;
+      // $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
+      return view($this->views.'\vprint_absensi_karyawan', $this->data);
     }
 
-    $formatTanggalIndo = function($dateString) {
-        if (empty($dateString)) return '-';
-        
-        // Mengantisipasi jika pemisah tanggal menggunakan '/' atau '-'
-        $dateString = str_replace('/', '-', $dateString); 
-        
-        // Buat objek DateTime dari format asal dd-mm-yyyy
-        $date = DateTime::createFromFormat('d-m-Y', $dateString);
-        
-        if (!$date) return $dateString; // Kembalikan string asli jika gagal parsing
+    else {
 
-        // Daftar nama bulan singkat Indonesia
-        $bulanIndo = [
-            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
-            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
-        ];
+      $formatTanggalIndo = function($dateString) {
+          if (empty($dateString)) return '-';
+          
+          // Mengantisipasi jika pemisah tanggal menggunakan '/' atau '-'
+          $dateString = str_replace('/', '-', $dateString); 
+          
+          // Buat objek DateTime dari format asal dd-mm-yyyy
+          $date = DateTime::createFromFormat('d-m-Y', $dateString);
+          
+          if (!$date) return $dateString; // Kembalikan string asli jika gagal parsing
+  
+          // Daftar nama bulan singkat Indonesia
+          $bulanIndo = [
+              1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+              7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+          ];
+  
+          $hari  = $date->format('d');
+          $bulan = $bulanIndo[(int)$date->format('n')]; // 'n' menghasilkan angka bulan 1-12 tanpa angka 0 di depan
+          $tahun = $date->format('Y');
+  
+          return "{$hari} {$bulan} {$tahun}";
+      };
+  
+      $this->data['periode_awal']  = $formatTanggalIndo($from); // Hasil: "01 Mei 2026"
+      $this->data['periode_akhir'] = $formatTanggalIndo($to);
 
-        $hari  = $date->format('d');
-        $bulan = $bulanIndo[(int)$date->format('n')]; // 'n' menghasilkan angka bulan 1-12 tanpa angka 0 di depan
-        $tahun = $date->format('Y');
+      $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
+      $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
+      $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate(null, $from, $to, 'rekap');
+      $this->data['total_karyawan'] = json_decode(json_encode($this->data['rekap_absensi']), true);
+      $this->data['total_karyawan'] = count($this->data['total_karyawan']);
 
-        return "{$hari} {$bulan} {$tahun}";
-    };
+      return view($this->views.'\vprint_absensi_karyawan_rekap', $this->data);
 
-    $data_karyawan->periode_awal  = $formatTanggalIndo($from); // Hasil: "01 Mei 2026"
-    $data_karyawan->periode_akhir = $formatTanggalIndo($to);
+    }
 
-    $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
-    $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
-    $this->data['karyawan'] = $data_karyawan;
-    $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate($id, $from, $to);
-    $this->data['detail_absensi'] = $this->mabsen->getDetailAbsensiByKaryawanAndDate($id, $from, $to);
-
-    // $data_rekap_absensi = $this->mabsen->getData(null, 0, 9999, null, null, ['id_karyawan' => $id, 'tgl_absen_from' => $from, 'tgl_absen_to' => $to]);
-    // $this->data['rekap_absensi'] = $data_rekap_absensi;
-
-    // $params_det['id_sdm_gaji'] = $id;
-    // $params_det['nip'] = $nip;
-    // $this->data['detail'] = $this->mgaji->getDataDet(null,0, 9999, 0, 0, $params_det);  
-    return view($this->views.'\vprint_absensi_karyawan', $this->data);
   }
 }

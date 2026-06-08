@@ -107,12 +107,22 @@
 
         <div class="modal-header">
           <h5 class="modal-title" id="modalExportPdfLabel">
-            <i class="fa fa-file-pdf me-2 text-danger"></i> Export PDF Absensi per Karyawan
+            <i class="fa fa-file-pdf me-2 text-danger"></i> Export PDF Absensi Karyawan
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
 
         <div class="modal-body">
+          <!-- Type Selection -->
+          <div class="mb-3">
+            <label class="form-label fw-medium small text-muted" for="pdf_type">Tipe Export</label>
+            <select id="pdf_type" name="pdf_type" class="form-select">
+              <option value="karyawan" selected>Karyawan</option>
+              <option value="rekap">Rekap Karyawan</option>
+            </select>
+          </div>
+
+          <!-- Karyawan Selection -->
           <div class="mb-3">
             <label class="form-label fw-medium small text-muted" for="pdf_karyawan">Nama Karyawan</label>
             <select id="pdf_karyawan" name="pdf_karyawan" class="form-select select2" data-placeholder="-- Pilih Karyawan --">
@@ -122,6 +132,7 @@
               <?php endforeach; ?>
             </select>
           </div>
+
           <div class="row g-2 mb-3">
             <div class="col-6">
               <label class="form-label fw-medium small text-muted" for="pdf_from">Dari Tanggal</label>
@@ -132,23 +143,6 @@
               <input type="text" id="pdf_to" name="pdf_to" class="form-control datepickerx" placeholder="dd/mm/yyyy">
             </div>
           </div>
-          <!-- <div class="mb-1">
-            <label class="form-label fw-medium small text-muted">Tampilkan</label>
-            <div class="d-flex flex-wrap gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chk_jam" name="chk_jam" checked>
-                <label class="form-check-label" for="chk_jam">Jam Masuk &amp; Keluar</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chk_ket" name="chk_ket" checked>
-                <label class="form-check-label" for="chk_ket">Keterangan</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chk_rekap" name="chk_rekap">
-                <label class="form-check-label" for="chk_rekap">Rekap Hadir</label>
-              </div>
-            </div>
-          </div> -->
         </div>
 
         <div class="modal-footer">

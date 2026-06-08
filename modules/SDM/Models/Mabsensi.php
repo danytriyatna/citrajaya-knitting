@@ -410,7 +410,8 @@ class Mabsensi extends \App\Models\PrModel
         
         
         $builder->groupBy("rk.full_name, rk.nip");
-
+        $builder->orderBy('rk.nip', 'ASC');
+        
         if (!empty($rekap_absensi)) {
             return $builder->get()->getResult();
         }

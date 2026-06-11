@@ -10,6 +10,7 @@ use Modules\Referensi\Models\GudangModel;
 use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Referensi\Models\KonsumenModel;
 use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\PackModel;
 use Modules\Referensi\Models\PerusahaanModel;
 use Modules\Referensi\Models\ProsesProduksiModel;
 use Modules\Referensi\Models\SatuanModel;
@@ -37,6 +38,7 @@ class BarangMasuk extends BaseController
     protected $mkonsumen;
     protected $mProses;
     protected $mPerusahaan;
+    protected $mPack;
 
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/incoming-goods';
@@ -58,6 +60,7 @@ class BarangMasuk extends BaseController
         $this->mkonsumen = new KonsumenModel();
         $this->mProses = new ProsesProduksiModel();
         $this->mPerusahaan = new PerusahaanModel();
+        $this->mPack = new PackModel();
     }
 
     public function index()
@@ -322,6 +325,15 @@ class BarangMasuk extends BaseController
         $dataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
         $this->data['operator']    = $dataOperator;
         $this->data['role_id'] = session()->get('role_id');
+
+        $sortPack = [
+            [
+                'field' => 'id',
+                'dir' => 'ASC'
+            ]
+        ];
+        $dataPack = $this->mPack->getData(null, 0, 99999, $sortPack);
+        $this->data['pack'] = $dataPack;
         // dd($this->data);
         return view($this->views . '\barang_masuk_form', $this->data);
     }

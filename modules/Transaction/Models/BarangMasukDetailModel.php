@@ -24,8 +24,9 @@ class BarangMasukDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
+        $builder->join("ref_pack pbx", "uk.pack_id = pbx.id", "left");
 
-        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
+        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price, pbx.pack_name, uk.pack_id");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);

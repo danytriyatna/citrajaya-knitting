@@ -261,6 +261,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
                         "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : 0,
                         "id_header" => $id,
                         "qty" => $rowData['qty'],
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
@@ -309,6 +310,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => $rowData['pack_id'],
                             "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
@@ -319,6 +321,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => $rowData['pack_id'],
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,

@@ -4,60 +4,94 @@
 <div id="modal-detail-item" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
+
+      <!-- Header -->
       <div class="modal-header">
         <h5 class="modal-title">Form Detail Item</h5>
         <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
+      <!-- Hidden Fields -->
+      <input type="hidden" id="idDetail"  name="idDetail">
+      <input type="hidden" id="edit"      name="edit">
+      <input type="hidden" id="idBarang"  name="idBarang">
+      <input type="hidden" id="kodeBarang" name="kodeBarang">
+      <input type="hidden" id="qty_po"    name="qty_po">
+
+      <!-- Body -->
       <div class="modal-body">
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_item">Item</label>
+
+        <!-- Item -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="namaBarang">Item</label>
           <div class="col-md-9">
             <div class="input-group">
-              <input type="text" id="namaBarang" readonly name="namaBarang" class="form-control" placeholder="Pilih Barang" required>
-              <input type="hidden" id="idDetail" name="idDetail" class="form-control" required>
-              <input type="hidden" id="edit" name="edit" class="form-control" required>
-              <input type="hidden" id="idBarang" name="idBarang" class="form-control" required>
-              <input type="hidden" id="kodeBarang" name="kodeBarang" class="form-control" required>
-              <span id="spanBarang" class="input-group-text bg-white" id="basic-addon11"><i class="ti-search"></i></span>
+              <input type="text" id="namaBarang" name="namaBarang"
+                class="form-control" placeholder="Pilih Barang" readonly required>
+              <span id="spanBarang" class="input-group-text bg-white" style="cursor:pointer;">
+                <i class="ti-search"></i>
+              </span>
             </div>
           </div>
         </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_unit">Unit</label>
+
+        <!-- Unit -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="unit">Unit</label>
           <div class="col-md-9">
-            <input type="text" id="unit" name="unit" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
-          </div>
-        </div>
-        <div class="form-group row d-none">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">Qty PO</label>
-          <div class="col-md-9">
-            <input type="hidden" id="qty_po" name="qty_po" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">Qty Receive</label>
-          <div class="col-md-9">
-            <input type="text" id="qty_item" name="qty_item" class="form-control" placeholder="Ketikkan qty item" value="">
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
-          <div class="col-md-9">
-            <input type="text" id="price" pattern="\d{10,13}" name="price" class="form-control" placeholder="Ketikkan Price" value="">
+            <input type="text" id="unit" name="unit"
+              class="form-control" placeholder="Terisi otomatis oleh sistem" readonly>
           </div>
         </div>
 
-        <div class="form-group row">
-          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="lot_no">Lot No.</label>
+        <!-- Qty Receive -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">Qty Receive</label>
           <div class="col-md-9">
-            <input type="text" id="lot_no" name="lot_no" class="form-control" placeholder="Ketikkan lot no." value="">
+            <input type="number" id="qty_item" name="qty_item" min="0"
+              class="form-control" placeholder="Ketikkan qty item">
           </div>
         </div>
-      </div>
+
+        <!-- Price -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
+          <div class="col-md-9">
+            <input type="text" id="price" name="price"
+              class="form-control" placeholder="Ketikkan Price">
+          </div>
+        </div>
+
+        <!-- Lot No. -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="lot_no">Lot No.</label>
+          <div class="col-md-9">
+            <input type="text" id="lot_no" name="lot_no"
+              class="form-control" placeholder="Ketikkan lot no.">
+          </div>
+        </div>
+
+        <!-- Pack ID -->
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pack_id">Pack</label>
+          <div class="col-md-9">
+            <select id="pack_id" name="pack_id" class="form-control" style="width:100%;">
+              <option value="" selected disabled>-- Pilih Pack --</option>
+              <?php foreach ($pack as $row): ?>
+                <option value="<?= $row->id ?>"><?= $row->pack_name ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
+
+      </div><!-- /modal-body -->
+
+      <!-- Footer -->
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
         <button type="button" class="btn btn-success" id="btn-simpan-det">Simpan</button>
       </div>
+
     </div>
   </div>
 </div>

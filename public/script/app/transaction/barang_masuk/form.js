@@ -19,6 +19,7 @@ let selectKategori = $('#select_kategori');
 let selectProses = $('#select_proses');
 let selectOperator = $('#select_operator');
 let inpLotNo = $('#lot_no');
+let inpPack = $('#pack_id');
 let detailData = $("#data-details").val().replace(/&quot;/ig, '"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
 let btnAdd = $('#btn-add');
@@ -632,6 +633,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             }, width: "10%"
         },
         { title: "LOT NO", width: "15%", field: "lot_no", hozAlign: "left" },
+        { title: "PACK", width: "15%", field: "pack_name", hozAlign: "left" },
     ],
     locale: 'id',
     // layout: 'fitColumns',
@@ -1194,6 +1196,7 @@ function openModalDetail(row = null) {
         inpPrice.val(formatRupiah(data.price.toString()))
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
+        inpPack.val(data.pack_id).trigger("change")
     } else {
         inpBarang.val("")
         inpIdBarang.val("")
@@ -1202,6 +1205,7 @@ function openModalDetail(row = null) {
         inpPrice.val("")
         inpLotNo.val("")
         inpEdit.val("")
+        inpPack.val("").trigger("change")
     }
     modalDet.modal("show")
 
@@ -1271,6 +1275,8 @@ function openModalDetail(row = null) {
                 price: price,
                 lot_no: inpLotNo.val(),
                 nama_unit: inpUnit.val(),
+                pack_id: inpPack.val(),
+                pack_name: inpPack.find('option:selected').text(),
             });
         } else {
 
@@ -1283,6 +1289,8 @@ function openModalDetail(row = null) {
                 qty: inpQtyItem.val(),
                 lot_no: inpLotNo.val(),
                 nama_unit: inpUnit.val(),
+                pack_id: inpPack.val(),
+                pack_name: inpPack.find('option:selected').text(),
             });
         }
         modalDet.modal("hide")

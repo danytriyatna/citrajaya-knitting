@@ -211,6 +211,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            abx.pack_id,
+            rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
             ebx.nama_jenis_barang,
@@ -220,6 +222,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         FROM
             trans_barang abx
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
             INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
             INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
@@ -245,6 +248,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            abx.pack_id,
+            rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
             ebx.nama_jenis_barang,
@@ -254,6 +259,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         FROM
             trans_barang abx 
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
             INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
               INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
@@ -271,6 +277,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     SELECT
     lot_id,
     lot_no,
+    pack_id,
     id_barang,
     month,
     year,
@@ -300,6 +307,8 @@ stock_base AS (
         nt.id_gudang,
         nt.lot_id,
         nt.lot_no,
+        nt.pack_id,
+        nt.pack_name,
         nt.nama_barang,
         nt.kode_barang,
         nt.nama_jenis_barang,
@@ -371,9 +380,10 @@ $query = $this->db->query($sql, $params);
     {
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
-        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, b.kode_barang || ' ' || b.nama_barang as barang, CAST(a.jumlah AS DECIMAL(18,2)) as saldo_akhir, CAST(a.stok_awal AS DECIMAL(18,2)) as saldo_awal");
+        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, rp.pack_name, b.kode_barang || ' ' || b.nama_barang as barang, CAST(a.jumlah AS DECIMAL(18,2)) as saldo_akhir, CAST(a.stok_awal AS DECIMAL(18,2)) as saldo_awal");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
         $builder->join("ref_jenis_barang c", "a.id_jenis_barang = c.id", "inner");
+        $builder->join("ref_pack rp", "a.pack_id = rp.id", "left");
         if (!empty($idJenisBarang)) {
             $builder->where("a.id_jenis_barang", $idJenisBarang);
         }
@@ -391,6 +401,9 @@ $query = $this->db->query($sql, $params);
         }
         if (!empty($params['lot_no'])) {
             $builder->where("a.lot_no", $params['lot_no']);
+        }
+        if (!empty($params['pack_id'])) {
+            $builder->where("a.pack_id", $params['pack_id']);
         }
         if (!empty($params['lot_id'])) {
             $builder->where("a.lot_id", $params['lot_id']);
@@ -483,6 +496,7 @@ $query = $this->db->query($sql, $params);
             $builder->select("
                 abx.id_barang,
                 tl.lot_no,
+                abx.pack_id,
 
                 -- Subquery untuk ambil price terakhir yg tidak null
                 (
@@ -535,7 +549,7 @@ $query = $this->db->query($sql, $params);
             $builder->where("EXTRACT(YEAR FROM abx.tanggal)", $year);
             $builder->where("abx.id_barang", $lot['id_barang']);
             $builder->where("tl.lot_no", $lot['lot_no']);
-            $builder->groupBy("abx.id_barang, tl.lot_no");
+            $builder->groupBy("abx.id_barang, tl.lot_no, abx.pack_id");
             
             
             $data = $builder->get()->getRow();
@@ -565,6 +579,7 @@ $query = $this->db->query($sql, $params);
                     $isi['id_jenis_barang'] = !empty($idJenisBarang) ? $idJenisBarang : $id_jenis_barang;
                     $isi['lot_id'] = $lot_id[$key];
                     $isi['lot_no'] = $lot_no;
+                    $isi['pack_id'] = $data->pack_id;
                     $isi['stok_awal'] = $saldo_awal;
                     $isi['masuk'] = round($masuk, 2);
                     $isi['keluar'] = round($keluar, 2);
@@ -578,6 +593,7 @@ $query = $this->db->query($sql, $params);
                     $builder_detail->where('abx.month', $bulan);
                     $builder_detail->where('abx.year', $tahun);
                     $builder_detail->where('abx.lot_no', $lot_no);
+                    $builder_detail->where('abx.pack_id', $data->pack_id);
                     $builder_detail->where('abx.id_barang', $data->id_barang);
                     // $builder_detail->where('abx.id_trans_barang', $value->id);
                     $builder_detail->select("*");
@@ -592,7 +608,7 @@ $query = $this->db->query($sql, $params);
                         }
                     }
                     else {
-                        $this->db->table("trans_barang_history")->update($isi, array("month" => $bulan, "year" => $tahun, "lot_no" => $lot_no, "id_barang" => $data->id_barang));
+                        $this->db->table("trans_barang_history")->update($isi, array("month" => $bulan, "year" => $tahun, "lot_no" => $lot_no, "id_barang" => $data->id_barang, "pack_id" => $data->pack_id));
                     }
                 }
                 
@@ -606,6 +622,7 @@ $query = $this->db->query($sql, $params);
                 "id_barang" => $value->id_barang,
                 "lot_no" => $value->lot_no,
                 "lot_id" => $value->lot_id,
+                "pack_id" => $value->pack_id,
             );
             $getNextData = $this->getDataGudang($idJenisBarang, $idGudang, $nextYear, $nextMonth, $paramsNext);
             if (empty($getNextData)) {
@@ -613,6 +630,7 @@ $query = $this->db->query($sql, $params);
                 $isi['id_jenis_barang'] = $value->id_jenis_barang;
                 $isi['lot_id'] = $value->lot_id;
                 $isi['lot_no'] = $value->lot_no;
+                $isi['pack_id'] = $value->pack_id;
                 $isi['stok_awal'] = $value->stok_awal;
                 $isi['masuk'] = $value->masuk;
                 $isi['keluar'] = $value->keluar;

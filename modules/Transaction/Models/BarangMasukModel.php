@@ -249,7 +249,6 @@ class BarangMasukModel extends \App\Models\PrModel
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 
-            // print_r($dataProduksi);exit;
             if(!empty($detail)){
                 foreach ($detail as $rowData) {
                     if ($rowData['id_barang'] != "") {
@@ -335,7 +334,7 @@ class BarangMasukModel extends \App\Models\PrModel
                     }
                 }
             }
-            // print_r($data);exit;
+
             if($data['id_kategori'] == 12 || $data['id_kategori'] == 1){
                 if(!empty($dataProduksi)){
 
@@ -348,7 +347,6 @@ class BarangMasukModel extends \App\Models\PrModel
 
                     $idMP = [];
                     foreach ($dataProduksi as $xrow) {
-                        // print_r($xrow);exit;
                         $xpr = [];
                         $xpr['kode_sales_order'] = $xrow['kode_sales_order'];
                         $xpr['kode_ukuran'] = $xrow['kode_ukuran'];
@@ -357,10 +355,29 @@ class BarangMasukModel extends \App\Models\PrModel
                         if(!empty($clr[1])){
                             $xpr['kode_warna2'] = $clr[1];
                         }
+                        if(!empty($clr[2])){
+                            $xpr['kode_warna3'] = $clr[2];
+                        }
+                        if(!empty($clr[3])){
+                            $xpr['kode_warna4'] = $clr[3];
+                        }
+                        if(!empty($clr[4])){
+                            $xpr['kode_warna5'] = $clr[4];
+                        }
+                        if(!empty($clr[5])){
+                            $xpr['kode_warna6'] = $clr[5];
+                        }
+                        if(!empty($clr[6])){
+                            $xpr['kode_warna7'] = $clr[6];
+                        }
+                        if(!empty($clr[7])){
+                            $xpr['kode_warna8'] = $clr[7];
+                        }
 
                         $tipe = substr($xpr['kode_sales_order'], 0, 3) === 'SPL' ? 1 : (substr($xpr['kode_sales_order'], 0, 3) === 'SOD' ? 2 : null);
-                        // print_r($tipe);exit;
+
                         $dtSo = $this->getDataSO($xpr, $tipe);
+                        
                         
                         $idSo = !empty($dtSo) ? $dtSo->id_sales_order : 0;
 
@@ -380,7 +397,6 @@ class BarangMasukModel extends \App\Models\PrModel
                             }
                         }
 
-                        // print_r($xrow);exit;
                         if ($xrow['qty_kirim'] < $xrow['qty'] && $data['id_kategori'] != 1 && $isi_kurung != 2 && $data['id_perusahaan'] != 2) {
                             throw new \Exception("QTY Terima Melebihi QTY yang Tersedia!");
                         }
@@ -497,19 +513,6 @@ class BarangMasukModel extends \App\Models\PrModel
                             $dtProses = $this->getDataWP($xp);
                             if(!empty($dtProses)){
                                 $idProduksi = $this->getDataProduksiByIdWalkorder($dtProses->id_walkorder)->id;
-                                // print_r("============================================="); print_r("<br>");
-                                
-                                // print_r($xpr);
-                                // print_r("<br>");
-                                // print_r("------------------------------------------------");   print_r("<br>");
-                                // print_r($xrow);
-                                // print_r("<br>");
-                                // print_r("------------------------------------------------");   print_r("<br>");
-                                // print_r($dtProses);
-                                // print_r("<br>");
-                                // print_r("------------------------------------------------");   print_r("<br>");
-                                // print_r($idProduksi);
-                                // print_r("<br>");
 
                                 $amount = !empty($xrow['amount']) ? $xrow['amount'] : 0;
                                 $qty = !empty($xrow['qty']) ? $xrow['qty'] : 0;
@@ -522,6 +525,11 @@ class BarangMasukModel extends \App\Models\PrModel
                                 //     $harga = round($harga, 0);
                                 // }
                                 // insert data produksi
+                                if (empty($dtSo->id_warna_1)) {
+
+                                    print_r($dtSo);
+                                     throw new \Exception("Data SO " . $xrow['kode_sales_order'] . " dengan warna " . $xrow['color'] . " tidak ditemukan, pastikan data SO sudah benar");
+                                }
                                 $arrDataUkuran = [
                                     "kode_transaksi" => $kode_transaksi,
                                     "id_produksi" => $idProduksi,
@@ -621,17 +629,31 @@ class BarangMasukModel extends \App\Models\PrModel
 
     function getDataSO($params, $tipe)
     {
-        // $builder = $this->db->table('trans_sales_order');
-        // $builder->select("id");
-        // $builder->where("kode_sales_order", $kodeSalesOrder);
         $prms = '';
-       
+
         if(!empty($params['kode_warna1'])){
             $prms .= " AND rw1.kode_warna = '" . $params['kode_warna1'] . "'";
         }
-
         if(!empty($params['kode_warna2'])){
             $prms .= " AND rw2.kode_warna = '" . $params['kode_warna2'] . "'";
+        }
+        if(!empty($params['kode_warna3'])){
+            $prms .= " AND rw3.kode_warna = '" . $params['kode_warna3'] . "'";
+        }
+        if(!empty($params['kode_warna4'])){
+            $prms .= " AND rw4.kode_warna = '" . $params['kode_warna4'] . "'";
+        }
+        if(!empty($params['kode_warna5'])){
+            $prms .= " AND rw5.kode_warna = '" . $params['kode_warna5'] . "'";
+        }
+        if(!empty($params['kode_warna6'])){
+            $prms .= " AND rw6.kode_warna = '" . $params['kode_warna6'] . "'";
+        }
+        if(!empty($params['kode_warna7'])){
+            $prms .= " AND rw7.kode_warna = '" . $params['kode_warna7'] . "'";
+        }
+        if(!empty($params['kode_warna8'])){
+            $prms .= " AND rw8.kode_warna = '" . $params['kode_warna8'] . "'";
         }
 
         if(!empty($params['kode_ukuran'])){
@@ -649,8 +671,14 @@ class BarangMasukModel extends \App\Models\PrModel
                 ou.id,
                 ou.id_sample as id_sales_order,
                 ou.id_sample_det as id_sales_order_det,
-                sod.id_warna_1,
-                sod.id_warna_2,
+                COALESCE(b1.id_warna, sod.id_warna_1) AS id_warna_1,
+                COALESCE(b2.id_warna, sod.id_warna_2) AS id_warna_2,
+                COALESCE(b3.id_warna, sod.id_warna_3) AS id_warna_3,
+                COALESCE(b4.id_warna, sod.id_warna_4) AS id_warna_4,
+                COALESCE(b5.id_warna, sod.id_warna_5) AS id_warna_5,
+                COALESCE(b6.id_warna, sod.id_warna_6) AS id_warna_6,
+                COALESCE(b7.id_warna, sod.id_warna_7) AS id_warna_7,
+                COALESCE(b8.id_warna, sod.id_warna_8) AS id_warna_8,
 
                 -- Flag sumber warna
                 CASE 
@@ -659,7 +687,13 @@ class BarangMasukModel extends \App\Models\PrModel
                 END AS sumber_warna,
 
                 rw1.keterangan as color1,
-                rw2.keterangan as color2
+                rw2.keterangan as color2,
+                rw3.keterangan as color3,
+                rw4.keterangan as color4,
+                rw5.keterangan as color5,
+                rw6.keterangan as color6,
+                rw7.keterangan as color7,
+                rw8.keterangan as color8
             ");
 
             $builder->join('trans_sample_det sod', 'sod.id = ou.id_sample_det', 'inner');
@@ -669,26 +703,44 @@ class BarangMasukModel extends \App\Models\PrModel
             // JOIN ref_barang
             $builder->join('ref_barang b1', 'b1.id = sod.id_barang_1', 'left');
             $builder->join('ref_barang b2', 'b2.id = sod.id_barang_2', 'left');
+            $builder->join('ref_barang b3', 'b3.id = sod.id_barang_3', 'left');
+            $builder->join('ref_barang b4', 'b4.id = sod.id_barang_4', 'left');
+            $builder->join('ref_barang b5', 'b5.id = sod.id_barang_5', 'left');
+            $builder->join('ref_barang b6', 'b6.id = sod.id_barang_6', 'left');
+            $builder->join('ref_barang b7', 'b7.id = sod.id_barang_7', 'left');
+            $builder->join('ref_barang b8', 'b8.id = sod.id_barang_8', 'left');
 
             // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di sod
-            // rw1 diubah dari inner ke left agar tidak hilang jika warna via ref_barang
             $builder->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, sod.id_warna_1)', 'left');
             $builder->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, sod.id_warna_2)', 'left');
+            $builder->join('ref_warna rw3', 'rw3.id = COALESCE(b3.id_warna, sod.id_warna_3)', 'left');
+            $builder->join('ref_warna rw4', 'rw4.id = COALESCE(b4.id_warna, sod.id_warna_4)', 'left');
+            $builder->join('ref_warna rw5', 'rw5.id = COALESCE(b5.id_warna, sod.id_warna_5)', 'left');
+            $builder->join('ref_warna rw6', 'rw6.id = COALESCE(b6.id_warna, sod.id_warna_6)', 'left');
+            $builder->join('ref_warna rw7', 'rw7.id = COALESCE(b7.id_warna, sod.id_warna_7)', 'left');
+            $builder->join('ref_warna rw8', 'rw8.id = COALESCE(b8.id_warna, sod.id_warna_8)', 'left');
 
             $builder->where('1 = 1' . $prms);
+
         } elseif ($tipe == 2) {
+
             if(!empty($params['kode_sales_order'])){
                 $prms .= " AND so.kode_sales_order = '" . $params['kode_sales_order'] . "'";
             }
-
 
             $builder = $this->db->table('trans_sales_order_ukuran ou');
             $builder->select("
                 ou.id,
                 ou.id_sales_order,
                 ou.id_sales_order_det,
-                sod.id_warna_1,
-                sod.id_warna_2,
+                COALESCE(b1.id_warna, sod.id_warna_1) AS id_warna_1,
+                COALESCE(b2.id_warna, sod.id_warna_2) AS id_warna_2,
+                COALESCE(b3.id_warna, sod.id_warna_3) AS id_warna_3,
+                COALESCE(b4.id_warna, sod.id_warna_4) AS id_warna_4,
+                COALESCE(b5.id_warna, sod.id_warna_5) AS id_warna_5,
+                COALESCE(b6.id_warna, sod.id_warna_6) AS id_warna_6,
+                COALESCE(b7.id_warna, sod.id_warna_7) AS id_warna_7,
+                COALESCE(b8.id_warna, sod.id_warna_8) AS id_warna_8,
 
                 -- Flag sumber warna
                 CASE 
@@ -697,7 +749,13 @@ class BarangMasukModel extends \App\Models\PrModel
                 END AS sumber_warna,
 
                 rw1.keterangan as color1,
-                rw2.keterangan as color2
+                rw2.keterangan as color2,
+                rw3.keterangan as color3,
+                rw4.keterangan as color4,
+                rw5.keterangan as color5,
+                rw6.keterangan as color6,
+                rw7.keterangan as color7,
+                rw8.keterangan as color8
             ");
 
             $builder->join('trans_sales_order_det sod', 'sod.id = ou.id_sales_order_det', 'inner');
@@ -707,11 +765,22 @@ class BarangMasukModel extends \App\Models\PrModel
             // JOIN ref_barang
             $builder->join('ref_barang b1', 'b1.id = sod.id_barang_1', 'left');
             $builder->join('ref_barang b2', 'b2.id = sod.id_barang_2', 'left');
+            $builder->join('ref_barang b3', 'b3.id = sod.id_barang_3', 'left');
+            $builder->join('ref_barang b4', 'b4.id = sod.id_barang_4', 'left');
+            $builder->join('ref_barang b5', 'b5.id = sod.id_barang_5', 'left');
+            $builder->join('ref_barang b6', 'b6.id = sod.id_barang_6', 'left');
+            $builder->join('ref_barang b7', 'b7.id = sod.id_barang_7', 'left');
+            $builder->join('ref_barang b8', 'b8.id = sod.id_barang_8', 'left');
 
             // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di sod
-            // rw1 diubah dari inner ke left agar tidak hilang jika warna via ref_barang
             $builder->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, sod.id_warna_1)', 'left');
             $builder->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, sod.id_warna_2)', 'left');
+            $builder->join('ref_warna rw3', 'rw3.id = COALESCE(b3.id_warna, sod.id_warna_3)', 'left');
+            $builder->join('ref_warna rw4', 'rw4.id = COALESCE(b4.id_warna, sod.id_warna_4)', 'left');
+            $builder->join('ref_warna rw5', 'rw5.id = COALESCE(b5.id_warna, sod.id_warna_5)', 'left');
+            $builder->join('ref_warna rw6', 'rw6.id = COALESCE(b6.id_warna, sod.id_warna_6)', 'left');
+            $builder->join('ref_warna rw7', 'rw7.id = COALESCE(b7.id_warna, sod.id_warna_7)', 'left');
+            $builder->join('ref_warna rw8', 'rw8.id = COALESCE(b8.id_warna, sod.id_warna_8)', 'left');
 
             $builder->where('1 = 1' . $prms);
         }

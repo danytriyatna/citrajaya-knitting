@@ -8,6 +8,7 @@ let dtList = new Tabulator("#dt-list", {
         {title:"No. Transaksi", field:"kode_transaksi", hozAlign:"left",width:"12%"},
         {title:"Unit", field:"nama_satuan", hozAlign:"left",width:"10%"},
         {title:"Lot", field:"lot_no", hozAlign:"left",width:"10%"},
+        {title:"Pack", field:"pack_name", hozAlign:"left",width:"10%"},
         // {title:"Saldo Awal", field:"saldo_awal", hozAlign:"right",width:"10%", bottomCalc: 'sum'},
         {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"10%", bottomCalc: 'sum', headerHozAlign: "center"},
         {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"10%", bottomCalc: 'sum', headerHozAlign: "center"},

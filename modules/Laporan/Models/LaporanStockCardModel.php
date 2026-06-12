@@ -395,6 +395,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
             ebx.nama_jenis_barang,
@@ -403,6 +404,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
         FROM
             trans_barang abx
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
             INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
             INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
@@ -428,6 +430,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
             ebx.nama_jenis_barang,
@@ -436,6 +439,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
         FROM
             trans_barang abx 
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
             INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
               INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
@@ -449,7 +453,8 @@ class LaporanStockCardModel extends \App\Models\PrModel
             --AND abx.id_barang = 161
             
             ),
-            history_per_lot AS (
+            
+    history_per_lot AS (
             SELECT
             lot_id,
             lot_no,
@@ -480,6 +485,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
                 nt.id_barang,
                 nt.id_gudang,
                 nt.lot_id,
+                nt.pack_name,
                 nt.lot_no,
                 nt.nama_barang,
                 nt.kode_barang,

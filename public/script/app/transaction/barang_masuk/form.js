@@ -621,7 +621,12 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "15%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY", field: "qty", hozAlign: "center", width: "10%" },
+        { title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: "sum",
+            bottomCalcFormatter: function (cell) {
+                var value = cell.getValue();
+                return Number(value).toFixed(2);
+            } 
+        },
         { title: "UNIT", field: "nama_unit", hozAlign: "center", width: "15%" },
         {
             title: "PRICE", field: "price", formatter: "money",

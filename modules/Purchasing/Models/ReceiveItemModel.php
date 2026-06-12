@@ -206,6 +206,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                     "id_barang" => $idBarang,
                     "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
                     "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                    "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                     "id_header" => $id,
                     "qty" => $rowData['qty'],
                     "price" => !empty($rowData['price']) ? $rowData['price'] : null,
@@ -263,6 +264,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "created_at" =>  date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
                         "lot_no" => $rowData['lot_no'],
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                         "kode_transaksi" => $data['rec_no'],
                     ];
@@ -273,6 +275,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "tanggal" => date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
                         "lot_no" => $rowData['lot_no'],
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "saldo_awal" => 0,
                         "saldo_akhir" => $rowData['qty'],
                         "active" => 1,

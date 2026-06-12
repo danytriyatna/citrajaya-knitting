@@ -2,14 +2,15 @@
 
 namespace Modules\Purchasing\Controllers;
 
-use CodeIgniter\Controller;
 use App\Controllers\BaseController;
 use App\Libraries\DompdfGenerator;
+use CodeIgniter\Controller;
 use DateTime;
-use Modules\Purchasing\Models\ReceiveItemModel;
-use Modules\Purchasing\Models\ReceiveItemDetailModel;
 use Modules\Purchasing\Models\PurchaseDetailModel;
+use Modules\Purchasing\Models\ReceiveItemDetailModel;
+use Modules\Purchasing\Models\ReceiveItemModel;
 use Modules\Referensi\Models\GudangModel;
+use Modules\Referensi\Models\PackModel;
 use Modules\Transaction\Models\IncomingGoodsModel;
 
 class ReceiveItem extends BaseController
@@ -21,6 +22,7 @@ class ReceiveItem extends BaseController
   protected $mPODetail;
   protected $mGudang;
   protected $mBarangMasuk;
+  protected $mPack;
   protected $urlv  = 'purchasing/receive-item';
   function __construct()
   {
@@ -30,6 +32,7 @@ class ReceiveItem extends BaseController
     $this->mPODetail = new PurchaseDetailModel();
     $this->mGudang = new GudangModel();
     $this->mBarangMasuk = new IncomingGoodsModel();
+    $this->mPack = new PackModel();
   }
 
   public function index()
@@ -250,6 +253,15 @@ class ReceiveItem extends BaseController
     ];
     $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
     $this->data['gudang']    = $resDataGudang;
+
+    $sortPack = [
+        [
+            'field' => 'id',
+            'dir' => 'ASC'
+        ]
+    ];
+    $dataPack = $this->mPack->getData(null, 0, 99999, $sortPack);
+    $this->data['pack'] = $dataPack;
     return view($this->views . '\receive_item_form', $this->data);
   }
 

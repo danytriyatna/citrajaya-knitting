@@ -63,6 +63,17 @@
             <input type="text" id="lot_no" name="lot_no" class="form-control" placeholder="Ketikkan lot no." value="">
           </div>
         </div>
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pack_id">Pack</label>
+          <div class="col-md-9">
+            <select id="pack_id" name="pack_id" class="form-select select2" data-placeholder="-- Pilih Pack --">
+              <option value="" selected disabled>-- Pilih Pack --</option>
+              <?php foreach ($pack as $row): ?>
+                <option value="<?= $row->id ?>"><?= $row->pack_name ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>

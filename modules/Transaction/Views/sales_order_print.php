@@ -197,7 +197,7 @@
                     :
                 </td>
                 <td style="border: none; width: 20%; vertical-align: top;">
-                    -
+                    <?= !empty($data->ref_po) ? $data->ref_po : '-' ?>
                 </td>
                 <td style="border: none; width: 5%; vertical-align: top;">
                     Desk

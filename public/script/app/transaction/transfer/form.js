@@ -84,7 +84,7 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
         },
         {
             title: "Kode Barang", field: "kode_barang", headerSort: false,
-            width: "20%"
+            width: "15%"
         },
         {
             title: "Nama Barang", field: "nama_barang", headerSort: false,
@@ -93,15 +93,22 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
 
         {
             title: "Satuan", field: "nama_satuan", headerSort: false,
-            width: "10%"
+            width: "15%"
         },
         {
             title: "Lot No.", field: "lot_no", headerSort: false,
-            width: "25%"
+            width: "15%"
+        },
+        {
+            title: "Pack Name", field: "pack_name", headerSort: false,
+            width: "10%"
+        },
+        {
+            title: "Pack ID", field: "pack_id", visible: false, headerSort: false,
         },
         {
             title: "Qty", field: "qty", headerSort: false,
-            width: "25%"
+            width: "15%"
         },
     ],
     locale: 'id',

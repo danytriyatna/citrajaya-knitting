@@ -3,11 +3,12 @@ let dtList = new Tabulator("#dt-list", {
     paginationSize: 100,
     paginationButtonCount: 5,
     paginationCounter:"rows",
-    groupBy: ['nama_jenis_barang','barang'],
+    groupBy: ['nama_jenis_barang','barang', 'lot_no'], // 🔥 grup berdasarkan jenis barang, nama barang, lot no, dan pack name
     // groupCalcs: false, //
     columns:[
         // {title:"LOT ID", field:"lot_id", width:"10%"},
         {title:"LOT", field:"lot_no", width:"9%"},
+        {title:"PACK", field:"pack_name", width:"9%"},
         {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"15%"},
         {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"12%"},
         {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"12%"},

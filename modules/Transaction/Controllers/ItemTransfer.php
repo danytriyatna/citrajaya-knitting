@@ -724,6 +724,8 @@ class ItemTransfer extends BaseController
                   "qty" => $row->qty,
                   "lot_no" => $row->lot_no,
                   "lot_id" => $row->lot_id,
+                  "pack_id" => $row->pack_id,
+                  "pack_name" => $row->pack_name,
                   "id_barang" => $row->id_barang,
                   "month" => $row->month,
               )

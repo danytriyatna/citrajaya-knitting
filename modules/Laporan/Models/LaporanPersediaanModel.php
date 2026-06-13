@@ -460,12 +460,14 @@ $query = $this->db->query($sql, $params);
         
 
         $lot_id = [];
+        $pack_id = [];
         $lot_no = [];
         $stok_awal = [];
         $data_barang = [];
         foreach ($dataOld as $key => $value) {
             // Buat key gabungan unik
-            $combinedKey = $value->id_barang . '_' . $value->lot_no;
+            $pack_id_part = isset($value->pack_id) ? $value->pack_id : 'null';
+            $combinedKey = $value->id_barang . '_' . $value->lot_no . '_' . $pack_id_part;
 
             // Cek apakah kombinasi ini sudah pernah dimasukkan
             if (isset($existing_keys[$combinedKey])) {
@@ -476,10 +478,12 @@ $query = $this->db->query($sql, $params);
             $data_barang[] = [
                 "id_barang" => $value->id_barang,
                 "lot_no" => $value->lot_no,
+                "pack_id" => $value->pack_id,
                 "id_jenis_barang" => $value->id_jenis_barang,
             ];
 
             $lot_id[] = $value->lot_id;
+            $pack_id[] = $value->pack_id;
             $stok_awal[] = isset($value->saldo_awal_awal) ? $value->saldo_awal_awal : 0;
             $lot_no[] = $value->lot_no;
 
@@ -490,6 +494,7 @@ $query = $this->db->query($sql, $params);
         foreach ($data_barang as $key => $lot) {
             $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
             $lot_no = $lot['lot_no'];
+            $pack_id_cur = $lot['pack_id'];
             $id_jenis_barang = $lot['id_jenis_barang'];
             $builder = $this->db->table("trans_barang abx");
             $builder->join("trans_lots tl", "abx.lot_id = tl.id", "inner");
@@ -504,6 +509,7 @@ $query = $this->db->query($sql, $params);
                     FROM trans_barang abx2
                     INNER JOIN trans_lots cbx ON abx2.lot_id = cbx.id
                     WHERE cbx.lot_no = '$lot_no'
+                    and abx2.pack_id = $pack_id_cur
                     AND EXTRACT(MONTH FROM abx2.tanggal) = $month
                     AND EXTRACT(YEAR FROM abx2.tanggal) = $year
                     AND abx2.price IS NOT NULL
@@ -517,6 +523,7 @@ $query = $this->db->query($sql, $params);
                     FROM trans_barang abx3
                     INNER JOIN trans_lots cbx2 ON abx3.lot_id = cbx2.id
                     WHERE cbx2.lot_no = '$lot_no'
+                    and abx3.pack_id = $pack_id_cur
                     AND EXTRACT(MONTH FROM abx3.tanggal) = $month
                     AND EXTRACT(YEAR FROM abx3.tanggal) = $year
                     ORDER BY abx3.tanggal DESC
@@ -549,6 +556,7 @@ $query = $this->db->query($sql, $params);
             $builder->where("EXTRACT(YEAR FROM abx.tanggal)", $year);
             $builder->where("abx.id_barang", $lot['id_barang']);
             $builder->where("tl.lot_no", $lot['lot_no']);
+            $builder->where("abx.pack_id", $lot['pack_id']);
             $builder->groupBy("abx.id_barang, tl.lot_no, abx.pack_id");
             
             
@@ -579,7 +587,7 @@ $query = $this->db->query($sql, $params);
                     $isi['id_jenis_barang'] = !empty($idJenisBarang) ? $idJenisBarang : $id_jenis_barang;
                     $isi['lot_id'] = $lot_id[$key];
                     $isi['lot_no'] = $lot_no;
-                    $isi['pack_id'] = $data->pack_id;
+                    $isi['pack_id'] = $pack_id[$key];
                     $isi['stok_awal'] = $saldo_awal;
                     $isi['masuk'] = round($masuk, 2);
                     $isi['keluar'] = round($keluar, 2);
@@ -593,7 +601,7 @@ $query = $this->db->query($sql, $params);
                     $builder_detail->where('abx.month', $bulan);
                     $builder_detail->where('abx.year', $tahun);
                     $builder_detail->where('abx.lot_no', $lot_no);
-                    $builder_detail->where('abx.pack_id', $data->pack_id);
+                    $builder_detail->where('abx.pack_id', $pack_id[$key]);
                     $builder_detail->where('abx.id_barang', $data->id_barang);
                     // $builder_detail->where('abx.id_trans_barang', $value->id);
                     $builder_detail->select("*");
@@ -608,7 +616,7 @@ $query = $this->db->query($sql, $params);
                         }
                     }
                     else {
-                        $this->db->table("trans_barang_history")->update($isi, array("month" => $bulan, "year" => $tahun, "lot_no" => $lot_no, "id_barang" => $data->id_barang, "pack_id" => $data->pack_id));
+                        $this->db->table("trans_barang_history")->update($isi, array("month" => $bulan, "year" => $tahun, "lot_no" => $lot_no, "id_barang" => $data->id_barang, "pack_id" => $pack_id[$key]));
                     }
                 }
                 
@@ -676,6 +684,8 @@ $query = $this->db->query($sql, $params);
                 a.month,
                 a.year,
                 a.lot_id,
+                a.pack_id,
+                e.pack_name,
                 a.lot_no,
                 a.jumlah AS qty,
                 a.price,
@@ -687,6 +697,7 @@ $query = $this->db->query($sql, $params);
             INNER JOIN ref_barang b         ON a.id_barang = b.id
             INNER JOIN ref_satuan c         ON b.id_satuan = c.id
             INNER JOIN ref_jenis_barang d   ON b.id_jenis_barang = d.id
+            left JOIN ref_pack e            ON a.pack_id = e.id
             {$where}
             ORDER BY a.id_barang, a.lot_no, (a.year * 100 + a.month) DESC
         ";

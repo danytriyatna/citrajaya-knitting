@@ -25,6 +25,16 @@
         </div>
 
         <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="ref_po">Ref Purchase Order No.</label>
+          <div class="col-md-9">
+            <input type="text" id="ref_po" name="ref_po" class="form-control" placeholder="Ketikkan nomor PO" value="">
+            <div class="invalid-feedback">
+              Purchase Order No. tidak valid
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="tgl_sales_order">Date<span class="text-danger">*</span></label>
           <div class="col-md-9">
             <input type="text" id="tgl_sales_order" name="tgl_sales_order" class="form-control datepicker" placeholder="Pilih tanggal sales_order" value="" required>

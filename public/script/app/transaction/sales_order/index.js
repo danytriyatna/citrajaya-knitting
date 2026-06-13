@@ -12,61 +12,62 @@ $(document).ready(function () {
 
     $("[data-politespace]").politespace();
 
-    const inpData           = $('#data_id');
-    const inpRole           = $('#role_id');
-    const inpNoSalesOrder   = $('#no_sales_order');
-    const inpDeskripsi      = $('#desc_style');
-    const inpStyle          = $('#style');
-    const inprepeat         = $('#repeat_inp');
-    const inpBuyer          = $('#select_buyer');
-    const inpTglTransaksi   = $('#tgl_sales_order');
-    const inpTglDeadline    = $('#tgl_deadline');
-    const inpTglDeadlineDua    = $('#tgl_deadline_dua');
-    const inpKetSalesOrder  = $('#ket_sales_order');
-    const inpUangDP         = $('#uang_dp');
-    const inpTglDP         = $('#tgl_dp');
-    const inpTypeDP         = $('#select_type');
-    const inpUangDP2         = $('#uang_dp_2');
-    const inpTglDP2         = $('#tgl_dp_2');
-    const inpTypeDP2         = $('#select_type_2');
-    const inpPengiriman         = $('#pengiriman');
-    let inpPoWarna1      = $('#po_warna1');
-    let inpPoWarna2      = $('#po_warna2');
-    let inpPoWarna3      = $('#po_warna3');
-    let inpPoWarna4      = $('#po_warna4');
-    let inpPoWarna5      = $('#po_warna5');
-    let inpPoWarna6      = $('#po_warna6');
-    let inpPoWarna7      = $('#po_warna7');
-    let inpPoWarna8      = $('#po_warna8');
-    let inpPoBarang1      = $('#po_barang1');
-    let inpPoBarang2      = $('#po_barang2');
-    let inpPoBarang3      = $('#po_barang3');
-    let inpPoBarang4      = $('#po_barang4');
-    let inpPoBarang5      = $('#po_barang5');
-    let inpPoBarang6      = $('#po_barang6');
-    let inpPoBarang7      = $('#po_barang7');
-    let inpPoBarang8      = $('#po_barang8');
+    const inpData = $('#data_id');
+    const inpRole = $('#role_id');
+    const inpNoSalesOrder = $('#no_sales_order');
+    const inpRefPo = $('#ref_po');
+    const inpDeskripsi = $('#desc_style');
+    const inpStyle = $('#style');
+    const inprepeat = $('#repeat_inp');
+    const inpBuyer = $('#select_buyer');
+    const inpTglTransaksi = $('#tgl_sales_order');
+    const inpTglDeadline = $('#tgl_deadline');
+    const inpTglDeadlineDua = $('#tgl_deadline_dua');
+    const inpKetSalesOrder = $('#ket_sales_order');
+    const inpUangDP = $('#uang_dp');
+    const inpTglDP = $('#tgl_dp');
+    const inpTypeDP = $('#select_type');
+    const inpUangDP2 = $('#uang_dp_2');
+    const inpTglDP2 = $('#tgl_dp_2');
+    const inpTypeDP2 = $('#select_type_2');
+    const inpPengiriman = $('#pengiriman');
+    let inpPoWarna1 = $('#po_warna1');
+    let inpPoWarna2 = $('#po_warna2');
+    let inpPoWarna3 = $('#po_warna3');
+    let inpPoWarna4 = $('#po_warna4');
+    let inpPoWarna5 = $('#po_warna5');
+    let inpPoWarna6 = $('#po_warna6');
+    let inpPoWarna7 = $('#po_warna7');
+    let inpPoWarna8 = $('#po_warna8');
+    let inpPoBarang1 = $('#po_barang1');
+    let inpPoBarang2 = $('#po_barang2');
+    let inpPoBarang3 = $('#po_barang3');
+    let inpPoBarang4 = $('#po_barang4');
+    let inpPoBarang5 = $('#po_barang5');
+    let inpPoBarang6 = $('#po_barang6');
+    let inpPoBarang7 = $('#po_barang7');
+    let inpPoBarang8 = $('#po_barang8');
 
-    const fileSalesOrder     = $('#fileSalesOrder');
-    const fileSalesOrderOld  = $('#fileSalesOrderOld');
+    const fileSalesOrder = $('#fileSalesOrder');
+    const fileSalesOrderOld = $('#fileSalesOrderOld');
     const linkFileSalesOrder = $('#linkFileSalesOrder');
-    const deskripsiText      = $('#deskripsiText');
-    const tglSalesOrderText  = $('#tglSalesOrderText');
-    const buyerText          = $('#buyerText');
-    const tglDeadlineText    = $('#tglDeadlineText');
-    const tglDeadlineTextDua    = $('#tglDeadlineTextDua');
-    const noSalesOrderText   = $('#noSalesOrderText');
-    const fotoText           = $('#fotoText');
-    const rowDet             = $("#rowDet")
+    const deskripsiText = $('#deskripsiText');
+    const tglSalesOrderText = $('#tglSalesOrderText');
+    const buyerText = $('#buyerText');
+    const tglDeadlineText = $('#tglDeadlineText');
+    const tglDeadlineTextDua = $('#tglDeadlineTextDua');
+    const noSalesOrderText = $('#noSalesOrderText');
+    const fotoText = $('#fotoText');
+    const rowDet = $("#rowDet")
 
-    const isModal            = $("#modal-form-add-po");
-    const isModalPO          = $("#modal-form-po");
-    var idSalesOrder       = null
-    var idSalesOrderDet    = null
+    const isModal = $("#modal-form-add-po");
+    const isModalPO = $("#modal-form-po");
+    var idSalesOrder = null
+    var idSalesOrderDet = null
 
-    const btnSend            = $("#btn-send");
-    const brcStyle            = $("#style_input");
-    let qty_ukuran            = [];
+    const btnSend = $("#btn-send");
+    const brcStyle = $("#style_input");
+    let qty_ukuran = [];
 
     const mapping = {
         'po_barang1': 'po_warna1',
@@ -81,40 +82,40 @@ $(document).ready(function () {
 
     $.each(mapping, function (barangId, warnaId) {
         $('#' + barangId).on('change', function () {
-        // Ambil data-warna dari option yang dipilih
-        const selectedOption = $(this).find('option:selected');
-        const idWarna = selectedOption.data('warna');
+            // Ambil data-warna dari option yang dipilih
+            const selectedOption = $(this).find('option:selected');
+            const idWarna = selectedOption.data('warna');
 
-        const $warna = $('#' + warnaId);
+            const $warna = $('#' + warnaId);
 
-        if (idWarna) {
-            // Set value select2 warna lalu trigger
-            $warna.val(idWarna).trigger('change');
-        } 
+            if (idWarna) {
+                // Set value select2 warna lalu trigger
+                $warna.val(idWarna).trigger('change');
+            }
         });
     });
 
-    let buttonRowAction = function(cell) {
-        let fmBtnDelete = "";        
-        let fmBtnEdit = "";        
-     
+    let buttonRowAction = function (cell) {
+        let fmBtnDelete = "";
+        let fmBtnEdit = "";
+
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
         fmBtnEdit = ` <button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
-    inpBuyer.on("change", function(){
-        let  val = $(this).val()
-        if(val.length > 0){
+    inpBuyer.on("change", function () {
+        let val = $(this).val()
+        if (val.length > 0) {
             getSample()
         }
     });
 
     let dtList = new Tabulator("#dt-list", {
         columns: [
-            {formatter: cardFormatter, hozAlign:"center", widthGrow: 1,headerSort: false},
+            { formatter: cardFormatter, hozAlign: "center", widthGrow: 1, headerSort: false },
         ],
-        locale: 'id',    
+        locale: 'id',
         layout: 'fitColumns',
         ajaxURL: "/trans/sales-order/list",
         ajaxConfig: "POST",
@@ -160,68 +161,70 @@ $(document).ready(function () {
             sorters: "order"
         },
         selectableRows: false,
-	});
+    });
 
     let defColumDet = [
-                        {
-                            headerSort: false,  
-                            title: 'Aksi', 
-                            formatter: buttonRowAction,
-                            width: 100, align: "center", cssClass: "text-center",
-                            cellClick: function(e, cell) {
-                                let row = cell.getRow();
-                                let data_row = row.getData();
-                                if (e.target.title === 'delete') {
-                                    if (confirm("Anda yakin akan menghapus data?")) {
-                                        deleteData(data_row.id)
-                                        // window.location.replace(baseUrl + "/trans/sales-order/delete/detail" + data_row.id);
-                                    }
-                                }else if(e.target.title === 'edit'){
-                                    getDetailQty(idSalesOrder,data_row.id)
-                                }   
-                            }
-                        },
-                        {headerSort: false,title:"Colour", field:"colour"},
-                        {headerSort: false,title:"Amount", field:"harga_satuan",formatter: "money", formatterParams: {
-                            decimal: ",",
-                            thousand: ".",
-                            symbol: "Rp",  // Simbol mata uang Rupiah
-                            precision: 0,   // Tidak ada desimal
-                        }, hozAlign:"right", width: '12%'},
-                    ]
+        {
+            headerSort: false,
+            title: 'Aksi',
+            formatter: buttonRowAction,
+            width: 100, align: "center", cssClass: "text-center",
+            cellClick: function (e, cell) {
+                let row = cell.getRow();
+                let data_row = row.getData();
+                if (e.target.title === 'delete') {
+                    if (confirm("Anda yakin akan menghapus data?")) {
+                        deleteData(data_row.id)
+                        // window.location.replace(baseUrl + "/trans/sales-order/delete/detail" + data_row.id);
+                    }
+                } else if (e.target.title === 'edit') {
+                    getDetailQty(idSalesOrder, data_row.id)
+                }
+            }
+        },
+        { headerSort: false, title: "Colour", field: "colour" },
+        {
+            headerSort: false, title: "Amount", field: "harga_satuan", formatter: "money", formatterParams: {
+                decimal: ",",
+                thousand: ".",
+                symbol: "Rp",  // Simbol mata uang Rupiah
+                precision: 0,   // Tidak ada desimal
+            }, hozAlign: "right", width: '12%'
+        },
+    ]
     let dtListDetail = new Tabulator("#dt-detail", {
-        pagination: true, 
+        pagination: true,
         paginationSize: 10,
         paginationButtonCount: 5,
         columns: defColumDet,
-        locale: 'id',    
-        layout:"fitColumns",
-        resizableColumnFit:true,
+        locale: 'id',
+        layout: "fitColumns",
+        resizableColumnFit: true,
         placeholder: "Tidak ada data",
-	});
+    });
 
     function calculateTotal(row) {
-        if(row){
+        if (row) {
             let qty = row.qty || 0;
             let harga = row.harga_satuan || 0;
             return qty * harga;
         }
     }
 
-    let buttonQRAction = function(cell){
-        if(cell.getData().qty != null){
+    let buttonQRAction = function (cell) {
+        if (cell.getData().qty != null) {
             let fmBtnQRCode = "";
             fmBtnQRCode = ` <button type="button" class="btn btn-sm btn-info" title='qr code'><i class="fa fa-print" title='qr code'></i></button>`;
             return fmBtnQRCode;
-         }
-     }
+        }
+    }
 
     let dtListDetailQty = new Tabulator("#dt-detail-qty", {
-        pagination: true, 
+        pagination: true,
         paginationSize: 10,
         paginationButtonCount: 5,
-        columns:[
-            {title:"ID", field:"id", visible:false},
+        columns: [
+            { title: "ID", field: "id", visible: false },
             // {
             //     headerSort: false,  
             //     title: 'Aksi', 
@@ -235,37 +238,41 @@ $(document).ready(function () {
             //         } 
             //     }
             // },
-            {headerSort: false,title:"No",formatter: "rownum",cssClass:'text-center', hozAlign: "center", width:"8%"},
-            {headerSort: false,title:"id_ukuran", field:"id_ukuran", cssClass:'text-center', hozAlign:"center",visible:false},
-            {headerSort: false,title:"Ukuran", field:"ukuran", cssClass:'text-center', hozAlign:"center",width:"18%"},
-            {headerSort: false,title:"QTY", field:"qty", cssClass:'text-center', hozAlign:"center",width:"10%",editor: "number",cellEdited: updateTotal},
-            {headerSort: false,title:"Price", field:"harga_satuan",formatter: "money", formatterParams: {
-                decimal: ",",
-                thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            }, cssClass:'text-end', hozAlign:"right",width:"32%",editor: "number",cellEdited: updateTotal},
-            {headerSort: false,title:"Total", field:"harga_total",formatter: "money", formatterParams: {
-                decimal: ",",
-                thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            }, cssClass:'text-end', hozAlign:"right",width:"32%"},
+            { headerSort: false, title: "No", formatter: "rownum", cssClass: 'text-center', hozAlign: "center", width: "8%" },
+            { headerSort: false, title: "id_ukuran", field: "id_ukuran", cssClass: 'text-center', hozAlign: "center", visible: false },
+            { headerSort: false, title: "Ukuran", field: "ukuran", cssClass: 'text-center', hozAlign: "center", width: "18%" },
+            { headerSort: false, title: "QTY", field: "qty", cssClass: 'text-center', hozAlign: "center", width: "10%", editor: "number", cellEdited: updateTotal },
+            {
+                headerSort: false, title: "Price", field: "harga_satuan", formatter: "money", formatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",  // Simbol mata uang Rupiah
+                    precision: 0,   // Tidak ada desimal
+                }, cssClass: 'text-end', hozAlign: "right", width: "32%", editor: "number", cellEdited: updateTotal
+            },
+            {
+                headerSort: false, title: "Total", field: "harga_total", formatter: "money", formatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",  // Simbol mata uang Rupiah
+                    precision: 0,   // Tidak ada desimal
+                }, cssClass: 'text-end', hozAlign: "right", width: "32%"
+            },
         ],
-     
-        locale: 'id',    
+
+        locale: 'id',
         // layout: 'fitColumns',
         placeholder: "Tidak ada data",
         height: '300px',
-        pagination:false
-	});
+        pagination: false
+    });
 
     function updateTotal(cell) {
         let row = cell.getRow();
-        if (row) { 
+        if (row) {
             let newTotal = calculateTotal(row.getData());
             row.update({ harga_total: newTotal });
-        } 
+        }
     }
 
     let searchThread = null;
@@ -292,43 +299,43 @@ $(document).ready(function () {
         });
     }
 
-     // declarre untuk variable print qr
-     const mdlPrint = $("#modal-print-barcode");
-     const inpp_foto = $("#fotoPrint");
-     const inpp_noSo = $("#noSamplePrint");
-     const inpp_deskripsi = $("#deskripsiPrint");
-     const inpp_tglSample = $("#tglSamplePrint");
-     const inpp_tglDeadline = $("#tglDeadlinePrint");
-     const inpp_tglDeadlineDua = $("#tglDeadlinePrintDua");
-     const inpp_buyer = $("#buyerPrint");    
-     const inpp_warna = $("#warnaPrint");
-     const inpp_trans = $("#warnaTrans");
+    // declarre untuk variable print qr
+    const mdlPrint = $("#modal-print-barcode");
+    const inpp_foto = $("#fotoPrint");
+    const inpp_noSo = $("#noSamplePrint");
+    const inpp_deskripsi = $("#deskripsiPrint");
+    const inpp_tglSample = $("#tglSamplePrint");
+    const inpp_tglDeadline = $("#tglDeadlinePrint");
+    const inpp_tglDeadlineDua = $("#tglDeadlinePrintDua");
+    const inpp_buyer = $("#buyerPrint");
+    const inpp_warna = $("#warnaPrint");
+    const inpp_trans = $("#warnaTrans");
 
-    function cardFormatter(cell, formatterParams, onRendered){
+    function cardFormatter(cell, formatterParams, onRendered) {
         let data = cell.getRow().getData(); // Ambil data row
 
         let status = '';
         let aksi = '';
-        if(data.status == 'Draft'){
-             status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
-                    <span class="f-w-700 text-muted">`+data.status+`</span>`
+        if (data.status == 'Draft') {
+            status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
+                    <span class="f-w-700 text-muted">`+ data.status + `</span>`
 
             aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
                  <button type="button" ${deleteButton == true ? '' : 'hidden'} class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
                  <button type="button" hidden  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
-        
+
         }
-        
-        else{
+
+        else {
             status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
-                    <span class="f-w-700 text-success">`+data.status+`</span>`
+                    <span class="f-w-700 text-success">`+ data.status + `</span>`
 
 
             aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
                 <button hidden type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
                 <button type="button" ${printButton == true ? '' : 'hidden'}  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
         }
-        
+
         // HTML Card Layout
         var cardHtml = `<div class="card shadow-sm">
                   <div class="card-header">
@@ -343,8 +350,8 @@ $(document).ready(function () {
                             <div class="card-body p-y-4">
                               <div class="d-flex justify-content-start align-items-center f-s-11">
                                 `
-                                    +status+
-                                `
+            + status +
+            `
                               </div>
                             </div>
                           </div>
@@ -362,7 +369,7 @@ $(document).ready(function () {
                         <hr class="m-y-8" />
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>
                         <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em></p>
-                        <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-'}</em></p>
+                        <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua ? formatterDate(data.tgl_deadline_dua) : '-'}</em></p>
                         <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i>&nbsp; ${data.nama}</p>
                         <a class="hover-zoom-rotate" href="${data.file_gambar}" target="_blank"><img class="m-t-0 d-block object-fit-cover rounded" src="${data.file_gambar}" alt="Foto Sample" width="160px" height="90px" /></a>
                       </div>
@@ -375,21 +382,21 @@ $(document).ready(function () {
 
         // declarre untuk variable print qr
         const print_btn = () => {
-            let btn = `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modalz" title="print-warna"> <i class="fa fa-print" title="print-warna"></i></button>`;    
+            let btn = `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modalz" title="print-warna"> <i class="fa fa-print" title="print-warna"></i></button>`;
             return btn
         }
-        
-        onRendered(()=>{
-            
-            document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', ()=>{
+
+        onRendered(() => {
+
+            document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', () => {
                 fileSalesOrder.val('')
                 linkFileSalesOrder.attr('src', "")
                 getDetail(data.id)
             });
-            document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', ()=>{
+            document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', () => {
                 window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
             });
-            document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', ()=>{
+            document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', () => {
                 Swal.fire({
                     title: 'Hapus Data?',
                     text: 'Data yang dihapus tidak dapat dikembalikan!',
@@ -405,9 +412,9 @@ $(document).ready(function () {
                     }
                 });
             });
-            
+
             let isColumn = [
-                {headerSort: false,title:"No", field:"no",   width: "5%"},
+                { headerSort: false, title: "No", field: "no", width: "5%" },
                 // {headerSort: false,  title:"QR", width:"7%", formatter: print_btn, visible: (USER_ROLE == 1 || USER_ROLE == 2),
                 //     cellClick: function(e, cell) {
                 //         let row = cell.getRow();
@@ -456,20 +463,20 @@ $(document).ready(function () {
                 //     }
                 // },
                 // {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colordasar"}
-                {headerSort: false, cssClass: 'text-start', title:"Colour", field:"colour"}
+                { headerSort: false, cssClass: 'text-start', title: "Colour", field: "colour" }
             ]
 
             let total = 0;
             for (const el of data.key_ukuran) {
                 const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
                 // total += isKey;
-                isColumn.push({ 
-                    headerSort: false,  
-                    title: el.kode_ukuran, 
-                    field: isKey, 
-                    cssClass: "text-center", 
-                    hozAlign: "center", 
-                    width: "7%", 
+                isColumn.push({
+                    headerSort: false,
+                    title: el.kode_ukuran,
+                    field: isKey,
+                    cssClass: "text-center",
+                    hozAlign: "center",
+                    width: "7%",
                     // bottomCalc: "sum", // Menambahkan kalkulasi sum di bagian bawah kolom
                     // bottomCalcFormatter: "money", // Format hasil kalkulasi sebagai uang
                     // bottomCalcFormatterParams: {
@@ -479,19 +486,19 @@ $(document).ready(function () {
                     //     precision: 0 // Tidak ada desimal
                     // }
                 });
-             }
+            }
 
-             // Simpan list key_ukuran global
+            // Simpan list key_ukuran global
             let ukuranKeys = data.key_ukuran; // global
 
             isColumn.push({
                 headerSort: false,
-                cssClass: "text-center", 
+                cssClass: "text-center",
                 title: "Total",
                 field: "total",
                 hozAlign: "center",
-                 width: "7%", 
-                mutator: function(value, data, type, params, component){
+                width: "7%",
+                mutator: function (value, data, type, params, component) {
                     let total = 0;
                     for (const el of ukuranKeys) {
                         const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran;
@@ -499,7 +506,7 @@ $(document).ready(function () {
                     }
                     return total;
                 },
-                bottomCalc: function(values, data, calcParams){
+                bottomCalc: function (values, data, calcParams) {
                     return values.reduce((sum, val) => sum + parseFloat(val || 0), 0);
                 },
                 bottomCalcFormatter: "money",
@@ -513,7 +520,7 @@ $(document).ready(function () {
 
             isColumn.push(
                 {
-                    headerSort: false, cssClass: 'text-center', title:"Amount", field:"total_harga",formatter: "money", 
+                    headerSort: false, cssClass: 'text-center', title: "Amount", field: "total_harga", formatter: "money",
                     formatterParams: {
                         decimal: ",",
                         thousand: ".",
@@ -528,28 +535,29 @@ $(document).ready(function () {
                         symbol: "Rp", // Simbol mata uang Rupiah
                         precision: 0 // Tidak ada desimal
                     },
-                    hozAlign:"right", cssClass: 'text-end', width:"15%"})
+                    hozAlign: "right", cssClass: 'text-end', width: "15%"
+                })
 
             new Tabulator(`#dt-list-detail-${data.id}`, {
-                data: data.detail, 
-                layout:"fitColumns",
-                resizableColumnFit:true,
+                data: data.detail,
+                layout: "fitColumns",
+                resizableColumnFit: true,
                 // pagination: true, 
                 // paginationSize: 10,
                 // paginationButtonCount: 5,
                 columns: isColumn,
             });
         });
-    
+
         return cardHtml; // Return HTML Card
     }
 
-    $("#print_slc_ukuran").change(function() {
+    $("#print_slc_ukuran").change(function () {
         let selectedUkuran = $(this).val();
         $("#print_qty").val(qty_ukuran[selectedUkuran])
     });
 
-    $("#btn-add").on("click", function(){
+    $("#btn-add").on("click", function () {
         let today = new Date().toISOString().split('T')[0];
         inpData.val("")
         linkFileSalesOrder.attr('src', "")
@@ -563,6 +571,7 @@ $(document).ready(function () {
         inpTglDeadlineDua.val("")
         inpKetSalesOrder.val("")
         inpStyle.val("")
+        inpRefPo.val("")
         inprepeat.val(0)
         inpSample.val("").trigger("change")
         setTimeout(() => {
@@ -579,7 +588,7 @@ $(document).ready(function () {
         isModal.modal("show");
     });
 
-    $("#btn-add-detail").on("click", function(){
+    $("#btn-add-detail").on("click", function () {
         idSalesOrder = inpData.val()
         idSalesOrderDet = null
         inpPoWarna1.val('').trigger('change');
@@ -598,34 +607,34 @@ $(document).ready(function () {
         inpPoBarang6.val('').trigger('change');
         inpPoBarang7.val('').trigger('change');
         inpPoBarang8.val('').trigger('change');
-        getDetailQty(inpData.val(),0)
+        getDetailQty(inpData.val(), 0)
     });
 
-    $("#btn-save").on("click", function(e){
+    $("#btn-save").on("click", function (e) {
         e.preventDefault()
         simpanData(0)
     });
 
-    $("#btn-send").on("click", function(e){
+    $("#btn-send").on("click", function (e) {
         e.preventDefault()
         simpanData(1)
     });
 
 
-    $("#btn-save-detail").on("click", function(e){
+    $("#btn-save-detail").on("click", function (e) {
         e.preventDefault()
         simpanDataDetail()
     });
 
-    function formatterDate($date){
+    function formatterDate($date) {
         let newDate = new Date($date);
         const options = { day: '2-digit', month: 'long', year: 'numeric' };
         const formattedDate = newDate.toLocaleDateString('id-ID', options);
         return formattedDate
     }
-    
+
     function formatLocaleDate(localeDate) {
-    
+
         var months = {
             "Januari": "01",
             "Februari": "02",
@@ -642,8 +651,8 @@ $(document).ready(function () {
         };
 
         var parts = localeDate.split(" ");
-        var day = parts[0].padStart(2, '0'); 
-        var month = months[parts[1]]; 
+        var day = parts[0].padStart(2, '0');
+        var month = months[parts[1]];
         var year = parts[2];
 
         return `${year}-${month}-${day}`;
@@ -653,7 +662,7 @@ $(document).ready(function () {
         $.ajax({
             url: `/trans/sales-order/detail/${id}`,
             type: 'GET',
-            dataType: 'json', 
+            dataType: 'json',
             beforeSend: function () {
                 Swal.fire({
                     title: 'Loading...',
@@ -664,7 +673,7 @@ $(document).ready(function () {
                     }
                 });
             },
-            success: function(data) {
+            success: function (data) {
                 idSalesOrder = id
                 rowDet.show()
                 inpData.val(data.id)
@@ -673,8 +682,9 @@ $(document).ready(function () {
                 fileSalesOrderOld.val(data.gambar_id)
                 inpKetSalesOrder.val(data.keterangan)
                 inpStyle.val(data.stylex)
+                inpRefPo.val(data.ref_po)
                 inprepeat.val(data.style_cnt_order).trigger("change");
-                
+
                 setTimeout(() => {
                     inpBuyer.val(data.id_konsumen).trigger('change')
                     setTimeout(() => {
@@ -695,76 +705,76 @@ $(document).ready(function () {
                         }, 1000);
                     }, 2000);
                 }, 1000);
-                
-                if(data.file_gambar){
+
+                if (data.file_gambar) {
                     fileSalesOrderOld.val(data.gambar_id)
                     linkFileSalesOrder.removeClass("d-none")
                     linkFileSalesOrder.attr('src', data.file_gambar)
                 }
-               
+
                 setColumDetailData(data)
 
-                
-                if(data.status == 'Draft'){
+
+                if (data.status == 'Draft') {
                     btnSend.show()
-                }else{
+                } else {
                     btnSend.hide()
                 }
 
                 isModal.modal("show");
 
-                
+
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 Swal.close();
                 console.error('Error fetching data:', error);
             }
         });
     }
 
-    function setColumDetailData(data){
-        let newColumn =  [
-                            {
-                                headerSort: false,  
-                                title: 'Aksi', 
-                                formatter: buttonRowAction,
-                                width: 100, align: "center", cssClass: "text-center",
-                                cellClick: function(e, cell) {
-                                    let row = cell.getRow();
-                                    let data_row = row.getData();
-                                    if (e.target.title === 'delete') {
-                                        if (confirm("Anda yakin akan menghapus data?")) {
-                                            deleteData(data_row.id)
-                                            // window.location.replace(baseUrl + "/trans/sales-order/delete/detail" + data_row.id);
-                                        }
-                                    }else if(e.target.title === 'edit'){
-                                        getDetailQty(idSalesOrder,data_row.id)
-                                    }   
-                                }
-                            },
-                            {headerSort: false,title:"Colour", field:"colour"},
-                        ]
+    function setColumDetailData(data) {
+        let newColumn = [
+            {
+                headerSort: false,
+                title: 'Aksi',
+                formatter: buttonRowAction,
+                width: 100, align: "center", cssClass: "text-center",
+                cellClick: function (e, cell) {
+                    let row = cell.getRow();
+                    let data_row = row.getData();
+                    if (e.target.title === 'delete') {
+                        if (confirm("Anda yakin akan menghapus data?")) {
+                            deleteData(data_row.id)
+                            // window.location.replace(baseUrl + "/trans/sales-order/delete/detail" + data_row.id);
+                        }
+                    } else if (e.target.title === 'edit') {
+                        getDetailQty(idSalesOrder, data_row.id)
+                    }
+                }
+            },
+            { headerSort: false, title: "Colour", field: "colour" },
+        ]
 
         const dataCol = data.key_ukuran
 
         for (const el of dataCol) {
             const isKey = (el.key_ukuran == 'all') ? 'all_' : el.key_ukuran
-            newColumn.push( {headerSort: false,  title:el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign:"center", width:"7%"} )
+            newColumn.push({ headerSort: false, title: el.kode_ukuran, field: isKey, cssClass: "text-center", hozAlign: "center", width: "7%" })
         }
 
         // last column 
-        newColumn.push(  
-                        {
-                            headerSort: false,title:"Amount", field:"total_harga",formatter: "money", 
-                            formatterParams: {
-                                decimal: ",",
-                                thousand: ".",
-                                symbol: "Rp",  // Simbol mata uang Rupiah
-                                precision: 0,   // Tidak ada desimal
-                            },
-                            hozAlign:"right", width: '15%'
-                        }
-                    )
+        newColumn.push(
+            {
+                headerSort: false, title: "Amount", field: "total_harga", formatter: "money",
+                formatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",  // Simbol mata uang Rupiah
+                    precision: 0,   // Tidak ada desimal
+                },
+                hozAlign: "right", width: '15%'
+            }
+        )
 
         setTimeout(() => {
             dtListDetail.setColumns(newColumn);
@@ -773,11 +783,11 @@ $(document).ready(function () {
         }, 500);
     }
 
-    function getDetailQty(id,idDet) {
+    function getDetailQty(id, idDet) {
         $.ajax({
             url: `/trans/sales-order/detail-qty/${id}/${idDet}`,
             type: 'GET',
-            dataType: 'json', 
+            dataType: 'json',
             beforeSend: function () {
                 Swal.fire({
                     title: 'Loading...',
@@ -788,17 +798,17 @@ $(document).ready(function () {
                     }
                 });
             },
-            success: function(data) {
+            success: function (data) {
                 Swal.close();
                 isModal.modal("hide")
                 noSalesOrderText.html(data.kode_sales_order)
                 deskripsiText.html(data.deskripsi)
                 tglSalesOrderText.html(`<i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}`)
                 buyerText.html(`<i class="fa fa-user f-s-11"></i>&nbsp; ${data.nama}`)
-                fotoText.attr("src",data.file_gambar)
+                fotoText.attr("src", data.file_gambar)
                 tglDeadlineText.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em>`)
-                tglDeadlineTextDua.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua? formatterDate(data.tgl_deadline_dua) : '-'}</em>`)
-                if(data.detail){
+                tglDeadlineTextDua.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua ? formatterDate(data.tgl_deadline_dua) : '-'}</em>`)
+                if (data.detail) {
                     idSalesOrderDet = data.detail.id
                     inpPoWarna1.val(data.detail.id_warna_1).trigger('change');
                     inpPoWarna2.val(data.detail.id_warna_2).trigger('change');
@@ -818,14 +828,14 @@ $(document).ready(function () {
                     inpPoBarang7.val(data.detail.id_barang_7).trigger('change');
                     inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
                 }
-                
+
                 dtListDetailQty.setData(data.detailUkuran)
                 isModalPO.modal("show");
                 setTimeout(() => {
                     dtListDetailQty.redraw(true)
                 }, 500);
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 Swal.close();
                 console.error('Error fetching data:', error);
             }
@@ -834,80 +844,80 @@ $(document).ready(function () {
 
 
     function deleteData(id) {
-            $.ajax({
-                type: 'GET',
-                url: `/trans/sales-order/delete/detail/${id}`,
-                dataType: 'json', 
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Loading...',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        onBeforeOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                },
-                success: function (response) {
-        
-                    if(response.status == true){
-                        Swal.fire({
-                            text: response.message,
-                            icon: 'success',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                        getDetail(idSalesOrder)
-                        dtList.setData()
-                        Swal.close();
-                    
-                    }else{
-                        Swal.fire({
-                            text: response.message,
-                            icon: 'error',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
+        $.ajax({
+            type: 'GET',
+            url: `/trans/sales-order/delete/detail/${id}`,
+            dataType: 'json',
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
                     }
-                },
-                error: function (e) {
-                    let msg = e.responseJSON.message;
-                    Swal.close();
-        
+                });
+            },
+            success: function (response) {
+
+                if (response.status == true) {
                     Swal.fire({
-                        text: msg,
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    getDetail(idSalesOrder)
+                    dtList.setData()
+                    Swal.close();
+
+                } else {
+                    Swal.fire({
+                        text: response.message,
                         icon: 'error',
                         showConfirmButton: false,
                         timer: 2000
                     });
-                },
-            });
-        
+                }
+            },
+            error: function (e) {
+                let msg = e.responseJSON.message;
+                Swal.close();
+
+                Swal.fire({
+                    text: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            },
+        });
+
     }
-    
+
     function simpanData(send) {
-        
+
         let validation = true
         // if(inpNoSalesOrder.val().length == 0) validation = false
-        if(inpDeskripsi.val().length == 0) validation = false
-        if(inpBuyer.val().length == 0) validation = false
-        if(inpTglDeadline.val().length == 0) validation = false
+        if (inpDeskripsi.val().length == 0) validation = false
+        if (inpBuyer.val().length == 0) validation = false
+        if (inpTglDeadline.val().length == 0) validation = false
         // if(inpTglDeadlineDua.val().length == 0) validation = false
-        if(inpTglTransaksi.val().length == 0) validation = false
+        if (inpTglTransaksi.val().length == 0) validation = false
         // if(fileSalesOrder[0].files[0] == undefined) validation = false
-    
-        if(validation){
+
+        if (validation) {
             var formData = new FormData();
-            formData.append("id",inpData.val());
-            formData.append("noSalesOrder",inpNoSalesOrder.val());
-            formData.append("deskripsi",inpDeskripsi.val());
-            formData.append("fileSalesOrder",fileSalesOrder[0].files[0]);
-            formData.append("fileIdSalesOrderOld",fileSalesOrderOld.val());
-            formData.append("idKonsumen",inpBuyer.val());
-            formData.append("tglDeadline",formatLocaleDate(inpTglDeadline.val()));
-            formData.append("tglDeadlineDua",inpTglDeadlineDua.val() != '' ? formatLocaleDate(inpTglDeadlineDua.val()) : '');
-            formData.append("tglTransaksi",formatLocaleDate(inpTglTransaksi.val()));
-            formData.append("keterangan",inpKetSalesOrder.val());
+            formData.append("id", inpData.val());
+            formData.append("noSalesOrder", inpNoSalesOrder.val());
+            formData.append("deskripsi", inpDeskripsi.val());
+            formData.append("fileSalesOrder", fileSalesOrder[0].files[0]);
+            formData.append("fileIdSalesOrderOld", fileSalesOrderOld.val());
+            formData.append("idKonsumen", inpBuyer.val());
+            formData.append("tglDeadline", formatLocaleDate(inpTglDeadline.val()));
+            formData.append("tglDeadlineDua", inpTglDeadlineDua.val() != '' ? formatLocaleDate(inpTglDeadlineDua.val()) : '');
+            formData.append("tglTransaksi", formatLocaleDate(inpTglTransaksi.val()));
+            formData.append("keterangan", inpKetSalesOrder.val());
             formData.append("samples", inpSample.val())
             formData.append("uang_dp", inpUangDP.val());
             formData.append("uang_dp_2", inpUangDP2.val());
@@ -917,15 +927,16 @@ $(document).ready(function () {
             formData.append("tgl_dp_2", inpTglDP2.val() != '' ? formatLocaleDate(inpTglDP2.val()) : '');
             formData.append("type_dp_2", inpTypeDP2.val());
             formData.append("style", inpStyle.val());
+            formData.append("ref_po", inpRefPo.val());
             formData.append("repeat", inprepeat.val());
             formData.append("submit_data", send);
-            
+
             $.ajax({
                 type: 'POST',
                 url: '/trans/sales-order/save',
                 data: formData,
                 processData: false,  // Jangan ubah data menjadi string
-            contentType: false,  // Agar jQuery tidak mengatur tipe konten
+                contentType: false,  // Agar jQuery tidak mengatur tipe konten
                 beforeSend: function () {
                     Swal.fire({
                         title: 'Loading...',
@@ -937,8 +948,8 @@ $(document).ready(function () {
                     });
                 },
                 success: function (response) {
-        
-                    if(response.status == true){
+
+                    if (response.status == true) {
                         Swal.fire({
                             text: response.message,
                             icon: 'success',
@@ -948,7 +959,7 @@ $(document).ready(function () {
                         dtList.setData()
                         Swal.close();
                         isModal.modal("hide");
-                    }else{
+                    } else {
                         Swal.fire({
                             text: response.message,
                             icon: 'error',
@@ -960,7 +971,7 @@ $(document).ready(function () {
                 error: function (e) {
                     let msg = e.responseJSON.message;
                     Swal.close();
-        
+
                     Swal.fire({
                         text: msg,
                         icon: 'error',
@@ -969,7 +980,7 @@ $(document).ready(function () {
                     });
                 },
             });
-        }else{
+        } else {
             Swal.fire({
                 text: "Lengkapi isian pada form !",
                 icon: 'warning',
@@ -980,8 +991,7 @@ $(document).ready(function () {
     }
 
     function simpanDataDetail() {
-        if(inpPoBarang1.val() == "")
-        {
+        if (inpPoBarang1.val() == "") {
             return Swal.fire({
                 text: "Barang 1 Belum terpilih!",
                 icon: 'warning',
@@ -989,84 +999,83 @@ $(document).ready(function () {
                 timer: 2000
             });
         }
-        let dataUkuran = dtListDetailQty.getData().filter(x => (x.qty && (x.harga_satuan || x.harga_satuan === 0 )) || (x.qty == 0 || x.qty == '0'));
-        if(dataUkuran.length ==0)
-            {
-                return Swal.fire({
-                    text: "Ukuran Minimal satu harus diisi",
-                    icon: 'warning',
+        let dataUkuran = dtListDetailQty.getData().filter(x => (x.qty && (x.harga_satuan || x.harga_satuan === 0)) || (x.qty == 0 || x.qty == '0'));
+        if (dataUkuran.length == 0) {
+            return Swal.fire({
+                text: "Ukuran Minimal satu harus diisi",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/trans/sales-order/save-detail',
+            data: {
+                barang1: inpPoBarang1.val(),
+                barang2: inpPoBarang2.val(),
+                barang3: inpPoBarang3.val(),
+                barang4: inpPoBarang4.val(),
+                barang5: inpPoBarang5.val(),
+                barang6: inpPoBarang6.val(),
+                barang7: inpPoBarang7.val(),
+                barang8: inpPoBarang8.val(),
+                dataUkuran: dataUkuran,
+                idSalesOrder: idSalesOrder,
+                idSalesOrderDet: idSalesOrderDet,
+            },
+            dataType: "json",
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
                     showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-    
-            $.ajax({
-                type: 'POST',
-                url: '/trans/sales-order/save-detail',
-                data: {
-                    barang1:inpPoBarang1.val(),
-                    barang2:inpPoBarang2.val(),
-                    barang3:inpPoBarang3.val(),
-                    barang4:inpPoBarang4.val(),
-                    barang5:inpPoBarang5.val(),
-                    barang6:inpPoBarang6.val(),
-                    barang7:inpPoBarang7.val(),
-                    barang8:inpPoBarang8.val(),
-                    dataUkuran: dataUkuran,
-                    idSalesOrder:idSalesOrder,
-                    idSalesOrderDet:idSalesOrderDet,
-                },
-                dataType: "json",
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Loading...',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        onBeforeOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                },
-                success: function (response) {
-        
-                    if(response.status == true){
-                        Swal.fire({
-                            text: response.message,
-                            icon: 'success',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                        Swal.close();
-                        getDetail(idSalesOrder)
-                        isModalPO.modal("hide");
-                    }else{
-                        Swal.fire({
-                            html: response.message,
-                            icon: 'error',
-                            showConfirmButton: false,
-                            timer: 4000
-                        });
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
                     }
-                },
-                error: function (e) {
-                    let msg = e.responseJSON.message;
-                    Swal.close();
-        
+                });
+            },
+            success: function (response) {
+
+                if (response.status == true) {
                     Swal.fire({
-                        html: msg,
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    Swal.close();
+                    getDetail(idSalesOrder)
+                    isModalPO.modal("hide");
+                } else {
+                    Swal.fire({
+                        html: response.message,
                         icon: 'error',
                         showConfirmButton: false,
                         timer: 4000
                     });
-                },
-            });
-        
+                }
+            },
+            error: function (e) {
+                let msg = e.responseJSON.message;
+                Swal.close();
+
+                Swal.fire({
+                    html: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            },
+        });
+
     }
-    
+
     var isSampleData = [];
     let inpSample = $("#select_samples")
 
-    function getSample(){
+    function getSample() {
         $.ajax({
             url: '/trans/sales-order/getSample', // point to server-side controller method
             dataType: "json", // what to expect back from the server
@@ -1081,64 +1090,64 @@ $(document).ready(function () {
                     }
                 });
             },
-            data: { 
-                  'buyers': inpBuyer.val(),
-              },
+            data: {
+                'buyers': inpBuyer.val(),
+            },
             success: function (res) {
-              Swal.close();
-              inpSample.empty()
-              if(res.status){
-                isSampleData = res.data
-                inpSample.append($("<option></option>").attr("value", 0).text("- Pilih Sample -"));
-                $.each(isSampleData, function(key,value) {
-                    inpSample.append($("<option></option>").attr("value", value.id).text(value.kode_sample + " : " + value.style));
-                });
+                Swal.close();
+                inpSample.empty()
+                if (res.status) {
+                    isSampleData = res.data
+                    inpSample.append($("<option></option>").attr("value", 0).text("- Pilih Sample -"));
+                    $.each(isSampleData, function (key, value) {
+                        inpSample.append($("<option></option>").attr("value", value.id).text(value.kode_sample + " : " + value.style));
+                    });
 
-                if(inpData.val().length == 0){
-                    // inpTglTransaksi.datepicker('setDate', isSampleData[0].tgl_transaksi); //.val(changeTgl(isSampleData[0].tgl_transaksi))
-                    // inpTglDeadline.datepicker('setDate', isSampleData[0].tgl_deadline); //.val(changeTgl(isSampleData[0].tgl_transaksi))
-                    // // inpTglDeadline.val(changeTgl(isSampleData[0].tgl_deadline))
-                    // inpKetSalesOrder.val(isSampleData[0].deskripsi)
-                    // inpDeskripsi.val(isSampleData[0].deskripsi)
-                }else{
-                    setTimeout(() => {
-                        inpSample.attr('value') != undefined ? inpSample.val(inpSample.attr('value')).trigger('change') : ''
-                    }, 500);
+                    if (inpData.val().length == 0) {
+                        // inpTglTransaksi.datepicker('setDate', isSampleData[0].tgl_transaksi); //.val(changeTgl(isSampleData[0].tgl_transaksi))
+                        // inpTglDeadline.datepicker('setDate', isSampleData[0].tgl_deadline); //.val(changeTgl(isSampleData[0].tgl_transaksi))
+                        // // inpTglDeadline.val(changeTgl(isSampleData[0].tgl_deadline))
+                        // inpKetSalesOrder.val(isSampleData[0].deskripsi)
+                        // inpDeskripsi.val(isSampleData[0].deskripsi)
+                    } else {
+                        setTimeout(() => {
+                            inpSample.attr('value') != undefined ? inpSample.val(inpSample.attr('value')).trigger('change') : ''
+                        }, 500);
+                    }
+
+
+                } else {
+                    console.log(res.message)
                 }
-                
-                
-              }else{
-                  console.log(res.message)
-              }
             },
             error: function (res) {
-              let msg = res.responseJSON.message;
-              Swal.close();
+                let msg = res.responseJSON.message;
+                Swal.close();
             },
-          });
+        });
     }
 
-    function changeTgl(tgl){
+    function changeTgl(tgl) {
         let splits = tgl.split('-');
 
         return splits[2] + '-' + splits[1] + '-' + splits[0]
     }
 
-    inpSample.on("change", function(){
+    inpSample.on("change", function () {
         let val = $(this).val()
         $(this).val(val)
         let isin = isSampleData.filter((isi) => val == isi.id);
-        if(isin.length > 0){
-            if(inpData.val().length == 0){
-               setTimeout(() => {
+        if (isin.length > 0) {
+            if (inpData.val().length == 0) {
+                setTimeout(() => {
                     inpTglTransaksi.val("")
                     inpTglDeadline.val("")
                     inpTglDeadlineDua.val("")
                     let tglTr = isin[0].tgl_transaksi.split('-')
-                    let tglTransaksi = tglTr['2'] + '-' + tglTr['1']+ '-' + tglTr['0']
+                    let tglTransaksi = tglTr['2'] + '-' + tglTr['1'] + '-' + tglTr['0']
                     // inpTglTransaksi.datepicker('setDate', tglTransaksi); //.val(changeTgl(isin[0].tgl_transaksi))
                     let tglD = isin[0].tgl_deadline.split('-')
-                    let tglDead = tglD['2'] + '-' + tglD['1']+ '-' + tglD['0']
+                    let tglDead = tglD['2'] + '-' + tglD['1'] + '-' + tglD['0']
                     // inpTglDeadline.datepicker('setDate', tglDead); //.val(changeTgl(isin[0].tgl_transaksi))
                     inpStyle.val(isin[0].style)
                     inprepeat.val(isin[0].style_cnt_order);
@@ -1149,16 +1158,16 @@ $(document).ready(function () {
                     }, 600);
                     inpKetSalesOrder.val(isin[0].deskripsi)
                     inpDeskripsi.val(isin[0].deskripsi)
-               }, 1000);
+                }, 1000);
             }
         }
     });
 
-    function generateQRCode(data){
+    function generateQRCode(data) {
         $.ajax({
             type: 'POST',
             url: '/trans/sales-order/generate',
-            data:{data:JSON.stringify(data)},
+            data: { data: JSON.stringify(data) },
             dataType: "json",
             beforeSend: function () {
                 Swal.fire({
@@ -1171,8 +1180,8 @@ $(document).ready(function () {
                 });
             },
             success: function (response) {
-    
-                if(response.status == true){
+
+                if (response.status == true) {
                     Swal.fire({
                         text: response.message,
                         icon: 'success',
@@ -1182,15 +1191,15 @@ $(document).ready(function () {
                     const blob = base64ToBlob(response.file_base64, 'image/png');
                     const url = URL.createObjectURL(blob);
                     const downloadLink = document.createElement('a');
-                    downloadLink.href = url;  
-                    downloadLink.download = response.file_name; 
+                    downloadLink.href = url;
+                    downloadLink.download = response.file_name;
 
                     downloadLink.click();
-                
+
                     URL.revokeObjectURL(url);
                     Swal.close();
-                
-                }else{
+
+                } else {
                     Swal.fire({
                         text: response.message,
                         icon: 'error',
@@ -1202,7 +1211,7 @@ $(document).ready(function () {
             error: function (e) {
                 let msg = e.responseJSON.message;
                 Swal.close();
-    
+
                 Swal.fire({
                     text: msg,
                     icon: 'error',
@@ -1218,8 +1227,8 @@ $(document).ready(function () {
 
         //   const inpp_slcWarna = $("#print_slc_warna");
         const inpp_slcUkuran = $("#print_slc_ukuran");
-        const inpp_qty       = $("#print_qty");
-        const inpp_qtyp      = $("#print_qtyp");
+        const inpp_qty = $("#print_qty");
+        const inpp_qtyp = $("#print_qtyp");
 
         // mdlPrint
         const dt_noSample = inpp_noSo.html()
@@ -1233,25 +1242,25 @@ $(document).ready(function () {
 
         // Query parameters
         let params = {
-            ukuran : inpp_slcUkuran.val(),
-            ukuran_text : inpp_slcUkuran.find("option:selected").text(),
-            qty : inpp_qty.val(),
-            qtyp : inpp_qtyp.val(),
-            noSample : dt_noSample,
-            deskripsi : dt_deskripsi,
-            buyer : '',
-            warna : dt_warna,
-            trans : dt_trans,
-            style : dt_style
-          };
-  
-          // Buat query string
-          let queryString = $.param(params); // Convert objek ke query string
-          let fullUrl = `trans/work-order/generate?${queryString}`;
+            ukuran: inpp_slcUkuran.val(),
+            ukuran_text: inpp_slcUkuran.find("option:selected").text(),
+            qty: inpp_qty.val(),
+            qtyp: inpp_qtyp.val(),
+            noSample: dt_noSample,
+            deskripsi: dt_deskripsi,
+            buyer: '',
+            warna: dt_warna,
+            trans: dt_trans,
+            style: dt_style
+        };
+
+        // Buat query string
+        let queryString = $.param(params); // Convert objek ke query string
+        let fullUrl = `trans/work-order/generate?${queryString}`;
         //   let fullUrl = `trans/sales-order/generate?${queryString}`;
-  
-          // Buka link di tab baru
-          window.open(fullUrl, '_blank');
+
+        // Buka link di tab baru
+        window.open(fullUrl, '_blank');
         //   setTimeout(() => {
         //     // inpp_trans.html(data.id);
         //     mdlPrint.modal("hide");
@@ -1262,82 +1271,82 @@ $(document).ready(function () {
     function base64ToBlob(base64, contentType = '', sliceSize = 512) {
         const byteCharacters = atob(base64); // Hapus prefix "data:image/png;base64,"
         const byteArrays = [];
-    
+
         for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
             const slice = byteCharacters.slice(offset, offset + sliceSize);
             const byteNumbers = new Array(slice.length);
-            
+
             for (let i = 0; i < slice.length; i++) {
                 byteNumbers[i] = slice.charCodeAt(i);
             }
-    
+
             const byteArray = new Uint8Array(byteNumbers);
             byteArrays.push(byteArray);
         }
-    
+
         return new Blob(byteArrays, { type: contentType });
     }
 
 
 });
 
-function readURL(input,id) {
+function readURL(input, id) {
     if (input.files && input.files[0]) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        const imageUrl = e.target.result;
-        const imgElement = document.getElementById('linkFileSalesOrder');
-        imgElement.classList.remove("d-none");
-        imgElement.src = imageUrl; // Set src dari <img> ke data URL
-      };
-      reader.readAsDataURL(input.files[0]);
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            const imageUrl = e.target.result;
+            const imgElement = document.getElementById('linkFileSalesOrder');
+            imgElement.classList.remove("d-none");
+            imgElement.src = imageUrl; // Set src dari <img> ke data URL
+        };
+        reader.readAsDataURL(input.files[0]);
     }
-  }
+}
 
-  let btnExcel = $("#btn_excel");
-    btnExcel.on("click", function(){
-        let from_date = $("#from_date").val();
-        let to_date = $("#to_date").val();
-        let inpFilterBuyer  = $('#filter_buyer').val();
-        
+let btnExcel = $("#btn_excel");
+btnExcel.on("click", function () {
+    let from_date = $("#from_date").val();
+    let to_date = $("#to_date").val();
+    let inpFilterBuyer = $('#filter_buyer').val();
 
-        if (from_date == null || from_date == "" || from_date == undefined) {
-            Swal.fire({
-                text: "From Date Export Harus Diisi!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
-        else if (to_date == null || to_date == "" || to_date == undefined) {
-            Swal.fire({
-                text: "To Date Export Harus Diisi!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
-        else if (parseDate(from_date) > parseDate(to_date)) {
-            Swal.fire({
-                text: "From Date tidak boleh lebih besar dari To Date!",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
-            });
-            return false;
-        }
 
-        else {
-            let url = "/trans/sales-order/print_excel_lists/" + from_date + "/" + to_date + "/" + inpFilterBuyer;
-            window.open(url, '_blank');
-        }
-    });
-
-    function parseDate(str) {
-        // format dd-mm-yyyy
-        let parts = str.split("-");
-        return new Date(parts[2], parts[1] - 1, parts[0]); 
-        // year, monthIndex (0=Jan), day
+    if (from_date == null || from_date == "" || from_date == undefined) {
+        Swal.fire({
+            text: "From Date Export Harus Diisi!",
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        return false;
     }
+    else if (to_date == null || to_date == "" || to_date == undefined) {
+        Swal.fire({
+            text: "To Date Export Harus Diisi!",
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        return false;
+    }
+    else if (parseDate(from_date) > parseDate(to_date)) {
+        Swal.fire({
+            text: "From Date tidak boleh lebih besar dari To Date!",
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        return false;
+    }
+
+    else {
+        let url = "/trans/sales-order/print_excel_lists/" + from_date + "/" + to_date + "/" + inpFilterBuyer;
+        window.open(url, '_blank');
+    }
+});
+
+function parseDate(str) {
+    // format dd-mm-yyyy
+    let parts = str.split("-");
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+    // year, monthIndex (0=Jan), day
+}

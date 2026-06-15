@@ -19,6 +19,8 @@ let selectGudang = $('#select_warehouse');
 let selectKategori = $('#select_kategori');
 let inpLotNo = $('#lot_no');
 let inpIdLot = $('#id_lot');
+let inpPackName = $('#pack_name');
+let inpPackId = $('#id_lot');
 let detailData = $("#data-details").val().replace(/&quot;/ig,'"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig,'"');
 let btnAdd = $('#btn-add');
@@ -163,6 +165,10 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
             width: "15%",visible:false
         },
         {
+            title: "ID Packs", field: "pack_id", headerSort: false,
+            width: "15%",visible:false
+        },
+        {
             title: "Kode Barang", field: "kode_barang", headerSort: false,
             width: "20%"
         },
@@ -177,7 +183,11 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
         },
         {
             title: "Lot No.", field: "lot_no", headerSort: false,
-            width: "25%"
+            width: "15%"
+        },
+        {
+            title: "Pack", field: "pack_name", headerSort: false,
+            width: "15%"
         },
         {
             title: "Qty", field: "qty", headerSort: false,
@@ -309,6 +319,8 @@ dtListBarang.on("rowClick", function(e, row){
     inpQtyExist.val(qty)
     inpPrice.val(harga_satuan)
     inpIdLot.val(idLot)
+    inpPackName.val(row._row.data.pack_name)
+    inpPackId.val(row._row.data.pack_id)
     $("#modal-barang").modal("hide");
 })
 
@@ -336,6 +348,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         {field:"id_barang", visible:false},
         {field:"id_header", visible:false},
         {field:"lot_id", visible:false},
+        {field:"pack_id", visible:false},
         {field:"qty_exist", visible:false},
         {field:"nama_unit", visible:false},
         {
@@ -378,7 +391,8 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
         },width:"10%"},
-        {title:"LOT NO", width:"15%", field:"lot_no", hozAlign:"left"},
+        {title:"LOT NO", width:"10%", field:"lot_no", hozAlign:"left"},
+        {title:"PACK NAME", width:"10%", field:"pack_name", hozAlign:"left"},
     ],
     locale: 'id',    
     // layout: 'fitColumns',
@@ -903,6 +917,8 @@ function openModalDetail(row = null){
         inpLotNo.val(data.lot_no)
         inpEdit.val(data.lot_no)
         inpIdLot.val(data.lot_id)
+        inpPackName.val(data.pack_name)
+        inpPackId.val(data.pack_id)
         inpQtyExist.val(data.qty_exist)
         inpKodeBarang.val(data.kode_barang)
     } else{
@@ -915,6 +931,9 @@ function openModalDetail(row = null){
         inpEdit.val("")
         inpQtyExist.val("")
         inpIdLot.val("")
+        inpPackName.val("")
+        inpPackId.val("")
+        inpKodeBarang.val("")
     }
     modalDet.modal("show")
 
@@ -978,6 +997,8 @@ function openModalDetail(row = null){
                 lot_no                   : inpLotNo.val(),
                 lot_id                   : inpIdLot.val(),
                 nama_unit                 : inpUnit.val(),
+                pack_name                 : inpPackName.val(),
+                pack_id                 : inpPackId.val(),
             });
         } else{
 
@@ -992,6 +1013,8 @@ function openModalDetail(row = null){
                 lot_no                   : inpLotNo.val(),
                 lot_id                   : inpIdLot.val(),
                 nama_unit                   : inpUnit.val(),
+                pack_name                   : inpPackName.val(),
+                pack_id                   : inpPackId.val(),
             });
         }
         modalDet.modal("hide")

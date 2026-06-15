@@ -677,11 +677,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 LOWER(b.kode_barang) LIKE '%{$keyword}%'
                 OR LOWER(b.nama_barang) LIKE '%{$keyword}%'
                 OR LOWER(a.lot_no) LIKE '%{$keyword}%'
+                OR LOWER(e.pack_name) LIKE '%{$keyword}%'
             )";
         }
 
         $innerSql = "
-            SELECT DISTINCT ON (a.id_barang, a.lot_no)
+            SELECT DISTINCT ON (a.id_barang, a.pack_id, a.lot_no)
                 a.id_barang,
                 a.month,
                 a.year,
@@ -701,7 +702,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             INNER JOIN ref_jenis_barang d   ON b.id_jenis_barang = d.id
             left JOIN ref_pack e            ON a.pack_id = e.id
             {$where}
-            ORDER BY a.id_barang, a.lot_no, (a.year * 100 + a.month) DESC
+            ORDER BY a.id_barang, a.pack_id, a.lot_no, (a.year * 100 + a.month) DESC
         ";
 
         if ($id == null || $id == "") {
@@ -745,9 +746,10 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
         $builder->join("ref_satuan c", "b.id_satuan = c.id", "inner");
         $builder->join("ref_jenis_barang d", "b.id_jenis_barang = d.id", "inner");
+        $builder->join("ref_pack f", "a.pack_id = f.id", "left");
         $builder->join("({$subQuery->getCompiledSelect()}) e", 
-    'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
-    'inner');
+            'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
+            'inner');
         $builder->select("count(1) as _cnt");
         // $builder->where('uk.active = 1');
         if (!empty($params['id_gudang'])) {
@@ -758,6 +760,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             $builder->Where('LOWER(b.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(b.nama_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->orWhere('LOWER(f.pack_name) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }
 

@@ -54,6 +54,14 @@
             <input type="text" id="lot_no" name="lot_no" class="form-control" placeholder="Lot No. diisi otomatis oleh sistem" readonly>
           </div>
         </div>
+
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pack_name">Pack</label>
+          <div class="col-md-9">
+            <input type="text" id="pack_name" name="pack_name" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+            <input type="hidden" id="pack_id" name="pack_id" value="">
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>

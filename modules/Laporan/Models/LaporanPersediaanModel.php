@@ -200,175 +200,177 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         }
 
         $sql = "WITH normalized_trans as ( SELECT
-            abx.tanggal,
-            abx.created_at,
-            abx.kode_transaksi,
-            abx.id_barang,
-            abx.id_gudang_asal AS id_gudang,
-            'keluar' AS jenis_transaksi,
-            abx.jumlah * -1 AS jumlah,
-            abx.id,
-            bbx.name,
-            cbx.lot_no,
-            abx.lot_id,
-            abx.pack_id,
-            rp.pack_name,
-            dbx.nama_barang,
-            dbx.kode_barang,
-            ebx.nama_jenis_barang,
-            fbx.nama_satuan,
-            abx.price,
-            dbx.id_jenis_barang
-        FROM
-            trans_barang abx
-            LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
-            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
-            INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
-            INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
-            INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
-            INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
-        WHERE
-            abx.id_gudang_asal IS NOT null
-            AND EXTRACT(MONTH FROM  abx.tanggal) = $month
-            AND EXTRACT(YEAR FROM  abx.tanggal) = $year
-            AND abx.id_gudang_asal = $idGudang
-            $idJenisBarangSql
-            --AND abx.id_barang = 226 
-            
-        UNION ALL
-        SELECT
-            abx.tanggal,
-            abx.created_at,
-            abx.kode_transaksi,
-            abx.id_barang,
-            abx.id_gudang_tujuan AS id_gudang,
-            'masuk' AS jenis_transaksi,
-            abx.jumlah AS jumlah,
-            abx.id,
-            bbx.name,
-            cbx.lot_no,
-            abx.lot_id,
-            abx.pack_id,
-            rp.pack_name,
-            dbx.nama_barang,
-            dbx.kode_barang,
-            ebx.nama_jenis_barang,
-            fbx.nama_satuan,
-            abx.price,
-            dbx.id_jenis_barang
-        FROM
-            trans_barang abx 
-            LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
-            LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
-            INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
-              INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
-            INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
-            INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
-        WHERE
-            abx.id_gudang_tujuan IS NOT null
-            AND EXTRACT(MONTH FROM  abx.tanggal) = $month
-            AND EXTRACT(YEAR FROM  abx.tanggal) = $year
-            AND abx.id_gudang_tujuan = $idGudang
-            $idJenisBarangSql
-            --AND abx.id_barang = 161
-            
-            ),
-            history_per_lot AS (
-    SELECT
-    lot_id,
-    lot_no,
-    pack_id,
-    id_barang,
-    month,
-    year,
-    stok_awal AS saldo_awal
-FROM trans_barang_history
-),
-normalized_trans_with_history AS (
-    SELECT
-        nt.*,
-        COALESCE(h.saldo_awal, 0) AS saldo_awal_history
-    FROM normalized_trans nt
-    LEFT JOIN history_per_lot h
-        ON nt.lot_no = h.lot_no
-    AND nt.id_barang = h.id_barang
-    AND EXTRACT(MONTH FROM nt.tanggal) = h.month
-    AND EXTRACT(YEAR FROM nt.tanggal) = h.year
-),
-stock_base AS (
-    SELECT
-        nt.id,
-        nt.tanggal,
-        nt.created_at,
-        nt.name AS transaksi,
-        nt.kode_transaksi,
-        nt.id_jenis_barang,
-        nt.id_barang,
-        nt.id_gudang,
-        nt.lot_id,
-        nt.lot_no,
-        nt.pack_id,
-        nt.pack_name,
-        nt.nama_barang,
-        nt.kode_barang,
-        nt.nama_jenis_barang,
-        nt.nama_satuan,
-        nt.price,
-        CONCAT(nt.kode_barang, ' ', nt.nama_barang) AS barang,
-        CAST(CASE WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS masuk,
-        CAST(CASE WHEN nt.jenis_transaksi = 'keluar' THEN -nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS keluar,
-        
-        CAST(
-            CASE 
-                WHEN ROW_NUMBER() OVER(PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC) = 1 
-                THEN nt.saldo_awal_history 
-                ELSE NULL 
-            END AS DECIMAL(18,2)
-        ) AS saldo_awal_awal,
-        
-        CAST(
-            SUM(
-                CASE 
-                    WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah 
-                    WHEN nt.jenis_transaksi = 'keluar' THEN nt.jumlah 
-                    ELSE 0 
-                END
-            ) OVER (
-                PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC
-                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) + 
-            FIRST_VALUE(nt.saldo_awal_history) OVER (PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC)
-            AS DECIMAL(18,2)
-        ) AS saldo_akhir
-    FROM normalized_trans_with_history nt
-),
+                    abx.tanggal,
+                    abx.created_at,
+                    abx.kode_transaksi,
+                    abx.id_barang,
+                    abx.id_gudang_asal AS id_gudang,
+                    'keluar' AS jenis_transaksi,
+                    abx.jumlah * -1 AS jumlah,
+                    abx.id,
+                    bbx.name,
+                    cbx.lot_no,
+                    abx.lot_id,
+                    abx.pack_id,
+                    rp.pack_name,
+                    dbx.nama_barang,
+                    dbx.kode_barang,
+                    ebx.nama_jenis_barang,
+                    fbx.nama_satuan,
+                    abx.price,
+                    dbx.id_jenis_barang
+                FROM
+                    trans_barang abx
+                    LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+                    LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
+                    INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
+                    INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
+                    INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
+                    INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
+                WHERE
+                    abx.id_gudang_asal IS NOT null
+                    AND EXTRACT(MONTH FROM  abx.tanggal) = $month
+                    AND EXTRACT(YEAR FROM  abx.tanggal) = $year
+                    AND abx.id_gudang_asal = $idGudang
+                    $idJenisBarangSql
+                    --AND abx.id_barang = 226 
+                    
+                UNION ALL
+                SELECT
+                    abx.tanggal,
+                    abx.created_at,
+                    abx.kode_transaksi,
+                    abx.id_barang,
+                    abx.id_gudang_tujuan AS id_gudang,
+                    'masuk' AS jenis_transaksi,
+                    abx.jumlah AS jumlah,
+                    abx.id,
+                    bbx.name,
+                    cbx.lot_no,
+                    abx.lot_id,
+                    abx.pack_id,
+                    rp.pack_name,
+                    dbx.nama_barang,
+                    dbx.kode_barang,
+                    ebx.nama_jenis_barang,
+                    fbx.nama_satuan,
+                    abx.price,
+                    dbx.id_jenis_barang
+                FROM
+                    trans_barang abx 
+                    LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
+                    LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
+                    INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
+                    INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
+                    INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
+                    INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
+                WHERE
+                    abx.id_gudang_tujuan IS NOT null
+                    AND EXTRACT(MONTH FROM  abx.tanggal) = $month
+                    AND EXTRACT(YEAR FROM  abx.tanggal) = $year
+                    AND abx.id_gudang_tujuan = $idGudang
+                    $idJenisBarangSql
+                    --AND abx.id_barang = 161
+                    
+                    ),
 
-stock_card AS (
-    SELECT
-        sb.*,
-        CAST(
-            COALESCE(
-                sb.saldo_awal_awal,
-                LAG(sb.saldo_akhir) OVER (PARTITION BY sb.id_barang, sb.lot_no ORDER BY sb.id)
-            ) AS DECIMAL(18,2)
-        ) AS saldo_awal
-    FROM stock_base sb
-)
+                history_per_lot AS (
+                    SELECT
+                    lot_id,
+                    lot_no,
+                    pack_id,
+                    id_barang,
+                    month,
+                    year,
+                    stok_awal AS saldo_awal
+                FROM trans_barang_history
+                ),
 
-    SELECT *
-    FROM stock_card
-    --where id_barang = 226
-    ORDER BY
-        nama_jenis_barang ASC,
-        nama_barang ASC,
-        lot_no ASC,
-        tanggal,
-        created_at ASC,
-        id_gudang,
-        id ASC,
-        kode_transaksi";
+                normalized_trans_with_history AS (
+                    SELECT
+                        nt.*,
+                        COALESCE(h.saldo_awal, 0) AS saldo_awal_history
+                    FROM normalized_trans nt
+                    LEFT JOIN history_per_lot h
+                        ON nt.lot_no = h.lot_no
+                    AND nt.id_barang = h.id_barang
+                    AND EXTRACT(MONTH FROM nt.tanggal) = h.month
+                    AND EXTRACT(YEAR FROM nt.tanggal) = h.year
+                ),
+                stock_base AS (
+                    SELECT
+                        nt.id,
+                        nt.tanggal,
+                        nt.created_at,
+                        nt.name AS transaksi,
+                        nt.kode_transaksi,
+                        nt.id_jenis_barang,
+                        nt.id_barang,
+                        nt.id_gudang,
+                        nt.lot_id,
+                        nt.lot_no,
+                        nt.pack_id,
+                        nt.pack_name,
+                        nt.nama_barang,
+                        nt.kode_barang,
+                        nt.nama_jenis_barang,
+                        nt.nama_satuan,
+                        nt.price,
+                        CONCAT(nt.kode_barang, ' ', nt.nama_barang) AS barang,
+                        CAST(CASE WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS masuk,
+                        CAST(CASE WHEN nt.jenis_transaksi = 'keluar' THEN -nt.jumlah ELSE 0 END AS DECIMAL(18,2)) AS keluar,
+                        
+                        CAST(
+                            CASE 
+                                WHEN ROW_NUMBER() OVER(PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC) = 1 
+                                THEN nt.saldo_awal_history 
+                                ELSE NULL 
+                            END AS DECIMAL(18,2)
+                        ) AS saldo_awal_awal,
+                        
+                        CAST(
+                            SUM(
+                                CASE 
+                                    WHEN nt.jenis_transaksi = 'masuk' THEN nt.jumlah 
+                                    WHEN nt.jenis_transaksi = 'keluar' THEN nt.jumlah 
+                                    ELSE 0 
+                                END
+                            ) OVER (
+                                PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                            ) + 
+                            FIRST_VALUE(nt.saldo_awal_history) OVER (PARTITION BY nt.id_barang, nt.lot_no ORDER BY nt.id ASC)
+                            AS DECIMAL(18,2)
+                        ) AS saldo_akhir
+                    FROM normalized_trans_with_history nt
+                ),
 
-$query = $this->db->query($sql, $params);
+                stock_card AS (
+                    SELECT
+                        sb.*,
+                        CAST(
+                            COALESCE(
+                                sb.saldo_awal_awal,
+                                LAG(sb.saldo_akhir) OVER (PARTITION BY sb.id_barang, sb.lot_no ORDER BY sb.id)
+                            ) AS DECIMAL(18,2)
+                        ) AS saldo_awal
+                    FROM stock_base sb
+                )
+
+            SELECT *
+            FROM stock_card
+            --where id_barang = 226
+            ORDER BY
+                nama_jenis_barang ASC,
+                nama_barang ASC,
+                lot_no ASC,
+                tanggal,
+                created_at ASC,
+                id_gudang,
+                id ASC,
+                kode_transaksi";
+
+        $query = $this->db->query($sql, $params);
 
 
         $this->_data  = $query->getResult();

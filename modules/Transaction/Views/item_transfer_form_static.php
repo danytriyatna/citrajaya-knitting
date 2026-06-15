@@ -53,6 +53,13 @@
             <input type="text" id="lot_no" name="lot_no" class="form-control" placeholder="Ketikkan nomor lot" value="">
           </div>
         </div>
+        <div class="form-group row mb-3">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="pack_name">Pack</label>
+          <div class="col-md-9">
+            <input type="text" id="pack_name" name="pack_name" class="form-control" placeholder="Terisi otomatis oleh sistem" value="" readonly>
+            <input type="hidden" id="pack_id" name="pack_id" value="">
+          </div>
+        </div>
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="lot_no">Keterangan</label>
           <div class="col-md-9">

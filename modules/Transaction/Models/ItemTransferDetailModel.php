@@ -12,6 +12,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     protected $tblSatuan = "ref_satuan";
     protected $tblGudang = "ref_gudang";
     protected $tblTrxLots = "trans_lots";
+    protected $tblPack = "ref_pack";
     protected $tblDetailSO = "trans_barang_trf_so_det";
 
     protected $_data = null;
@@ -28,8 +29,10 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join($this->tblTrxLots . " gbx", "uk.lot_id = gbx.id AND gbx.id_gudang = $params[id_gudang]", "left");
+        $builder->join($this->tblPack . " hbx", "uk.pack_id = hbx.id", "left");
         $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
-                          fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price, uk.keterangan");
+                          fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, 
+                          uk.price, uk.keterangan, hbx.pack_name, uk.pack_id");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);

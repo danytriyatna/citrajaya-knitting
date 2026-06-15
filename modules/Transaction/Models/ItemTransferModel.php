@@ -654,6 +654,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     $dataDetail = [
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                         "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,
                         "id_header" => $id,
@@ -688,7 +689,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             $idLotsMasuk = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
                         }
     
-                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk);
+                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
     
                         // $stokAwal = !empty($resData) ? $resData->stok : 0;
                         $dataBarang = [
@@ -704,6 +705,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLotsMasuk,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
@@ -714,6 +716,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLotsMasuk,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,
@@ -733,7 +736,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));
                         }
     
-                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots);
+                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
     
                         // $stokAwal = !empty($resData) ? $resData->stok : 0;
                         $dataBarangAsal = [
@@ -749,6 +752,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
@@ -759,6 +763,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
                             "lot_no" => $rowData['lot_no'],
+                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],
                             "active" => 1,

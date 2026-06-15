@@ -21,6 +21,8 @@ let inpIdCMT = $('#id_cmt');
 let divCMT = $('#div-cmt');
 let selectTipe = $('#tipe');
 let inpLotNo = $('#lot_no');
+let inpPackId = $('#pack_id');
+let inpPackName = $('#pack_name');
 let inpIdLot = $('#id_lot');
 let detailData = $("#data-details").val().replace(/&quot;/ig, '"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
@@ -250,6 +252,8 @@ dtListBarang.on("rowClick", function (e, row) {
     inpKodeBarang.val(`${kodeBarang}`)
     inpUnit.val(namaSatuan)
     inpLotNo.val(lotNo)
+    inpPackId.val(row._row.data.pack_id)
+    inpPackName.val(row._row.data.pack_name)
     inpQtyExist.val(qty)
     inpIdLot.val(idLot)
     inpPrice.val(hargasatuan)
@@ -566,6 +570,8 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             }, width: "10%"
         },
         { title: "LOT NO", width: "12%", field: "lot_no", hozAlign: "left" },
+        { title: "PACK NAME", width: "12%", field: "pack_name", hozAlign: "left" },
+        { title: "PACK ID", field: "pack_id", visible: false },
         { title: "KETERANGAN", width: "16%", field: "keterangan", hozAlign: "left" },
     ],
     locale: 'id',
@@ -871,6 +877,8 @@ function openModalDetail(row = null) {
         inpQtyItem.val(data.qty)
         inpPrice.val(formatRupiah(data.price.toString()))
         inpLotNo.val(data.lot_no)
+        inpPackId.val(data.pack_id)
+        inpPackName.val(data.pack_name)
         inpEdit.val(data.lot_no)
         inpIdLot.val(data.lot_id)
         inpQtyExist.val(data.qty_exist)
@@ -882,6 +890,8 @@ function openModalDetail(row = null) {
         inpQtyItem.val("")
         inpPrice.val("")
         inpLotNo.val("")
+        inpPackId.val("")
+        inpPackName.val("")
         inpEdit.val("")
         inpQtyExist.val("")
         inpIdLot.val("")
@@ -958,6 +968,8 @@ function openModalDetail(row = null) {
                 lot_id: inpIdLot.val(),
                 nama_unit: inpUnit.val(),
                 keterangan: inpKeteranganDet.val(),
+                pack_id: inpPackId.val(),
+                pack_name: inpPackName.val(),
             });
         } else {
 
@@ -972,7 +984,9 @@ function openModalDetail(row = null) {
                 lot_no: inpLotNo.val(),
                 lot_id: inpIdLot.val(),
                 nama_unit: inpUnit.val(),
-                keterangan: inpKeteranganDet.val()
+                keterangan: inpKeteranganDet.val(),
+                pack_id: inpPackId.val(),
+                pack_name: inpPackName.val()
             });
         }
 

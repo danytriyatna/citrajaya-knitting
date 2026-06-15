@@ -260,7 +260,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
                         "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
-                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : 0,
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "id_header" => $id,
                         "qty" => $rowData['qty'],
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
@@ -292,7 +292,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
                         }
     
-                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang'], $idLots);
+                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
     
                         // $stokAwal = !empty($resData) ? $resData->stok : 0;
                         $dataBarang = [

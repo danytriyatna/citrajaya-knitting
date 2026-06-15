@@ -2,23 +2,24 @@
 
 namespace Modules\Transaction\Controllers;
 
-use CodeIgniter\Controller;
-use App\Libraries\DompdfGenerator;
 use App\Controllers\BaseController;
+use App\Libraries\DompdfGenerator;
+use CodeIgniter\Controller;
+use Modules\Laporan\Models\LaporanPersediaanModel;
 use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\GudangModel;
+use Modules\Referensi\Models\JenisBarangModel;
+use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\PackModel;
 use Modules\Referensi\Models\SatuanModel;
+use Modules\Transaction\Models\BarangMasukDetailModel;
+use Modules\Transaction\Models\BarangMasukModel;
+use Modules\Transaction\Models\IncomingGoodsModel;
+use Modules\Transaction\Models\ItemTransferDetailModel;
+use Modules\Transaction\Models\ItemTransferModel;
+use Modules\Transaction\Models\SalesOrderModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Modules\Referensi\Models\OperatorModel;
-use Modules\Referensi\Models\JenisBarangModel;
-use Modules\Transaction\Models\SalesOrderModel;
-use Modules\Transaction\Models\BarangMasukModel;
-use Modules\Transaction\Models\ItemTransferModel;
-use Modules\Laporan\Models\LaporanPersediaanModel;
-use Modules\Transaction\Models\IncomingGoodsModel;
-use Modules\Transaction\Models\BarangMasukDetailModel;
-use Modules\Transaction\Models\ItemTransferDetailModel;
 
 class ItemTransfer extends BaseController
 {
@@ -34,6 +35,8 @@ class ItemTransfer extends BaseController
   protected $mSalesOrder;
   protected $mOperator;
   protected $mRefPersediaan;
+  protected $mPack;
+
   function __construct()
   {
     $this->MOD_ALIAS = "MOD_TRANSAKSI_BARANG_MASUK";
@@ -47,6 +50,7 @@ class ItemTransfer extends BaseController
     $this->mSalesOrder = new SalesOrderModel();
     $this->mOperator = new OperatorModel();
     $this->mRefPersediaan = new LaporanPersediaanModel();
+    $this->mPack = new PackModel();
   }
 
   public function index()
@@ -369,6 +373,15 @@ class ItemTransfer extends BaseController
     $this->data['gudang']    = $resDataGudang;
     $this->data['proses']    = $resDataProses;
     $this->data['role_id'] = session()->get('role_id');
+
+    $sortPack = [
+          [
+              'field' => 'id',
+              'dir' => 'ASC'
+          ]
+    ];
+    $dataPack = $this->mPack->getData(null, 0, 99999, $sortPack);
+    $this->data['pack'] = $dataPack;
     return view($this->views . '\item_transfer_form_static', $this->data);
   }
 

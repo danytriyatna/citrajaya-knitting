@@ -78,7 +78,7 @@ class LaporanStockCard extends BaseController
 
         // $resData = $this->mLaporan->getLaporanStockCard($idBarang, $filter_gudang, $tahun, $bulan);
         $resData = $this->mLaporan->getLaporanPersediaan($idBarang, $filter_gudang, $tahun, $bulan);
-        
+        // dd($resData);
         $total = $this->mLaporan->getDataGudang($idBarang, $filter_gudang, $tahun, $bulan);
         // dd($total);
         $total_awal = 0;

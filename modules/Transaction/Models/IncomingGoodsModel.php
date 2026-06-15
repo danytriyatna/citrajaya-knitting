@@ -141,13 +141,16 @@ class IncomingGoodsModel extends \App\Models\PrModel
         // }
     }
 
-    function getLastStokBarangBalances($idBarang, $idGudang, $lotId)
+    function getLastStokBarangBalances($idBarang, $idGudang, $lotId, $pack_id = null)
     {
         $builder = $this->db->table("trans_barang_balances");
         $builder->select("*");
         $builder->where('id_barang', $idBarang);
         $builder->where('id_gudang', $idGudang);
         $builder->where('lot_id', $lotId);
+        if (!empty($pack_id)) {
+            $builder->where('pack_id', $pack_id);
+        }
         $builder->where('tanggal', date("Y-m-d"));
         $this->_data = $builder->get()->getRow();
         return $this->_data;

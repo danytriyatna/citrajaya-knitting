@@ -395,6 +395,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            abx.pack_id,
             rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
@@ -430,6 +431,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             bbx.name,
             cbx.lot_no,
             abx.lot_id,
+            abx.pack_id,
             rp.pack_name,
             dbx.nama_barang,
             dbx.kode_barang,
@@ -454,10 +456,11 @@ class LaporanStockCardModel extends \App\Models\PrModel
             
             ),
             
-    history_per_lot AS (
+        history_per_lot AS (
             SELECT
             lot_id,
             lot_no,
+            pack_id,
             id_barang,
             month,
             year,
@@ -471,9 +474,10 @@ class LaporanStockCardModel extends \App\Models\PrModel
             FROM normalized_trans nt
             LEFT JOIN history_per_lot h
                 ON nt.lot_no = h.lot_no
-            AND nt.id_barang = h.id_barang
-            AND EXTRACT(MONTH FROM nt.tanggal) = h.month
-            AND EXTRACT(YEAR FROM nt.tanggal) = h.year
+                AND nt.pack_id = h.pack_id
+                AND nt.id_barang = h.id_barang
+                AND EXTRACT(MONTH FROM nt.tanggal) = h.month
+                AND EXTRACT(YEAR FROM nt.tanggal) = h.year
         ),
         stock_base AS (
             SELECT

@@ -247,7 +247,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
                     }
 
-                    $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $rowData['id_gudang'], $idLots);
+                    $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $rowData['id_gudang'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
 
                     // $stokAwal = !empty($resData) ? $resData->stok : 0;
                     $dataBarang = [

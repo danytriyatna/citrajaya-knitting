@@ -61,7 +61,7 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="kode">Kode</label>
           <div class="col-md-9">
-            <input type="text" id="kode" name="kode" class="form-control" placeholder="Ketikkan kode">
+            <input readonly type="text" id="kode" name="kode" class="form-control" placeholder="Ketikkan kode">
           </div>
         </div>
       </div>

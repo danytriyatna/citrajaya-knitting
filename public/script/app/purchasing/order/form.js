@@ -96,6 +96,10 @@ let dtList = new Tabulator("#dt-list", {
             title: "Keterangan", field: "keterangan", formatter: "html", headerSort: false,
             width:"15%"
         },
+        {
+            title: "Kode Warna", field: "kode", formatter: "html", headerSort: false,
+            width:"15%", visible:false
+        },
     ],
     locale: 'id',    
     ajaxURL: "/master-data/barang/list",
@@ -248,6 +252,7 @@ dtList.on("rowClick", function(e, row){
     var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
     var idSatuan = row._row.data.id_satuan.replace(/<[^>]*>/g, '');
+    var kode = row._row.data.kode.replace(/<[^>]*>/g, '');
     if(dtListDetailPO.getData().some(x => x.id_barang == idBarang)){
         return Swal.fire({
             text: "Barang sudah dipilih",
@@ -261,6 +266,7 @@ dtList.on("rowClick", function(e, row){
     inpUnitID.val(idSatuan)
     inpIdBarang.val(idBarang)
     inpKodeBarang.val(kodeBarang)
+    inpKode.val(kode)
     inpBarang.val(`${namaBarang}`)
 
     $.ajax({
@@ -377,6 +383,7 @@ function openModalDetail(row = null){
         inpIdDetail.val(data.id)
         inpBarang.val(data.nama_barang)
         inpKodeBarang.val(data.kode_barang)
+        inpKode.val(data.kode)
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         inpQty.val(data.qty)
@@ -509,6 +516,7 @@ function openModalDetail(row = null){
                 tax                 : tax,
                 kode                        : inpKode.val(),
                 nama_unit                 : inpUnit.val(),
+                kode                 : inpKode.val(),
             });
         } else{
 
@@ -528,6 +536,7 @@ function openModalDetail(row = null){
                 tax                         : tax,
                 kode                        : inpKode.val(),
                 nama_unit                   : inpUnit.val(),
+                kode                 : inpKode.val(),
             });
         }
         modalDet.modal("hide")

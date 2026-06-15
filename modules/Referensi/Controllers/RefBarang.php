@@ -127,6 +127,7 @@ class RefBarang extends BaseController
                     "kode_warna" => $row->kode_warna,
                     "id_jenis_barang" => $row->id_jenis_barang,
                     "keterangan" => $row->keterangan,
+                    "kode" => $row->kode,
                 )
             );
         }

@@ -950,6 +950,7 @@ class SalesInvoice extends BaseController
       $dtails_so = [];
       $kode_ref = [];
       $deskripsi = [];
+      $ref_po = [];
       $warna = [];
       $ukuranAll = [];
       $total_dp = 0;
@@ -978,6 +979,7 @@ class SalesInvoice extends BaseController
           if (!empty($dtails_so)) {
              $kode_ref[] = $value_det->kode_ref;
              $deskripsi[] = $value_det->style."/".$value_det->deskripsi;
+             $ref_po[] = !empty($value_det->ref_po) ? $value_det->ref_po : null;
             //  dd($dtails_so);
              foreach ($dtails_so as $keyso => $valueso) {
                 $rowsToDisplay = [];
@@ -1100,7 +1102,6 @@ class SalesInvoice extends BaseController
           }
         }
       }
-      
       $dt = $this->mInvoice->get_walkorder_konsumen_ori($params);
       if (!empty($dt)) {
 
@@ -1210,6 +1211,7 @@ class SalesInvoice extends BaseController
       $this->data['ukuran'] = !empty($kodeUkuranSaja) ? $kodeUkuranSaja : [];
       $this->data['kode_ref'] = !empty($kode_ref) ? $kode_ref : [];
       $this->data['deskripsi'] = !empty($deskripsi) ? $deskripsi : [];
+      $this->data['ref_po'] = !empty($ref_po) ? $ref_po : [];
       $this->data['data_detail'] = !empty($warna) ? $warna : [];
       $this->data['total_dp'] = !empty($total_dp) ? $total_dp : 0;
       $this->data['total_dp_2'] = !empty($total_dp_2) ? $total_dp_2 : 0;

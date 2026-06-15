@@ -193,7 +193,7 @@
             </tr>
             <tr style="border: none;">
                 <td style="border: none; width: 5%; vertical-align: top;">
-                    Ref. DO
+                    Ref. SO
                 </td>
                 <td style="border: none; width: 2%; vertical-align: top;">
                     :
@@ -209,6 +209,17 @@
                 </td>
                 <td style="border: none; width: 30%; vertical-align: top;">
                     <?= $data->deskripsi ?>
+                </td>
+            </tr>
+            <tr style="border: none;">
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    Ref. PO
+                </td>
+                <td style="border: none; width: 2%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= !empty($data->ref_po) ?  $data->ref_po : '-'?>
                 </td>
             </tr>
         </tbody>

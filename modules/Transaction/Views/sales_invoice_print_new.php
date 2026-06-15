@@ -191,6 +191,10 @@
         $total_harga = 0;
         foreach ($data_detail as $key => $value):
             foreach ($value as $w => $color):
+                $ref_po_show = null;
+                if (!empty($ref_po[$nomor-1])) {
+                    $ref_po_show = $ref_po[$nomor-1].'<br><br>';
+                }
                 echo "<tr>";
 
                 // Kolom NO & DESKRIPSI hanya di baris pertama warna pertama
@@ -198,7 +202,7 @@
                     // Baris pertama → tampil normal
                     echo "<td style='text-align:center; vertical-align: top; border-left:1px solid #808080; border-right:1px solid #808080; border-top:1px solid #808080;'>{$nomor}</td>";
                     echo "<td style='text-align:left; vertical-align: top; border-left:1px solid #808080; border-right:1px solid #808080; border-top:1px solid #808080;'>
-                            {$key}<br>{$deskripsi[$nomor-1]}
+                            {$ref_po_show}{$key}<br>{$deskripsi[$nomor-1]}
                         </td>";
                 } 
                 else {

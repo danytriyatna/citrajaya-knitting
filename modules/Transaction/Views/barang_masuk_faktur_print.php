@@ -193,6 +193,7 @@
 
     <table class="table-bordered w-100">
         <thead>
+            <?php if(!empty($dataSO) ) : ?>
             <tr>
                 <th colspan="5" style="border:0;"></th>
                 <th colspan="2" style="border:0;">Nomor Faktur :</th>
@@ -210,7 +211,15 @@
                 <th class="text-center" style="width: 14%;">Amount</th>
                 <th class="text-center" style="width: 9%;">Ket.</th>
             </tr>
+            <?php else : ?>
+            <tr>
+                <th style="border:0; width: 50%"></th>
+                <th style="border:0;">Nomor Faktur :</th>
+                <th style="border:0;text-align:left;"><?= $data->kode_transaksi ?></th>
+            </tr>
+            <?php endif; ?>
         </thead>
+        <?php if(!empty($dataSO) ) : ?>
         <tbody>
             <?php 
             // Pastikan $dataSO tidak null sebelum masuk ke pengecekan
@@ -273,7 +282,48 @@
                 <th class="text-right"><?= !empty($scanned) ? $scanned.' Ikat' : null ?></th>
             </tr>
         </tfoot>
+        <?php endif; ?>
     </table>
+
+    <br>
+    <?php if(!empty($detail) ) { ?>
+    <table class="table-bordered w-100">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 5%;">No.</th>
+                <th class="text-center" style="width: 20%;">Item Code</th>
+                <th class="text-center" style="width: 35%;">Item Description</th>
+                <th class="text-center" style="width: 15%;">Lot No</th>
+                <th class="text-center" style="width: 16%;">Qty</th>
+                <th class="text-center" style="width: 14%;">Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php $i = 1;
+        $xqty2 = 0;
+            foreach ($detail as $xrow) { 
+                $xqty2 = $xqty2 + (float) $xrow->qty; ?>
+                ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td>  <?= $xrow->kode_barang  ?> </td>
+                    <td>  <?= $xrow->nama_barang   ?> </td>
+                    <td class="text-left"><?= $xrow->lot_no ?></td>
+                    <td class="text-right"><?= $xrow->qty ?></td>
+                    <td class="text-left"><?= $xrow->nama_unit ?></td>
+                </tr>
+            <?php } ?>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-right" style="border: 1px solid black;"><b>Jumlah</b></td>
+                <td class="text-right" style="border: 1px solid black;"><b><?= !empty($xqty2) ? $xqty2 : 0 ?></b></td>
+                <td style="border: 1px solid black;"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+   <?php } ?>
 
     <br>
     <table class="w-100">

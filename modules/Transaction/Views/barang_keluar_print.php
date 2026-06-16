@@ -160,7 +160,7 @@
     <table style="border: none; width: 100%;">
         <tbody>
             <tr style="border: none;">
-                <td style="border: none; width: 5%; vertical-align: top;">
+                <td style="border: none; width: 8%; vertical-align: top;">
                     No
                 </td>
                 <td style="border: none; width: 2%; vertical-align: top;">
@@ -172,7 +172,7 @@
                 <td style="border: none; width: 5%; vertical-align: top;">
                     Tipe
                 </td>
-                <td style="border: none; width: 3%; vertical-align: top;">
+                <td style="border: none; width: 2%; vertical-align: top;">
                     :
                 </td>
                 <td style="border: none; width: 30%; vertical-align: top;">
@@ -180,14 +180,23 @@
                 </td>
             </tr>
             <tr style="border: none;">
-                <td style="border: none; width: 5%; vertical-align: top;">
-                    Ref.
+                <td style="border: none; width: 8%; vertical-align: top;">
+                    Ref. Transfer
                 </td>
                 <td style="border: none; width: 2%; vertical-align: top;">
                     :
                 </td>
                 <td style="border: none; width: 20%; vertical-align: top;">
-                    -
+                    <?= !empty($data->no_ref_trf) ? $data->no_ref_trf : null ?>
+                </td>
+                <td style="border: none; width: 5%; vertical-align: top;">
+                    Ref. SO
+                </td>
+                <td style="border: none; width: 2%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= !empty($data->kode_so) ? $data->kode_so : null ?>
                 </td>
             </tr>
         </tbody>
@@ -241,11 +250,7 @@
                 </tr>
             <?php endforeach ?>
             <tr>
-                <th></th>
-                <th class="text-left"></th>
-                <th></th>
-                <th class="text-right"></th>
-                <th colspan="<?= $maxPacks ?>" class="text-center">JUMLAH</th>
+                <th colspan="<?= $maxPacks + 4 ?>" class="text-center">JUMLAH</th>
                 <th class="text-right"><?= $pack_total ?> PACK</th>
                 <th class="text-right"><?= number_format($qty_total, 2) ?></th>
             </tr>

@@ -444,7 +444,6 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 sub.lot_no,
                 sub.kode_barang,
                 sub.nama_barang,
-                sub.nama_unit,
                 STRING_AGG(DISTINCT sub.keterangan, ' ~ ' ORDER BY sub.keterangan) AS keterangan,
                 STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
                 SUM(sub.qty) AS qty
@@ -458,7 +457,6 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                     uk.keterangan,
                     ebx.kode_barang,
                     ebx.nama_barang,
-                    fbx.nama_satuan AS nama_unit,
                     CONCAT(COALESCE(hbx.pack_name, '-'), ':', uk.qty::text) AS pack_qty
                 FROM trans_barang_trf_detail uk
                 INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
@@ -471,7 +469,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             ) sub
             GROUP BY
                 sub.id_barang, sub.id_header, sub.lot_no,
-                sub.kode_barang, sub.nama_barang, sub.nama_unit
+                sub.kode_barang, sub.nama_barang
             ORDER BY sub.id_barang
         ";
         $this->_data = $this->db->query($sql, [$id_gudang, $id_header])->getResult();

@@ -137,7 +137,7 @@ class LaporanPersediaan extends BaseController
         $date = DateTime::createFromFormat('!m', $bulan); // !m → hanya bulan
         $nama_bulan = $date->format('F');
 
-        $results = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        $results = $this->mLaporan->getDataGudangPrint($idJenisBarang, $filter_gudang, $tahun, $bulan);
         
 
         //start phpspreadsheet
@@ -151,15 +151,19 @@ class LaporanPersediaan extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A2', 'Laporan Persediaan '. $title)
 
-               ->setCellValue('A4', 'LOT')
-               ->setCellValue('B4', 'JENIS BARANG')
-               ->setCellValue('C4', 'BARANG')
-               ->setCellValue('D4', 'QTY AWAL')
-               ->setCellValue('E4', 'QTY MASUK')
-               ->setCellValue('F4', 'QTY KELUAR')
-               ->setCellValue('G4', 'QTY AKHIR')
-               ->setCellValue('H4', 'NILAI')
-               ->setCellValue('I4', 'TANGGAL');
+               ->setCellValue('A4', 'JENIS BARANG')
+               ->setCellValue('B4', 'KODE BARANG')
+               ->setCellValue('C4', 'KODE WARNA')
+               ->setCellValue('D4', 'NAMA BARANG')
+               ->setCellValue('E4', 'UNIT')
+               ->setCellValue('F4', 'PACK')
+               ->setCellValue('G4', 'LOT')
+               ->setCellValue('h4', 'QTY AWAL')
+               ->setCellValue('I4', 'QTY MASUK')
+               ->setCellValue('J4', 'QTY KELUAR')
+               ->setCellValue('K4', 'QTY AKHIR')
+               ->setCellValue('L4', 'NILAI')
+               ->setCellValue('M4', 'TANGGAL');
 
             $styleArray = [
                 'borders' => [
@@ -292,13 +296,13 @@ class LaporanPersediaan extends BaseController
                 ],
             ];
             
-        $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:I4')->applyFromArray($styleArray_header);
+        $sheets->getActiveSheet()->freezePane('E5');
+        $gets->getStyle('A4:M4')->applyFromArray($styleArray_header);
         // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
         // $sheets->getActiveSheet()->mergeCells('A2:I2');
-        $sheets->getActiveSheet()->mergeCells('A2:I2');
+        $sheets->getActiveSheet()->mergeCells('A2:M2');
         // $sheets->getActiveSheet()->mergeCells('A4:I4');
         // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
@@ -308,26 +312,30 @@ class LaporanPersediaan extends BaseController
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
         
         // set width
-        $gets->getColumnDimension('A')->setWidth(15);
-        $gets->getColumnDimension('B')->setWidth(30);
-        $gets->getColumnDimension('C')->setWidth(50);
-        $gets->getColumnDimension('D')->setWidth(20);
-        $gets->getColumnDimension('E')->setWidth(20);
-        $gets->getColumnDimension('F')->setWidth(20);
-        $gets->getColumnDimension('G')->setWidth(20);
-        $gets->getColumnDimension('H')->setWidth(30);
-        $gets->getColumnDimension('I')->setWidth(20);
+        $gets->getColumnDimension('A')->setWidth(20);
+        $gets->getColumnDimension('B')->setWidth(17);
+        $gets->getColumnDimension('C')->setWidth(25);
+        $gets->getColumnDimension('D')->setWidth(40);
+        $gets->getColumnDimension('E')->setWidth(15);
+        $gets->getColumnDimension('F')->setWidth(10);
+        $gets->getColumnDimension('G')->setWidth(12);
+        $gets->getColumnDimension('H')->setWidth(15);
+        $gets->getColumnDimension('I')->setWidth(15);
+        $gets->getColumnDimension('J')->setWidth(15);
+        $gets->getColumnDimension('K')->setWidth(15);
+        $gets->getColumnDimension('L')->setWidth(25);
+        $gets->getColumnDimension('M')->setWidth(20);
 
-        $gets->getStyle('A4:I4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-        $gets->getStyle('A4:I4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:M4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+        $gets->getStyle('A4:M4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H', 'I'
+            'A','B','C','D', 'E','F','G', 'H', 'I', 'J', 'K', 'L', 'M'
         );
 
-        for ($i=0; $i < 9 ; $i++) { 
+        for ($i=0; $i < 13 ; $i++) { 
 
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('C5D9F1');
@@ -362,25 +370,28 @@ class LaporanPersediaan extends BaseController
             $nilai = !empty($r->price) ? $r->price : 0;
 
             $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('A'.$ix, !empty($r->lot_no) ? $r->lot_no : "-")
-                    ->setCellValue('B'.$ix, !empty($r->nama_jenis_barang) ? $r->nama_jenis_barang : '-')
-                    ->setCellValue('C'.$ix, !empty($r->barang) ? $r->barang : '-')
-                    ->setCellValue('D'.$ix, !empty($r->saldo_awal) ? $r->saldo_awal : 0)
-                    ->setCellValue('E'.$ix, !empty($r->masuk) ? $r->masuk : 0)
-                    ->setCellValue('F'.$ix, !empty($r->keluar) ? $r->keluar : 0)
-                    ->setCellValue('G'.$ix, !empty($r->saldo_akhir) ? $r->saldo_akhir : 0)
-                    ->setCellValue('H'.$ix, $nilai)
-                    ->setCellValue('I'.$ix, !empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-");
+                    ->setCellValue('A'.$ix, !empty($r->nama_jenis_barang) ? $r->nama_jenis_barang : '-')
+                    ->setCellValue('B'.$ix, !empty($r->kode_barang) ? $r->kode_barang : '-')
+                    ->setCellValue('C'.$ix, !empty($r->kode_warna) ? $r->kode_warna : '-')
+                    ->setCellValue('D'.$ix, !empty($r->barang) ? $r->barang : '-')
+                    ->setCellValue('E'.$ix, !empty($r->nama_unit) ? $r->nama_unit : '-')
+                    ->setCellValue('F'.$ix, !empty($r->pack_name) ? $r->pack_name : '-')
+                    ->setCellValue('G'.$ix, !empty($r->lot_no) ? $r->lot_no : '-')
+                    ->setCellValue('H'.$ix, !empty($r->saldo_awal) ? $r->saldo_awal : 0)
+                    ->setCellValue('I'.$ix, !empty($r->masuk) ? $r->masuk : 0)
+                    ->setCellValue('J'.$ix, !empty($r->keluar) ? $r->keluar : 0)
+                    ->setCellValue('K'.$ix, !empty($r->saldo_akhir) ? $r->saldo_akhir : 0)
+                    ->setCellValue('L'.$ix, $nilai)
+                    ->setCellValue('M'.$ix, !empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-");
                     // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
 
             // if($length > 0 && $ix === $length - 1){
             //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
             // }else{
-                $gets->getStyle('A'.$ix.':C'.$ix)->applyFromArray($stylexArray);
-                $gets->getStyle('D'.$ix.':I'.$ix)->applyFromArray($stylexArray);
+                $gets->getStyle('A'.$ix.':M'.$ix)->applyFromArray($stylexArray);
             // }
 
-            $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("L" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
           $ix++;

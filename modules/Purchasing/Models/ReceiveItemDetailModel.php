@@ -87,7 +87,6 @@ class ReceiveItemDetailModel extends \App\Models\PrModel
                 sub.price,
                 sub.kode_warna,
                 sub.nama_barang,
-                sub.nama_unit,
                 STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
                 SUM(sub.qty) AS qty,
                 SUM(sub.qty * sub.price) AS jumlah
@@ -103,12 +102,10 @@ class ReceiveItemDetailModel extends \App\Models\PrModel
                     uk.qty,
                     rw.keterangan as kode_warna,
                     ebx.nama_barang,
-                    fbx.nama_satuan AS nama_unit,
                     CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty
                 FROM trans_receive_detail uk
                 INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
                 LEFT JOIN ref_warna rw ON ebx.id_warna = rw.id
-                INNER JOIN ref_satuan fbx ON ebx.id_satuan = fbx.id
                 INNER JOIN ref_gudang gbx ON uk.id_gudang = gbx.id
                 LEFT  JOIN ref_pack rp ON uk.pack_id = rp.id
                 WHERE uk.active = 1
@@ -117,7 +114,7 @@ class ReceiveItemDetailModel extends \App\Models\PrModel
             ) sub
             GROUP BY
                 sub.id_barang, sub.id_header, sub.id_gudang, sub.nama_gudang,
-                sub.lot_no, sub.price, sub.kode_warna, sub.nama_barang, sub.nama_unit
+                sub.lot_no, sub.price, sub.kode_warna, sub.nama_barang
             ORDER BY sub.id_barang
         ";
 

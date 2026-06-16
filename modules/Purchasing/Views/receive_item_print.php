@@ -146,16 +146,16 @@
                         <table class="table-bordered border-spacing-0 w-100">
                             <tbody>
                                 <tr>
-                                    <th><small>KEPADA YTH</small></th>
+                                    <th>TERIMA DARI</th>
                                 </tr>
                                 <tr>
                                     <td><?= $data->nama_vendor ?></td>
                                 </tr>
                                 <tr>
-                                    <td>&nbsp;</td>
+                                    <th class="text-center">DI</th>
                                 </tr>
                                 <tr>
-                                    <td>&nbsp;</td>
+                                    <th class="text-center">BANDUNG</th>
                                 </tr>
                                 <tr>
                                     <td>&nbsp;</td>
@@ -168,9 +168,48 @@
         </table>
     </div>
 
-    <h1 class="uppercase text-lg mb-6 mt-0">RECEIVE ITEM</h1>
-    <p class="uppercase text-md my-0"><span class="d-inline-block" style="width: 152px;">No. Receive</span> : <?= $data->po_no ?></p>
-    <p class="uppercase text-md my-0"><span class="d-inline-block" style="width: 152px;">No. PO</span> : <?= $data->rec_no ?></p>
+    <table class="w-100">
+        <thead>
+            <tr>
+                <td colspan="4" style="text-align: left; font-size: 20px">
+                    <strong>RECEIVE ITEM</strong>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border: none;">
+                <td style="width: 12%; vertical-align: top;">
+                    <strong>No. RECEIVE</strong>
+                </td>
+                <td style="width: 3%; vertical-align: top;">
+                    <strong>:</strong>
+                </td>
+                <td colspan='2' style="width: 35%; vertical-align: top;">
+                    <strong><?= !empty($data->rec_no) ? $data->rec_no : null ?></strong>
+                </td>
+                <td style="width: 12%; vertical-align: top;">
+                    <strong>No. Nota Supplier</strong>
+                </td>
+                <td style="width: 3%; vertical-align: top;">
+                    <strong>:</strong>
+                </td>
+                <td colspan='2' style="width: 35%; vertical-align: top;">
+                    <strong><?= !empty($data->form_no) ? $data->form_no : null ?></strong>
+                </td>
+            </tr>
+            <tr style="border: none;">
+                <td style="vertical-align: top;">
+                    <strong>No. PO</strong>
+                </td>
+                <td style="vertical-align: top;">
+                    <strong>:</strong>
+                </td>
+                <td colspan='2' style="vertical-align: top;">
+                    <strong><?= !empty($data->po_no) ? $data->po_no : null ?></strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
     <br>
     <?php if(!empty($detail) ) { ?>
     <?php
@@ -183,16 +222,15 @@
             <tr>
                 <th class="text-center" rowspan="2" style="width: 3%;">No.</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 13%">COLOR CODE</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 16%">ITEM DESCRIPTION</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">UNIT</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM DESCRIPTION</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">LOT</th>
                 <?php if ($maxPacks > 0): ?>
                     <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
                 <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 8%">TOTAL PACK</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">TOTAL QTY</th>
-                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 10%">UNIT PRICE</th>
-                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL PRICE</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">TOTAL QTY</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">TOTAL PACK</th>
+                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 8%">UNIT PRICE</th>
+                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 11%">TOTAL PRICE</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 15%">WAREHOUSE</th>
             </tr>
             <tr>
@@ -213,15 +251,14 @@
                     <td><?= $i++ ?></td>
                     <td><?= $row->kode_warna ?></td>
                     <td><?= $row->nama_barang ?></td>
-                    <td><?= $row->nama_unit ?></td>
                     <td class="text-left"><?= $row->lot_no ?></td>
                     <?php foreach ($packHeaders as $packName): ?>
                         <td class="text-right">
                             <?= isset($packs[$packName]) ? $packs[$packName] : '-' ?>
                         </td>
                     <?php endforeach; ?>
-                    <td class="text-right"><?= count($packs) ?> PACK</td>
                     <td class="text-right"><?= number_format($row->qty, 2) ?></td>
+                    <td class="text-right"><?= count($packs) ?> PACK</td>
                     <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round($row->price)) : 0 ?></td>
                     <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round((float) $row->price * (float) $row->qty )) : 0 ?></td>
                     <td><?= $row->nama_gudang ?></td>
@@ -230,9 +267,9 @@
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="<?= $maxPacks + 5 ?>" class="text-center text-sm" style="border: 1px solid black">JUMLAH</th>
-                <th class="text-sm text-right" style="border: 1px solid black"><?= $pack_total ?> PACK</th>
+                <th colspan="<?= $maxPacks + 4 ?>" class="text-center text-sm" style="border: 1px solid black">JUMLAH</th>
                 <th class="text-sm text-right" style="border: 1px solid black"><?= number_format($qty_total, 2) ?></th>
+                <th class="text-sm text-right" style="border: 1px solid black"><?= $pack_total ?> PACK</th>
                 <th style="border: 1px solid black"></th>
                 <th class="text-sm text-right" style="border: 1px solid black"><?= !empty($row->price) ? "Rp." . number_format(round($total_price)) : 0 ?></th>
                 <th style="border: 1px solid black"></th>

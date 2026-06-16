@@ -259,14 +259,12 @@
             <tr>
                 <th class="text-center" rowspan="2" style="width: 3%;">No.</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">CODE</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM DESCRIPTION</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 8%">UNIT</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">LOT</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 20%">ITEM DESCRIPTION</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">LOT</th>
                 <?php if ($maxPacks > 0): ?>
                     <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
                 <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL PACK</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL QTY</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL QTY / KG</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle;">KETERANGAN</th>
             </tr>
             <tr>
@@ -287,14 +285,12 @@
                     <td><?= $i++ ?></td>
                     <td><?= $row->kode_barang ?></td>
                     <td><?= $row->nama_barang ?></td>
-                    <td><?= $row->nama_unit ?></td>
                     <td class="text-left"><?= $row->lot_no ?></td>
                     <?php foreach ($packHeaders as $packName): ?>
                         <td class="text-right">
                             <?= isset($packs[$packName]) ? $packs[$packName] : '-' ?>
                         </td>
                     <?php endforeach; ?>
-                    <td class="text-right"><?= count($packs) ?> PACK</td>
                     <td class="text-right"><?= number_format($row->qty, 2) ?></td>
                     <td><?= $row->keterangan ?></td>
                 </tr>
@@ -302,8 +298,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="<?= $maxPacks + 5 ?>" class="text-center">JUMLAH</th>
-                <th class="text-right"><?= $pack_total ?> PACK</th>
+                <th colspan="<?= $maxPacks + 4 ?>" class="text-center">JUMLAH</th>
                 <th class="text-right"><?= number_format($qty_total, 2) ?></th>
                 <th></th>
             </tr>

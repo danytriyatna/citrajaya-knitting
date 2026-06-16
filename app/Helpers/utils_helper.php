@@ -295,20 +295,20 @@ if (!function_exists('fdate_eng_to_ind_4')) {
 
 if(!function_exists('formatTanggalIndonesia')){
     function formatTanggalIndonesia($tanggal, $use_long_format = true) {
-       // Pisahkan tanggal, bulan, dan tahun
-        $tanggalArray = explode('-', $tanggal);  // format input: Y-m-d
-        $tahun = $tanggalArray[0];
-        $bulanAngka = $tanggalArray[1];
-        $hari = $tanggalArray[2];
+        // Buang bagian waktu jika ada (misal: '2026-06-16 00:00:00' → '2026-06-16')
+        $tanggal = explode(' ', $tanggal)[0];
 
-        // Dapatkan nama bulan dalam bahasa Indonesia
+        $tanggalArray = explode('-', $tanggal);
+        $tahun       = $tanggalArray[0];
+        $bulanAngka  = $tanggalArray[1];
+        $hari        = $tanggalArray[2];
+
         if ($use_long_format) {
             $bulanNama = bulan((int)$bulanAngka);
         } else {
             $bulanNama = bulans((int)$bulanAngka);
         }
 
-        // Gabungkan hasilnya dalam format 'd F Y'
         return $hari . ' ' . $bulanNama . ' ' . $tahun;
     }
 }

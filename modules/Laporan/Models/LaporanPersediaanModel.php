@@ -490,7 +490,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             sub.barang            ASC,
             sub.pack_name         ASC,
             sub.tanggal           DESC
-    ";
+         ";
 
         $binds = [];
         if (!empty($idJenisBarang))       $binds[] = $idJenisBarang;
@@ -506,6 +506,98 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDataGudangPrintPack($idJenisBarang = null, $idGudang = null, $year = null, $month = null, $params = null)
+    {
+        $whereJenis  = !empty($idJenisBarang)        ? "AND a.id_jenis_barang = ?"  : "";
+        $whereGudang = !empty($idGudang)             ? "AND a.id_gudang = ?"        : "";
+        $whereMonth  = !empty($month)                ? "AND a.month = ?"            : "";
+        $whereYear   = !empty($year)                 ? "AND a.year = ?"             : "";
+        $whereBarang = !empty($params['id_barang'])  ? "AND a.id_barang = ?"        : "";
+        $whereLotNo  = !empty($params['lot_no'])     ? "AND a.lot_no = ?"           : "";
+        $wherePack   = !empty($params['pack_id'])    ? "AND a.pack_id = ?"          : "";
+        $whereLotId  = !empty($params['lot_id'])     ? "AND a.lot_id = ?"           : "";
+
+       $sql = "
+            SELECT
+                sub.id_barang,
+                sub.id_jenis_barang,
+                sub.lot_no,
+                sub.kode_barang,
+                sub.nama_jenis_barang,
+                sub.kode_warna,
+                sub.barang,
+                sub.tanggal,
+                sub.nama_unit,
+                sub.price,
+                STRING_AGG(
+                    CONCAT(COALESCE(sub.pack_name, '-'), ':', sub.qty::text),
+                    '|'
+                    ORDER BY sub.pack_name
+                ) AS pack_data,
+                CAST(SUM(sub.masuk) AS DECIMAL(18,2))     AS masuk,
+                CAST(SUM(sub.keluar) AS DECIMAL(18,2))    AS keluar,
+                CAST(SUM(sub.jumlah) AS DECIMAL(18,2))    AS saldo_akhir,
+                CAST(SUM(sub.stok_awal) AS DECIMAL(18,2)) AS saldo_awal
+            FROM (
+                SELECT
+                    a.id_barang,
+                    a.id_jenis_barang,
+                    a.lot_no,
+                    a.tanggal,
+                    a.price,
+                    a.masuk,
+                    a.keluar,
+                    a.jumlah,
+                    a.stok_awal,
+                    a.id AS urutan,
+                    b.nama_barang,
+                    b.kode_barang,
+                    b.kode_barang || ' ' || b.nama_barang AS barang,
+                    c.nama_jenis_barang,
+                    rw.keterangan AS kode_warna,
+                    rp.pack_name,
+                    fbx.nama_satuan AS nama_unit,
+                    a.jumlah AS qty
+                FROM trans_barang_history a
+                INNER JOIN ref_barang b        ON a.id_barang       = b.id
+                INNER JOIN ref_satuan fbx      ON b.id_satuan       = fbx.id
+                LEFT  JOIN ref_warna rw        ON b.id_warna        = rw.id
+                INNER JOIN ref_jenis_barang c  ON a.id_jenis_barang = c.id
+                LEFT  JOIN ref_pack rp         ON a.pack_id         = rp.id
+                WHERE 1=1
+                {$whereJenis}
+                {$whereGudang}
+                {$whereMonth}
+                {$whereYear}
+                {$whereBarang}
+                {$whereLotNo}
+                {$wherePack}
+                {$whereLotId}
+            ) sub
+            GROUP BY
+                sub.id_barang, sub.id_jenis_barang,
+                sub.lot_no, sub.kode_barang,
+                sub.nama_jenis_barang, sub.kode_warna, sub.barang,
+                sub.tanggal, sub.nama_unit, sub.price
+            ORDER BY
+                sub.nama_jenis_barang ASC,
+                sub.barang            ASC,
+                sub.tanggal           DESC
+        ";
+
+        $binds = [];
+        if (!empty($idJenisBarang))       $binds[] = $idJenisBarang;
+        if (!empty($idGudang))            $binds[] = $idGudang;
+        if (!empty($month))               $binds[] = $month;
+        if (!empty($year))                $binds[] = $year;
+        if (!empty($params['id_barang'])) $binds[] = $params['id_barang'];
+        if (!empty($params['lot_no']))    $binds[] = $params['lot_no'];
+        if (!empty($params['pack_id']))   $binds[] = $params['pack_id'];
+        if (!empty($params['lot_id']))    $binds[] = $params['lot_id'];
+
+        $this->_data = $this->db->query($sql, $binds)->getResult();
+        return $this->_data;
+    }
 
     function getTahun()
     {

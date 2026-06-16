@@ -126,3 +126,64 @@ function getBulan($bln)
             break;
     }
 }
+
+function getPackHeaders(array $rows): array
+{
+    $packNames = [];
+    foreach ($rows as $row) {
+        $packs = parsePacks($row->pack_data);
+        foreach (array_keys($packs) as $name) {
+            if (!in_array($name, $packNames)) {
+                $packNames[] = $name;
+            }
+        }
+    }
+
+    usort($packNames, function($a, $b) {
+        $aIsNum = is_numeric($a);
+        $bIsNum = is_numeric($b);
+
+        if ($aIsNum && $bIsNum) {
+            // keduanya angka → urutkan numerik
+            return $a - $b;
+        } elseif ($aIsNum && !$bIsNum) {
+            // angka duluan sebelum huruf
+            return -1;
+        } elseif (!$aIsNum && $bIsNum) {
+            return 1;
+        } else {
+            // keduanya huruf → urutkan A-Z
+            return strcasecmp($a, $b);
+        }
+    });
+
+    return $packNames;
+}
+function parsePacks($data): array
+{
+    $result = [];
+    if (empty($data)) return $result;
+
+    foreach (explode('|', $data) as $item) {
+        $parts = explode(':', $item, 2); // limit 2 agar aman
+        if (count($parts) === 2) {
+            $name = trim($parts[0]);
+            $qty  = trim($parts[1]);
+            $result[$name] = $qty;
+        }
+    }
+    return $result;
+}
+
+/**
+ * Hitung jumlah kolom pack maksimal dari semua rows
+ */
+function getMaxPacks(array $rows): int
+{
+    $max = 0;
+    foreach ($rows as $row) {
+        $packs = parsePacks($row->pack_data);
+        $max = max($max, count($packs));
+    }
+    return $max;
+}

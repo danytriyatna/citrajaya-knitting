@@ -367,20 +367,72 @@ function formatRupiah(value) {
     return rupiah ? 'Rp ' + rupiah : '';
 }
 
+function isDuplicateCombination(lotNo, packId, gudangId, excludeLot = null) {
+    return dtListDetail.getData().some(x => 
+        x.lot_no == lotNo && 
+        x.pack_id == packId && 
+        x.id_barang == inpIdBarang.val() &&
+        x.id_gudang == gudangId &&
+        excludeLot != lotNo
+    );
+}
+
 inpLotNo.keyup(function (e) {
-    let lotNo = inpLotNo.val()
-    if (dtListDetail.getData().some(x => x.lot_no == inpLotNo.val() && inpEdit.val() != inpLotNo.val())) {
-        e.target.value = ""
+    let lotNo = inpLotNo.val();
+    let packId = selectPack.val();
+    let gudangId = selectGudang.val();
+
+    // cek kombinasi barang + lot + pack + gudang
+    if (packId && gudangId && isDuplicateCombination(lotNo, packId, gudangId, inpEdit.val())) {
+        e.target.value = "";
         return Swal.fire({
-            text: `Lot No ${lotNo} sudah ada`,
+            text: `Kombinasi Barang, Lot No ${lotNo}, Pack, dan Gudang sudah ada`,
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
         });
     }
 
-    checkLotNo(e.target.value)
-})
+    checkLotNo(e.target.value);
+});
+
+selectPack.change(function () {
+    let lotNo = inpLotNo.val();
+    let packId = selectPack.val();
+    let gudangId = selectGudang.val();
+
+    if (!lotNo) return;
+
+    // cek kombinasi barang + lot + pack + gudang
+    if (gudangId && isDuplicateCombination(lotNo, packId, gudangId, inpEdit.val())) {
+        $(this).val(null).trigger('change');
+        return Swal.fire({
+            text: `Kombinasi Barang, Lot No ${lotNo}, Pack, dan Gudang sudah ada`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+});
+
+selectGudang.change(function () {
+    let lotNo = inpLotNo.val();
+    let packId = selectPack.val();
+    let gudangId = selectGudang.val();
+
+    if (!lotNo || !packId) return;
+
+    // cek kombinasi barang + lot + pack + gudang
+    if (isDuplicateCombination(lotNo, packId, gudangId, inpEdit.val())) {
+        $(this).val(null).trigger('change');
+        return Swal.fire({
+            text: `Kombinasi Barang, Lot No ${lotNo}, Pack, dan Gudang sudah ada`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+});
 
 inpQtyItem.on("input", function (e) {
     e.target.value = e.target.value.replace(",", ".");
@@ -516,7 +568,7 @@ function checkLotNo(value) {
         success: function (data) {
 
             if (data.status) {
-                value = ''
+                inpLotNo.val('')
                 return Swal.fire({
                     text: data.message,
                     icon: 'error',

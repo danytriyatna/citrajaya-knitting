@@ -426,4 +426,56 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $id_header = $params['id_header'];
+        $id_gudang = $params['id_gudang'];
+
+        $whereReceive = "";
+        if (!empty($params['isReceive'])) {
+            $whereReceive = "AND (uk.qty_receive < uk.qty OR uk.qty_receive IS NULL)";
+        }
+
+        $sql = "
+            SELECT
+                sub.id_barang,
+                sub.id_header,
+                sub.lot_no,
+                sub.kode_barang,
+                sub.nama_barang,
+                sub.nama_unit,
+                STRING_AGG(DISTINCT sub.keterangan, ' ~ ' ORDER BY sub.keterangan) AS keterangan,
+                STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
+                SUM(sub.qty) AS qty
+            FROM (
+                SELECT
+                    uk.id AS urutan,
+                    uk.id_barang,
+                    uk.id_header,
+                    uk.lot_no,
+                    uk.qty,
+                    uk.keterangan,
+                    ebx.kode_barang,
+                    ebx.nama_barang,
+                    fbx.nama_satuan AS nama_unit,
+                    CONCAT(COALESCE(hbx.pack_name, '-'), ':', uk.qty::text) AS pack_qty
+                FROM trans_barang_trf_detail uk
+                INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
+                INNER JOIN ref_satuan fbx ON ebx.id_satuan = fbx.id
+                LEFT  JOIN trans_lots gbx ON uk.lot_id = gbx.id AND gbx.id_gudang = ?
+                LEFT  JOIN ref_pack hbx ON uk.pack_id = hbx.id
+                WHERE uk.id_header = ?
+                AND uk.active = 1
+                {$whereReceive}
+            ) sub
+            GROUP BY
+                sub.id_barang, sub.id_header, sub.lot_no,
+                sub.kode_barang, sub.nama_barang, sub.nama_unit
+            ORDER BY sub.id_barang
+        ";
+        $this->_data = $this->db->query($sql, [$id_gudang, $id_header])->getResult();
+
+        return $this->_data;
+    }
 }

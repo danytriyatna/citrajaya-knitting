@@ -673,7 +673,7 @@ class ItemTransfer extends BaseController
       $resDataDetSO = $this->mRefDet->getDataDetSO($id);
 
 
-      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
+      $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];

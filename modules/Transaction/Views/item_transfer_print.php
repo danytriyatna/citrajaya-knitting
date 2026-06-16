@@ -111,7 +111,7 @@
         {
             border: 1px solid #333;
             padding: 5px 6px;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .kop-surat img {
@@ -199,7 +199,7 @@
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" style="width: 5%;">No.</th>
+                <th class="text-center" style="width: 3%;">No.</th>
                 <th class="text-center" style="width: 15%;">No SO</th>
                 <th class="text-center" style="width: 10%;">Style</th>
                 <th class="text-center" style="width: 35%;">Colour</th>
@@ -247,42 +247,65 @@
         </tfoot>
     </table>
    <?php if(!empty($detail) ) { ?>
+    <?php
+    // $rows = hasil getData()
+        $packHeaders = getPackHeaders($detail);
+        $maxPacks = count($packHeaders);
+    ?>
 
     <br>
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" style="width: 5%;">No.</th>
-                <th class="text-center" style="width: 20%;">Item Code</th>
-                <th class="text-center" style="width: 35%;">Item Description</th>
-                <th class="text-center" style="width: 15%;">Lot No</th>
-                <th class="text-center" style="width: 16%;">Qty</th>
-                <th class="text-center" style="width: 14%;">Unit</th>
-                <th class="text-center" style="width: 25%;">Keterangan</th>
+                <th class="text-center" rowspan="2" style="width: 3%;">No.</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">CODE</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM DESCRIPTION</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 8%">UNIT</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">LOT</th>
+                <?php if ($maxPacks > 0): ?>
+                    <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
+                <?php endif; ?>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL PACK</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL QTY</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle;">KETERANGAN</th>
+            </tr>
+            <tr>
+                <?php foreach ($packHeaders as $packName): ?>
+                    <th class="text-center"><?= esc($packName) ?></th>
+                <?php endforeach; ?>
             </tr>
         </thead>
         <tbody>
-        <?php $i = 1;
-        $xqty2 = 0;
-            foreach ($detail as $xrow) { 
-                $xqty2 = $xqty2 + (float) $xrow->qty; ?>
-                ?>
+        <?php $i = 1; $qty_total = 0; $junmlah = 0; $pack_total = 0;
+            foreach ($detail as $row) : ?>
+            <?php 
+                $packs = parsePacks($row->pack_data);
+                $qty_total += $row->qty;
+                $pack_total += count($packs);
+            ?>
                 <tr>
                     <td><?= $i++ ?></td>
-                    <td>  <?= $xrow->kode_barang  ?> </td>
-                    <td>  <?= $xrow->nama_barang   ?> </td>
-                    <td class="text-left"><?= $xrow->lot_no ?></td>
-                    <td class="text-right"><?= $xrow->qty ?></td>
-                    <td class="text-left"><?= $xrow->nama_unit ?></td>
-                    <td class="text-left"><?= $xrow->keterangan ?></td>
+                    <td><?= $row->kode_barang ?></td>
+                    <td><?= $row->nama_barang ?></td>
+                    <td><?= $row->nama_unit ?></td>
+                    <td class="text-left"><?= $row->lot_no ?></td>
+                    <?php foreach ($packHeaders as $packName): ?>
+                        <td class="text-right">
+                            <?= isset($packs[$packName]) ? $packs[$packName] : '-' ?>
+                        </td>
+                    <?php endforeach; ?>
+                    <td class="text-right"><?= count($packs) ?> PACK</td>
+                    <td class="text-right"><?= number_format($row->qty, 2) ?></td>
+                    <td><?= $row->keterangan ?></td>
                 </tr>
-            <?php } ?>
+            <?php endforeach ?>
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right"><b>Jumlah</b></td>
-                <td class="text-right"><b><?= !empty($xqty2) ? $xqty2 : 0 ?></b></td>
-                <td colspan="2"></td>
+                <th colspan="<?= $maxPacks + 5 ?>" class="text-center">JUMLAH</th>
+                <th class="text-right"><?= $pack_total ?> PACK</th>
+                <th class="text-right"><?= number_format($qty_total, 2) ?></th>
+                <th></th>
             </tr>
         </tfoot>
     </table>

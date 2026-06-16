@@ -86,4 +86,52 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+    {
+        $id_header = $params['id_header'];
+
+        $sql = "
+            SELECT 
+                sub.id_barang,
+                sub.id_header,
+                sub.lot_no,
+                sub.kode_barang,
+                sub.nama_barang,
+                sub.nama_unit,
+                STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
+                SUM(sub.qty) AS qty,
+                SUM(sub.qty * sub.price) AS jumlah
+            FROM (
+                SELECT 
+                    uk.id AS urutan,
+                    uk.id_barang,
+                    uk.id_header,
+                    uk.lot_no,
+                    uk.price,
+                    uk.qty,
+                    ebx.kode_barang,
+                    ebx.nama_barang,
+                    fbx.nama_satuan AS nama_unit,
+                    CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty
+                FROM {$this->table} uk
+                INNER JOIN {$this->tblBarang} ebx ON uk.id_barang = ebx.id
+                INNER JOIN {$this->tblSatuan} fbx ON ebx.id_satuan = fbx.id
+                LEFT  JOIN ref_pack rp ON uk.pack_id = rp.id
+                WHERE uk.id_header = ?
+                AND uk.active = 1
+            ) sub
+            GROUP BY 
+                sub.id_barang, sub.id_header, sub.lot_no,
+                sub.kode_barang, sub.nama_barang, sub.nama_unit
+            ORDER BY sub.id_barang
+            LIMIT ? OFFSET ?
+        ";
+
+        $offset = empty($offset) ? 0 : $offset;
+        $limit  = empty($limit)  ? 10 : $limit;
+
+        $this->_data = $this->db->query($sql, [$id_header, $limit, $offset])->getResult();
+        return $this->_data;
+    }
 }

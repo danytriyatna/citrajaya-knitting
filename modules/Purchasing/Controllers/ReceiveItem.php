@@ -334,7 +334,7 @@ class ReceiveItem extends BaseController
         ]
       ];
 
-      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
+      $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false));
       $this->data['data'] = !empty($resData) ? $resData : [];
       $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
     }

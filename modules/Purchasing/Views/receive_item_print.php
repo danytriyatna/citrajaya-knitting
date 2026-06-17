@@ -227,7 +227,7 @@
                 <?php if ($maxPacks > 0): ?>
                     <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
                 <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">TOTAL QTY</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">TOTAL QTY / KG</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">TOTAL PACK</th>
                 <th class="text-right" rowspan="2" style="vertical-align: middle; width: 8%">UNIT PRICE</th>
                 <th class="text-right" rowspan="2" style="vertical-align: middle; width: 11%">TOTAL PRICE</th>

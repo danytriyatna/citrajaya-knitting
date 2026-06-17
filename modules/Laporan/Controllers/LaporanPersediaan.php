@@ -315,7 +315,7 @@ class LaporanPersediaan extends BaseController
         $gets->getColumnDimension('A')->setWidth(20);
         $gets->getColumnDimension('B')->setWidth(17);
         $gets->getColumnDimension('C')->setWidth(25);
-        $gets->getColumnDimension('D')->setWidth(40);
+        $gets->getColumnDimension('D')->setWidth(35);
         $gets->getColumnDimension('E')->setWidth(15);
         $gets->getColumnDimension('F')->setWidth(10);
         $gets->getColumnDimension('G')->setWidth(12);
@@ -367,7 +367,7 @@ class LaporanPersediaan extends BaseController
             
             $r = $results[$xx];
 
-            $nilai = !empty($r->price) ? $r->price : 0;
+            $nilai = !empty($r->price) ? $r->price * $r->saldo_akhir : 0;
 
             $gets
                     ->setCellValue('A'.$ix, !empty($r->nama_jenis_barang) ? $r->nama_jenis_barang : '-')
@@ -542,7 +542,7 @@ class LaporanPersediaan extends BaseController
         $gets2->getColumnDimension('A')->setWidth(20);
         $gets2->getColumnDimension('B')->setWidth(15);
         $gets2->getColumnDimension('C')->setWidth(25);
-        $gets2->getColumnDimension('D')->setWidth(40);
+        $gets2->getColumnDimension('D')->setWidth(35);
         $gets2->getColumnDimension('E')->setWidth(12);
         $gets2->getColumnDimension('F')->setWidth(10);
 
@@ -598,9 +598,9 @@ class LaporanPersediaan extends BaseController
             $totalPackRow = array_sum(array_values($packs));
             $totalQtyAkhir += $row->saldo_akhir;
 
-            $gets2->setCellValue("{$colTotalPackL}{$rowNum}", $totalPackRow)
+            $gets2->setCellValue("{$colTotalPackL}{$rowNum}", count($packs))
                 ->setCellValue("{$colQtyAkhirL}{$rowNum}", $row->saldo_akhir)
-                ->setCellValue("{$colNilaiL}{$rowNum}", $row->price)
+                ->setCellValue("{$colNilaiL}{$rowNum}", !empty($row->price) ? $row->price * $row->saldo_akhir : 0)
                 ->setCellValue("{$colTanggalL}{$rowNum}", formatTanggalIndonesia($row->tanggal));
 
             // Style angka untuk total pack, qty akhir, nilai

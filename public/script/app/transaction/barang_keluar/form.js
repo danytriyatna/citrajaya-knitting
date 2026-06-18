@@ -214,7 +214,9 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     ajaxRequesting: function (url, params) {
         params.start = params.size * (params.page - 1);
         params.length = params.size;
-        params.idGudang = selectGudang.val()
+        params.idGudang = selectGudang.val();
+        params.kode_walkorder = inpNoRefWO.val()
+        params.type = 'BTK'
     },
     ajaxResponse: function (url, params, response) {
         let pageSize = dtListBarang.getPageSize();
@@ -857,6 +859,21 @@ btnApprove.on("click",function(e){
 
 
 btnAdd.click(function(){
+    if(selectKategori.val() == 0 || selectKategori.val() == null){
+        return toastr.warning('<strong style="color: black;">Kategori</strong> Wajib Diisi!', "Warning", {
+            positionClass: "toast-top-right"
+        });
+    }
+    if(selectGudang.val() == 0 || selectGudang.val() == null){
+        return toastr.warning('<strong style="color: black;">Warehouse</strong> Wajib Diisi!', "Warning", {
+            positionClass: "toast-top-right"
+        });
+    }
+    if (selectKategori.val() == 5 && (inpNoRefWO.val() == null || inpNoRefWO.val() == '' || inpNoRefWO.val() == undefined)) {
+        return  toastr.warning('Apabila kategori: <strong style="color: cyan;">' +  selectKategori.select2('data')[0].text + '</strong> Maka <strong style="color: black;">No. WO</strong> Wajib Diisi!', "Warning", {
+            positionClass: "toast-top-right"
+        });
+    }
     openModalDetail()
 })
 

@@ -10,6 +10,16 @@
       </div>
       <div class="modal-body">
         <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_item">No. WO</label>
+          <div class="col-md-9">
+            <div class="input-group">
+              <input type="text" id="kode_walkorder" readonly name="kode_walkorder" class="form-control" placeholder="Pilih No. Work Order" required>
+              <input type="hidden" id="id_wo" name="id_wo" class="form-control" required>
+              <span id="spanWO" class="input-group-text bg-white" id="basic-addon12"><i class="ti-search"></i></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="select_item">Item</label>
           <div class="col-md-9">
             <div class="input-group">
@@ -93,6 +103,31 @@
         </div>
         <div class="row">
           <div id="dt-list-barang" class="table-responsive table-striped"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="modal-workorder" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">List WorkOrder</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="col-md-4" style="float: right; position: relative; right: 15px;">
+              <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
+                <input type="text" id="tb-search-wo" class="form-control" placeholder="Pencarian . . .">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="dt-list-workorder" class="table-responsive table-striped"></div>
         </div>
       </div>
 

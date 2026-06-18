@@ -12,7 +12,10 @@ let inpPrice = $('#price');
 let inpUnit = $('#unit');
 let inpEdit = $('#edit');
 let spanBarang = $('#spanBarang');
+let spanWO = $('#spanWO');
 let selectGudangAsal = $('#gudang_asal');
+let inpIdWO = $('#id_wo');
+let inpKodeWO = $('#kode_walkorder');
 let selectGudangTujuan = $('#gudang_tujuan');
 let selectProses = $('#select_proses');
 let selectCMT = $('#select_cmt');
@@ -126,6 +129,8 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
         params.start = params.size * (params.page - 1);
         params.length = params.size;
         params.idGudang = selectGudangAsal.val()
+        params.kode_walkorder = inpKodeWO.val()
+        params.tipe = 'transfer'
     },
     ajaxResponse: function (url, params, response) {
         let pageSize = dtListBarang.getPageSize();
@@ -163,6 +168,85 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     selectable: false,
 });
 
+let dtListWO = new Tabulator("#dt-list-workorder", {
+    columns: [
+        {
+            title: "ID WO", field: "id", headerSort: false,
+            width: "15%", visible: false
+        },
+        {
+            title: "Ref ID", field: "ref_id", headerSort: false,
+            width: "15%", visible: false
+        },
+        {
+            title: "Tipe", field: "tipe_id", headerSort: false,
+            width: "15%", visible: false
+        },
+        {
+            title: "No. WO", field: "kode_walkorder", headerSort: false,
+            width: "20%"
+        },
+        {
+            title: "Ref Kode", field: "ref_kode", headerSort: false,
+            width: "20%"
+        },
+        {
+            title: "Nama Konsumen", field: "konsumen_nama", headerSort: false,
+            width: "20%"
+        },
+        {
+            title: "Style", field: "keterangan_style", headerSort: false,
+            width: "40%"
+        }
+    ],
+    locale: 'id',
+    // ajaxURL: "/trans/outgoing-goods/list-barang",
+    ajaxURL: "/trans/work-order/list",
+    ajaxConfig: "POST",
+    sortMode: "remote",
+    filterMode: "remote",
+    selectableRows: true,
+    placeholder: "Tidak ada data",
+    ajaxRequesting: function (url, params) {
+        params.start = params.size * (params.page - 1);
+        params.length = params.size;
+    },
+    ajaxResponse: function (url, params, response) {
+        let pageSize = dtListWO.getPageSize();
+        let pageNo = dtListWO.getPage();
+        let startRow = (pageSize * (pageNo - 1)) + 1;
+        let endRow = response.data.length + startRow - 1;
+        if (response.data.length === 0) {
+            startRow = 0; endRow = 0;
+        }
+        let recordsFiltered = parseInt(response.recordsFiltered);
+        let recordsTotal = parseInt(response.recordsTotal);
+
+        $("#table-footer .tabulator-startrow").text(startRow);
+        $("#table-footer .tabulator-endrow").text(endRow);
+        $("#table-footer .tabulator-totalrow").text(recordsFiltered);
+
+        let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
+        elTotalFilteredRow.text("");
+        if (recordsTotal > recordsFiltered) {
+            elTotalFilteredRow.text(" (disaring dari " + recordsTotal
+                + " entri keseluruhan)");
+        }
+        return response;
+    },
+    footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
+        + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
+        + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
+    pagination: true,
+    paginationMode: "remote",
+    paginationSize: 25,
+    paginationButtonCount: 10,
+    dataSendParams: {
+        sorters: "order"
+    },
+    selectableRows: false,
+});
+
 setTimeout(() => {
     inpRefProduksi.on("change", function () {
         const ch = $(this).is(':checked');
@@ -195,6 +279,20 @@ if (elSearchBarang != null) {
     });
 }
 
+let searchThreadWO = null;
+let elSearchWO = $("#tb-search-wo");
+if (elSearchWO != null) {
+    elSearchWO.on("keyup", function (e) {
+        if ($(this).val().length < 3 && e.keyCode > 13) {
+            return;
+        }
+        clearTimeout(searchThreadWO);
+        searchThreadWO = setTimeout(function () {
+            dtListWO.setFilter("", "like", elSearchWO.val());
+        }, 600);
+    });
+}
+
 let searchSO = null;
 let elSearchSO = $("#tb-search-so");
 if (elSearchSO != null) {
@@ -221,6 +319,14 @@ dtListBarang.on("rowClick", function (e, row) {
             timer: 2000
         });
     }
+    if (inpIdWO.val() == null) {
+        return Swal.fire({
+            text: "No. Work Order harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
     if (selectGudangTujuan.val() == null) {
         return Swal.fire({
             text: "Gudang Tujuan harus dipilih",
@@ -233,6 +339,7 @@ dtListBarang.on("rowClick", function (e, row) {
 
     const kodeBarang = row._row.data.kode_barang.replace(/<[^>]*>/g, '');
     const idBarang = row._row.data.id;
+    const idWo = row._row.data.id_wo;
     const idLot = row._row.data.lot_id;
     const qty = row._row.data.qty;
     const namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
@@ -248,6 +355,7 @@ dtListBarang.on("rowClick", function (e, row) {
         });
     }
     inpIdBarang.val(idBarang)
+    inpIdWO.val(idWo)
     inpBarang.val(`${namaBarang}`)
     inpKodeBarang.val(`${kodeBarang}`)
     inpUnit.val(namaSatuan)
@@ -257,8 +365,34 @@ dtListBarang.on("rowClick", function (e, row) {
     inpQtyExist.val(qty)
     inpIdLot.val(idLot)
     inpPrice.val(hargasatuan)
-    console.log(hargasatuan)
     $("#modal-barang").modal("hide");
+})
+
+dtListWO.on("rowClick", function (e, row) {
+
+    if (selectGudangAsal.val() == null) {
+        return Swal.fire({
+            text: "Gudang Asal harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+    if (selectGudangTujuan.val() == null) {
+        return Swal.fire({
+            text: "Gudang Tujuan harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+
+    const kodeWO = row._row.data.kode_walkorder.replace(/<[^>]*>/g, '');
+    const idWO = row._row.data.id;
+    inpIdWO.val(idWO)
+    inpKodeWO.val(`${kodeWO}`)
+    $("#modal-workorder").modal("hide");
 })
 
 
@@ -556,19 +690,22 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
 
             }
         },
+        { title: "ID WO", field: "id_wo", visible: false, width: '10%' },
+        { title: "No. Workorder", field: "kode_walkorder", hozAlign: "left", width: "10%" },
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "10%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY", field: "qty", hozAlign: "center", width: "10%",
+        {
+            title: "QTY", field: "qty", hozAlign: "center", width: "10%",
             bottomCalc: "sum",
-            bottomCalcFormatter: function(cell) {
+            bottomCalcFormatter: function (cell) {
                 let val = cell.getValue();
                 return parseFloat(val.toFixed(2));
             },
-            formatter: function(cell) {
+            formatter: function (cell) {
                 let val = cell.getValue();
                 return parseFloat(parseFloat(val).toFixed(2));
             }
-         },
+        },
         { title: "UNIT", field: "nama_unit", hozAlign: "center", width: "15%" },
         {
             title: "PRICE", field: "price", formatter: "money", visible: false,
@@ -712,6 +849,29 @@ inpQtyItem.keyup(function (e) {
 spanBarang.click(function () {
     Swal.showLoading();
     dtListBarang.replaceData()
+    if (inpIdWO.val() == null || inpIdWO.val() == '' || inpIdWO.val() == undefined) {
+        return Swal.fire({
+            text: "No. Work Order harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    dtListBarang.on("dataLoaded", function (data) {
+        Swal.close();
+        setTimeout(() => {
+            dtListBarang.redraw(true)
+        }, 500);
+        $("#modal-barang").modal("show")
+    });
+
+    dtListBarang.deselectRow();
+});
+
+spanWO.click(function () {
+    Swal.showLoading();
+    dtListWO.replaceData()
 
     if (selectGudangAsal.val() == null) {
         return Swal.fire({
@@ -731,15 +891,15 @@ spanBarang.click(function () {
         });
     }
 
-    dtListBarang.on("dataLoaded", function (data) {
+    dtListWO.on("dataLoaded", function (data) {
         Swal.close();
         setTimeout(() => {
-            dtListBarang.redraw(true)
+            dtListWO.redraw(true)
         }, 500);
-        $("#modal-barang").modal("show")
+        $("#modal-workorder").modal("show")
     });
 
-    dtListBarang.deselectRow();
+    dtListWO.deselectRow();
 });
 
 
@@ -883,6 +1043,8 @@ function openModalDetail(row = null) {
         let data = row.getData()
         inpBarang.val(data.nama_barang)
         inpIdBarang.val(data.id_barang)
+        inpIdWO.val(data.id_wo)
+        inpKodeWO.val(data.kode_walkorder)
         inpUnit.val(data.nama_unit)
         inpQtyItem.val(data.qty)
         inpPrice.val(formatRupiah(data.price.toString()))
@@ -896,6 +1058,8 @@ function openModalDetail(row = null) {
     } else {
         inpBarang.val("")
         inpIdBarang.val("")
+        inpIdWO.val('')
+        inpKodeWO.val('')
         inpUnit.val("")
         inpQtyItem.val("")
         inpPrice.val("")
@@ -964,13 +1128,14 @@ function openModalDetail(row = null) {
                 timer: 2000
             });
         }
-
         if (row) {
             row.update({
                 id: inpIdDetail.val(),
                 nama_barang: inpBarang.val(),
                 kode_barang: inpKodeBarang.val(),
                 id_barang: inpIdBarang.val(),
+                id_wo: inpIdWO.val(),
+                kode_walkorder: inpKodeWO.val(),
                 qty: inpQtyItem.val(),
                 price: inpPrice.val(),
                 qty_exist: inpQtyExist.val(),
@@ -988,6 +1153,8 @@ function openModalDetail(row = null) {
                 nama_barang: inpBarang.val(),
                 kode_barang: inpKodeBarang.val(),
                 id_barang: inpIdBarang.val(),
+                id_wo: inpIdWO.val(),
+                kode_walkorder: inpKodeWO.val(),
                 price: inpPrice.val(),
                 qty: inpQtyItem.val(),
                 qty_exist: inpQtyExist.val(),

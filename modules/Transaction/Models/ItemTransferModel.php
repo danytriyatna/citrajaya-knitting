@@ -654,6 +654,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     $dataDetail = [
                         "id_barang" => $idBarang,
                         "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "kode_walkorder" => !empty($rowData['kode_walkorder']) ? $rowData['kode_walkorder'] : null,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                         "keterangan" => !empty($rowData['keterangan']) ? $rowData['keterangan'] : null,

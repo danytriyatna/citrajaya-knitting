@@ -28,11 +28,12 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
+        $builder->join("trans_walkorder wo", "uk.kode_walkorder = wo.kode_walkorder", "left");
         $builder->join($this->tblTrxLots . " gbx", "uk.lot_id = gbx.id AND gbx.id_gudang = $params[id_gudang]", "left");
         $builder->join($this->tblPack . " hbx", "uk.pack_id = hbx.id", "left");
         $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
                           fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, 
-                          uk.price, uk.keterangan, hbx.pack_name, uk.pack_id");
+                          uk.price, uk.keterangan, hbx.pack_name, uk.pack_id,wo.kode_walkorder,wo.id as id_wo");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);

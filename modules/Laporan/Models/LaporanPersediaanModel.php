@@ -842,7 +842,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
 
     function getDataPersediaanBarang($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
-        $where = "WHERE 1=1";
+        $where = "WHERE 1=1 AND b.active = 1";
 
         if (!empty($params['id_gudang'])) {
             $where .= " AND a.id_gudang = " . intval($params['id_gudang']);
@@ -856,6 +856,16 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 OR LOWER(b.nama_barang) LIKE '%{$keyword}%'
                 OR LOWER(a.lot_no) LIKE '%{$keyword}%'
                 OR LOWER(e.pack_name) LIKE '%{$keyword}%'
+            )";
+        }
+        if (!empty($params['kode_walkorder'])) {
+            $kode_walkorder = $params['kode_walkorder'];
+            $where .= " AND b.id IN (
+                SELECT tww.id_barang
+                FROM trans_walkorder_warna tww
+                INNER JOIN trans_walkorder_detail twd ON tww.id_walkorder_detail = twd.id
+                INNER JOIN trans_walkorder tw on twd.id_walkorder = tw.id
+                WHERE tw.kode_walkorder = '{$kode_walkorder}'
             )";
         }
 
@@ -929,10 +939,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             'a.id_barang = e.id_barang AND (a.year * 100 + a.month) = e.max_period', 
             'inner');
         $builder->select("count(1) as _cnt");
-        // $builder->where('uk.active = 1');
+        $builder->where('b.active = 1');
+
         if (!empty($params['id_gudang'])) {
             $builder->where('a.id_gudang', $params['id_gudang']);
         }
+
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
             $builder->Where('LOWER(b.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -940,6 +952,18 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(f.pack_name) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
+        }
+
+        if (!empty($params['kode_walkorder'])) {
+            $kode_walkorder = $params['kode_walkorder'];
+            $builder->whereIn('b.id', function($subBuilder) use ($kode_walkorder) {
+                $subBuilder->select('tww.id_barang')
+                    ->from('trans_walkorder_warna tww')
+                    ->join('trans_walkorder_detail twd', 'tww.id_walkorder_detail = twd.id', 'inner')
+                    ->join('trans_walkorder tw', 'twd.id_walkorder = tw.id', 'inner')
+                    ->where('tw.kode_walkorder', $kode_walkorder);
+                return $subBuilder;
+            });
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;

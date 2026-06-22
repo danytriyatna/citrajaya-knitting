@@ -410,6 +410,13 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         if (!empty($params['lot_id'])) {
             $builder->where("a.lot_id", $params['lot_id']);
         }
+        if (!empty($params['search'])) {
+            $builder->groupStart();
+            $builder->Where('LOWER(b.nama_barang) LIKE', strtolower("%{$params['search']}%"));
+            $builder->orWhere('LOWER(b.kode_barang) LIKE', strtolower("%{$params['search']}%"));
+            $builder->orWhere('LOWER(a.lot_no) LIKE', strtolower("%{$params['search']}%"));
+            $builder->groupEnd();
+        }
         $builder->orderBy("c.nama_jenis_barang", "ASC");
         $builder->orderBy("b.nama_barang", "ASC");    
         $builder->orderBy("a.lot_id", "DESC");    

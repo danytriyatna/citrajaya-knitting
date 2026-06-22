@@ -81,12 +81,13 @@ class LaporanPersediaan extends BaseController
         $idJenisBarang = $this->request->getGet('filter_jenis_id');
 
         $filter_gudang = $this->request->getGet('filter_gudang_id');
+        $params['search'] = $this->request->getGet('search');
 
         $tahun = $this->request->getGet('tahun');
         $bulan = $this->request->getGet('bulan');
 
         // $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);
-        $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan, $params);
 
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];

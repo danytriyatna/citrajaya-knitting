@@ -975,10 +975,6 @@ inpPrice.keyup(function (e) {
 
 })
 
-inpQtyItem.on("input", function (e) {
-    e.target.value = e.target.value.replace(",", ".");
-})
-
 
 inpQtyItem.keyup(function (e) {
 

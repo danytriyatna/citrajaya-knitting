@@ -1,6 +1,6 @@
 <?= $this->extend('template'); ?>
 <?= $this->section('modal') ?>
-<div id="modal-barang" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+<!-- <div id="modal-barang" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -24,7 +24,7 @@
 
     </div>
   </div>
-</div>
+</div> -->
 <?= $this->endSection('modal') ?>
 <?= $this->section('content'); ?>
 
@@ -106,14 +106,11 @@
           </div>
           <br>
 
-          <div class="row">
-            <div class="col-sm-6 text-right">
-              <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
-              <button id="exportExcel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Export to XLSX</button>
-              <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
-              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
-              <a class="btn btn-info m-l-5 updateData" id="updateData">Update Data</a>
-            </div>
+          <div class="row d-flex justify-content-between align-items-center">
+              <div class="col-sm-6 text-right">
+                  <button id="exportExcel" class="btn btn-success open_form" type="button"><i class="fa fa-file-excel"></i> Export to XLSX</button>
+                  <a class="btn btn-info m-l-5 updateData" id="updateData">Update Data</a>
+              </div>
           </div>
         </div>
       </div>
@@ -124,6 +121,16 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-body">
+          <div class="row d-flex justify-content-end align-items-center">
+                <div class="col-sm-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;">
+                            <i class="ti-search"></i>
+                        </span>
+                        <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" style="border-left-width: 0px;">
+                    </div>
+                </div>
+            </div>
 
           <div class="form-group row">
             <div class="col-sm-3 offset-sm-9">

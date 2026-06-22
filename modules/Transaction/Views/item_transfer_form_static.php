@@ -298,7 +298,7 @@
               <div class="form-group row">
                 <label class="control-label text-start text-md-end col-md-2 col-form-label" for="trans_desc">Desc</label>
                 <div class="col-md-10">
-                  <textarea rows="3" id="trans_desc" name="trans_desc" class="form-control" placeholder="Ketikkan uraian deskripsi"></textarea>
+                  <textarea rows="3" id="trans_desc" name="trans_desc" class="form-control" placeholder="Ketikkan uraian deskripsi"><?= !empty($resData->keterangan) ? $resData->keterangan : null ?></textarea>
                 </div>
               </div>
             </div>

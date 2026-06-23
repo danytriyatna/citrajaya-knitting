@@ -25,10 +25,11 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join("ref_pack rp", "uk.pack_id = rp.id", "left");
+        $builder->join("trans_barang_header tbh", "uk.pack_id = tbh.id", "left");
         // $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no AND gbx.id_gudang = $params[id_gudang] ", "inner");
 
         // $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no,gbx.id as lot_id, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
-        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.lot_id,uk.id_barang,fbx.nama_satuan as nama_unit, rp.pack_name, uk.pack_id, ebx.kode_barang, ebx.nama_barang, uk.price");
+        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.lot_id,uk.id_barang,fbx.nama_satuan as nama_unit, rp.pack_name, uk.pack_id, ebx.kode_barang, ebx.nama_barang, uk.price, tbh.no_ref_transfer, tbh.no_ref_wo");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);
@@ -99,6 +100,7 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
                 sub.kode_barang,
                 sub.nama_barang,
                 sub.nama_unit,
+                sub.kode_warna,
                 STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
                 SUM(sub.qty) AS qty,
                 SUM(sub.qty * sub.price) AS jumlah
@@ -113,9 +115,11 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
                     ebx.kode_barang,
                     ebx.nama_barang,
                     fbx.nama_satuan AS nama_unit,
+                    rw.keterangan as kode_warna,
                     CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty
                 FROM {$this->table} uk
                 INNER JOIN {$this->tblBarang} ebx ON uk.id_barang = ebx.id
+                LEFT JOIN ref_warna rw ON ebx.id_warna = rw.id
                 INNER JOIN {$this->tblSatuan} fbx ON ebx.id_satuan = fbx.id
                 LEFT  JOIN ref_pack rp ON uk.pack_id = rp.id
                 WHERE uk.id_header = ?
@@ -123,7 +127,7 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
             ) sub
             GROUP BY 
                 sub.id_barang, sub.id_header, sub.lot_no,
-                sub.kode_barang, sub.nama_barang, sub.nama_unit
+                sub.kode_barang, sub.nama_barang, sub.nama_unit, sub.kode_warna
             ORDER BY sub.id_barang
             LIMIT ? OFFSET ?
         ";

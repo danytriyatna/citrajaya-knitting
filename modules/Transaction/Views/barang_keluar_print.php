@@ -211,14 +211,14 @@
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">CODE</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 20%">ITEM NAME</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 12%">COLOR CODE</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM NAME</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 8%">UNIT</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">LOT</th>
                 <?php if ($maxPacks > 0): ?>
                     <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
                 <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 9%">TOTAL PACK</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL PACK</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL QTY</th>
             </tr>
             <tr>
@@ -236,7 +236,7 @@
                 $pack_total += count($packs);
             ?>
                 <tr>
-                    <td><?= $row->kode_barang ?></td>
+                    <td><?= $row->kode_warna ?></td>
                     <td><?= $row->nama_barang ?></td>
                     <td><?= $row->nama_unit ?></td>
                     <td class="text-left"><?= $row->lot_no ?></td>

@@ -526,7 +526,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
         ),
 
         stock_card AS (
-            SELECT
+            SELECT DISTINCT ON (sb.id_barang, sb.lot_no, sb.transaksi, sb.kode_transaksi, sb.pack_name, sb.nama_satuan)
                 sb.*,
                 CAST(
                     COALESCE(

@@ -401,7 +401,7 @@ class BarangKeluar extends BaseController
         }
         $dompdf = new \Dompdf\Dompdf();
         // Set Dompdf options for portrait orientation
-        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->setPaper('A4', 'potrait');
 
         $this->data['data'] = [];
         if ($id != "") {
@@ -420,6 +420,14 @@ class BarangKeluar extends BaseController
             $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
             $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
             $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+            if (count($resDataDetail) > 0) {
+                $maxPackCount = max(array_map(function($row) {
+                    return count(explode('|', $row->pack_data));
+                }, $resDataDetail));
+                if ($maxPackCount > 3) {
+                    $dompdf->setPaper('A4', 'landscape');
+                }
+            }
             $this->data['data'] = !empty($resData) ? $resData : [];
             $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
             $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];

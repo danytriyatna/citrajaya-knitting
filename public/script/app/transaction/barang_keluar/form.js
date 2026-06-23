@@ -382,17 +382,18 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             
             }
         },
-        {title:"ITEM CODE", field:"kode_barang",hozAlign:"left", width:"15%"},
+        {title:"ITEM CODE", field:"kode_barang",hozAlign:"left", width:"10%"},
         {title:"ITEM DESCRIPTION", field:"nama_barang", hozAlign:"left",width:"25%"},
-        {title:"QTY", field:"qty", hozAlign:"center",width:"10%"},
-        {title:"UNIT", field:"nama_unit", hozAlign:"center",width:"15%"},
+        {title:"QTY TRANSFER", field:"qty_transfer", hozAlign:"right",width:"10%"},
+        {title:"QTY", field:"qty", hozAlign:"right",width:"10%"},
+        {title:"UNIT", field:"nama_unit", hozAlign:"left",width:"10%"},
         {title:"PRICE", field:"price", formatter : "money",
             formatterParams: {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
-        },width:"10%"},
+        },width:"10%",  hozAlign:"right"},
         {title:"LOT NO", width:"10%", field:"lot_no", hozAlign:"left"},
         {title:"PACK NAME", width:"10%", field:"pack_name", hozAlign:"left"},
     ],
@@ -819,7 +820,13 @@ function submitData(status,message){
         });
     }
 
-
+    if(selectKategori.val() == 5){
+        if ((inpNoRefTrf.val() == null || inpNoRefTrf.val() == '' || inpNoRefTrf.val() == undefined) || (inpNoRefWO.val() == null || inpNoRefWO.val() == '' || inpNoRefWO.val() == undefined)) {
+            return  toastr.warning('Apabila kategori: <strong style="color: cyan;">' +  selectKategori.select2('data')[0].text + '</strong> Maka <strong style="color: black;">No. Transfer dan No. WO</strong> Wajib Diisi!', "Warning", {
+                positionClass: "toast-top-right"
+            });
+        }
+    }
 
     
     if(dtListDetail.getData().length == 0){

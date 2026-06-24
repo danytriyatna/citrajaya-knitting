@@ -252,7 +252,7 @@ dtList.on("rowClick", function(e, row){
     var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
     var idSatuan = row._row.data.id_satuan.replace(/<[^>]*>/g, '');
-    var kode = row._row.data.kode.replace(/<[^>]*>/g, '');
+    var kode = row?._row?.data?.kode ? row._row.data.kode.replace(/<[^>]*>/g, '') : null;
     if(dtListDetailPO.getData().some(x => x.id_barang == idBarang)){
         return Swal.fire({
             text: "Barang sudah dipilih",

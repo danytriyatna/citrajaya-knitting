@@ -111,6 +111,7 @@ class LaporanPersediaan extends BaseController
         $bulan = $this->request->getGet('bulan');
 
         $resUpdate = $this->mLaporan->updateDataHistory($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        // dd($resUpdate);
 
         // $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);
         $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan);

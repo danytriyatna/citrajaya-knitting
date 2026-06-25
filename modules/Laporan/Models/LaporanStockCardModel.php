@@ -393,8 +393,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             abx.jumlah * -1 AS jumlah,
             abx.id,
             bbx.name,
-            cbx.lot_no,
-            abx.lot_id,
+            abx.lot_no,
             abx.pack_id,
             rp.pack_name,
             dbx.nama_barang,
@@ -406,7 +405,6 @@ class LaporanStockCardModel extends \App\Models\PrModel
             trans_barang abx
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
             LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
-            INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
             INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
             INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
@@ -429,8 +427,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             abx.jumlah AS jumlah,
             abx.id,
             bbx.name,
-            cbx.lot_no,
-            abx.lot_id,
+            abx.lot_no,
             abx.pack_id,
             rp.pack_name,
             dbx.nama_barang,
@@ -442,7 +439,6 @@ class LaporanStockCardModel extends \App\Models\PrModel
             trans_barang abx 
             LEFT JOIN ref_trans bbx ON LEFT(abx.kode_transaksi, 3) = bbx.alias
             LEFT JOIN ref_pack rp ON abx.pack_id = rp.id
-            INNER JOIN trans_lots cbx ON abx.lot_id = cbx.id
               INNER JOIN ref_barang dbx ON abx.id_barang = dbx.id
             INNER JOIN ref_jenis_barang ebx ON dbx.id_jenis_barang = ebx.id
             INNER JOIN ref_satuan fbx ON dbx.id_satuan = fbx.id
@@ -455,10 +451,25 @@ class LaporanStockCardModel extends \App\Models\PrModel
             --AND abx.id_barang = 161
             
             ),
+
+            normalized_trans_dedup AS (
+    SELECT
+        tanggal, created_at, kode_transaksi, id_barang, id_gudang,
+        jenis_transaksi, jumlah, id, name, lot_no, pack_id,
+        pack_name, nama_barang, kode_barang, nama_jenis_barang, nama_satuan, price
+    FROM (
+        SELECT *,
+            ROW_NUMBER() OVER (
+                PARTITION BY id_barang, kode_transaksi, pack_id, lot_no, jenis_transaksi, jumlah, id_gudang
+                ORDER BY created_at DESC
+            ) AS rn
+        FROM normalized_trans
+    ) AS ranked
+    WHERE rn = 1
+),
             
         history_per_lot AS (
             SELECT
-            lot_id,
             lot_no,
             pack_id,
             id_barang,
@@ -471,7 +482,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
             SELECT
                 nt.*,
                 COALESCE(h.saldo_awal, 0) AS saldo_awal_history
-            FROM normalized_trans nt
+            FROM normalized_trans_dedup nt
             LEFT JOIN history_per_lot h
                 ON nt.lot_no = h.lot_no
                 AND nt.pack_id = h.pack_id
@@ -488,7 +499,6 @@ class LaporanStockCardModel extends \App\Models\PrModel
                 nt.kode_transaksi,
                 nt.id_barang,
                 nt.id_gudang,
-                nt.lot_id,
                 nt.pack_name,
                 nt.lot_no,
                 nt.nama_barang,
@@ -526,7 +536,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
         ),
 
         stock_card AS (
-            SELECT DISTINCT ON (sb.id_barang, sb.lot_no, sb.transaksi, sb.kode_transaksi, sb.pack_name, sb.nama_satuan)
+            SELECT
                 sb.*,
                 CAST(
                     COALESCE(

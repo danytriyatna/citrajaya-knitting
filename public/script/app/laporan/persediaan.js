@@ -1,60 +1,64 @@
 let dtList = new Tabulator("#dt-list", {
-    pagination: true, 
-    paginationSize: 100,
-    paginationButtonCount: 5,
-    paginationCounter:"rows",
-    groupBy: ['barang', 'pack_name'], // 🔥 grup berdasarkan jenis barang, nama barang, lot no, dan pack name
-    // groupCalcs: false, //
-    columns:[
-        // {title:"LOT ID", field:"lot_id", width:"10%"},
-        {title:"PACK", field:"pack_name", width:"9%"},
-        {title:"LOT", field:"lot_no", width:"9%"},
-        {title:"Size/Warna", field:"nama_satuan", hozAlign:"left",width:"15%"},
-        {title:"Qty<br>Awal", field:"saldo_awal", hozAlign:"right",width:"12%", headerHozAlign: "right"},
-        {title:"Qty<br>Masuk", field:"masuk", hozAlign:"right",width:"12%", headerHozAlign: "right"},
-        {title:"Qty<br>Keluar", field:"keluar", hozAlign:"right",width:"12%", headerHozAlign: "right"},
-        {title:"Qty<br>Akhir", field:"saldo_akhir", hozAlign:"right",width:"12%", headerHozAlign: "right", bottomCalc:"sum", bottomCalcFormatter:"money", bottomCalcFormatterParams:{
-            decimal:",",
-            thousand:"."}
-        },
-        {
-            title:"Nilai",
-            field:"price",
-            hozAlign:"right",
-            width:"17%",
-            formatter:"money",
-            formatterParams:{
-                decimal:",",
-                thousand:".",
-                symbol:"Rp",
-                precision:0,
-            },
-            headerHozAlign: "right"
-            // bottomCalc:"sum", // 🔥 ini menghitung total seluruh kolom
-            // bottomCalcFormatter:"money",
-            // bottomCalcFormatterParams:{
-            //     decimal:",",
-            //     thousand:".",
-            //     symbol:"Rp ",
-            //     precision:0,
-            // },
-        },
-        {title:"Tanggal", field:"tanggal", hozAlign:"right",width:"10%"},
-    ],
-    // columnCalcs:"table",
-    locale: 'id',    
-    // layout: 'fitColumns',
-    placeholder: "Tidak ada data",
-    // Saat halaman berubah, update info pagination
-    paginationDataReceived: function(data){
-        updatePageInfo();
-    },
-    paginationChanged: function(pagenum){
-        updatePageInfo();
-    },
-    dataLoaded: function(data){
-        updatePageInfo();
+  pagination: true,
+  paginationSize: 100,
+  paginationButtonCount: 5,
+  paginationCounter: "rows",
+  groupBy: ['barang', 'pack_name'],
+  groupClosedShowCalcs: true,
+
+  // ✅ Ganti groupFooter → groupHeader
+  groupHeader: function (value, count, data, group) {
+    let isBarang = !group.getParentGroup();
+
+    if (isBarang) {
+      let totalMasuk = data.reduce((s, r) => s + (parseFloat(r.masuk) || 0), 0);
+      let totalKeluar = data.reduce((s, r) => s + (parseFloat(r.keluar) || 0), 0);
+      let totalAkhir = data.reduce((s, r) => s + (parseFloat(r.saldo_akhir) || 0), 0);
+
+      let fmt = (n) => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      return `
+        <span style="font-weight:bold;">${value}</span>
+        <span style="font-size:0.85em; color:#666;">(${count} items)</span>
+        <span style="float:right; font-weight:bold; color:#c00; font-size:0.85em; margin-right:10px;">
+          Masuk: ${fmt(totalMasuk)} &nbsp;|&nbsp;
+          Keluar: ${fmt(totalKeluar)} &nbsp;|&nbsp;
+          Akhir: ${fmt(totalAkhir)}
+        </span>
+      `;
     }
+
+    // Level pack_name: tampil normal
+    return `<b>${value}</b> <span style="color:#666;">(${count} items)</span>`;
+  },
+
+  columns: [
+    { title: "PACK", field: "pack_name", width: "9%" },
+    { title: "LOT", field: "lot_no", width: "9%" },
+    { title: "Size/Warna", field: "nama_satuan", hozAlign: "left", width: "15%" },
+    { title: "Qty<br>Awal", field: "saldo_awal", hozAlign: "right", width: "12%", headerHozAlign: "right" },
+    { title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "12%", headerHozAlign: "right", bottomCalc: "sum" },
+    { title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "12%", headerHozAlign: "right", bottomCalc: "sum" },
+    {
+      title: "Qty<br>Akhir", field: "saldo_akhir", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { decimal: ",", thousand: "." }
+    },
+    {
+      title: "Nilai", field: "price", hozAlign: "right", width: "17%",
+      formatter: "money",
+      formatterParams: { decimal: ",", thousand: ".", symbol: "Rp", precision: 0 },
+      headerHozAlign: "right",
+    },
+    { title: "Tanggal", field: "tanggal", hozAlign: "right", width: "10%" },
+  ],
+
+  locale: 'id',
+  placeholder: "Tidak ada data",
+  paginationDataReceived: function (data) { updatePageInfo(); },
+  paginationChanged: function (pagenum) { updatePageInfo(); },
+  dataLoaded: function (data) { updatePageInfo(); }
 });
 
 // let dtListBarang = new Tabulator("#dt-list-barang", {
@@ -92,7 +96,7 @@ let dtList = new Tabulator("#dt-list", {
 //                 precision: 0,   // Tidak ada desimal
 //             }, hozAlign:"right",
 //         },
-       
+
 //         {
 //             title: "Keterangan", field: "keterangan", formatter: "html", headerSort: false,
 //             width:"15%"
@@ -159,24 +163,24 @@ let dtList = new Tabulator("#dt-list", {
 let searchThread = null;
 let elSearch = $("#tb-search");
 if (elSearch != null) {
-    elSearch.on("keyup", function (e) {
-        if ($(this).val().length < 3 && e.keyCode > 13) {
-            return false;
-        }
-        else {
-            $(".preloader").css("opacity", "0.7").show();
-            if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
-                Swal.fire({
-                    title: 'Warning',
-                    text: 'Tahun,Bulan & Gudang harus dipilih',
-                    icon: 'warning',
-                })
-                $(".preloader").hide().css("opacity", "1");
-                return false    
-            }
-            getDataLaporan()
-        }
-    });
+  elSearch.on("keyup", function (e) {
+    if ($(this).val().length < 3 && e.keyCode > 13) {
+      return false;
+    }
+    else {
+      $(".preloader").css("opacity", "0.7").show();
+      if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+        Swal.fire({
+          title: 'Warning',
+          text: 'Tahun,Bulan & Gudang harus dipilih',
+          icon: 'warning',
+        })
+        $(".preloader").hide().css("opacity", "1");
+        return false
+      }
+      getDataLaporan()
+    }
+  });
 }
 
 // dtListBarang.on("rowClick", function(e, row){
@@ -197,120 +201,120 @@ if (elSearch != null) {
 // });
 
 $("#btn-tampilkan").click(function () {
-    $(".preloader").css("opacity", "0.7").show();
-    if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
-      Swal.fire({
-        title: 'Warning',
-        text: 'Tahun,Bulan & Gudang harus dipilih',
-        icon: 'warning',
-      })
-      $(".preloader").hide().css("opacity", "1");
-      return false    
-    }
-    getDataLaporan()
-  });
+  $(".preloader").css("opacity", "0.7").show();
+  if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+    Swal.fire({
+      title: 'Warning',
+      text: 'Tahun,Bulan & Gudang harus dipilih',
+      icon: 'warning',
+    })
+    $(".preloader").hide().css("opacity", "1");
+    return false
+  }
+  getDataLaporan()
+});
 
-  $("#exportExcel").click(function () {
-    if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
-      Swal.fire({
-        title: 'Warning',
-        text: 'Tahun,Bulan & Gudang harus dipilih',
-        icon: 'warning',
-      })
-      $(".preloader").hide().css("opacity", "1");
-      return false    
-    }
-
-    let url = `/laporan/persediaan/print_excel_lists?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`
-    window.open(url, '_blank');
-  });
-
-  $("#btn-reset").click(function () {
-      $("#filter_jenis_barang").val("").trigger("change");
-      $("#filter_gudang").val("").trigger("change");
-      $("#filter_tahun").val("").trigger("change");
-      $("#filter_bulan").val("").trigger("change");
-  });
-
-  function getDataLaporan(){
-    $url = `/laporan/persediaan/list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`;
-    if (elSearch.val() != null && elSearch.val().length > 3) {
-        $url = `/laporan/persediaan/list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}&search=${$('#tb-search').val()}`;
-    }
-    $.ajax({
-        url: $url,
-        type: 'GET',
-        dataType: 'json', 
-        success: function(data) {
-            
-            dtList.setData(data.data)
-    
-            setTimeout(() => {
-                dtList.redraw(true)
-            }, 500);
-            $(".preloader").hide().css("opacity", "1");
-        },
-        error: function(xhr, status, error) {
-            $(".preloader").hide().css("opacity", "1");
-            console.error('Error fetching data:', error);
-        }
-    });
+$("#exportExcel").click(function () {
+  if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+    Swal.fire({
+      title: 'Warning',
+      text: 'Tahun,Bulan & Gudang harus dipilih',
+      icon: 'warning',
+    })
+    $(".preloader").hide().css("opacity", "1");
+    return false
   }
 
-  $("#updateData").click(function () {
-    $(".preloader").css("opacity", "0.7").show();
-    if($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "" ){
-      Swal.fire({
-        title: 'Warning',
-        text: 'Tahun,Bulan & Gudang harus dipilih',
-        icon: 'warning',
-      })
+  let url = `/laporan/persediaan/print_excel_lists?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`
+  window.open(url, '_blank');
+});
+
+$("#btn-reset").click(function () {
+  $("#filter_jenis_barang").val("").trigger("change");
+  $("#filter_gudang").val("").trigger("change");
+  $("#filter_tahun").val("").trigger("change");
+  $("#filter_bulan").val("").trigger("change");
+});
+
+function getDataLaporan() {
+  $url = `/laporan/persediaan/list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`;
+  if (elSearch.val() != null && elSearch.val().length > 3) {
+    $url = `/laporan/persediaan/list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}&search=${$('#tb-search').val()}`;
+  }
+  $.ajax({
+    url: $url,
+    type: 'GET',
+    dataType: 'json',
+    success: function (data) {
+
+      dtList.setData(data.data)
+
+      setTimeout(() => {
+        dtList.redraw(true)
+      }, 500);
       $(".preloader").hide().css("opacity", "1");
-      return false    
+    },
+    error: function (xhr, status, error) {
+      $(".preloader").hide().css("opacity", "1");
+      console.error('Error fetching data:', error);
     }
-    getUpdateDataLaporan()
-    
   });
+}
 
-  function getUpdateDataLaporan(){
-    $.ajax({
-        url: `/laporan/persediaan/update-list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`,
-        type: 'GET',
-        dataType: 'json', 
-        success: function(data) {
-            
-            dtList.setData(data.data)
-    
-            setTimeout(() => {
-                dtList.redraw(true)
-            }, 500);
+$("#updateData").click(function () {
+  $(".preloader").css("opacity", "0.7").show();
+  if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+    Swal.fire({
+      title: 'Warning',
+      text: 'Tahun,Bulan & Gudang harus dipilih',
+      icon: 'warning',
+    })
+    $(".preloader").hide().css("opacity", "1");
+    return false
+  }
+  getUpdateDataLaporan()
 
-            $(".preloader").hide().css("opacity", "1");
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching data:', error);
-            $(".preloader").hide().css("opacity", "1");
-        }
-    });
+});
+
+function getUpdateDataLaporan() {
+  $.ajax({
+    url: `/laporan/persediaan/update-list?filter_jenis_id=${$('#filter_jenis_barang').val()}&tahun=${$('#filter_tahun').val()}&bulan=${$('#filter_bulan').val()}&filter_gudang_id=${$('#filter_gudang').val()}`,
+    type: 'GET',
+    dataType: 'json',
+    success: function (data) {
+
+      dtList.setData(data.data)
+
+      setTimeout(() => {
+        dtList.redraw(true)
+      }, 500);
+
+      $(".preloader").hide().css("opacity", "1");
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching data:', error);
+      $(".preloader").hide().css("opacity", "1");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const selectBulan = document.getElementById("filter_bulan");
+  const selectTahun = document.getElementById("filter_tahun");
+
+  const now = new Date();
+  const bulanSekarang = now.getMonth() + 1; // getMonth() = 0–11
+  const tahunSekarang = now.getFullYear();
+
+  // Set bulan jika opsi tersedia
+  if (selectBulan.querySelector(`option[value="${bulanSekarang}"]`)) {
+    selectBulan.value = bulanSekarang;
+    selectBulan.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const selectBulan = document.getElementById("filter_bulan");
-    const selectTahun = document.getElementById("filter_tahun");
-
-    const now = new Date();
-    const bulanSekarang = now.getMonth() + 1; // getMonth() = 0–11
-    const tahunSekarang = now.getFullYear();
-
-    // Set bulan jika opsi tersedia
-    if (selectBulan.querySelector(`option[value="${bulanSekarang}"]`)) {
-      selectBulan.value = bulanSekarang;
-      selectBulan.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    // Set tahun jika opsi tersedia
-    if (selectTahun.querySelector(`option[value="${tahunSekarang}"]`)) {
-      selectTahun.value = tahunSekarang;
-      selectTahun.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  });
+  // Set tahun jika opsi tersedia
+  if (selectTahun.querySelector(`option[value="${tahunSekarang}"]`)) {
+    selectTahun.value = tahunSekarang;
+    selectTahun.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+});

@@ -3,7 +3,6 @@ let dtList = new Tabulator("#dt-list", {
     paginationSize: 100,
     paginationButtonCount: 5,
     paginationCounter: "rows",
-    groupBy: ['pack_name'],
     columns: [
         { title: "Tanggal", field: "tanggal", width: "7%" },
         { title: "Transaksi", field: "transaksi", hozAlign: "left", width: "13%" },

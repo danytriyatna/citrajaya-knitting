@@ -848,8 +848,9 @@ inpQtyItem.keyup(function (e) {
 
 spanBarang.click(function () {
     Swal.showLoading();
-    dtListBarang.replaceData()
-    if (inpIdWO.val() == null || inpIdWO.val() == '' || inpIdWO.val() == undefined) {
+    
+    let isRefProduksi = inpRefProduksi.is(':checked');
+    if ((inpIdWO.val() == null || inpIdWO.val() == '' || inpIdWO.val() == undefined) && isRefProduksi == true) {
         return Swal.fire({
             text: "No. Work Order harus dipilih",
             icon: 'error',
@@ -857,16 +858,19 @@ spanBarang.click(function () {
             timer: 2000
         });
     }
+    else {
+        dtListBarang.replaceData()
+        dtListBarang.on("dataLoaded", function (data) {
+            Swal.close();
+            setTimeout(() => {
+                dtListBarang.redraw(true)
+            }, 500);
+            $("#modal-barang").modal("show")
+        });
+    
+        dtListBarang.deselectRow();
+    }
 
-    dtListBarang.on("dataLoaded", function (data) {
-        Swal.close();
-        setTimeout(() => {
-            dtListBarang.redraw(true)
-        }, 500);
-        $("#modal-barang").modal("show")
-    });
-
-    dtListBarang.deselectRow();
 });
 
 spanWO.click(function () {

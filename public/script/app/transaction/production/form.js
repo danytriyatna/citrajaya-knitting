@@ -59,7 +59,7 @@ $(document).ready(function () {
 
     let setColumn = [
         {
-            title: "Colour", field: "colordasar",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
+            title: "Colour", field: "colour_warna",  sorter: "string", headerSort:false, align: "center", cssClass: "text-left",
         },
     ]
 
@@ -91,6 +91,19 @@ $(document).ready(function () {
         }
     )
 
+    setColumn.push(
+        {
+            title: "Berat (Kg)", field: "total_btm", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
+            width: "10%", bottomCalc: "sum",
+            formatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+            },
+            bottomCalcFormatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+            }
+        }
+    )
+
     // table detail 
     let dtListDetail = new Tabulator("#dt-detail", {
         columns: setColumn,
@@ -108,6 +121,7 @@ $(document).ready(function () {
 	});
 
     let detail_data = $("#data-details").val().replace(/&quot;/ig,'"');
+    let detail_data_barang = $("#data-detail-barangs").val().replace(/&quot;/ig,'"');
 
     if(detail_data.length > 0){
         setTimeout(() => {
@@ -129,6 +143,59 @@ $(document).ready(function () {
         }
         return fmBtnDelete;
     };
+
+    let dtListDetailBarang = new Tabulator("#dt-detail-barang", {
+        pagination: false, 
+        paginationSize: 10,
+        paginationButtonCount: 5,
+        columns:[
+            {headerSort:false, title:"WARNA", field:"kode_warna", width:"20%"},
+            {headerSort:false, title:"KEBUTUHAN (QTY/KG)", field:"total", hozAlign:"right",width:"15%" ,headerHozAlign: "right", bottomCalc: "sum", 
+            formatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+            },
+            bottomCalcFormatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+            }},
+            {headerSort:false, title:"Pengiriman (QTY/KG)", field:"total", hozAlign:"right",width:"15%",headerHozAlign: "right" , bottomCalc: "sum",
+            formatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+            },
+            bottomCalcFormatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+            }},
+            {headerSort:false, title:"LOT", field:"operator", hozAlign:"left",width:"10%"},
+            {headerSort:false, title:"Pemakaian (QTY/KG)", field:"total", hozAlign:"right",width:"15%",headerHozAlign: "right" , bottomCalc: "sum",
+            formatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+            },
+            bottomCalcFormatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+            }},
+            {headerSort:false, title:"Sisa (Kg)", field:"total", hozAlign:"right",width:"10%",headerHozAlign: "right" , bottomCalc: "sum",
+            formatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+            },
+            bottomCalcFormatter: function(cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+            }},
+        ],
+        locale: 'id',    
+        // layout: 'fitColumns',
+        placeholder: "Tidak ada data",
+	});
+
+    if(detail_data_barang.length > 0){
+        setTimeout(() => {
+            try {
+                let isdata = JSON.parse(detail_data_barang);
+                // Set data ke Tabulator
+                dtListDetailBarang.setData(isdata);
+            } catch (e) {
+                console.error("Error parsing JSON:", e);
+            }
+        }, 1000);
+    } 
 
     let dtListProd = new Tabulator("#dt-list-prod", {
         pagination: true, 

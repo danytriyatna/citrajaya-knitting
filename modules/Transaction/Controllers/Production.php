@@ -322,6 +322,9 @@ class Production extends BaseController
         $pru['id_sales_order'] = $stdData->ref_id;
         $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
       }
+      
+      $walkOrderDet = $this->mWalkorder->getData_warna_print($resData->id_walkorder);
+
 
       if (!empty($list_detail)) {
         for ($i = 0; $i < count($list_detail); $i++) {
@@ -331,6 +334,19 @@ class Production extends BaseController
           } else {
             $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
           }
+          $drow->total_btm = 0;
+          foreach ($dtUkuran as $keyukuran => $valueukuran) {
+            if ($valueukuran->key_ukuran == 'all' && property_exists($drow, $valueukuran->key_ukuran."_")) {
+              $getTotalBTM = $this->mProduksi->getTotalBTMSO($drow->kode_so, $valueukuran->key_ukuran, $drow->colour_warna);
+              $drow->total_btm += $getTotalBTM->total_btm;
+              break;
+            }
+            else if (property_exists($drow, $valueukuran->key_ukuran)) {
+              $getTotalBTM = $this->mProduksi->getTotalBTMSO($drow->kode_so, $valueukuran->key_ukuran, $drow->colour_warna);
+              $drow->total_btm += $getTotalBTM->total_btm;
+            }
+          }
+          
           $list_detail[$i]->qty      = $allQty;
           $list_detail[$i]->qty_prod = 0;
         }
@@ -376,6 +392,7 @@ class Production extends BaseController
       $this->data['ref_id'] = encrypt($stdData->ref_id);
       $this->data['detail'] = json_encode($list_detail);
       $this->data['dtUkuran'] = json_encode($dtUkuran);
+      $this->data['walk_order_det'] = !empty($walkOrderDet) ? json_encode($walkOrderDet) : null;
 
       $status = $stdData->status;
     }

@@ -412,6 +412,7 @@ class Mabsensi extends \App\Models\PrModel
         $builder->where('sa.tgl_absen >=', $from);
         $builder->where('sa.tgl_absen <=', $to);
         $builder->where('rk.active', 1);
+        $builder->where('rk.type', 1);
         
         $builder->groupBy("rk.full_name, rk.nip");
         $builder->orderBy('rk.nip', 'ASC');

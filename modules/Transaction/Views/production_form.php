@@ -203,6 +203,7 @@
           <li class="breadcrumb-item">Transaksi</li>
           <li class="breadcrumb-item active"><?= $titlehead ?></li>
           <input type="hidden" id="data-details" value='<?= $detail; ?>'>
+          <input type="hidden" id="data-detail-barangs" value='<?= $walk_order_det; ?>'>
           <input type="hidden" id="data-ukuran" value='<?= $dtUkuran; ?>' >
 
           <input type="hidden" id="ref_id" value='<?= $ref_id; ?>'>
@@ -221,6 +222,7 @@
           <div class="row">
             <div class="col-sm-3 text-center">
               <h6 class="f-w-700 m-b-6"><?= $row->kode_prod; ?></h6>
+              <h6 class="f-w-700 m-b-6"><?= $row->kode_walkorder; ?></h6>
               <h5 class="f-w-700 m-b-12"><?= $row->keterangan_style; ?></h5>
               <h7 class="f-w-700 m-b-12"><?= $row->keterangan; ?></h7>
               <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi); ?></p>
@@ -229,7 +231,12 @@
               <img class="m-t-10 w-90" src="<?= $row->file_gambar; ?>" alt="Foto Sample">
             </div>
             <div class="col-sm-9">
-              <div class="table-striped table-centered" id="dt-detail"></div>
+              <div class="row">
+                <div class="table-striped table-centered" id="dt-detail"></div>
+              </div>
+              <div class="row mt-3">
+                <div class="table-striped table-centered" id="dt-detail-barang"></div>
+              </div>
             </div>
           </div>
 

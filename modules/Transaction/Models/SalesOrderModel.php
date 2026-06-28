@@ -339,6 +339,17 @@ class SalesOrderModel extends \App\Models\PrModel
                     CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
                     CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END
                 ) AS colour,
+                 tso.kode_sales_order as kode_so,
+                TRIM(BOTH '~' FROM
+                    COALESCE(w1.kode_warna, '') ||
+                    CASE WHEN w2.kode_warna IS NOT NULL THEN '~' || w2.kode_warna ELSE '' END ||
+                    CASE WHEN w3.kode_warna IS NOT NULL THEN '~' || w3.kode_warna ELSE '' END ||
+                    CASE WHEN w4.kode_warna IS NOT NULL THEN '~' || w4.kode_warna ELSE '' END ||
+                    CASE WHEN w5.kode_warna IS NOT NULL THEN '~' || w5.kode_warna ELSE '' END ||
+                    CASE WHEN w6.kode_warna IS NOT NULL THEN '~' || w6.kode_warna ELSE '' END ||
+                    CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
+                    CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END
+                ) AS colour_warna,
                 TRIM(BOTH ' ~ ' FROM
                     CASE WHEN b1.id IS NOT NULL THEN COALESCE(NULLIF(b1.keterangan, ''), COALESCE(w1.keterangan, '')) ELSE COALESCE(w1.keterangan, '') END ||
                     CASE WHEN b2.id IS NOT NULL AND NULLIF(b2.keterangan, '') IS NOT NULL THEN ' ~ ' || b2.keterangan
@@ -406,6 +417,7 @@ class SalesOrderModel extends \App\Models\PrModel
                     {$col21}
                 )
             INNER JOIN trans_sales_order_det td ON td.id = tbl.id
+            INNER JOIN trans_sales_order tso ON tso.id = td.id_sales_order
 
             -- JOIN ref_barang untuk query utama
             LEFT JOIN ref_barang b1 ON b1.id = td.id_barang_1

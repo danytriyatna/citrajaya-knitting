@@ -49,18 +49,19 @@ $(document).ready(function () {
         $.get("/keuangan/transaksi_akun/get_org/", {}, function (data) {
             fmDCoa.html('');
             fmDCoa.select2ToTree({
-                treeData: {
-                    dataArr: data,
-                    valFld: "id",
-                    labelFld: "unit_name",
-                    incFld: "children",
-                    dftVal: null
-                },
-                allowClear: false,
-                placeholder: '- Pilih -',
-                multiple: false,
-                width: '100%'
-            });
+    treeData: {
+        dataArr: data,
+        valFld: "id",
+        labelFld: "unit_name",
+        incFld: "children",
+        dftVal: null
+    },
+    allowClear: false,
+    placeholder: '- Pilih -',
+    multiple: false,
+    width: '100%',
+    dropdownParent: $('#modal-item'), // ✅ arahkan ke id modal kamu
+});
             fmDCoa.val(fmDCoa.attr('value')).trigger('change');
         }, "json");
     }
@@ -216,7 +217,6 @@ $(document).ready(function () {
 	setTimeout(() => {
 		$("#btn-add-detail").on("click", function(e){
 			e.preventDefault();
-			console.log("samep sini");
 			fmDSeq.val("");
 			fmDCoa.val("").trigger("change");
 			fmDJumlah.val("").blur();

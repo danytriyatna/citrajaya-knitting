@@ -49,10 +49,12 @@ class Absensi extends BaseController
     $sortKaryawan = [
           [
               'field' => 'full_name',
+              'type' => 1,
               'dir' => 'ASC'
           ]
       ];
-    $dataKaryawan = $this->mkaryawan->getData(null, 0, 99999, $sortKaryawan);
+    $paramsKaryawan['type'] = 1;
+    $dataKaryawan = $this->mkaryawan->getData(null, 0, 99999, $sortKaryawan, null, $paramsKaryawan);
     foreach ($dataKaryawan as $key => $value) {
       $value->id = encrypt($value->id);
     }

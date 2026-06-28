@@ -314,7 +314,7 @@ class SampleModel extends \App\Models\PrModel
                     CASE WHEN w7.kode_warna IS NOT NULL THEN ' - ' || w7.kode_warna ELSE '' END ||
                     CASE WHEN w8.kode_warna IS NOT NULL THEN ' - ' || w8.kode_warna ELSE '' END 
                 ) AS colour,
-
+                tso.kode_sample as kode_so,
                 -- keterangan: ambil dari ref_barang jika ada, fallback ke kode_warna ref_warna
                 TRIM(BOTH ' ~ ' FROM
                     CASE 
@@ -386,6 +386,7 @@ class SampleModel extends \App\Models\PrModel
                     {$col21}
                 )
             INNER JOIN trans_sample_det td ON td.id = tbl.id
+            INNER JOIN trans_sample tso ON tso.id = td.id_sample
             LEFT JOIN (
                 SELECT id_sample_det, SUM(harga_total) AS total_harga
                 FROM trans_sample_ukuran

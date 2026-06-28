@@ -408,6 +408,43 @@ class ProductionModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getTotalBTMSO($kode_so = null, $kode_ukuran = null, $color = null){
+        if ($kode_ukuran == 'sm') {
+            $kode_ukuran = 'S/M';
+        }
+        else if ($kode_ukuran == 'ml') {
+            $kode_ukuran = 'M/L';
+        }
+        else if ($kode_ukuran == 'lxl') {
+            $kode_ukuran = 'L/XL';
+        }
+        else if ($kode_ukuran == 'xxl') {
+            $kode_ukuran = '2XL';
+        }
+        else if ($kode_ukuran == 'xxxl') {
+            $kode_ukuran = '3XL';
+        }
+        else if ($kode_ukuran == 'xxxxl') {
+            $kode_ukuran = '4XL';
+        }
+        else if ($kode_ukuran == 'xxxxxl') {
+            $kode_ukuran = '5XL';
+        }
+        else if ($kode_ukuran == 'xxxxxxl') {
+            $kode_ukuran = '6XL';
+        }
+        $kode_ukuran = strtoupper($kode_ukuran);
+        $builder = $this->db->table("trans_barang_masuk_produksi abx");
+        $builder->select("COALESCE(SUM(abx.berat), 0) as total_btm");
+        $builder->join("trans_barang_header bbx", "abx.id_header = bbx.id", "inner");
+        $builder->where('bbx.active', 1);
+        $builder->where('abx.kode_sales_order', $kode_so);
+        $builder->where('abx.kode_ukuran', $kode_ukuran);
+        $builder->where('abx.color', $color);
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
     function getProduksilast($params){
         $id_walkorder = $params['id_walkorder'];
          // Dynamic Columns

@@ -842,7 +842,8 @@ class WalkorderModel extends \App\Models\PrModel
             SUM(abx.kg_loss)     as kg_loss,
             SUM(abx.total)       as total,
             SUM(abx.kuota)       as kuota,
-            SUM(abx.kuota_tambah) as kuota_tambah
+            SUM(abx.kuota_tambah) as kuota_tambah,
+            '-' as total_sementara
         ");
 
         // JOIN ref_barang (nullable)

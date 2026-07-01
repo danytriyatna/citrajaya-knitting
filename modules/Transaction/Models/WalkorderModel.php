@@ -843,7 +843,56 @@ class WalkorderModel extends \App\Models\PrModel
             SUM(abx.total)       as total,
             SUM(abx.kuota)       as kuota,
             SUM(abx.kuota_tambah) as kuota_tambah,
-            '-' as total_sementara
+            '-' as total_sementara,
+            (
+                SELECT COALESCE(SUM(tbtd.qty), 0)
+                FROM trans_barang_trf_detail tbtd
+                INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+                WHERE tbtd.kode_walkorder = (
+                        SELECT wo2.kode_walkorder 
+                        FROM trans_walkorder wo2 
+                        WHERE wo2.id = " . (int)$id . "
+                    )
+                AND tbtd.id_barang      = abx.id_barang
+                AND tbth.id_gudang_asal = 1
+            ) AS total_qty_trf,
+             (
+                SELECT COALESCE(SUM(tbd.qty), 0)
+                FROM trans_barang_detail tbd
+                INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                 WHERE tbh.no_ref_wo = (
+                        SELECT wo3.kode_walkorder 
+                        FROM trans_walkorder wo3 
+                        WHERE wo3.id = " . (int)$id . "
+                    )
+                AND tbd.id_barang      = abx.id_barang
+            ) AS total_qty_pakai,
+             (
+                (
+                    SELECT COALESCE(SUM(tbtd.qty), 0)
+                    FROM trans_barang_trf_detail tbtd
+                    INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+                    WHERE tbtd.kode_walkorder = (
+                            SELECT wo2.kode_walkorder 
+                            FROM trans_walkorder wo2 
+                            WHERE wo2.id = " . (int)$id . "
+                        )
+                    AND tbtd.id_barang      = abx.id_barang
+                    AND tbth.id_gudang_asal = 1
+                )
+                -
+                (
+                    SELECT COALESCE(SUM(tbd.qty), 0)
+                    FROM trans_barang_detail tbd
+                    INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                    WHERE tbh.no_ref_wo = (
+                            SELECT wo3.kode_walkorder 
+                            FROM trans_walkorder wo3 
+                            WHERE wo3.id = " . (int)$id . "
+                        )
+                    AND tbd.id_barang      = abx.id_barang
+                )
+            ) AS sisa
         ");
 
         // JOIN ref_barang (nullable)

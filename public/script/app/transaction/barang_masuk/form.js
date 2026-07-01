@@ -621,11 +621,12 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "15%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: "sum",
+        {
+            title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: "sum",
             bottomCalcFormatter: function (cell) {
                 var value = cell.getValue();
                 return Number(value).toFixed(2);
-            } 
+            }
         },
         { title: "UNIT", field: "nama_unit", hozAlign: "center", width: "15%" },
         {
@@ -756,12 +757,29 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         // },
         { title: "Qty", field: "qty_kirim", width: "8%" },
         {
-            title: "Qty<br>Terima", field: "qty", width: "8%", editor: "number", cellEdited: function (cell) {
+            title: "Qty<br>Terima",
+            field: "qty",
+            width: "8%",
+            editor: "number",
+            bottomCalc: "sum",
+            formatter: function (cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2);
+            },
+            bottomCalcFormatter: function (cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2);
+            },
+            // 🌟 TAMBAHKAN INI: Update Amount & Refresh Kalkulasi saat Qty diubah
+            cellEdited: function (cell) {
                 const row = cell.getRow();
                 const qty = parseFloat(cell.getValue()) || 0;
                 const harga = parseFloat(row.getCell("harga").getValue()) || 0;
-                row.update({ amount: qty * harga });
-            }, formatter: "money", bottomCalcFormatter: 'money', bottomCalc: 'sum'
+
+                // Pastikan nilai tersimpan sebagai angka murni di Tabulator
+                row.update({
+                    qty: qty,
+                    amount: qty * harga
+                });
+            }
         },
         {
             title: "Berat (Kg)",
@@ -784,16 +802,27 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         },
         { title: "Ukuran", field: "kode_ukuran", width: "8%" },
         {
-            title: "Harga", field: "harga", width: "10%", formatter: "money", formatterParams: {
+            title: "Harga",
+            field: "harga",
+            width: "10%",
+            formatter: "money",
+            formatterParams: {
                 decimal: ",",
                 thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
-            }, editor: "number", cellEdited: function (cell) {
+                symbol: "Rp",
+                precision: 0,
+            },
+            editor: "number",
+            cellEdited: function (cell) {
                 const row = cell.getRow();
                 const harga = parseFloat(cell.getValue()) || 0;
                 const qty = parseFloat(row.getCell("qty").getValue()) || 0;
-                row.update({ amount: qty * harga });
+
+                // 🌟 Pastikan harga juga di-update sebagai angka murni
+                row.update({
+                    harga: harga,
+                    amount: qty * harga
+                });
             }
         },
         {
@@ -1515,6 +1544,7 @@ function addItem(data, typeAction = null, isScan = false) {
         produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
         dtListProduksi.setData(produksi_data);
     } else {
+        data = structuredClone(data);
         const matchingItems = produksi_data.filter(x =>
             x.kode_sales_order == data.kode_sales_order &&
             x.kode_ukuran == data.kode_ukuran &&
@@ -1556,7 +1586,6 @@ function addItem(data, typeAction = null, isScan = false) {
             data.total_scanned = 1;
             // data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
         }
-
         console.log("data yang ditambahkan", data)
 
         dtListProduksi.addRow(data);

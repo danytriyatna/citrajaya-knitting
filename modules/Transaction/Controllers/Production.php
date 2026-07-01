@@ -322,6 +322,8 @@ class Production extends BaseController
         $pru['id_sales_order'] = $stdData->ref_id;
         $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
       }
+
+      $getDataWO = $this->mWalkorder->getData($resData->id_walkorder);
       
       $walkOrderDet = $this->mWalkorder->getData_warna_print($resData->id_walkorder);
 

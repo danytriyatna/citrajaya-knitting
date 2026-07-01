@@ -269,6 +269,10 @@ class BarangMasukModel extends \App\Models\PrModel
                     $this->insertRecordGetid($this->tblDet, $dataDetail);
     
                     if ($data['status'] == 1) {
+
+                        if (empty( $rowData['lot_no']) || empty( $rowData['pack_id'])) {
+                            throw new \Exception($rowData['kode_barang']." Lot No dan Pack tidak boleh kosong!");
+                        }
     
                         $mBarangMasuk = new IncomingGoodsModel();
                         $arrParam =  [
@@ -291,9 +295,9 @@ class BarangMasukModel extends \App\Models\PrModel
                         } else {
                             $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
                         }
-    
+                        
                         $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
-    
+                        
                         // $stokAwal = !empty($resData) ? $resData->stok : 0;
                         $dataBarang = [
                             "id_barang" => $idBarang,
@@ -621,8 +625,8 @@ class BarangMasukModel extends \App\Models\PrModel
             // throw $e;
             return [
                 'status' => false,
-                // 'message' => $e->getMessage(),
-                'message' => $e->getMessage() . " (di baris " . $e->getLine() . " file " . $e->getFile() . ")",
+                'message' => $e->getMessage(),
+                // 'message' => $e->getMessage() . " (di baris " . $e->getLine() . " file " . $e->getFile() . ")",
             ];
         }
     }

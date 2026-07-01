@@ -911,5 +911,140 @@ class WalkorderModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    function getData_warna_print_prod($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
+{
+    $id = (int)$id;
+
+    $builder = $this->db->table($this->table5 . " abx");
+
+    // 🌟 Subquery gabungan lot_no dari kedua sumber, per id_barang
+    $lotSubquery = "
+        (
+            SELECT tbtd.id_barang, tbtd.lot_no
+            FROM trans_barang_trf_detail tbtd
+            INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+            WHERE tbtd.kode_walkorder = (
+                    SELECT wo2.kode_walkorder 
+                    FROM trans_walkorder wo2 
+                    WHERE wo2.id = {$id}
+                )
+            AND tbth.id_gudang_asal = 1
+
+            UNION
+
+            SELECT tbd.id_barang, tbd.lot_no
+            FROM trans_barang_detail tbd
+            INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+            WHERE tbh.no_ref_wo = (
+                    SELECT wo3.kode_walkorder 
+                    FROM trans_walkorder wo3 
+                    WHERE wo3.id = {$id}
+                )
+        ) lot
+    ";
+
+    $builder->select(" 
+        abx.id_warna,
+        abx.id_barang,
+        lot.lot_no,
+
+        CASE 
+            WHEN abx.id_barang IS NOT NULL THEN 'via_barang'
+            ELSE 'via_warna'
+        END AS sumber_warna,
+
+        CASE
+            WHEN abx.id_barang IS NOT NULL THEN COALESCE(NULLIF(rb.keterangan, ''), rw.keterangan)
+            ELSE rw.keterangan
+        END AS kode_warna,
+
+        SUM(abx.gram)        as gram,
+        SUM(abx.kg)          as kg,
+        SUM(abx.loss)        as loss,
+        SUM(abx.kg_loss)     as kg_loss,
+        SUM(abx.total)       as total,
+        SUM(abx.kuota)       as kuota,
+        SUM(abx.kuota_tambah) as kuota_tambah,
+        '-' as total_sementara,
+
+        (
+            SELECT COALESCE(SUM(tbtd.qty), 0)
+            FROM trans_barang_trf_detail tbtd
+            INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+            WHERE tbtd.kode_walkorder = (
+                    SELECT wo2.kode_walkorder 
+                    FROM trans_walkorder wo2 
+                    WHERE wo2.id = {$id}
+                )
+            AND tbtd.id_barang      = abx.id_barang
+            AND tbtd.lot_no         = lot.lot_no
+            AND tbth.id_gudang_asal = 1
+        ) AS total_qty_trf,
+
+        (
+            SELECT COALESCE(SUM(tbd.qty), 0)
+            FROM trans_barang_detail tbd
+            INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+            WHERE tbh.no_ref_wo = (
+                    SELECT wo3.kode_walkorder 
+                    FROM trans_walkorder wo3 
+                    WHERE wo3.id = {$id}
+                )
+            AND tbd.id_barang = abx.id_barang
+            AND tbd.lot_no    = lot.lot_no
+        ) AS total_qty_pakai,
+
+        (
+            (
+                SELECT COALESCE(SUM(tbtd.qty), 0)
+                FROM trans_barang_trf_detail tbtd
+                INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+                WHERE tbtd.kode_walkorder = (
+                        SELECT wo2.kode_walkorder 
+                        FROM trans_walkorder wo2 
+                        WHERE wo2.id = {$id}
+                    )
+                AND tbtd.id_barang      = abx.id_barang
+                AND tbtd.lot_no         = lot.lot_no
+                AND tbth.id_gudang_asal = 1
+            )
+            -
+            (
+                SELECT COALESCE(SUM(tbd.qty), 0)
+                FROM trans_barang_detail tbd
+                INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                WHERE tbh.no_ref_wo = (
+                        SELECT wo3.kode_walkorder 
+                        FROM trans_walkorder wo3 
+                        WHERE wo3.id = {$id}
+                    )
+                AND tbd.id_barang = abx.id_barang
+                AND tbd.lot_no    = lot.lot_no
+            )
+        ) AS sisa
+    ");
+
+    // JOIN ref_barang (nullable)
+    $builder->join("ref_barang rb", "rb.id = abx.id_barang", "left");
+
+    // JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di abx
+    $builder->join("ref_warna rw", "rw.id = COALESCE(rb.id_warna, abx.id_warna)", "left");
+
+    $builder->join("trans_walkorder_detail wodet", "wodet.id = abx.id_walkorder_detail", "inner");
+    $builder->join("trans_walkorder wo",           "wo.id = wodet.id_walkorder",          "inner");
+
+    // 🌟 JOIN ke daftar lot_no gabungan
+    $builder->join($lotSubquery, "lot.id_barang = abx.id_barang", "left", false);
+
+    $builder->where('wo.id', $id);
+
+    // 🌟 lot.lot_no ikut masuk GROUP BY supaya row pecah per lot_no
+    $builder->groupBy('abx.id_warna, abx.id_barang, lot.lot_no, rb.nama_barang, rb.keterangan, rw.kode_warna, rw.keterangan');
+
+    $this->_data = $builder->get()->getResult();
+
+    return $this->_data;
+}
     // END WARNA    
 }

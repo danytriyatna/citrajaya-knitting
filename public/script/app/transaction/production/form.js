@@ -149,9 +149,9 @@ $(document).ready(function () {
         paginationSize: 10,
         paginationButtonCount: 5,
         columns: [
-            { headerSort: false, title: "WARNA", field: "kode_warna", width: "25%" },
+            { headerSort: false, title: "WARNA", field: "kode_warna", width: "27%" },
             {
-                headerSort: false, title: "KEBUTUHAN<br>(QTY/KG)", field: "total", hozAlign: "right", width: "15%", headerHozAlign: "right", bottomCalc: "sum",
+                headerSort: false, title: "KEBUTUHAN<br>(QTY/KG)", field: "total", hozAlign: "right", width: "17%", headerHozAlign: "right", bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
                 },
@@ -160,7 +160,7 @@ $(document).ready(function () {
                 }
             },
             {
-                headerSort: false, title: "Pengiriman<br>(QTY/KG)", field: "total_qty_trf", hozAlign: "right", width: "15%", headerHozAlign: "right",
+                headerSort: false, title: "Pengiriman<br>(QTY/KG)", field: "total_qty_trf", hozAlign: "right", width: "17%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
@@ -169,9 +169,9 @@ $(document).ready(function () {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
                 }
             },
-            { headerSort: false, title: "LOT", field: "operator", hozAlign: "left", width: "12%" },
+            { headerSort: false, title: "LOT", field: "lot_no", hozAlign: "left", width: "12%", visible: false },
             {
-                headerSort: false, title: "Pemakaian<br>(QTY/KG)", field: "total_qty_pakai", hozAlign: "right", width: "15%", headerHozAlign: "right",
+                headerSort: false, title: "Pemakaian<br>(QTY/KG)", field: "total_qty_pakai", hozAlign: "right", width: "17%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
@@ -181,7 +181,7 @@ $(document).ready(function () {
                 }
             },
             {
-                headerSort: false, title: "Sisa (Kg)", field: "sisa", hozAlign: "right", width: "15%", headerHozAlign: "right",
+                headerSort: false, title: "Sisa (Kg)", field: "sisa", hozAlign: "right", width: "17%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal

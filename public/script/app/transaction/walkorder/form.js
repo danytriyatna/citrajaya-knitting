@@ -62,7 +62,7 @@ $(document).ready(function () {
                     noSP.html(dataRow.ref_kode)
                     inpp_deskripsi.html(dataRow.keterangan);
                     inpp_warna.html(data_row.colordasar);
-                    inpp_tglSample.html(formatterDate(dataRow.tgl_transaksi))
+                    inpp_tglSample.html(formatterDate(dataRow.tgl_transaksi_ref))
                     inpp_tglDeadline.html(formatterDate(dataRow.tgl_deadline))
                     inpp_tglDeadlineDua.html(formatterDate(dataRow.tgl_deadline_dua))
 

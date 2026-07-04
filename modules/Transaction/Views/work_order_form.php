@@ -160,7 +160,7 @@
               <h7 class="f-w-700 m-b-12"><?= $row->keterangan; ?></h7> -->
               <h5 class="f-w-700 m-b-6"><?= $row->style; ?></h5>
               <h5 class="f-w-700 m-b-12"><?= $row->deskripsi; ?></h5>
-              <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi); ?></p>
+              <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi_ref); ?></p>
               <p class="m-y-0"><em>Deadline: <?= fdate_eng_to_ind($row->tgl_deadline); ?></em></p>
               <p class="m-y-0"><em>Deadline 2: <?= !empty($row->tgl_deadline_dua) ? fdate_eng_to_ind($row->tgl_deadline_dua) : '-'; ?></em></p>
               <p class="f-w-700 m-t-4"><?= $row->konsumen_nama; ?></p>

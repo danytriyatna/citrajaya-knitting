@@ -117,6 +117,10 @@
         .kop-surat div p {
             margin-top: 10px;
         }
+
+        @page {
+            size: portrait;
+        }
     </style>
 </head>
 
@@ -221,16 +225,14 @@
         <thead>
             <tr>
                 <th class="text-center" rowspan="2" style="width: 3%;">No.</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 13%">COLOR CODE</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 15%">COLOR CODE</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM DESCRIPTION</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">LOT</th>
                 <?php if ($maxPacks > 0): ?>
                     <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
                 <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 6%">TOTAL QTY / KG</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">TOTAL PACK</th>
-                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 8%">UNIT PRICE</th>
-                <th class="text-right" rowspan="2" style="vertical-align: middle; width: 11%">TOTAL PRICE</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL QTY / KG</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL PACK</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 15%">WAREHOUSE</th>
             </tr>
             <tr>
@@ -259,8 +261,6 @@
                     <?php endforeach; ?>
                     <td class="text-right"><?= number_format($row->qty, 2) ?></td>
                     <td class="text-right"><?= count($packs) ?> PACK</td>
-                    <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round($row->price)) : 0 ?></td>
-                    <td class="text-right"><?= !empty($row->price) ? "Rp." . number_format(round((float) $row->price * (float) $row->qty )) : 0 ?></td>
                     <td><?= $row->nama_gudang ?></td>
                 </tr>
             <?php endforeach ?>
@@ -270,8 +270,6 @@
                 <th colspan="<?= $maxPacks + 4 ?>" class="text-center text-sm" style="border: 1px solid black">JUMLAH</th>
                 <th class="text-sm text-right" style="border: 1px solid black"><?= number_format($qty_total, 2) ?></th>
                 <th class="text-sm text-right" style="border: 1px solid black"><?= $pack_total ?> PACK</th>
-                <th style="border: 1px solid black"></th>
-                <th class="text-sm text-right" style="border: 1px solid black"><?= !empty($row->price) ? "Rp." . number_format(round($total_price)) : 0 ?></th>
                 <th style="border: 1px solid black"></th>
             </tr>
         </tfoot>

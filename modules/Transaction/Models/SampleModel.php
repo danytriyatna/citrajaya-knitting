@@ -681,6 +681,60 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getDetailGramasi($sampleDetId = null, $idBarang = null, $idWarna = null) {
+        $builder = $this->db->table('trans_sample_gram tdg');
+
+        $id_gudang = !empty($params['id_gudang']) ? $params['id_gudang'] : null;
+
+        $subQtyOnHand = "COALESCE((
+            SELECT tbh.jumlah
+            FROM trans_barang_history tbh
+            WHERE tbh.id_barang = tdg.id_barang
+            " . (!empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "") . "
+            ORDER BY tbh.year DESC, tbh.month DESC
+            LIMIT 1
+        ), 0) AS kuota_history";
+
+        $builder->select(" 
+            tdg.id, 
+            tdg.id_warna, 
+            tdg.id_barang,
+            tdg.qty,
+            tdg.gram, tdg.gram_nd, tdg.kg, tdg.loss, tdg.kg_loss, tdg.total,
+            COALESCE(rb.nama_barang, rw.kode_warna) AS kode_warna,
+            rw.keterangan as warna_keterangan,
+
+            -- Flag sumber warna
+            CASE 
+                WHEN tdg.id_barang IS NOT NULL THEN 'via_barang'
+                ELSE 'via_warna'
+            END AS sumber_warna,
+
+            -- Qty on hand dari trans_barang_history
+            {$subQtyOnHand}
+        ");
+
+        // JOIN ref_barang (nullable)
+        $builder->join("ref_barang rb", "rb.id = tdg.id_barang", "left");
+
+        // JOIN ref_warna: prioritaskan warna dari ref_barang, fallback ke id_warna di abx
+        $builder->join("ref_warna rw", "rw.id = COALESCE(rb.id_warna, tdg.id_warna)", "left");
+
+        if (!empty($sampleDetId)) {
+            $builder->where('tdg.id_sample_det', $sampleDetId);
+        }
+
+        if (!empty($idBarang)) {
+            $builder->where('tdg.id_barang', $idBarang);
+        }
+
+        if (!empty($idWarna)) {
+            $builder->where('tdg.id_warna', $idWarna);
+        }
+        $this->_data = $builder->get()->getRow();
+        return $this->_data;
+    }
+
 
     function getDataDetailSample_ori($idSample, $params = null)
     {

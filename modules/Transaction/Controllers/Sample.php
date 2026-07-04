@@ -210,7 +210,7 @@ class Sample extends BaseController
 
     if(!empty($dtGram)){
       for ($i=0; $i < count($dtGram) ; $i++) { 
-        $kodeWarna = "Warna ";
+        $kodeWarna = "Barang ";
         if($i == 0) { 
           $kodeWarna = $kodeWarna . 'A';
         } else if($i == 1) { 

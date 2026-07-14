@@ -91,51 +91,66 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
     function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $id_header = $params['id_header'];
+        $id_gudang = $params['id_gudang'] ?? null;
+        $kode_wo = $params['kode_wo'] ? "AND td.kode_walkorder = '{$params['kode_wo']}'" : '';
 
         $sql = "
+        SELECT 
+            sub.id_barang,
+            sub.id_header,
+            sub.lot_no,
+            sub.kode_barang,
+            sub.nama_barang,
+            sub.nama_unit,
+            sub.kode_warna,
+            STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
+            SUM(sub.qty) AS qty,
+            SUM(sub.qty * sub.price) AS jumlah,
+            SUM(sub.qty_transfer) AS qty_transfer
+        FROM (
             SELECT 
-                sub.id_barang,
-                sub.id_header,
-                sub.lot_no,
-                sub.kode_barang,
-                sub.nama_barang,
-                sub.nama_unit,
-                sub.kode_warna,
-                STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
-                SUM(sub.qty) AS qty,
-                SUM(sub.qty * sub.price) AS jumlah
-            FROM (
-                SELECT 
-                    uk.id AS urutan,
-                    uk.id_barang,
-                    uk.id_header,
-                    uk.lot_no,
-                    uk.price,
-                    uk.qty,
-                    ebx.kode_barang,
-                    ebx.nama_barang,
-                    fbx.nama_satuan AS nama_unit,
-                    rw.keterangan as kode_warna,
-                    CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty
-                FROM {$this->table} uk
-                INNER JOIN {$this->tblBarang} ebx ON uk.id_barang = ebx.id
-                LEFT JOIN ref_warna rw ON ebx.id_warna = rw.id
-                INNER JOIN {$this->tblSatuan} fbx ON ebx.id_satuan = fbx.id
-                LEFT  JOIN ref_pack rp ON uk.pack_id = rp.id
-                WHERE uk.id_header = ?
-                AND uk.active = 1
-            ) sub
-            GROUP BY 
-                sub.id_barang, sub.id_header, sub.lot_no,
-                sub.kode_barang, sub.nama_barang, sub.nama_unit, sub.kode_warna
-            ORDER BY sub.id_barang
-            LIMIT ? OFFSET ?
-        ";
+                uk.id AS urutan,
+                uk.id_barang,
+                uk.id_header,
+                uk.lot_no,
+                uk.price,
+                uk.qty,
+                uk.pack_id,
+                hd.no_ref_wo AS kode_walkorder,
+                ebx.kode_barang,
+                ebx.nama_barang,
+                fbx.nama_satuan AS nama_unit,
+                rw.keterangan as kode_warna,
+                CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty,
+                (
+                    SELECT COALESCE(SUM(td.qty), 0)
+                    FROM trans_barang_trf_detail td
+                    INNER JOIN trans_barang_trf_header th ON th.id = td.id_header::int
+                    WHERE td.pack_id = uk.pack_id
+                      AND td.lot_no = uk.lot_no
+                      AND td.kode_walkorder = hd.no_ref_wo
+                      AND th.id_gudang_tujuan = ?
+                ) AS qty_transfer
+            FROM trans_barang_detail uk
+            INNER JOIN trans_barang_header hd ON uk.id_header = hd.id
+            INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
+            LEFT JOIN ref_warna rw ON ebx.id_warna = rw.id
+            INNER JOIN ref_satuan fbx ON ebx.id_satuan = fbx.id
+            LEFT  JOIN ref_pack rp ON uk.pack_id = rp.id
+            WHERE uk.id_header = ?
+            AND uk.active = 1
+        ) sub
+        GROUP BY 
+            sub.id_barang, sub.id_header, sub.lot_no,
+            sub.kode_barang, sub.nama_barang, sub.nama_unit, sub.kode_warna
+        ORDER BY sub.id_barang
+        LIMIT ? OFFSET ?
+    ";
 
-        $offset = empty($offset) ? 0 : $offset;
-        $limit  = empty($limit)  ? 10 : $limit;
+    $offset = empty($offset) ? 0 : $offset;
+    $limit  = empty($limit)  ? 10 : $limit;
 
-        $this->_data = $this->db->query($sql, [$id_header, $limit, $offset])->getResult();
-        return $this->_data;
-    }
+    $this->_data = $this->db->query($sql, [$id_gudang, $id_header, $limit, $offset])->getResult();
+    return $this->_data;
+}
 }

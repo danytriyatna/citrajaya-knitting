@@ -416,8 +416,8 @@ class BarangKeluar extends BaseController
                     'dir' => 'ASC'
                 ]
             ];
-            $params['id_gudang'] =
-            $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
+            // $params['id_gudang'] =
+            $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang, "kode_wo" => $resData->no_ref_wo));
             $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
             $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
             if (count($resDataDetail) > 0) {

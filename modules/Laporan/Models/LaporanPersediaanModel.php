@@ -231,7 +231,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             AND EXTRACT(YEAR FROM  abx.tanggal) = $year
             AND abx.id_gudang_asal = $idGudang
             $idJenisBarangSql
-            --AND abx.id_barang = 226 
+            --AND abx.id_barang = 172
             
         UNION ALL
         SELECT
@@ -266,7 +266,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             AND EXTRACT(YEAR FROM  abx.tanggal) = $year
             AND abx.id_gudang_tujuan = $idGudang
             $idJenisBarangSql
-            --AND abx.id_barang = 161
+            --AND abx.id_barang = 172
             
             ),
 
@@ -391,9 +391,13 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     {
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
-        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, rp.pack_name, b.kode_barang || ' ' || b.nama_barang as barang, CAST(a.jumlah AS DECIMAL(18,2)) as saldo_akhir, CAST(a.stok_awal AS DECIMAL(18,2)) as saldo_awal");
+        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, rp.pack_name, b.kode_barang || ' ' || b.nama_barang as barang, 
+                            CAST(a.jumlah AS DECIMAL(18,2)) as saldo_akhir, CAST(a.stok_awal AS DECIMAL(18,2)) as saldo_awal,
+                            w.keterangan as color_code, rs.nama_satuan");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
         $builder->join("ref_jenis_barang c", "a.id_jenis_barang = c.id", "inner");
+        $builder->join("ref_warna w", "b.id_warna = w.id", "left");
+        $builder->join("ref_satuan rs", "b.id_satuan = rs.id", "left");
         $builder->join("ref_pack rp", "a.pack_id = rp.id", "left");
         if (!empty($idJenisBarang)) {
             $builder->where("a.id_jenis_barang", $idJenisBarang);
@@ -687,7 +691,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         foreach ($data_barang as $key => $lot) {
             $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
             $lot_no = $lot['lot_no'];
-            $pack_id_cur = $lot['pack_id'];
+            $pack_id_val = $lot['pack_id'];
+            $pack_id_cur = !empty($lot['pack_id']) ? " = $pack_id_val" : 'is null';
             $id_jenis_barang = $lot['id_jenis_barang'];
             $id_barang_cur = $lot['id_barang'];
 
@@ -702,7 +707,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         SELECT abx2.price
                         FROM trans_barang abx2
                         WHERE abx.lot_no = '$lot_no'
-                        AND abx2.pack_id = $pack_id_cur
+                        AND abx2.pack_id $pack_id_cur
                         AND EXTRACT(MONTH FROM abx2.tanggal) = $month
                         AND EXTRACT(YEAR FROM abx2.tanggal) = $year
                         AND abx2.price IS NOT NULL
@@ -715,7 +720,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         SELECT abx3.tanggal
                         FROM trans_barang abx3
                         WHERE abx3.lot_no = '$lot_no'
-                        AND abx3.pack_id = $pack_id_cur
+                        AND abx3.pack_id $pack_id_cur
                         AND EXTRACT(MONTH FROM abx3.tanggal) = $month
                         AND EXTRACT(YEAR FROM abx3.tanggal) = $year
                         ORDER BY abx3.tanggal DESC
@@ -768,18 +773,15 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     AND EXTRACT(YEAR FROM abx.tanggal) = $year
                     AND abx.id_barang = $id_barang_cur
                     AND abx.lot_no = '$lot_no'
-                    AND abx.pack_id = $pack_id_cur
+                    AND abx.pack_id $pack_id_cur
 
                 GROUP BY
                     abx.id_barang,
                     abx.lot_no,
                     abx.pack_id
             ";
-
+            
             $data = $this->db->query($sql)->getRow();
-            // if ($lot == 'K38T34') {
-            //     dd($data, $stok_awal[$key]);
-            // }
             
             $jumlah = 0;
             

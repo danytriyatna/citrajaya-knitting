@@ -199,6 +199,17 @@
                     <?= !empty($data->kode_so) ? $data->kode_so : null ?>
                 </td>
             </tr>
+            <tr style="border: none;">
+                <td style="border: none; width: 8%; vertical-align: top;">
+                    Ref. WO
+                </td>
+                <td style="border: none; width: 2%; vertical-align: top;">
+                    :
+                </td>
+                <td style="border: none; width: 20%; vertical-align: top;">
+                    <?= !empty($data->no_ref_wo) ? $data->no_ref_wo : null ?>
+                </td>
+            </tr>
         </tbody>
     </table>
     <br>
@@ -220,6 +231,8 @@
                 <?php endif; ?>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL PACK</th>
                 <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL QTY</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">QTY TRANSFER</th>
+                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">QTY SISA</th>
             </tr>
             <tr>
                 <?php foreach ($packHeaders as $packName): ?>
@@ -228,11 +241,12 @@
             </tr>
         </thead>
         <tbody>
-            <?php $i = 1; $qty_total = 0; $junmlah = 0; $pack_total = 0;
+            <?php $i = 1; $qty_total = 0; $qty_transfer_total = 0; $junmlah = 0; $pack_total = 0;
             foreach ($detail as $row) : ?>
             <?php 
                 $packs = parsePacks($row->pack_data);
                 $qty_total += $row->qty;
+                $qty_transfer_total += $row->qty_transfer;
                 $pack_total += count($packs);
             ?>
                 <tr>
@@ -247,19 +261,23 @@
                     <?php endforeach; ?>
                     <td class="text-right"><?= count($packs) ?> PACK</td>
                     <td class="text-right"><?= number_format($row->qty, 2) ?></td>
+                    <td class="text-right"><?= number_format($row->qty_transfer, 2) ?></td>
+                    <td class="text-right"><?= number_format($row->qty_transfer - $row->qty, 2) ?></td>
                 </tr>
             <?php endforeach ?>
             <tr>
                 <th colspan="<?= $maxPacks + 4 ?>" class="text-center">JUMLAH</th>
                 <th class="text-right"><?= $pack_total ?> PACK</th>
                 <th class="text-right"><?= number_format($qty_total, 2) ?></th>
+                <th class="text-right"><?= number_format($qty_transfer_total, 2) ?></th>
+                <th class="text-right"><?= number_format($qty_transfer_total - $qty_total, 2) ?></th>
             </tr>
 
         </tbody>
     </table>
     <br>
     <?php endif; ?>
-    <h3>Desc:</h3>
+    <h3>Keterangan:</h3>
     <h5><?= !empty($data->keterangan) ? $data->keterangan : null ?></h5>
 
     <!-- <table class="table-bordered w-100">

@@ -849,9 +849,9 @@ class SalesOrder extends BaseController
                   // $prgram['id_sample_det'] = $data_detail[0]->id;
                   // $dtGram = $this->mSample->getData_gram(null, 0, 9999, null,  null, $prgram);
 
+                  $qty_wodet =  $this->mSalesOrder->getTotal_qty($xrow->id, 2);
                   if (!empty($data_detail_wo)) {
 
-                    $qty_wodet =  $this->mSalesOrder->getTotal_qty($xrow->id, 2);
 
                     $gram = 0;
                     $gram_nd = 0;
@@ -1170,7 +1170,7 @@ class SalesOrder extends BaseController
   }
   public function deleteDetailList($id = NULL)
   {
-    if (!$this->auth->loggedIn() or (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
+    if (!$this->auth->loggedIn() or (!$this->_delete)) {
       throw new \Exception('You must be an administrator to view this page.');
     }
 

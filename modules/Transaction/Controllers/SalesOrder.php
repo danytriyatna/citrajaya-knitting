@@ -1393,7 +1393,7 @@ class SalesOrder extends BaseController
 
       $ukuranKeysInc = array_values($ukuranKeysInc);
 
-      $sizes = ['xs', 's', 'sm', 'ml', 'm', 'l', 'lxl', 'xl', 'xxl', 'xxxl', 'xxxxl', 'xxxxxl', 'jumbo', 'all', 'xxxxxxl'];
+      $sizes = ['xs', 's', 'sm', 'ml', 'm', 'l', 'lxl', 'xl', 'xxl', 'xxxl', 'xxxxl', 'xxxxxl', 'jumbo', 'all', 'xxxxxxl', 'xxxxxxxl', 'xxxxxxxxl', 'xxxxxxxxxl', 'xxxxxxxxxxl'];
 
       foreach ($resDataDetail as $row) {
           $priceGroups = [];

@@ -261,6 +261,18 @@
                     elseif (strtoupper($u) == "XXXXXXL") {
                         $u = "6XL";
                     }
+                    elseif (strtoupper($u) == "XXXXXXXL") {
+                        $u = "7XL";
+                    }
+                    elseif (strtoupper($u) == "XXXXXXXXL") {
+                        $u = "8XL";
+                    }
+                    elseif (strtoupper($u) == "XXXXXXXXXL") {
+                        $u = "9XL";
+                    }
+                    elseif (strtoupper($u) == "XXXXXXXXXXL") {
+                        $u = "10XL";
+                    }
                     ?>
                     <th><?= strtoupper($u) == 'ALL_' ? "ALL" : strtoupper($u) ?></th>
                 <?php endforeach; ?>

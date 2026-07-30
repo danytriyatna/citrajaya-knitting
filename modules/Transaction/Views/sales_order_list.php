@@ -257,6 +257,7 @@
 
         <hr>
 
+        <div id="section-pilih-warna-style" class="d-none">
         <h6 class="f-w-700">Pilih Warna Style</h6>
         <div class="row">
           <div class="col-sm-6">
@@ -353,6 +354,7 @@
             </div>
 
           </div>
+        </div>
         </div>
 
         <h6 class="f-w-700">Pilih Barang</h6>

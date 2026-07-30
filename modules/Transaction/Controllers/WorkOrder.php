@@ -209,6 +209,7 @@ class WorkOrder extends BaseController
       
       $data_detail = [];
       if ($stdData->tipe_id == 1) {
+        $this->mSample->syncWorkOrderFromSample($stdData->ref_id);
         $list_detail = $this->mSample->getDataDetailSample_crostab($stdData->ref_id);
         $stdData->file_gambar = !empty($stdData->file_name) ? base_url() . "uploads/sample/"  . $stdData->file_name : "";
 
@@ -339,6 +340,9 @@ class WorkOrder extends BaseController
     $detail_id    = $this->request->getPost('detail');
     $detail_qty   = $this->request->getPost('detail_qty');
     $detail_loss  = $this->request->getPost('detail_loss');
+    if (empty($detail_loss) || (float)$detail_loss <= 0) {
+      $detail_loss = 5;
+    }
     $list_data    = $this->request->getPost('warna_data');
 
 

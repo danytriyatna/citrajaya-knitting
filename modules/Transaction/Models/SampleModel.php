@@ -251,14 +251,14 @@ class SampleModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetailSample_crostab($id)
+    function getDataDetailSample_crostab($id, $dtUkuran = null)
     {
-
-
-        // get data ukuran 
-        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-        $pru['id_sample'] = $id;
-        $dtUkuran = $this->getUkuranTrans($pru);
+        if ($dtUkuran === null) {
+            // get data ukuran 
+            $pru['use'] = 1; // ambil ukuran yang digunnakan order 
+            $pru['id_sample'] = $id;
+            $dtUkuran = $this->getUkuranTrans($pru);
+        }
 
         // looping data ukuran
         // Dynamic Columns
@@ -1177,7 +1177,7 @@ class SampleModel extends \App\Models\PrModel
                         "gram" => $xrow['gram'],
                         "gram_nd" => $xrow['gram_nd'],
                         "kg" => $xrow['kg'],
-                        "loss" => $xrow['loss'],
+                        "loss" => (!empty($xrow['loss']) && (float)$xrow['loss'] > 0) ? (float)$xrow['loss'] : 5,
                         "kg_loss" => $xrow['kg_loss'],
                         "total" => $xrow['total'],
                         "active" => 1,
@@ -1205,6 +1205,9 @@ class SampleModel extends \App\Models\PrModel
             $head_up['total_harga'] = $head_total;
             $this->updateRecord($this->table, $head_up, 'id', $dataWarna['id_sample']);
 
+            // Auto-sync Work Order if it exists for this Sample
+            $this->syncWorkOrderFromSample($dataWarna['id_sample']);
+
             if ($queryStatus == false) {
                 $this->db->transRollback();
                 return $msgError;
@@ -1224,6 +1227,138 @@ class SampleModel extends \App\Models\PrModel
         }
     }
 
+    public function syncWorkOrderFromSample($id)
+    {
+        $result = $this->getData($id);
+        if (empty($result) || $result->status != 1) {
+            return;
+        }
+
+        $existingWO = $this->db->table("trans_walkorder")
+            ->where("ref_id", $id)
+            ->where("tipe_id", 1)
+            ->where("active", 1)
+            ->get()
+            ->getRow();
+
+        if (!empty($existingWO)) {
+            $idWorkOrder = $existingWO->id;
+            $arrWorkOrder = [
+                "ref_kode" => !empty($result->kode_sample) ? $result->kode_sample : null,
+                "id_konsumen" => $result->id_konsumen,
+                "tgl_deadline" => $result->tgl_deadline,
+                "qty" => $result->qty,
+                "file_id" => !empty($result->gambar_id) ? $result->gambar_id : null,
+                "keterangan_style" => $result->keterangan,
+                "updated_at" => date("Y-m-d H:i:s")
+            ];
+            $this->updateRecord("trans_walkorder", $arrWorkOrder, 'id', $idWorkOrder);
+
+            $oldDets = $this->db->table("trans_walkorder_detail")
+                ->where("id_walkorder", $idWorkOrder)
+                ->get()
+                ->getResult();
+
+            if (!empty($oldDets)) {
+                $oldDetIds = array_column($oldDets, 'id');
+                if (!empty($oldDetIds)) {
+                    $this->db->table("trans_walkorder_warna")->whereIn("id_walkorder_detail", $oldDetIds)->delete();
+                }
+                $this->db->table("trans_walkorder_detail")->where("id_walkorder", $idWorkOrder)->delete();
+            }
+        } else {
+            $arrWorkOrder = [
+                "ref_id" => $id,
+                "ref_kode" => !empty($result->kode_sample) ? $result->kode_sample : null,
+                "kode_walkorder" => $this->generateNo("WRD", "trans_walkorder", "kode_walkorder"),
+                "id_konsumen" => $result->id_konsumen,
+                'tgl_transaksi' => date("Y-m-d"),
+                'tgl_deadline' => $result->tgl_deadline,
+                "qty" => $result->qty,
+                "file_id" => !empty($result->gambar_id) ? $result->gambar_id : null,
+                "status" => 1,
+                "tipe_id" => 1,
+                "active" => 1,
+                'keterangan_style' => $result->keterangan,
+                "created_at" => date("Y-m-d H:i:s"),
+            ];
+            $idWorkOrder = $this->insertRecordGetid("trans_walkorder", $arrWorkOrder);
+        }
+
+        $dataWarna = $this->getDataDetailSampleWarna($id);
+
+        if (!empty($dataWarna)) {
+            foreach ($dataWarna as $rowData) {
+
+                $detailWorkOrder = [
+                    'id_walkorder' => $idWorkOrder,
+                    'ref_detail_id' => $rowData->id,
+                    'qty' => $this->getTotal_qty($rowData->id, 2),
+                    'tipe_id' => 1,
+                    'created_at' => date("Y-m-d H:i:s")
+                ];
+
+                $woIdDet = $this->insertRecordGetid("trans_walkorder_detail", $detailWorkOrder);
+
+                $prgram['id_sample_det'] = $rowData->id;
+                $dtGram = $this->getData_gram(null, 0, 999, null, null, $prgram);
+
+                if (!empty($dtGram)) {
+                    $sum_gram = 0;
+                    $sum_gram_nd = 0;
+                    $sum_kg = 0;
+                    $max_loss = 0;
+                    $sum_kg_loss = 0;
+                    $sum_total = 0;
+
+                    foreach ($dtGram as $x) {
+                        $sum_gram += (float)($x->gram ?? 0);
+                        $sum_gram_nd += (float)($x->gram_nd ?? 0);
+                        $sum_kg += (float)($x->kg ?? 0);
+                        if ((float)($x->loss ?? 0) > $max_loss) $max_loss = (float)$x->loss;
+                        $sum_kg_loss += (float)($x->kg_loss ?? 0);
+                        $sum_total += (float)($x->total ?? 0);
+
+                        $arrWarna = [
+                            'id_walkorder_detail' => $woIdDet,
+                            'id_barang' => $x->id_barang,
+                            'gram' => $x->gram,
+                            'gram_nd' => $x->gram_nd,
+                            'kg' => $x->kg,
+                            'loss' => $x->loss,
+                            'kg_loss' => $x->kg_loss,
+                            'total' => $x->total,
+                            'created_at' => date("Y-m-d H:i:s")
+                        ];
+                        $this->insertRecordGetid("trans_walkorder_warna", $arrWarna);
+                    }
+
+                    $this->updateRecord("trans_walkorder_detail", [
+                        'gram' => $sum_gram,
+                        'gram_nd' => $sum_gram_nd,
+                        'kg' => $sum_kg,
+                        'loss' => $max_loss,
+                        'kg_loss' => $sum_kg_loss,
+                        'total' => $sum_total,
+                        'kuota_tambah' => 0 - $sum_total
+                    ], 'id', $woIdDet);
+                } else {
+                    for ($i = 0; $i < 8; $i++) {
+                        $field_name = 'id_barang_' . ($i + 1);
+                        if (!empty($rowData->$field_name)) {
+                            $arrWarna = [
+                                'id_walkorder_detail' => $woIdDet,
+                                'id_barang' => $rowData->$field_name,
+                                'created_at' => date("Y-m-d H:i:s")
+                            ];
+                            $this->insertRecordGetid("trans_walkorder_warna", $arrWarna);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function trxSubmitSample($arrData, $id)
     {
         $this->db->transStart();
@@ -1234,78 +1369,7 @@ class SampleModel extends \App\Models\PrModel
             $this->updateRecord("trans_sample", $arrData, 'id', $id);
 
             if (!empty($arrData['status']) && $arrData['status'] == 1) {
-                $result = $this->getData($id);
-                $arrWorkOrder = [
-                    "ref_id" => $id,
-                    "ref_kode" => !empty($result->kode_sample) ? $result->kode_sample : null,
-                    "kode_walkorder" => $this->generateNo("WRD", "trans_walkorder", "kode_walkorder"),
-                    "id_konsumen" => $arrData['id_konsumen'],
-                    'tgl_transaksi' => date("Y-m-d"),
-                    'tgl_deadline' => $arrData['tgl_deadline'],
-                    "qty" => $result->qty,
-                    "file_id" => !empty($arrData['gambar_id']) ? $arrData['gambar_id'] : null,
-                    "status" => 1,
-                    "tipe_id" => 1,
-                    "active" => 1,
-                    'keterangan_style' => $arrData['keterangan'],
-                    "created_at" => $arrData['updated_at'],
-
-                ];
-                $idWorkOrder = $this->insertRecordGetid("trans_walkorder", $arrWorkOrder);
-                $dataWarna = $this->getDataDetailSampleWarna($id);
-
-                if (!empty($dataWarna)) {
-                    foreach ($dataWarna as $rowData) {
-
-                        $detailWorkOrder = [
-                            'id_walkorder' => $idWorkOrder,
-                            'ref_detail_id' => $rowData->id,
-                            'qty' => $this->getTotal_qty($rowData->id, 2),
-                            'tipe_id' => 1,
-                            'created_at' => date("Y-m-d H:i:s")
-                        ];
-
-                        $woIdDet = $this->insertRecordGetid("trans_walkorder_detail", $detailWorkOrder);
-
-
-
-                        $prgram['id_sample_det'] = $rowData->id;
-                        $dtGram = $this->getData_gram(null, 0, 999, null,  null, $prgram);
-
-                        if (!empty($dtGram)) {
-                            foreach ($dtGram as $x) {
-                                $arrWarna = [
-                                    'id_walkorder_detail' => $woIdDet,
-                                    // 'id_warna' => $x->id_warna,
-                                    'id_barang' => $x->id_barang,
-                                    // 'qty' => $x->qty,
-                                    'gram' => $x->gram,
-                                    'gram_nd' => $x->gram_nd,
-                                    'kg' => $x->kg,
-                                    'loss' => $x->loss,
-                                    'kg_loss' => $x->kg_loss,
-                                    'total' => $x->total,
-                                    'created_at' => date("Y-m-d H:i:s")
-                                ];
-                                // print_r($x);exit;
-                                $this->insertRecordGetid("trans_walkorder_warna", $arrWarna);
-                            }
-                        } else {
-                            for ($i = 0; $i < 8; $i++) {
-                                $field_name = 'id_barang_' . ($i + 1);
-                                if (!empty($rowData->$field_name)) {
-                                    $arrWarna = [
-                                        'id_walkorder_detail' => $woIdDet,
-                                        // 'id_warna' => $rowData->$field_name,
-                                        'id_barang' => $rowData->$field_name,
-                                        'created_at' => date("Y-m-d H:i:s")
-                                    ];
-                                    $this->insertRecordGetid("trans_walkorder_warna", $arrWarna);
-                                }
-                            }
-                        }
-                    }
-                }
+                $this->syncWorkOrderFromSample($id);
             }
 
             $this->db->transComplete();

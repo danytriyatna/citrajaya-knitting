@@ -4,6 +4,7 @@ let inpVendor = $('#nama_vendor');
 let inpTglReceive = $('#tanggal');
 let divNamaVendor = $('#divNamaVendor');
 let divWO = $('#divWO');
+let divTransfer = $('#divTransfer');
 let spanVendor = $('#spanVendor');
 let inpBarang = $('#namaBarang');
 let inpKeterangan = $('#trans_desc');
@@ -385,6 +386,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "10%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
         { title: "QTY TRANSFER", field: "qty_transfer", hozAlign: "right", width: "10%" },
+        { title: "QTY RETURN", field: "qty_return", hozAlign: "right", width: "10%" },
         { title: "QTY", field: "qty", hozAlign: "right", width: "10%" },
         { title: "UNIT", field: "nama_unit", hozAlign: "left", width: "10%" },
         {
@@ -777,13 +779,17 @@ selectKategori.on("change", function (e) {
     if (nilai == 8) {
         divNamaVendor.removeClass("d-none")
         divWO.addClass("d-none")
+        divTransfer.removeClass("d-none")
     }
     else if (nilai == 5) {
         divNamaVendor.addClass("d-none")
         divWO.removeClass("d-none")
+        divTransfer.addClass("d-none")
+        inpNoRefTrf.val("")
     } else {
         divNamaVendor.addClass("d-none")
         divWO.addClass("d-none")
+        divTransfer.removeClass("d-none")
     }
 })
 

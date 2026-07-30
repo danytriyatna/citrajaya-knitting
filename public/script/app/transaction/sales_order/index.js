@@ -82,9 +82,25 @@ $(document).ready(function () {
 
     $.each(mapping, function (barangId, warnaId) {
         $('#' + barangId).on('change', function () {
+            const selectEl = $(this);
             // Ambil data-warna dari option yang dipilih
-            const selectedOption = $(this).find('option:selected');
-            const idWarna = selectedOption.data('warna');
+            const selectedOption = selectEl.find('option:selected');
+            const idBarang = selectEl.val();
+            const idWarna = selectedOption.attr('data-warna') || selectedOption.data('warna');
+
+            // Validasi: barang dipilih tapi belum punya relasi warna di Master Barang
+            if (idBarang && (!idWarna || idWarna == "0" || idWarna == "" || idWarna == "null")) {
+                const namaBarang = selectedOption.text();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validasi Relasi Warna',
+                    html: `Barang <b>${namaBarang}</b> belum memiliki relasi Warna di Master Barang!<br>Silakan tentukan warna barang terlebih dahulu.`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+                selectEl.val("").trigger("change.select2");
+                return false;
+            }
 
             const $warna = $('#' + warnaId);
 
@@ -1138,28 +1154,43 @@ $(document).ready(function () {
         $(this).val(val)
         let isin = isSampleData.filter((isi) => val == isi.id);
         if (isin.length > 0) {
-            if (inpData.val().length == 0) {
+            let currentSoId = inpData.val();
+            if (currentSoId.length == 0) {
                 setTimeout(() => {
                     inpTglTransaksi.val("")
                     inpTglDeadline.val("")
                     inpTglDeadlineDua.val("")
                     let tglTr = isin[0].tgl_transaksi.split('-')
                     let tglTransaksi = tglTr['2'] + '-' + tglTr['1'] + '-' + tglTr['0']
-                    // inpTglTransaksi.datepicker('setDate', tglTransaksi); //.val(changeTgl(isin[0].tgl_transaksi))
                     let tglD = isin[0].tgl_deadline.split('-')
                     let tglDead = tglD['2'] + '-' + tglD['1'] + '-' + tglD['0']
-                    // inpTglDeadline.datepicker('setDate', tglDead); //.val(changeTgl(isin[0].tgl_transaksi))
                     inpStyle.val(isin[0].style)
                     inprepeat.val(isin[0].style_cnt_order);
                     setTimeout(() => {
                         inpTglDeadline.val(formatterDate(isin[0].tgl_deadline))
-                        // inpTglDeadlineDua.val(formatterDate(isin[0].tgl_deadline_dua))
                         inpTglTransaksi.val(formatterDate(isin[0].tgl_transaksi))
                     }, 600);
                     inpKetSalesOrder.val(isin[0].deskripsi)
                     inpDeskripsi.val(isin[0].deskripsi)
-                }, 1000);
+                }, 500);
             }
+
+            // Fetch sample colors with 0 QTY for new items or preserved QTY for edit items
+            $.ajax({
+                url: `/trans/sales-order/view?kodeOrder=${isin[0].kode_sample}&soId=${currentSoId}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    if (res.data && res.data.length > 0) {
+                        rowDet.show();
+                        // res dari endpoint "view" berformat {data, ukuran},
+                        // sedangkan setColumDetailData() mengharapkan {detail, key_ukuran}
+                        // (format endpoint "detail"). Normalisasi dulu supaya tabel Colour
+                        // ikut terisi otomatis saat memilih Sample pada SO baru.
+                        setColumDetailData({ detail: res.data, key_ukuran: res.ukuran });
+                    }
+                }
+            });
         }
     });
 

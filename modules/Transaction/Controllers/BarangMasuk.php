@@ -427,6 +427,27 @@ class BarangMasuk extends BaseController
         return $this->response->setJSON($build_array);
     }
 
+    /**
+     * Cari harga transaksi Barang Masuk terakhir berdasarkan kombinasi
+     * Proses + CMT (header) dan Style (detail) yang sama.
+     * Khusus dipakai untuk auto-isi harga perusahaan "Citra Knitt" (id_perusahaan dikirim dari form).
+     */
+    function getLastPrice()
+    {
+        $id_proses = $this->request->getGet('id_proses');
+        $id_cmt = $this->request->getGet('id_cmt');
+        $style = $this->request->getGet('style');
+        $id_perusahaan = $this->request->getGet('id_perusahaan');
+
+        $result = $this->mRef->getLastHargaByProsesCmtStyle($id_proses, $id_cmt, $style, $id_perusahaan);
+
+        $data['status'] = !empty($result);
+        $data['harga'] = !empty($result) ? $result->harga : 0;
+        $data['tgl_transaksi'] = !empty($result) ? $result->tgl_transaksi : null;
+
+        return $this->response->setJSON($data);
+    }
+
     function getLastStock()
     {
         $idGudangTujuan = $this->request->getPost("idGudangTujuan");

@@ -262,8 +262,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-sm-6">
+                <div class="col-sm-6" id="divTransfer">
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">No. Transfer</label>
                     <div class="col-md-9">

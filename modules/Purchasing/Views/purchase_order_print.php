@@ -187,8 +187,14 @@
             </tr>
         </thead>
         <tbody>
-            <?php $i = 1;
-            foreach ($detail as $row) : ?>
+            <?php 
+            $i = 1;
+            $total_qty = 0;
+            $total_grand_price = 0;
+            foreach ($detail as $row) : 
+                $total_qty += (float)$row->qty;
+                $total_grand_price += (float)($row->grand_price ?? 0);
+            ?>
                 <tr>
                     <td><?= $i++ ?></td>
                     <td><?= $row->nama_barang ?></td>
@@ -198,12 +204,17 @@
                     <td class="text-right"><?= !empty($row->disc) ? $row->disc  . "%" : "" ?></td>
                     <td class="text-right"><?= !empty($row->tax) ? $row->tax  . "%" : "" ?></td>
                     <td class="text-right"><?= !empty($row->grand_price) ? "Rp." . number_format(round($row->grand_price)) : "" ?></td>
-
-
                 </tr>
             <?php endforeach ?>
-
         </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <td colspan="3" class="text-center"><b>TOTAL</b></td>
+                <td class="text-right"><b><?= rtrim(rtrim(number_format($total_qty, 2, '.', ''), '0'), '.') ?></b></td>
+                <td colspan="3"></td>
+                <td class="text-right"><b><?= !empty($total_grand_price) ? "Rp." . number_format(round($total_grand_price)) : "-" ?></b></td>
+            </tr>
+        </tfoot>
     </table>
 
     <table class="w-100">

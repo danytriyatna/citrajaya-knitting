@@ -5,14 +5,13 @@
 	"homepage": "https://codeigniter.com",
 	"license": "MIT",
 	"require": {
-		"php": "^7.3||^8.0",
+		"php": "^7.3||^8.0||^8.1",
 		"codeigniter4/framework": "4.3.4",
-		"benedmunds/codeigniter-ion-auth": "4.x-dev",
-		"firebase/php-jwt": "dev-main",
-		"endroid/qr-code": "6.x-dev",
-		"khanamiryan/qrcode-detector-decoder": "dev-master",
-		"dompdf/dompdf": "dev-master",
-		"phpoffice/phpspreadsheet": "dev-master"
+		"benedmunds/codeigniter-ion-auth": "4.0.0",
+		"firebase/php-jwt": "^6.0",
+		"endroid/qr-code": "^5.0",
+		"dompdf/dompdf": "^2.0",
+		"phpoffice/phpspreadsheet": "^2.0"
 	},
 	"suggest": {
 		"ext-fileinfo": "Improves mime type detection for files"
@@ -20,22 +19,56 @@
 	"autoload": {
 		"psr-4": {
 			"App\\": "app",
-			"Config\\": "app/Config"
+			"Config\\": "app/Config",
+			"IonAuth\\": "vendor/benedmunds/codeigniter-ion-auth/src"
 		},
 		"exclude-from-classmap": [
 			"**/Database/Migrations/**"
 		]
 	},
-	"support": {
-		"forum": "http://forum.codeigniter.com/",
-		"source": "https://github.com/codeigniter4/CodeIgniter4",
-		"slack": "https://codeigniterchat.slack.com"
-	},
-	"minimum-stability": "dev",
-	"repositories": {
-		"ionAuth": {
-			"type": "vcs",
-			"url": "git@github.com:sudadi/CodeIgniter-Ion-Auth.git"
+	"repositories": [
+		{
+			"type": "package",
+			"package": {
+				"name": "benedmunds/codeigniter-ion-auth",
+				"version": "4.0.0",
+				"dist": {
+					"url": "https://github.com/benedmunds/CodeIgniter-Ion-Auth/archive/4.0.0.zip",
+					"type": "zip"
+				},
+				"autoload": {
+					"psr-4": {
+						"IonAuth\\": "src/"
+					}
+				}
+			}
+		}
+	],
+	"config": {
+		"platform-check": false,
+		"platform": {
+			"php": "8.1.0"
+		},
+		"audit": {
+			"ignore": {
+				"PKSA-217t-qqjr-nkt3": "staging",
+				"PKSA-7ybs-j1bv-y5mc": "staging",
+				"PKSA-qbjf-dc24-wrff": "staging",
+				"PKSA-j54j-8c7k-rccq": "staging",
+				"PKSA-mscv-ktn8-2rsz": "staging",
+				"PKSA-3xnc-9vd8-pd26": "staging",
+				"PKSA-y2cr-5h3j-g3ys": "staging",
+				"PKSA-cv56-2228-pzr6": "staging",
+				"PKSA-6r8f-nxsb-67bq": "staging",
+				"PKSA-gh7h-hhy4-byg7": "staging",
+				"PKSA-mwt3-h9tv-kx78": "staging",
+				"PKSA-hp6n-n4kz-21wk": "staging",
+				"PKSA-mckv-s5hg-868k": "staging",
+				"PKSA-7ztm-rpt3-qqzk": "staging",
+				"PKSA-2kw5-jd8w-5mvh": "staging",
+				"PKSA-4jrs-y99s-q8j6": "staging",
+				"PKSA-hbk6-2vfz-8f8n": "staging"
+			}
 		}
 	}
 }

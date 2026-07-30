@@ -1,5 +1,19 @@
 <?= $this->extend('template'); ?>
 
+<style>
+  #dt-list-detail .tabulator-calcs-holder {
+    background-color: #ffc107 !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+  }
+  #dt-list-detail .tabulator-calcs-holder .tabulator-cell {
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+</style>
+
 <?= $this->section('modal') ?>
 <div id="modal-detail-item" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">

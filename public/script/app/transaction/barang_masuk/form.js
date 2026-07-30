@@ -763,10 +763,10 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             editor: "number",
             bottomCalc: "sum",
             formatter: function (cell) {
-                return parseFloat(cell.getValue() || 0).toFixed(2);
+                return parseFloat(cell.getValue() || 0).toFixed(0);
             },
             bottomCalcFormatter: function (cell) {
-                return parseFloat(cell.getValue() || 0).toFixed(2);
+                return parseFloat(cell.getValue() || 0).toFixed(0);
             },
             // 🌟 TAMBAHKAN INI: Update Amount & Refresh Kalkulasi saat Qty diubah
             cellEdited: function (cell) {
@@ -1524,6 +1524,24 @@ $("#select_perusahaan").on("change", function () {
 });
 
 
+// Khusus perusahaan "Citra Knitt": nama perusahaan dicek dari teks dropdown
+// (bukan hardcode ID) supaya tidak tergantung urutan/ID ref_perusahaan di DB.
+// Untuk perusahaan lain (mis. PT Citra Jaya Knitting) validasi harga TIDAK berubah.
+function isPerusahaanCitraKnitt() {
+    const text = selectPerusahaan.find('option:selected').text() || '';
+    return text.trim().toLowerCase() === 'citra knitt';
+}
+
+function finalizeAddItem(data, isScan) {
+    if (isScan) {
+        data.total_scanned = 1;
+        // data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
+    }
+    console.log("data yang ditambahkan", data)
+
+    dtListProduksi.addRow(data);
+}
+
 function addItem(data, typeAction = null, isScan = false) {
     let produksi_data = dtListProduksi.getData();
     let index = -1;
@@ -1543,6 +1561,7 @@ function addItem(data, typeAction = null, isScan = false) {
         produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
         produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
         dtListProduksi.setData(produksi_data);
+        $("#text_barcode").val("");
     } else {
         data = structuredClone(data);
         const matchingItems = produksi_data.filter(x =>
@@ -1579,19 +1598,43 @@ function addItem(data, typeAction = null, isScan = false) {
         data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
 
         const hargaFix = (parseFloat(data.harga) || 0) > 0 ? parseFloat(data.harga) : hargaRata;
-        data.harga = hargaFix;
-        data.amount = (parseFloat(data.qty) || 0) * hargaFix;
 
-        if (isScan) {
-            data.total_scanned = 1;
-            // data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
+        $("#text_barcode").val("");
+
+        const idProses = selectProses.val();
+        const idCmt = selectOperator.val();
+
+        // Validasi otomatis harga khusus perusahaan "Citra Knitt": cek transaksi Barang
+        // Masuk terakhir dengan kombinasi Proses + CMT (header) + Style (detail) yang sama.
+        if (isPerusahaanCitraKnitt() && idProses && idCmt && data.style) {
+            $.ajax({
+                url: baseUrl + '/trans/incoming-goods/last-price',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    id_proses: idProses,
+                    id_cmt: idCmt,
+                    style: data.style,
+                    id_perusahaan: selectPerusahaan.val(),
+                },
+                success: function (res) {
+                    const hargaTerakhir = (res && res.status) ? (parseFloat(res.harga) || 0) : 0;
+                    data.harga = hargaTerakhir > 0 ? hargaTerakhir : hargaFix;
+                    data.amount = (parseFloat(data.qty) || 0) * data.harga;
+                    finalizeAddItem(data, isScan);
+                },
+                error: function () {
+                    data.harga = hargaFix;
+                    data.amount = (parseFloat(data.qty) || 0) * hargaFix;
+                    finalizeAddItem(data, isScan);
+                }
+            });
+        } else {
+            data.harga = hargaFix;
+            data.amount = (parseFloat(data.qty) || 0) * hargaFix;
+            finalizeAddItem(data, isScan);
         }
-        console.log("data yang ditambahkan", data)
-
-        dtListProduksi.addRow(data);
     }
-
-    $("#text_barcode").val("");
 }
 
 

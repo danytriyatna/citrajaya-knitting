@@ -66,19 +66,20 @@ class SalesOrder extends BaseController
       return redirect()->to('/auth/login');
     }
 
+    $cache = \Config\Services::cache();
     $this->data['titlehead'] = "SalesOrder";
-    $this->data['buyer'] = $this->mkonsumen->where("active", 1)->findAll();
-    $this->data['type'] = $this->mkonsumen->where("active", 1)->findAll();
-    $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
-    $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
-    $this->data['rekening_list'] = $this->mRekening->where("active", 1)->findAll();
+    $this->data['buyer'] = $cache->remember('ref_konsumen_active', 3600, fn() => $this->mkonsumen->where("active", 1)->findAll());
+    $this->data['type'] = $this->data['buyer'];
+    $this->data['ukuran'] = $cache->remember('ref_ukuran_active', 3600, fn() => $this->mUkuran->where("active", 1)->findAll());
+    $this->data['warna'] = $cache->remember('ref_warna_active', 3600, fn() => $this->mWarna->where("active", 1)->findAll());
+    $this->data['rekening_list'] = $cache->remember('ref_rekening_active', 3600, fn() => $this->mRekening->where("active", 1)->findAll());
     $this->data['role_id'] = session()->get('role_id');
     $this->data['new_access'] = $this->_new;
     $this->data['edit_access'] = $this->_edit;
     $this->data['delete_access'] = $this->_delete;
     $this->data['print_access'] = $this->_print;
     $this->data['approve_access'] = $this->_approve;
-    $this->data['barang'] = $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
+    $this->data['barang'] = $cache->remember('ref_barang_active', 3600, fn() => $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll());
     
     return view($this->views . '\sales_order_list', $this->data);
   }
@@ -104,45 +105,45 @@ class SalesOrder extends BaseController
       "data" => array()
     );
 
+    $soDetailsMap = [];
+    $allDetIds = [];
+
+    // Phase 1: Collect details and IDs
     foreach ($results as $key => $row) {
-      
-      $id = encrypt($row->id);
-
-      $atr_edit = null;
-      $atr_del = null;
-      $btnAction = null;
-      if ($this->_edit) {
-        $atr_edit['title'] = 'Edit';
-        $atr_edit['url'] = $this->urlv . '/edit/';
-        $atr_edit['class'] = '';
-      }
-      if ($this->_delete) {
-        $atr_del['title'] = 'Hapus';
-        $atr_del['url'] = $this->urlv . '/delete/';
-        $atr_del['class'] = '';
-        $atr_del['onclick'] = "return confirm('Hapus Data ?')";
-      }
-      if ($atr_edit || $atr_del)
-        $btnAction = btn_action_group($id, $atr_edit, $atr_del);
-
-      // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
-      //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
-        
-      $status = $row->status == 1 ? "Draft" : "Approved";
-
-      $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-      $pru['id_sales_order'] = $row->id;
+      $pru = ['use' => 1, 'id_sales_order' => $row->id];
       $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-      
       $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id) : [];
       if (!empty($detail)) {
-        for ($i = 0; $i < count($detail); $i++) {
-          $drow = $detail[$i];
-          $allQty = $this->mSalesOrder->getTotal_qty($drow->id, 2);
-          $detail[$i]->qty      = $allQty;
+        foreach ($detail as $drow) {
+          if (!empty($drow->id)) {
+            $allDetIds[] = $drow->id;
+          }
         }
       }
-        
+      $soDetailsMap[$row->id] = [
+        'dtUkuran' => $dtUkuran,
+        'detail' => $detail
+      ];
+    }
+
+    // Phase 2: Batch query total qty for all collected detail IDs
+    $qtyMap = !empty($allDetIds) ? $this->mSalesOrder->getBatchTotalQtyByDetIds(array_unique($allDetIds)) : [];
+
+    // Phase 3: Populate build_array
+    foreach ($results as $key => $row) {
+      $id = encrypt($row->id);
+      $status = $row->status == 1 ? "Draft" : "Approved";
+
+      $dtUkuran = $soDetailsMap[$row->id]['dtUkuran'];
+      $detail = $soDetailsMap[$row->id]['detail'];
+
+      if (!empty($detail)) {
+        for ($i = 0; $i < count($detail); $i++) {
+          $dId = $detail[$i]->id;
+          $detail[$i]->qty = isset($qtyMap[$dId]) ? $qtyMap[$dId] : 0;
+        }
+      }
+
       array_push(
         $build_array["data"],
         array(
@@ -163,7 +164,6 @@ class SalesOrder extends BaseController
           "pengiriman" => !empty($row->pengiriman) ? \format_angka($row->pengiriman) : 0,
           "status"  => $status,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
-          // "detail" => $this->mSalesOrder->getDataDetailSalesOrder($row->id)
           "detail" => $detail,
           "key_ukuran" => $dtUkuran
         )
@@ -177,26 +177,77 @@ class SalesOrder extends BaseController
   {
     $detail = [];
     $dtUkuran = [];
+    $idSample = $this->request->getGet('idSample');
     $kodeOrder = $this->request->getGet('kodeOrder');
+    $soId = $this->request->getGet('soId');
 
-    $data = $this->mSalesOrder->getDataSO($kodeOrder);
-
-    if (!empty($data)) {
-      $id = !empty($data) ? $data->id : null;
-      $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-      $pru['id_sales_order'] = $id;
-      $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-      $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
-    } else {
-      $data = $this->mSample->getDataSample($kodeOrder);
+    if (!empty($idSample)) {
+      $id = $idSample;
+      $pru['use'] = 1;
+      $pru['id_sample'] = $id;
+      $dtUkuran = $this->mSample->getUkuranTrans($pru);
+      $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
+    } else if (!empty($kodeOrder)) {
+      $data = $this->mSalesOrder->getDataSO($kodeOrder);
       if (!empty($data)) {
         $id = !empty($data) ? $data->id : null;
-        $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-        $pru['id_sample'] = $id;
-        $dtUkuran = $this->mSample->getUkuranTrans($pru);
-
-        $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
+        $pru['use'] = 1; // ambil ukuran yang digunakan order 
+        $pru['id_sales_order'] = $id;
+        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
+      } else {
+        $data = $this->mSample->getDataSample($kodeOrder);
+        if (!empty($data)) {
+          $id = !empty($data) ? $data->id : null;
+          $pru['use'] = 1; // ambil ukuran yang digunakan order 
+          $pru['id_sample'] = $id;
+          $dtUkuran = $this->mSample->getUkuranTrans($pru);
+          $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
+        }
       }
+    }
+
+    if (empty($soId)) {
+      // ✅ SAAT TAMBAH BARU: Set seluruh QTY warna dari sampel ke 0
+      if (!empty($detail)) {
+        foreach ($detail as &$drow) {
+          foreach ($dtUkuran as $uk) {
+            $keyUk = ($uk->key_ukuran == 'all') ? 'all_' : $uk->key_ukuran;
+            if (isset($drow->$keyUk)) {
+              $drow->$keyUk = 0;
+            }
+          }
+          $drow->total_harga = 0;
+        }
+      }
+    } else {
+      // ✅ SAAT EDIT: Pertahankan warna & QTY yang sudah terinput di SO, set QTY 0 hanya untuk warna sampel yang belum terinput
+      $existingDetail = $this->mSalesOrder->getDataDetailSalesOrder_crostab(decrypt($soId));
+      $existingColorMap = [];
+      if (!empty($existingDetail)) {
+        foreach ($existingDetail as $ex) {
+          $existingColorMap[$ex->colour] = $ex;
+        }
+      }
+
+      $finalDetail = [];
+      if (!empty($detail)) {
+        foreach ($detail as $drow) {
+          if (isset($existingColorMap[$drow->colour])) {
+            $finalDetail[] = $existingColorMap[$drow->colour];
+          } else {
+            foreach ($dtUkuran as $uk) {
+              $keyUk = ($uk->key_ukuran == 'all') ? 'all_' : $uk->key_ukuran;
+              if (isset($drow->$keyUk)) {
+                $drow->$keyUk = 0;
+              }
+            }
+            $drow->total_harga = 0;
+            $finalDetail[] = $drow;
+          }
+        }
+      }
+      $detail = $finalDetail;
     }
 
     return $this->response->setJSON(array("data" => $detail, "ukuran" => $dtUkuran));

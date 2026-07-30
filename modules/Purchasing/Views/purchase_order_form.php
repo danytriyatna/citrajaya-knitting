@@ -244,6 +244,18 @@
             </div>
             <div class="col-sm-12">
 
+              <style>
+                #dt-list-po .tabulator-calcs-holder,
+                #dt-list-po .tabulator-calcs-holder .tabulator-row {
+                  background-color: #ffc107 !important;
+                  font-weight: bold !important;
+                  font-size: 14px !important;
+                  color: #000 !important;
+                }
+                #dt-list-po .tabulator-calcs-holder .tabulator-cell {
+                  border-top: 2px solid #000 !important;
+                }
+              </style>
               <div class="row">
                 <div id="dt-list-po" class="table-responsive table-striped"></div>
               </div>

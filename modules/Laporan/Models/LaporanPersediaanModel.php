@@ -391,7 +391,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     {
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
-        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, rp.pack_name, b.kode_barang || ' ' || b.nama_barang as barang, 
+        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, COALESCE(rp.pack_name, '-') as pack_name, COALESCE(NULLIF(a.lot_no, ''), '-') as lot_no, b.kode_barang || ' ' || b.nama_barang as barang, 
                             CAST(a.jumlah AS DECIMAL(18,2)) as saldo_akhir, CAST(a.stok_awal AS DECIMAL(18,2)) as saldo_awal,
                             w.keterangan as color_code, rs.nama_satuan");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
@@ -818,9 +818,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     $builder_detail->where('abx.month', $bulan);
                     $builder_detail->where('abx.year', $tahun);
                     $builder_detail->where('abx.lot_no', $lot_no);
-                    $builder_detail->where('abx.pack_id', $pack_id[$key]);
                     $builder_detail->where('abx.id_barang', $data->id_barang);
-                    // $builder_detail->where('abx.id_trans_barang', $value->id);
+                    if (!empty($pack_id[$key])) {
+                        $builder_detail->where('abx.pack_id', $pack_id[$key]);
+                    } else {
+                        $builder_detail->where('abx.pack_id IS NULL');
+                    }
                     $builder_detail->select("*");
 
                     $detail = $builder_detail->get()->getRow();
@@ -833,7 +836,17 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         }
                     }
                     else {
-                        $this->db->table("trans_barang_history")->update($isi, array("month" => $bulan, "year" => $tahun, "lot_no" => $lot_no, "id_barang" => $data->id_barang, "pack_id" => $pack_id[$key]));
+                        $builder_update = $this->db->table("trans_barang_history");
+                        $builder_update->where("month", $bulan);
+                        $builder_update->where("year", $tahun);
+                        $builder_update->where("lot_no", $lot_no);
+                        $builder_update->where("id_barang", $data->id_barang);
+                        if (!empty($pack_id[$key])) {
+                            $builder_update->where("pack_id", $pack_id[$key]);
+                        } else {
+                            $builder_update->where("pack_id IS NULL");
+                        }
+                        $builder_update->update($isi);
                     }
                 }
                 

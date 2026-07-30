@@ -59,29 +59,32 @@ class SalesOrderModel extends \App\Models\PrModel
     function getDataCnt($filters = null, $params = null)
     {
         $builder = $this->db->table($this->table . " abx");
+        $hasFilter = !empty($filters) && is_array($filters) && count($filters) >= 1 && !empty($filters[0]['value']);
 
-        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        if ($hasFilter) {
+            $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        }
+
         $builder->select("count(1) as _cnt");
         $builder->where('abx.active = 1');
 
-        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+        if ($hasFilter) {
             $builder->groupStart();
             $builder->where('LOWER(abx.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
             $builder->groupEnd();
         }
 
-        if(!empty($params['style'])){
+        if (!empty($params['style'])) {
             $builder->where("abx.style", $params['style']);
         }
 
-        if(!empty($params['id_konsumen'])){
+        if (!empty($params['id_konsumen'])) {
             $builder->where("abx.id_konsumen", $params['id_konsumen']);
         }
 
-        $this->_data = $builder->get()->getRow()->_cnt;
-
-        return $this->_data;
+        $row = $builder->get()->getRow();
+        return $row ? (int)$row->_cnt : 0;
     }
 
     function getDataUkuran($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null, $idProses = null)
@@ -1143,7 +1146,22 @@ class SalesOrderModel extends \App\Models\PrModel
             $builder->where("tsu.id_sales_order_det", $trans_id);
         }
         $this->_data = $builder->get()->getRow();
-        return $this->_data->cnt;
+        return $this->_data ? $this->_data->cnt : 0;
+    }
+
+    function getBatchTotalQtyByDetIds(array $detIds)
+    {
+        if (empty($detIds)) return [];
+        $builder = $this->db->table("trans_sales_order_ukuran tsu");
+        $builder->select("tsu.id_sales_order_det, SUM(tsu.qty) as cnt");
+        $builder->whereIn("tsu.id_sales_order_det", $detIds);
+        $builder->groupBy("tsu.id_sales_order_det");
+        $rows = $builder->get()->getResult();
+        $map = [];
+        foreach ($rows as $r) {
+            $map[$r->id_sales_order_det] = $r->cnt;
+        }
+        return $map;
     }
 
     function getDataSO($kodeSalesOrder)

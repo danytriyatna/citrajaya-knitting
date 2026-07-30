@@ -28,22 +28,43 @@ let dtList = new Tabulator("#dt-list", {
       `;
     }
 
-    // Level pack_name: tampil normal
-    return `<b>${value}</b> <span style="color:#666;">(${count} items)</span>`;
+    // Level pack_name: jika pack_name null/empty/undefined, tampilkan "-"
+    let displayPack = (value === null || value === "null" || value === "" || !value) ? "-" : value;
+    return `<b>${displayPack}</b> <span style="color:#666;">(${count} items)</span>`;
   },
 
   columns: [
     { title: "PACK", field: "pack_name", width: "9%" },
     { title: "LOT", field: "lot_no", width: "9%" },
     { title: "Size/Warna", field: "nama_satuan", hozAlign: "left", width: "15%" },
-    { title: "Qty<br>Awal", field: "saldo_awal", hozAlign: "right", width: "12%", headerHozAlign: "right" },
-    { title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "12%", headerHozAlign: "right", bottomCalc: "sum" },
-    { title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "12%", headerHozAlign: "right", bottomCalc: "sum" },
     {
-      title: "Qty<br>Akhir", field: "saldo_akhir", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      title: "Qty<br>Awal", field: "saldo_awal", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      formatter: "money",
+      formatterParams: { decimal: ",", thousand: ".", precision: 2 }
+    },
+    {
+      title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      formatter: "money",
+      formatterParams: { decimal: ",", thousand: ".", precision: 2 },
       bottomCalc: "sum",
       bottomCalcFormatter: "money",
-      bottomCalcFormatterParams: { decimal: ",", thousand: "." }
+      bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
+    },
+    {
+      title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      formatter: "money",
+      formatterParams: { decimal: ",", thousand: ".", precision: 2 },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
+    },
+    {
+      title: "Qty<br>Akhir", field: "saldo_akhir", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      formatter: "money",
+      formatterParams: { decimal: ",", thousand: ".", precision: 2 },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
     },
     {
       title: "Nilai", field: "price", hozAlign: "right", width: "17%",
@@ -230,8 +251,22 @@ $("#exportExcel").click(function () {
 });
 
 $("#btn-reset").click(function () {
-  $("#filter_jenis_barang").val("").trigger("change");
-  $("#filter_gudang").val("").trigger("change");
+  const selectGudang = document.getElementById("filter_gudang");
+  let defaultGudangVal = "";
+  if (selectGudang) {
+    let optUtama = Array.from(selectGudang.options).find(opt => opt.text.trim().toLowerCase() === "gudang utama" || opt.value == "1");
+    if (optUtama) defaultGudangVal = optUtama.value;
+  }
+
+  const selectJenisBarang = document.getElementById("filter_jenis_barang");
+  let defaultJenisVal = "";
+  if (selectJenisBarang) {
+    let optBenang = Array.from(selectJenisBarang.options).find(opt => opt.text.trim().toUpperCase() === "BENANG RAJUT" || opt.value == "2");
+    if (optBenang) defaultJenisVal = optBenang.value;
+  }
+
+  $("#filter_jenis_barang").val(defaultJenisVal).trigger("change");
+  $("#filter_gudang").val(defaultGudangVal).trigger("change");
   $("#filter_tahun").val("").trigger("change");
   $("#filter_bulan").val("").trigger("change");
 });
@@ -299,8 +334,26 @@ function getUpdateDataLaporan() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  const selectGudang = document.getElementById("filter_gudang");
+  const selectJenisBarang = document.getElementById("filter_jenis_barang");
   const selectBulan = document.getElementById("filter_bulan");
   const selectTahun = document.getElementById("filter_tahun");
+
+  // Set Gudang Utama sebagai default
+  if (selectGudang) {
+    let optUtama = Array.from(selectGudang.options).find(opt => opt.text.trim().toLowerCase() === "gudang utama" || opt.value == "1");
+    if (optUtama) {
+      $(selectGudang).val(optUtama.value).trigger("change");
+    }
+  }
+
+  // Set BENANG RAJUT sebagai default
+  if (selectJenisBarang) {
+    let optBenang = Array.from(selectJenisBarang.options).find(opt => opt.text.trim().toUpperCase() === "BENANG RAJUT" || opt.value == "2");
+    if (optBenang) {
+      $(selectJenisBarang).val(optBenang.value).trigger("change");
+    }
+  }
 
   const now = new Date();
   const bulanSekarang = now.getMonth() + 1; // getMonth() = 0–11

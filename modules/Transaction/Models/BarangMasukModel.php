@@ -240,10 +240,12 @@ class BarangMasukModel extends \App\Models\PrModel
                 // $this->deleteRecordMultipleColumn('trans_barang_masuk_produksi', $arrDelete);
                 $getCurrent = $this->getData($id);
                 $data['kode_transaksi'] = $getCurrent->kode_transaksi;
-                $arrParam =  [
-                    "id" => $id,
-                ];
                 $this->updateRecords($this->table, $data, $arrParam);
+                if (!empty($tgl_trans) && !empty($data['kode_transaksi'])) {
+                    $this->db->table($this->tblTrxBarang)
+                        ->where('kode_transaksi', $data['kode_transaksi'])
+                        ->update(['tanggal' => date("Y-m-d H:i:s", strtotime($tgl_trans))]);
+                }
             } else {
                 $data['kode_transaksi'] = $this->generateKodePersediaan("BTM", $data['id_perusahaan']);
                 $id = $this->insertRecordGetid($this->table,  $data);
@@ -303,7 +305,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "id_barang" => $idBarang,
                             "jenis_transaksi" => 1,
                             "jumlah" =>  $rowData['qty'],
-                            "tanggal" => date("Y-m-d H:i:s"),
+                            "tanggal" => !empty($tgl_trans) ? date("Y-m-d H:i:s", strtotime($tgl_trans)) : date("Y-m-d H:i:s"),
                             "id_gudang_tujuan" =>  !empty($data['id_gudang']) ? $data['id_gudang'] : null,
                             "nama" => $nama,
                             "id_kategori" => $data['id_kategori'],
@@ -911,6 +913,38 @@ class BarangMasukModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getResult();
 
 
+        return $this->_data;
+    }
+
+    /**
+     * Ambil harga dari transaksi Barang Masuk terakhir dengan kombinasi
+     * Proses + CMT (header) dan Style (detail) yang sama.
+     * Khusus dipakai untuk validasi auto-harga perusahaan "Citra Knitt".
+     */
+    function getLastHargaByProsesCmtStyle($id_proses, $id_cmt, $style, $id_perusahaan = null)
+    {
+        if (empty($id_proses) || empty($id_cmt) || empty($style)) {
+            return null;
+        }
+
+        $builder = $this->db->table("trans_barang_masuk_produksi abx");
+        $builder->select("abx.id as id_mp, abx.harga, abx.style, abx.tgl_transaksi, abx.created_at, head.id_proses, head.id_cmt, head.id_perusahaan");
+        $builder->join("trans_barang_header head", "abx.id_header = head.id", "inner");
+        $builder->where("head.id_proses", $id_proses);
+        $builder->where("head.id_cmt", $id_cmt);
+        $builder->where("abx.style", $style);
+        $builder->where("head.active", 1);
+        $builder->where("abx.harga >", 0);
+
+        if (!empty($id_perusahaan)) {
+            $builder->where("head.id_perusahaan", $id_perusahaan);
+        }
+
+        $builder->orderBy("abx.tgl_transaksi", "DESC");
+        $builder->orderBy("abx.id", "DESC");
+        $builder->limit(1);
+
+        $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
 }

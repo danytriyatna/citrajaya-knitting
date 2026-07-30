@@ -289,7 +289,7 @@
                     <p>( ....................... )</p>
                 </td>
                 <td class="text-center">
-                    <p><b>Pengirim</b></p><br>
+                    <p><b>Mengetahui</b></p><br>
                     <p>( ....................... )</p>
                 </td>
             </tr>

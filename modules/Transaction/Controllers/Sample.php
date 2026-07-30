@@ -64,7 +64,7 @@ class Sample extends BaseController
     $this->data['buyer'] = $this->mkonsumen->where("active", 1)->findAll();
     $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
     $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
-    $this->data['barang'] = $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
+    $this->data['barang'] = $this->mBarang->select("id, kode_barang, nama_barang, id_warna")->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
     return view($this->views . '\sample_list', $this->data);
   }
 
@@ -205,35 +205,53 @@ class Sample extends BaseController
     $idSampleDet = !empty($idSampleDet) ? $idSampleDet : 0;
     $results = $this->mSample->getData($id);
 
-    $prg['id_sample_det'] = $idSampleDet;
-    $dtGram = $this->mSample->getData_gram(null, 0, 9999, null, null, $prg);
+    $targetSampleDetId = $idSampleDet;
 
-    if(!empty($dtGram)){
-      for ($i=0; $i < count($dtGram) ; $i++) { 
+    // Jika idSampleDet = 0 (Tambah Detail Baru), ambil id_sample_det TERAKHIR dari sampel ini
+    if (empty($targetSampleDetId)) {
+      $lastDet = $this->mSample->db->table("trans_sample_det")
+        ->where("id_sample", $id)
+        ->orderBy("id", "DESC")
+        ->get()
+        ->getRow();
+
+      if (!empty($lastDet)) {
+        $targetSampleDetId = $lastDet->id;
+      }
+    }
+
+    $dtGram = [];
+    if (!empty($targetSampleDetId)) {
+      $prg['id_sample_det'] = $targetSampleDetId;
+      $dtGram = $this->mSample->getData_gram(null, 0, 9999, null, null, $prg);
+    }
+
+    if (!empty($dtGram)) {
+      for ($i = 0; $i < count($dtGram); $i++) {
         $kodeWarna = "Barang ";
-        if($i == 0) { 
+        if ($i == 0) {
           $kodeWarna = $kodeWarna . 'A';
-        } else if($i == 1) { 
+        } else if ($i == 1) {
           $kodeWarna = $kodeWarna . 'B';
-        } else if($i == 2) { 
+        } else if ($i == 2) {
           $kodeWarna = $kodeWarna . 'C';
-        } else if($i == 3) { 
+        } else if ($i == 3) {
           $kodeWarna = $kodeWarna . 'D';
-        } else if($i == 4) { 
+        } else if ($i == 4) {
           $kodeWarna = $kodeWarna . 'E';
-        } else if($i == 5) { 
+        } else if ($i == 5) {
           $kodeWarna = $kodeWarna . 'F';
-        } else if($i == 6) { 
+        } else if ($i == 6) {
           $kodeWarna = $kodeWarna . 'G';
-        } else if($i == 7) { 
+        } else if ($i == 7) {
           $kodeWarna = $kodeWarna . 'H';
         }
 
         $dtGram[$i]->kode_warna = $kodeWarna . ' - ' . $dtGram[$i]->kode_warna;
       }
     }
-    // print_r($prg);exit;
-    $build_array =  array(
+
+    $build_array = array(
       "id"   => encrypt($results->id),
       "keterangan" => $results->keterangan,
       "nama" => $results->nama,
@@ -243,8 +261,9 @@ class Sample extends BaseController
       "deskripsi" => $results->deskripsi,
       "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sample/" . $results->file_name : "",
       "detail" => $this->mSample->getDataDetailSampleWarna($id, $idSampleDet),
-      "detailUkuran" =>  $this->mSample->getDataDetailSampleUkuran($id, $idSampleDet),
-      "detail_gram" => $dtGram
+      "detailUkuran" => $this->mSample->getDataDetailSampleUkuran($id, $idSampleDet),
+      "detail_gram" => $dtGram,
+      "is_new_detail" => (empty($idSampleDet) ? true : false)
     );
     return $this->response->setJSON($build_array);
   }

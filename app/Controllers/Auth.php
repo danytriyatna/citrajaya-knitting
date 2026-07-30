@@ -11,11 +11,13 @@ class Auth extends \IonAuth\Controllers\Auth
 	protected $user;
 	protected $files;
 	protected $situs;
+	protected $session;
 
 	function __construct()
 	{
 		parent::__construct();
 		helper('path');        
+		$this->session 		= \Config\Services::session();
 		$this->email 		= \Config\Services::email();
 		$this->auth 		= new \App\Libraries\CIonAuth();
 		$this->validation 	= \Config\Services::validation();
@@ -23,15 +25,27 @@ class Auth extends \IonAuth\Controllers\Auth
 		$this->files		= new FileModel();
 		$this->situs 		= new \Modules\Utility\Models\SitusModel();
 
-		$situs = $this->situs->getData();
-		if ($situs) {
-			$this->data['name_app'] = ($situs)?$situs->name_app : "";
-			$this->data['deskripsi'] = ($situs)?$situs->description : "";
-			$this->data['judul'] = ($situs)?$situs->title : "";
-			$this->data['foot'] = ($situs)?$situs->footer : "";
-			$showBackgroundImg = $this->files->getFiles($situs->file_id_background_img);
-			$this->data['view_background_img'] = ($showBackgroundImg)? $showBackgroundImg->file_name : "";
+		$cache = \Config\Services::cache();
+		$situsAuthData = $cache->get('auth_site_data');
+
+		if ($situsAuthData === null) {
+			$situs = $this->situs->getData();
+			$showBackgroundImg = ($situs && $situs->file_id_background_img) ? $this->files->getFiles($situs->file_id_background_img) : null;
+			$situsAuthData = [
+				'name_app' => ($situs) ? $situs->name_app : "",
+				'deskripsi' => ($situs) ? $situs->description : "",
+				'judul' => ($situs) ? $situs->title : "",
+				'foot' => ($situs) ? $situs->footer : "",
+				'view_background_img' => ($showBackgroundImg) ? $showBackgroundImg->file_name : ""
+			];
+			$cache->save('auth_site_data', $situsAuthData, 3600);
 		}
+
+		$this->data['name_app'] = $situsAuthData['name_app'];
+		$this->data['deskripsi'] = $situsAuthData['deskripsi'];
+		$this->data['judul'] = $situsAuthData['judul'];
+		$this->data['foot'] = $situsAuthData['foot'];
+		$this->data['view_background_img'] = $situsAuthData['view_background_img'];
 	}
 
 	protected $viewsFolder = 'auth';

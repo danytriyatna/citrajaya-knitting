@@ -29,6 +29,8 @@ require rtrim($paths->systemDirectory, '\\/ ') . DIRECTORY_SEPARATOR . 'bootstra
 require_once SYSTEMPATH . 'Config/DotEnv.php';
 (new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
 
+defined('ENVIRONMENT') || define('ENVIRONMENT', isset($_SERVER['CI_ENVIRONMENT']) ? $_SERVER['CI_ENVIRONMENT'] : (isset($_ENV['CI_ENVIRONMENT']) ? $_ENV['CI_ENVIRONMENT'] : 'development'));
+
 /*
  * ---------------------------------------------------------------
  * GRAB OUR CODEIGNITER INSTANCE

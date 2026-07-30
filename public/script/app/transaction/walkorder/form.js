@@ -182,16 +182,18 @@ $(document).ready(function () {
                 title: " ", field: "aksi", headerSort: false, formatter: fmEditDetail,
                 width: 100,
                 cellClick: function(e, cell) {
-                    if (e.target.title === 'edit') {
-                        let rowData = cell.getRow().getData();
-                        textDetId.val(rowData.id);
-                        textTitleWarna.html(rowData.wdasar);
-                        textQtyWarna.html(rowData.qty);
-                        inpDetailLoss.val(rowData.loss);
-                        
-                        dtListDetailWarna.setData(rowData.details)
-                        mdDetail.modal("show");
+                    let rowData = cell.getRow().getData();
+                    textDetId.val(rowData.id);
+                    textTitleWarna.html(rowData.wdasar);
+                    textQtyWarna.html(rowData.qty);
+                    let curLoss = parseFloat(rowData.loss);
+                    if (isNaN(curLoss) || curLoss <= 0) {
+                        curLoss = 5;
                     }
+                    inpDetailLoss.val(curLoss);
+                    
+                    dtListDetailWarna.setData(rowData.details || []);
+                    mdDetail.modal("show");
                 }
             },
             
@@ -325,19 +327,19 @@ $(document).ready(function () {
                         //     val_persen = val_persen > 0 ? val_persen.toFixed(2) : 0;
                         let val_gram_nd = val_gram * qty;
                         let val_kg = val_gram_nd / 1000;
-                            // val_kg = val_kg > 0 ? val_kg.toFixed(2) : 0;
-                        let val_kg_loss = inpDetailLoss.val().length > 0 ? (val_kg * inpDetailLoss.val())/ 100 : 0
-                            // val_kg_loss = val_kg_loss > 0 ? val_kg_loss.toFixed(2) : 0;
+                        let val_loss = parseFloat(inpDetailLoss.val());
+                        if (isNaN(val_loss) || val_loss <= 0) {
+                            val_loss = 5;
+                            inpDetailLoss.val(5);
+                        }
+                        let val_kg_loss = (val_kg * val_loss) / 100;
 
                         let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
-                            // val_total = val_total > 0 ? val_total.toFixed(2) : 0
                         let val_kuota = 0;
-                            // val_kuota    = val_kuota    > 0 ? val_kuota   .toFixed(2) : 0
-                        let val_kuota_tambah =  val_kuota - val_total
+                        let val_kuota_tambah = val_kuota - val_total;
             
                         // Set nilai total di baris yang sama
                         cell.getRow().update({ 
-                            // persen: val_persen,
                             gram_nd: val_gram_nd,
                             kg: val_kg,
                             kg_loss: val_kg_loss,
@@ -400,20 +402,24 @@ $(document).ready(function () {
     }   
 
     inpDetailLoss.on("change", function(){
-        let val = $(this).val()
+        let val = parseFloat($(this).val());
+        if (isNaN(val) || val <= 0) {
+            val = 5;
+            $(this).val(5);
+        }
         let rows = dtListDetailWarna.getRows();
         rows.forEach(row => {
             let rowData = row.getData();
             let val_kg = rowData.kg;
 
-            let val_kg_loss = val.length > 0 ? (val_kg * val) / 100 : 0
-                val_kg_loss = val_kg_loss > 0 ? val_kg_loss.toFixed(2) : 0;
+            let val_kg_loss = (val_kg * val) / 100;
+            val_kg_loss = val_kg_loss > 0 ? val_kg_loss.toFixed(2) : 0;
 
             let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
-                val_total = val_total > 0 ? val_total.toFixed(2) : 0
+            val_total = val_total > 0 ? val_total.toFixed(2) : 0
 
-            let val_kuota = 0;//parseFloat(val_kg) - parseFloat(val_kg_loss);
-                val_kuota    = val_kuota    > 0 ? val_kuota   .toFixed(2) : 0
+            let val_kuota = 0;
+            val_kuota = val_kuota > 0 ? val_kuota.toFixed(2) : 0
 
             let val_kuota_tambah = val_kuota - val_total;
 
@@ -428,7 +434,11 @@ $(document).ready(function () {
 
     function save_warna(){
         let inpQty = textQtyWarna.html();
-        let inLoss = inpDetailLoss.val();
+        let inLoss = parseFloat(inpDetailLoss.val());
+        if (isNaN(inLoss) || inLoss <= 0) {
+            inLoss = 5;
+            inpDetailLoss.val(5);
+        }
         let inDetailID = textDetId.val();
         let inData = dtListDetailWarna.getData().length > 0 ? JSON.stringify(dtListDetailWarna.getData()) : "[]";
 
@@ -438,7 +448,7 @@ $(document).ready(function () {
         form_data.append('detail', inDetailID);
         form_data.append('warna_data', inData);
         
-        if(inLoss.length > 0){
+        if (true) {
             $.ajax({
                 url: "/trans/work-order/save-warna", // point to server-side controller method
                 dataType: "json", // what to expect back from the server

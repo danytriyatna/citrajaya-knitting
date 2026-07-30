@@ -19,7 +19,7 @@
             <div class="form-group row">
               <label class="control-label text-start text-md-end col-md-4 col-form-label" for="loss_perc">Loss (%)</label>
               <div class="col-md-8">
-                <input type="number" id="loss_perc" name="loss_perc" class="form-control" placeholder="Ketikkan nilai loss">
+                <input type="number" id="loss_perc" name="loss_perc" class="form-control" placeholder="Ketikkan nilai loss" value="5">
               </div>
             </div>
           </div>

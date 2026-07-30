@@ -75,13 +75,11 @@ class BaseController extends Controller
 		$this->session 		= \Config\Services::session();
 		$this->auth 		= new \App\Libraries\CIonAuth();
 		$this->menulib 		= new \App\Libraries\MenuLib();
-		$this->ciqrcode		= new \App\Libraries\CIQRCode();
 		$this->mauth 		= new \IonAuth\Models\IonAuthModel();
 		$this->mcommon 		= new \App\Models\Mcommon();
 		$this->files 		= new \App\Models\FileModel();
 		$this->situs 		= new \Modules\Utility\Models\SitusModel();
 		$this->validation 	= \Config\Services::validation();
-		$this->encrypter 	= \Config\Services::encrypter();
 
 		$this->currentUser 	= $this->auth->user()->row();
 		$this->role = $this->mauth->getUsersGroups()->getRow();
@@ -91,6 +89,23 @@ class BaseController extends Controller
 		$this->_checkAuthorization($this->MOD_ALIAS);
 		$this->setMenu();
 		$this->setSitus();
+	}
+
+	public function __get($property)
+	{
+		if ($property === 'ciqrcode') {
+			if ($this->ciqrcode === null) {
+				$this->ciqrcode = new \App\Libraries\CIQRCode();
+			}
+			return $this->ciqrcode;
+		}
+		if ($property === 'encrypter') {
+			if ($this->encrypter === null) {
+				$this->encrypter = \Config\Services::encrypter();
+			}
+			return $this->encrypter;
+		}
+		return parent::__get($property);
 	}
 
 	protected function _checkAuthorization($MOD_ALIAS)
@@ -140,19 +155,49 @@ class BaseController extends Controller
 
 	public function setSitus()
 	{
-		$situs = $this->situs->getData();
-		$this->data['name_app'] = ($situs) ? $situs->name_app : "NO DATA";
-		$this->data['deskripsi'] = ($situs) ? $situs->description : "NO DATA";
-		$this->data['judul'] = ($situs) ? $situs->title : "NO DATA";
-		$this->data['foot'] = ($situs) ? $situs->footer : "NO DATA";
-		$this->data['logo'] = ($situs && $situs->file_id_logo) ? $this->files->getFiles($situs->file_id_logo)->file_name : "";
-		$this->data['logo_text'] = ($situs && $situs->file_id_logo_text) ? $this->files->getFiles($situs->file_id_logo_text)->file_name : "";
-		$this->data['avatar'] = ($this->currentUser && $this->files->getFiles($this->currentUser->file_id_photo)) ? $this->files->getFiles($this->currentUser->file_id_photo)->file_name : "";
+		$cache = \Config\Services::cache();
+		$situsData = $cache->get('site_branding_data');
+		if ($situsData === null) {
+			$situs = $this->situs->getData();
+			$situsData = [
+				'name_app' => ($situs) ? $situs->name_app : "NO DATA",
+				'deskripsi' => ($situs) ? $situs->description : "NO DATA",
+				'judul' => ($situs) ? $situs->title : "NO DATA",
+				'foot' => ($situs) ? $situs->footer : "NO DATA",
+				'logo' => ($situs && $situs->file_id_logo && ($f = $this->files->getFiles($situs->file_id_logo))) ? $f->file_name : "",
+				'logo_text' => ($situs && $situs->file_id_logo_text && ($f = $this->files->getFiles($situs->file_id_logo_text))) ? $f->file_name : "",
+			];
+			$cache->save('site_branding_data', $situsData, 3600);
+		}
+
+		$this->data['name_app'] = $situsData['name_app'];
+		$this->data['deskripsi'] = $situsData['deskripsi'];
+		$this->data['judul'] = $situsData['judul'];
+		$this->data['foot'] = $situsData['foot'];
+		$this->data['logo'] = $situsData['logo'];
+		$this->data['logo_text'] = $situsData['logo_text'];
+
+		$avatar = "";
+		if ($this->currentUser && !empty($this->currentUser->file_id_photo)) {
+			$f = $this->files->getFiles($this->currentUser->file_id_photo);
+			if ($f) {
+				$avatar = $f->file_name;
+			}
+		}
+		$this->data['avatar'] = $avatar;
 	}
 
 	public function setMenu()
 	{
-		$menu = $this->menulib->showMenu();
+		$role_id = $this->session->get('role_id');
+		$cache = \Config\Services::cache();
+		$cacheKey = 'user_menu_html_' . $role_id;
+		$menu = $cache->get($cacheKey);
+
+		if ($menu === null) {
+			$menu = $this->menulib->showMenu();
+			$cache->save($cacheKey, $menu, 3600);
+		}
 
 		if ($this->session->get('mode_penyamaran')) {
 			$addMenu = "<li>

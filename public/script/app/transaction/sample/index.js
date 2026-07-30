@@ -270,11 +270,11 @@ $(document).ready(function () {
             //         } 
             //     }
             // },
-            { headerSort: false, title: "No", formatter: "rownum", cssClass: 'text-center', hozAlign: "center", width: "8%" },
+            { headerSort: false, title: "No", formatter: "rownum", cssClass: 'text-center', hozAlign: "center", width: 50, resizable: false },
             { headerSort: false, title: "id_ukuran", field: "id_ukuran", cssClass: 'text-center', hozAlign: "center", visible: false },
-            { headerSort: false, title: "Ukuran", field: "ukuran", cssClass: 'text-center', hozAlign: "center", width: "18%" },
+            { headerSort: false, title: "Ukuran", field: "ukuran", cssClass: 'text-center', hozAlign: "center", widthGrow: 2, minWidth: 70 },
             {
-                headerSort: false, title: "QTY", field: "qty", cssClass: 'text-center', hozAlign: "center", width: "10%", editor: "number", cellEdited: updateTotal,
+                headerSort: false, title: "QTY", field: "qty", cssClass: 'text-center', hozAlign: "center", widthGrow: 2, minWidth: 70, editor: "number", cellEdited: updateTotal,
                 bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney
             },
             {
@@ -283,7 +283,7 @@ $(document).ready(function () {
                     thousand: ".",
                     symbol: "Rp",  // Simbol mata uang Rupiah
                     precision: 0,   // Tidak ada desimal
-                }, hozAlign: "right", width: "32%", editor: "number", cellEdited: updateTotal,
+                }, hozAlign: "right", widthGrow: 3, minWidth: 110, editor: "number", cellEdited: updateTotal,
                 bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney
             },
             {
@@ -292,13 +292,14 @@ $(document).ready(function () {
                     thousand: ".",
                     symbol: "Rp",  // Simbol mata uang Rupiah
                     precision: 0,   // Tidak ada desimal
-                }, hozAlign: "right", width: "32%",
+                }, hozAlign: "right", widthGrow: 3, minWidth: 110,
                 bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney
             },
         ],
 
         locale: 'id',
-        // layout: 'fitColumns',
+        layout: 'fitColumns',
+        resizableColumnFit: true,
         height: '300px',
         placeholder: "Tidak ada data",
         pagination: false
@@ -309,6 +310,42 @@ $(document).ready(function () {
         if (row) {
             let newTotal = calculateTotal(row.getData());
             row.update({ harga_total: newTotal });
+        }
+        recalcGramasi();
+    }
+
+    function recalcGramasi() {
+        if (!dtListDetailGram) return;
+        let detailQty = getBottomCalcValue(dtListDetailQty, 'qty') || 0;
+        let calcQty = (detailQty && parseFloat(detailQty) > 0) ? parseFloat(detailQty) : 1;
+        let loss = parseFloat(inpDetailLoss.val());
+        if (isNaN(loss) || loss <= 0) {
+            loss = 5;
+            inpDetailLoss.val(5);
+        }
+
+        let rows = dtListDetailGram.getRows();
+        window.isUpdatingRowGram = true;
+        try {
+            rows.forEach(row => {
+                let rowData = row.getData();
+                let val_gram = parseFloat(rowData.gram) || 0;
+                let val_gram_nd = val_gram * calcQty;
+                let val_kg = val_gram_nd / 1000;
+                let val_kg_loss = loss > 0 ? (val_kg * loss) / 100 : 0;
+                let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
+
+                row.update({
+                    qty: calcQty,
+                    loss: loss,
+                    gram_nd: val_gram_nd,
+                    kg: val_kg,
+                    kg_loss: val_kg_loss,
+                    total: val_total
+                });
+            });
+        } finally {
+            window.isUpdatingRowGram = false;
         }
     }
 
@@ -413,65 +450,8 @@ $(document).ready(function () {
 
 
         onRendered(() => {
-
-            document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', () => {
-                fileSample.val(null)
-                linkFileSample.attr('src', "")
-                linkFileSample.addClass("d-none")
-                getDetail(data.id)
-            });
-
-            document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', () => {
-                window.open(`${baseUrl}/trans/sample/print/${data.id}`, "_blank");
-            });
-            document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', () => {
-                Swal.fire({
-                    title: "Apakah anda yakin ingin menghapus data?",
-                    icon: 'question',
-                    confirmButtonText: 'Hapus',
-                    confirmButtonColor: '#dc3545',
-                    showCancelButton: true,
-                    cancelButtonText: 'Batal',
-                    cancelButtonColor: '#6C757D'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.replace(baseUrl + "/trans/sample/delete/list" + data.id);
-                    }
-                })
-            });
-
             let isColumn = [
                 { headerSort: false, title: "No", field: "no", width: "5%" },
-                // {headerSort: false,  title:"QR", width:"7%", formatter: print_btn,
-                //     cellClick: function(e, cell) {
-                //         let row = cell.getRow();
-                //         let data_row = row.getData();
-                //         if (e.target.title === 'print-warna') {
-                //             // console.log(data_row)
-
-                //             const inpp_slcUkuran = $("#print_slc_ukuran");
-                //             const inpp_qty       = $("#print_qty");
-                //             const inpp_qtyp      = $("#print_qtyp");
-
-                //             // inpp_slcUkuran
-                //             inpp_qty.val(1)
-                //             inpp_qtyp.val(1)
-
-                //             inpp_foto.attr('src', data.file_gambar);
-                //             inpp_noSample.html(data.kode_sample)
-                //             inpp_deskripsi.html(data.deskripsi);
-                //             inpp_warna.html(data_row.colordasar);
-                //             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
-                //             inpp_tglDeadline.html(formatterDate(data.tgl_deadline))
-                //             inpp_buyer.html(data.nama)
-
-                //             setTimeout(() => {
-                //                 // inpp_trans.html(data.id);
-                //                 mdlPrint.modal("show");
-                //             }, 500);
-                //         } 
-                //     }
-                // },
                 {
                     headerSort: false, title: "QR", width: "10%", hozAlign: "center", formatter: print_btn,
                     cellClick: function (e, cell) {
@@ -505,8 +485,6 @@ $(document).ready(function () {
                             inpp_qty.val(1)
                             inpp_qtyp.val(1)
 
-
-
                             inpp_foto.attr('src', data.file_gambar);
                             inpp_noSample.html(data.kode_sample)
                             inpp_deskripsi.html(data.deskripsi);
@@ -514,9 +492,7 @@ $(document).ready(function () {
                             inpp_tglSample.html(formatterDate(data.tgl_transaksi))
                             inpp_tglDeadline.html(data.tgl_deadline ? formatterDate(data.tgl_deadline) : '-')
 
-                            // brcStyle.val(xdata.style)
                             inpp_buyer.html(data.nama)
-
 
                             setTimeout(() => {
                                 inpp_trans.html(data_row.id);
@@ -566,21 +542,60 @@ $(document).ready(function () {
                         precision: 0 // Tidak ada desimal
                     },
                     hozAlign: "right", cssClass: 'text-end', width: "15%"
-                })
+                });
 
-            new Tabulator(`#dt-list-detail-${data.id}`, {
-                data: data.detail,
-                layout: "fitColumns",
-                resizableColumnFit: true,
-                // pagination: true, 
-                // paginationSize: 10,
-                // paginationButtonCount: 5,
-                columns: isColumn,
-            });
+            let pos = cell.getRow().getPosition() || 0;
+            setTimeout(() => {
+                let elTarget = document.getElementById(`dt-list-detail-${data.id}`);
+                if (elTarget) {
+                    new Tabulator(elTarget, {
+                        data: data.detail,
+                        layout: "fitColumns",
+                        resizableColumnFit: true,
+                        columns: isColumn,
+                    });
+                }
+            }, pos * 20);
         });
 
         return cardHtml; // Return HTML Card
     }
+
+    $(document).on("click", "#dt-list .edit", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        if (!id) return;
+        fileSample.val(null);
+        linkFileSample.attr('src', "");
+        linkFileSample.addClass("d-none");
+        getDetail(id);
+    });
+
+    $(document).on("click", "#dt-list .print", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        if (!id) return;
+        window.open(`${baseUrl}/trans/sample/print/${id}`, "_blank");
+    });
+
+    $(document).on("click", "#dt-list .delete", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        if (!id) return;
+        Swal.fire({
+            title: "Apakah anda yakin ingin menghapus data?",
+            icon: 'question',
+            confirmButtonText: 'Hapus',
+            confirmButtonColor: '#dc3545',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#6C757D'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.replace(baseUrl + "/trans/sample/delete/list" + id);
+            }
+        });
+    });
 
     $("#btn-add").on("click", function () {
         let today = new Date().toISOString().split('T')[0];
@@ -785,7 +800,31 @@ $(document).ready(function () {
         }, 500);
     }
 
+    let isSelect2BarangInit = false;
+    function ensureSelect2Barang() {
+        if (!isSelect2BarangInit) {
+            isSelect2BarangInit = true;
+            $('.select2-barang-lazy').select2({
+                dropdownParent: $('#modal-form-po'),
+                width: '100%'
+            });
+        }
+    }
+
+    isModalPO.on('show.bs.modal shown.bs.modal', function () {
+        ensureSelect2Barang();
+        setTimeout(function () {
+            if (typeof dtListDetailQty !== 'undefined') dtListDetailQty.redraw(true);
+            if (typeof dtListDetailGram !== 'undefined') dtListDetailGram.redraw(true);
+        }, 50);
+        setTimeout(function () {
+            if (typeof dtListDetailQty !== 'undefined') dtListDetailQty.redraw(true);
+            if (typeof dtListDetailGram !== 'undefined') dtListDetailGram.redraw(true);
+        }, 250);
+    });
+
     function getDetailQty(id, idDet) {
+        ensureSelect2Barang();
         dtListDetailQty.setData([])
         $.ajax({
             url: `/trans/sample/detail-qty/${id}/${idDet}`,
@@ -825,9 +864,19 @@ $(document).ready(function () {
                     inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
                 }
 
-                dtListDetailQty.setData(data.detailUkuran)
+                dtListDetailQty.setData(data.detailUkuran);
 
-                dtListDetailGram.setData(data.detail_gram)
+                window.savedGramMapByBarang = {};
+                window.savedGramMapByIndex = {};
+                if (data.detail_gram && data.detail_gram.length > 0) {
+                    data.detail_gram.forEach((gRow, idx) => {
+                        let valGram = parseFloat(gRow.gram) || 0;
+                        if (gRow.id_barang) window.savedGramMapByBarang[gRow.id_barang] = valGram;
+                        window.savedGramMapByIndex[idx] = valGram;
+                    });
+                }
+
+                dtListDetailGram.setData(data.detail_gram);
                 isModalPO.modal("show");
                 setTimeout(() => {
                     dtListDetailQty.redraw(true)
@@ -1209,7 +1258,7 @@ $(document).ready(function () {
                     title: 'Loading...',
                     allowOutsideClick: false,
                     showConfirmButton: false,
-                    onBeforeOpen: () => {
+                    didOpen: () => {
                         Swal.showLoading();
                     }
                 });
@@ -1224,8 +1273,10 @@ $(document).ready(function () {
                         timer: 2000
                     });
                     Swal.close();
-                    getDetail(idSample)
-                    dtList.setData()
+                    getDetail(idSample);
+                    if (dtList && typeof dtList.replaceData === 'function') {
+                        dtList.replaceData();
+                    }
                     isModalPO.modal("hide");
                 } else {
                     Swal.fire({
@@ -1237,7 +1288,7 @@ $(document).ready(function () {
                 }
             },
             error: function (e) {
-                let msg = e.responseJSON.message;
+                let msg = (e.responseJSON && e.responseJSON.message) ? e.responseJSON.message : "Terjadi kesalahan pada server.";
                 Swal.close();
 
                 Swal.fire({
@@ -1297,222 +1348,124 @@ $(document).ready(function () {
         }
     });
 
-    // start table detail warna 
-    let detailQty = 0;
-    $("#btn-refresh-gram").on("click", function (e) {
+    function getGramForSlot(idx) {
+        let currentRows = dtListDetailGram ? dtListDetailGram.getData() : [];
+        if (currentRows && currentRows[idx] && parseFloat(currentRows[idx].gram) > 0) {
+            return parseFloat(currentRows[idx].gram);
+        }
+        if (window.savedGramMapByIndex && window.savedGramMapByIndex[idx] !== undefined && window.savedGramMapByIndex[idx] > 0) {
+            return parseFloat(window.savedGramMapByIndex[idx]);
+        }
+        return 0;
+    }
+
+    $(document).on("change", "#po_barang1, #po_barang2, #po_barang3, #po_barang4, #po_barang5, #po_barang6, #po_barang7, #po_barang8", function () {
+        let selectEl = $(this);
+        let selectedOption = selectEl.find("option:selected");
+        let idBarang = selectEl.val();
+        let idWarna = selectedOption.attr("data-warna") || selectEl.find("option:selected").data("warna");
+
+        if (idBarang && (!idWarna || idWarna == "0" || idWarna == "" || idWarna == "null")) {
+            let namaBarang = selectedOption.text();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validasi Relasi Warna',
+                html: `Barang <b>${namaBarang}</b> belum memiliki relasi Warna di Master Barang!<br>Silakan tentukan warna barang terlebih dahulu.`,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+            selectEl.val("").trigger("change.select2");
+            buildGramasiData();
+            return false;
+        }
+
+        buildGramasiData();
+    });
+
+    $(document).on("click", "#btn-refresh-gram", function (e) {
         e.preventDefault();
-        setGramasi()
+        setGramasi();
     });
 
     let inpDetailLoss = $("#loss_perc");
     function setGramasi() {
         detailQty = getBottomCalcValue(dtListDetailQty, 'qty');
-        loss = inpDetailLoss.val().length > 0 ? inpDetailLoss.val() : 0
+        loss = inpDetailLoss.val().length > 0 ? parseFloat(inpDetailLoss.val()) : 0;
 
         Swal.fire({
-            title: "Muat Ulang data Gramasi akan menghilangkan data sebelumnya",
+            title: "Muat Ulang data Gramasi akan menyesuaikan ulang komposisi warna?",
             icon: 'question',
             confirmButtonText: 'Ya',
-            confirmButtonColor: '#dc3545',
+            confirmButtonColor: '#198754',
             showCancelButton: true,
             cancelButtonText: 'Batal',
             cancelButtonColor: '#6C757D'
         }).then((result) => {
             if (!result.isConfirmed) {
-                dtListDetailGram.setData([]);
-                return false
+                return false;
             }
-        })
+            buildGramasiData();
+        });
+    }
+
+    function buildGramasiData() {
+        detailQty = getBottomCalcValue(dtListDetailQty, 'qty') || 0;
+        let calcQty = (detailQty && parseFloat(detailQty) > 0) ? parseFloat(detailQty) : 1;
+        loss = parseFloat(inpDetailLoss.val());
+        if (isNaN(loss) || loss <= 0) {
+            loss = 5;
+            inpDetailLoss.val(5);
+        }
 
         let gramData = [];
-        let gramIsi = {
-            'qty': detailQty,
-            'loss': loss,
-            'id': '',
-            'id_warna': '',
-            'id_barang': '',
-            'kode_warna': '',
-            'persen': 0,
-            'gram': 0,
-            'gram_nd': 0,
-            'kg': 0,
-            'kg_loss': 0,
-            'total': 0,
-        }
+        let slots = [
+            { warna: inpPoWarna1, barang: inpPoBarang1, elWarna: $("#po_warna1") },
+            { warna: inpPoWarna2, barang: inpPoBarang2, elWarna: $("#po_warna2") },
+            { warna: inpPoWarna3, barang: inpPoBarang3, elWarna: $("#po_warna3") },
+            { warna: inpPoWarna4, barang: inpPoBarang4, elWarna: $("#po_warna4") },
+            { warna: inpPoWarna5, barang: inpPoBarang5, elWarna: $("#po_warna5") },
+            { warna: inpPoWarna6, barang: inpPoBarang6, elWarna: $("#po_warna6") },
+            { warna: inpPoWarna7, barang: inpPoBarang7, elWarna: $("#po_warna7") },
+            { warna: inpPoWarna8, barang: inpPoBarang8, elWarna: $("#po_warna8") },
+        ];
 
+        slots.forEach((slot, idx) => {
+            let valWarna = slot.warna.val();
+            let valBarang = slot.barang.val();
+            let textWarna = slot.elWarna.find("option:selected").text();
 
-        let text1 = $("#po_warna1 option:selected").text();
-        if (inpPoWarna1.val().length > 0) {
-            let arrW1 = gramIsi
-            arrW1.id_warna = inpPoWarna1.val()
-            arrW1.kode_warna = text1
+            if ((valWarna && valWarna.length > 0) || (valBarang && valBarang.length > 0)) {
+                let gramVal = getGramForSlot(idx);
+                let val_gram_nd = gramVal * calcQty;
+                let val_kg = val_gram_nd / 1000;
+                let val_kg_loss = loss > 0 ? (val_kg * loss) / 100 : 0;
+                let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
 
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna1.val(),
-                'id_barang': inpPoBarang1.val(),
-                'kode_warna': text1,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
+                gramData.push({
+                    'id': '',
+                    'id_warna': valWarna,
+                    'id_barang': valBarang,
+                    'kode_warna': textWarna,
+                    'qty': calcQty,
+                    'loss': loss,
+                    'persen': 0,
+                    'gram': gramVal,
+                    'gram_nd': val_gram_nd,
+                    'kg': val_kg,
+                    'kg_loss': val_kg_loss,
+                    'total': val_total,
+                });
+            }
+        });
 
-        let text2 = $("#po_warna2 option:selected").text();
-        if (inpPoWarna2.val().length > 0) {
-            let arrW2 = gramIsi
-            arrW2.id_warna = inpPoWarna2.val()
-            arrW2.kode_warna = text2
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna2.val(),
-                'id_barang': inpPoBarang2.val(),
-                'kode_warna': text2,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
+        dtListDetailGram.setData(gramData);
 
-        let text3 = $("#po_warna3 option:selected").text();
-        if (inpPoWarna3.val().length > 0) {
-            let arrW3 = gramIsi
-            arrW3.id_warna = inpPoWarna3.val()
-            arrW3.kode_warna = text3
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna3.val(),
-                'id_barang': inpPoBarang3.val(),
-                'kode_warna': text3,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-
-        let text4 = $("#po_warna4 option:selected").text();
-        if (inpPoWarna4.val().length > 0) {
-            let arrW4 = gramIsi
-            arrW4.id_warna = inpPoWarna4.val()
-            arrW4.kode_warna = text4
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna4.val(),
-                'id_barang': inpPoBarang4.val(),
-                'kode_warna': text4,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-
-        let text5 = $("#po_warna5 option:selected").text();
-        if (inpPoWarna5.val().length > 0) {
-            let arrW5 = gramIsi
-            arrW5.id_warna = inpPoWarna5.val()
-            arrW5.kode_warna = text5
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna5.val(),
-                'id_barang': inpPoBarang5.val(),
-                'kode_warna': text5,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-
-        let text6 = $("#po_warna6 option:selected").text();
-        if (inpPoWarna6.val().length > 0) {
-            let arrW6 = gramIsi
-            arrW6.id_warna = inpPoWarna6.val()
-            arrW6.kode_warna = text6
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna6.val(),
-                'id_barang': inpPoBarang6.val(),
-                'kode_warna': text6,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-
-        let text7 = $("#po_warna7 option:selected").text();
-        if (inpPoWarna7.val().length > 0) {
-            let arrW7 = gramIsi
-            arrW7.id_warna = inpPoWarna7.val()
-            arrW7.kode_warna = text7
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna7.val(),
-                'id_barang': inpPoBarang7.val(),
-                'kode_warna': text7,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-
-        let text8 = $("#po_warna8 option:selected").text();
-        if (inpPoWarna8.val().length > 0) {
-            let arrW8 = gramIsi
-            arrW8.id_warna = inpPoWarna8.val()
-            arrW8.kode_warna = text8
-            gramData.push({
-                'id': '',
-                'id_warna': inpPoWarna8.val(),
-                'id_barang': inpPoBarang8.val(),
-                'kode_warna': text8,
-                'qty': detailQty,
-                'loss': loss,
-                'persen': 0,
-                'gram': 0,
-                'gram_nd': 0,
-                'kg': 0,
-                'kg_loss': 0,
-                'total': 0,
-            })
-        }
-        // console.log(gramData);
         setTimeout(() => {
-            dtListDetailGram.setData(gramData);
-        }, 500);
+            let total_gram = gramData.reduce(function (sum, row) {
+                return sum + (parseFloat(row.gram) || 0);
+            }, 0);
+            updateRow([], total_gram);
+        }, 300);
     }
 
 
@@ -1520,7 +1473,7 @@ $(document).ready(function () {
         columns: [
             {
                 title: "Colour", field: "kode_warna", sorter: "string", headerSort: false, align: "center", cssClass: "text-left",
-                width: "16%"
+                widthGrow: 3, minWidth: 120
             },
             {
                 title: "ID", field: "id", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
@@ -1528,73 +1481,74 @@ $(document).ready(function () {
             },
             {
                 title: "%", field: "persen", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
-                width: "14%"
+                widthGrow: 1, minWidth: 50
             },
             {
                 title: "GRAM", field: "gram", sorter: "string", headerSort: false, align: "center", cssClass: "text-end tabulator-editable",
-                width: "14%", editor: "number", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
+                widthGrow: 2, minWidth: 70, editor: "number", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
                 cellEdited: function (cell) {
+                    if (window.isUpdatingRowGram) return;
+                    window.isUpdatingRowGram = true;
+                    try {
+                        let dQty = getBottomCalcValue(dtListDetailQty, 'qty') || 0;
+                        let qty = (dQty && parseFloat(dQty) > 0) ? parseFloat(dQty) : 1;
+                        let rowData = cell.getRow().getData();
+                        let tableColumn = cell._cell.column.cells;
+                        let total_gram = 0;
+                        if (tableColumn.length > 0) {
+                            let index_total = tableColumn.length - 1;
+                            total_gram = tableColumn[index_total].value;
+                        }
+                        updateRow(rowData, total_gram);
+                        let val_gram = rowData.gram ? parseFloat(rowData.gram) : 0;
+                        let val_gram_nd = val_gram * qty;
+                        let val_kg = val_gram_nd / 1000;
+                        let val_loss = parseFloat(inpDetailLoss.val());
+                        if (isNaN(val_loss) || val_loss <= 0) {
+                            val_loss = 5;
+                            inpDetailLoss.val(5);
+                        }
+                        let val_kg_loss = val_loss > 0 ? (val_kg * val_loss) / 100 : 0;
+                        let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
+                        let val_kuota = 0;
+                        let val_kuota_tambah = val_kuota - val_total;
 
-                    let qty = parseInt(detailQty)
-                    //  console.log(qty)
-                    // Dapatkan baris data yang telah diedit
-                    let rowData = cell.getRow().getData();
-                    let tableColumn = cell._cell.column.cells;
-                    let total_gram = 0;
-                    if (tableColumn.length > 0) {
-                        let index_total = tableColumn.length - 1;
-                        total_gram = tableColumn[index_total].value
+                        cell.getRow().update({
+                            gram_nd: val_gram_nd,
+                            kg: val_kg,
+                            kg_loss: val_kg_loss,
+                            total: val_total,
+                            kuota: val_kuota,
+                            kuota_tambah: val_kuota_tambah,
+                        });
+                    } finally {
+                        window.isUpdatingRowGram = false;
                     }
-                    updateRow(rowData, total_gram)
-                    let val_gram = rowData.gram ? rowData.gram : 0;
-                    // let val_persen = total_gram > 0 ? (rowData.gram/total_gram) * 100 : 0;
-                    //     val_persen = val_persen > 0 ? val_persen.toFixed(2) : 0;
-                    let val_gram_nd = val_gram * qty;
-                    let val_kg = val_gram_nd / 1000;
-                    // val_kg = val_kg > 0 ? val_kg.toFixed(2) : 0;
-                    let val_kg_loss = inpDetailLoss.val().length > 0 ? (val_kg * inpDetailLoss.val()) / 100 : 0
-                    // val_kg_loss = val_kg_loss > 0 ? val_kg_loss.toFixed(2) : 0;
-
-                    let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
-                    // val_total = val_total > 0 ? val_total.toFixed(2) : 0
-                    let val_kuota = 0;
-                    // val_kuota    = val_kuota    > 0 ? val_kuota   .toFixed(2) : 0
-                    let val_kuota_tambah = val_kuota - val_total
-
-                    // Set nilai total di baris yang sama
-                    cell.getRow().update({
-                        // persen: val_persen,
-                        gram_nd: val_gram_nd,
-                        kg: val_kg,
-                        kg_loss: val_kg_loss,
-                        total: val_total,
-                        kuota: val_kuota,
-                        kuota_tambah: val_kuota_tambah,
-                    });
                 },
             },
             {
                 title: "NEEDS<br>(GRAM)", field: "gram_nd", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
-                width: "14%", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
+                widthGrow: 2, minWidth: 90, bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
             },
 
             {
                 title: "IN KG", field: "kg", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
-                width: "14%", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
+                widthGrow: 2, minWidth: 70, bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
             },
 
             {
                 title: "LOSS<br>(KG)", field: "kg_loss", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
-                width: "14%", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
+                widthGrow: 2, minWidth: 70, bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
             },
 
             {
                 title: "NFP (KG)", field: "total", sorter: "string", headerSort: false, align: "center", cssClass: "text-end",
-                width: "14%", bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
+                widthGrow: 2, minWidth: 80, bottomCalc: "sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
             }
         ],
         locale: 'id',
-        //  layout: 'fitColumns',
+        layout: 'fitColumns',
+        resizableColumnFit: true,
         height: '300px',
         placeholder: "Tidak ada data",
         pagination: false,
@@ -1607,30 +1561,7 @@ $(document).ready(function () {
     });
 
     inpDetailLoss.on("change", function () {
-        let val = $(this).val()
-        let rows = dtListDetailGram.getRows();
-        rows.forEach(row => {
-            let rowData = row.getData();
-            let val_kg = rowData.kg;
-
-            let val_kg_loss = val.length > 0 ? (val_kg * val) / 100 : 0
-            val_kg_loss = val_kg_loss > 0 ? val_kg_loss.toFixed(2) : 0;
-
-            let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
-            val_total = val_total > 0 ? val_total.toFixed(2) : 0
-
-            let val_kuota = 0;//parseFloat(val_kg) - parseFloat(val_kg_loss);
-            val_kuota = val_kuota > 0 ? val_kuota.toFixed(2) : 0
-
-            let val_kuota_tambah = val_kuota - val_total;
-
-            row.update({
-                kg_loss: val_kg_loss,
-                total: val_total,
-                kuota: val_kuota,
-                kuota_tambah: val_kuota_tambah,
-            });
-        });
+        recalcGramasi();
     });
 
     function updateRow(data, total) {

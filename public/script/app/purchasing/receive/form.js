@@ -274,10 +274,32 @@ let buttonRowAction = function (cell) {
     return fmBtnEdit + " " + fmBtnDelete;
 };
 
+let customSumQtyReceive = function (values, data, calcParams) {
+    let sum = 0;
+    values.forEach(function (val) {
+        let num = parseFloat(val);
+        if (!isNaN(num)) {
+            sum += num;
+        }
+    });
+    return sum > 0 ? (Math.round(sum * 100) / 100).toString() : "0";
+};
+
+let customSumPackReceive = function (values, data, calcParams) {
+    let count = 0;
+    values.forEach(function (val) {
+        if (val && val.toString().trim() !== "" && val !== "-") {
+            count++;
+        }
+    });
+    return count > 0 ? count + " PACK" : "0 PACK";
+};
+
 let dtListDetail = new Tabulator("#dt-list-detail", {
     pagination: true,
     paginationSize: 10,
     paginationButtonCount: 5,
+    layout: "fitColumns",
     columns: [
         { field: "id", visible: false },
         { field: "isEdit", visible: false },
@@ -290,6 +312,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             title: '#',
             formatter: buttonRowAction,
             width: '10%', align: "center", cssClass: "text-center",
+            bottomCalc: function () { return "TOTAL"; },
             cellClick: function (e, cell) {
                 let row = cell.getRow();
                 if (e.target.title === 'delete') {
@@ -316,7 +339,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "15%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY", field: "qty", hozAlign: "center", width: "10%" },
+        { title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: customSumQtyReceive },
         { title: "UNIT", field: "nama_unit", hozAlign: "center", width: "10%" },
         {
             title: "PRICE", field: "price", formatter: "money",
@@ -329,10 +352,9 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "WAREHOUSE", field: "nama_gudang", hozAlign: "center", width: "20%" },
         { title: "LOT NO", width: "10%", field: "lot_no", hozAlign: "left" },
-        { title: "PACK NAME", width: "10%", field: "pack_name", hozAlign: "left" },
+        { title: "PACK NAME", width: "10%", field: "pack_name", hozAlign: "left", bottomCalc: customSumPackReceive },
     ],
     locale: 'id',
-    // layout: 'fitColumns',
     placeholder: "Tidak ada data",
 });
 

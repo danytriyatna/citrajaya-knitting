@@ -19,8 +19,15 @@ class SitusModel extends \App\Models\PrModel
 
     function getData()
     {
+        $cache = \Config\Services::cache();
+        $data = $cache->get('setting_situs_row');
+        if ($data !== null) {
+            return $data;
+        }
+
         $builder = $this->db->table($this->table);
         $this->_data = $builder->get()->getRow();
+        $cache->save('setting_situs_row', $this->_data, 3600);
         return $this->_data;
     }
     

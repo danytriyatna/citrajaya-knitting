@@ -131,6 +131,7 @@ $routes->group('trans/incoming-goods', ['namespace' => 'Modules\Transaction\Cont
   $routes->get('form', 'BarangMasuk::form');
   $routes->get('edit/(:any)', 'BarangMasuk::form/$1');
   $routes->post('last-stock', 'IncomingGoods::getLastStock');
+  $routes->get('last-price', 'BarangMasuk::getLastPrice');
   $routes->post('save', 'BarangMasuk::save');
   $routes->get('print/(:any)', 'BarangMasuk::print/$1');
   $routes->get('print-faktur/(:any)', 'BarangMasuk::print_faktur/$1');

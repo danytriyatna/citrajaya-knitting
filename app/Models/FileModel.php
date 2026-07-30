@@ -21,6 +21,15 @@ class FileModel extends Model
 
     function getFiles($id)
     {
-		return	$this->db->table($this->table)->where('id',$id)->get()->getRow();
+        if (empty($id)) return null;
+        $cache = \Config\Services::cache();
+        $cacheKey = 'file_info_' . $id;
+        $file = $cache->get($cacheKey);
+        if ($file !== null) {
+            return $file;
+        }
+        $file = $this->db->table($this->table)->where('id', $id)->get()->getRow();
+        $cache->save($cacheKey, $file, 3600);
+        return $file;
     }
 }

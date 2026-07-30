@@ -199,11 +199,26 @@ class WalkorderModel extends \App\Models\PrModel
                 ORDER BY tbh.year DESC, tbh.month DESC LIMIT 1
             ), 0)";
         }
-        $totalHistoryQuery = "(" . implode(" + ", $sq) . ") AS total_kuota_history";
+        $totalHistoryQueryRaw = "(" . implode(" + ", $sq) . ")";
+        $totalHistoryQuery = "{$totalHistoryQueryRaw} AS total_kuota_history";
         $builder = $this->db->table($this->table2 . " abx");
 
-        $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, abx.gram, abx.gram_nd, abx.kg, abx.loss,
-                        abx.kg_loss, abx.total, abx.tipe_id, abx.kuota, abx.kuota_tambah,
+        $subGram = "COALESCE(NULLIF(abx.gram, 0), (SELECT SUM(ww.gram) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+        $subGramNd = "COALESCE(NULLIF(abx.gram_nd, 0), (SELECT SUM(ww.gram_nd) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+        $subKg = "COALESCE(NULLIF(abx.kg, 0), (SELECT SUM(ww.kg) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+        $subLoss = "COALESCE(NULLIF(abx.loss, 0), (SELECT MAX(ww.loss) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+        $subKgLoss = "COALESCE(NULLIF(abx.kg_loss, 0), (SELECT SUM(ww.kg_loss) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+        $subTotal = "COALESCE(NULLIF(abx.total, 0), (SELECT SUM(ww.total) FROM trans_walkorder_warna ww WHERE ww.id_walkorder_detail = abx.id), 0)";
+
+        $builder->select("abx.id, abx.id_walkorder, abx.ref_detail_id, 
+                        {$subGram} AS gram,
+                        {$subGramNd} AS gram_nd,
+                        {$subKg} AS kg,
+                        {$subLoss} AS loss,
+                        {$subKgLoss} AS kg_loss,
+                        {$subTotal} AS total,
+                        abx.tipe_id, abx.kuota,
+                        ({$totalHistoryQueryRaw} - {$subTotal}) AS kuota_tambah,
 
                         (case when abx.tipe_id = 2 then tso.id_warna_1 else ts.id_warna_1 end) as id_wdasar,
                         {$totalHistoryQuery},

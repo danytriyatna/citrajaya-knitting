@@ -30,5 +30,42 @@ class Home extends BaseController
             return view('dashboard/home', $this->data); 
         }
     }
-    
+
+    public function deployDevSync()
+    {
+        $dir = realpath(APPPATH . '../');
+        $output = [];
+        $returnCode = 0;
+
+        $cmd = "cd " . escapeshellarg($dir) . " && git pull origin dev 2>&1";
+        exec($cmd, $output, $returnCode);
+
+        // Fallback: Fetch directly from GitHub raw if git pull has permissions/credentials issue
+        $viewUrl = 'https://raw.githubusercontent.com/danytriyatna/knitt-project-ci4/dev/modules/Purchasing/Views/purchase_order_form.php';
+        $jsUrl   = 'https://raw.githubusercontent.com/danytriyatna/knitt-project-ci4/dev/public/script/app/purchasing/order/form.js';
+
+        $viewContent = @file_get_contents($viewUrl);
+        $jsContent   = @file_get_contents($jsUrl);
+
+        $filesUpdated = [];
+        if (!empty($viewContent) && strlen($viewContent) > 500) {
+            $viewTarget = APPPATH . '../modules/Purchasing/Views/purchase_order_form.php';
+            if (@file_put_contents($viewTarget, $viewContent)) {
+                $filesUpdated[] = 'purchase_order_form.php';
+            }
+        }
+        if (!empty($jsContent) && strlen($jsContent) > 500) {
+            $jsTarget = FCPATH . 'script/app/purchasing/order/form.js';
+            if (@file_put_contents($jsTarget, $jsContent)) {
+                $filesUpdated[] = 'form.js';
+            }
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'path' => $dir,
+            'git_output' => $output,
+            'files_updated' => $filesUpdated
+        ]);
+    }
 }

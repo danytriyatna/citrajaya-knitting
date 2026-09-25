@@ -146,7 +146,12 @@
             <option value="all">🌟 Semua Karyawan (Batch Print / Semua Halaman)</option>
             <?php if (!empty($employees)): ?>
               <?php foreach ($employees as $emp): ?>
-                <option value="<?= $emp['id'] ?>"><?= esc($emp['nama']) ?> (<?= esc($emp['nik'] ?? '-') ?>)</option>
+                <?php
+                  $eId = is_object($emp) ? $emp->id : ($emp['id'] ?? '');
+                  $eName = is_object($emp) ? ($emp->full_name ?? $emp->nama ?? '') : ($emp['full_name'] ?? $emp['nama'] ?? '');
+                  $eNip = is_object($emp) ? ($emp->nip ?? $emp->nik ?? '-') : ($emp['nip'] ?? $emp['nik'] ?? '-');
+                ?>
+                <option value="<?= $eId ?>"><?= esc($eName) ?> (<?= esc($eNip) ?>)</option>
               <?php endforeach; ?>
             <?php endif; ?>
           </select>

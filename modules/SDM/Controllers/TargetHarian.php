@@ -441,6 +441,8 @@ class TargetHarian extends BaseController
             return redirect()->to('/auth/login');
         }
 
+        helper('utils_helper');
+
         $fromRaw = $this->request->getGet('from');
         $toRaw   = $this->request->getGet('to');
 
@@ -469,6 +471,8 @@ class TargetHarian extends BaseController
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
         }
+
+        helper('utils_helper');
 
         $fromRaw    = $this->request->getGet('from');
         $toRaw      = $this->request->getGet('to');

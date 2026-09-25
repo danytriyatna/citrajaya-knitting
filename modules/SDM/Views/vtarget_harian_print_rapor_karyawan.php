@@ -7,18 +7,31 @@
   <style>
     @page {
       size: A4 landscape;
-      margin: 10mm 8mm 10mm 8mm;
+      margin: 6mm 6mm 6mm 6mm;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      margin: 0;
+      padding: 0;
     }
     body {
       font-family: Arial, sans-serif;
-      font-size: 9.5px;
+      font-size: 8.5px;
       color: #111;
-      margin: 0;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+    .print-container {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding-right: 1.5px;
+    }
     .no-print {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       padding: 8px 15px;
       background: #f1f5f9;
       border-radius: 6px;
@@ -48,6 +61,17 @@
       .no-print {
         display: none !important;
       }
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .print-container {
+        width: 100% !important;
+        padding-right: 1.5px !important;
+      }
+      .matrix-table th:last-child, .matrix-table td:last-child {
+        border-right: 1.5px solid #000 !important;
+      }
       .page-break {
         page-break-after: always;
         break-after: page;
@@ -56,14 +80,14 @@
     .header-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .header-table td {
-      padding: 2px 4px;
-      font-size: 11px;
+      padding: 2px 2px;
+      font-size: 10.5px;
     }
     .title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: bold;
       text-align: center;
       text-transform: uppercase;
@@ -71,9 +95,9 @@
       letter-spacing: 0.5px;
     }
     .sub-title {
-      font-size: 11px;
+      font-size: 10.5px;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #333;
       font-weight: bold;
     }
@@ -81,23 +105,28 @@
       background: #f8fafc;
       border: 1px solid #cbd5e1;
       border-radius: 4px;
-      padding: 6px 10px;
-      margin-bottom: 8px;
+      padding: 5px 8px;
+      margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
+      font-size: 9px;
     }
     .matrix-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 10px;
+      table-layout: auto;
+      margin-bottom: 8px;
+      border: 1px solid #000;
     }
     .matrix-table th, .matrix-table td {
-      border: 1px solid #333;
-      padding: 4px 3px;
-      font-size: 9px;
+      border: 1px solid #1e293b;
+      padding: 2.5px 1.5px;
+      font-size: 8px;
       vertical-align: middle;
+    }
+    .matrix-table th:last-child, .matrix-table td:last-child {
+      border-right: 1.5px solid #000 !important;
     }
     .matrix-table th {
       background-color: #0284c7 !important;
@@ -109,26 +138,32 @@
       background-color: #38bdf8 !important;
       color: #082f49 !important;
       font-weight: bold;
-      font-size: 8px;
-      padding: 3px 1px;
+      font-size: 7.5px;
+      padding: 2px 0px;
       text-align: center;
       white-space: nowrap;
+      letter-spacing: -0.3px;
     }
     .matrix-table .th-summary {
       background-color: #e2e8f0 !important;
       color: #000;
       font-weight: bold;
       text-align: center;
+      font-size: 8px;
+      padding: 2px 1px;
+      white-space: nowrap;
     }
     .cell-num {
       text-align: right !important;
-      padding-right: 5px !important;
+      padding-right: 2px !important;
       font-weight: 600;
       white-space: nowrap;
+      font-size: 7.5px;
     }
     .cell-zero {
       text-align: center;
       color: #94a3b8;
+      font-size: 7.5px;
     }
     .row-total-footer {
       background-color: #f8fafc;
@@ -200,7 +235,7 @@
         $gradeBg = ($avgP >= 100) ? '#047857' : (($avgP >= 80) ? '#d97706' : '#b91c1c');
       ?>
 
-      <div class="<?= ($rIdx < count($reports) - 1) ? 'page-break' : '' ?>" style="margin-bottom: 25px;">
+      <div class="<?= ($rIdx < count($reports) - 1) ? 'page-break' : '' ?> print-container" style="margin-bottom: 25px;">
         
         <table class="header-table">
           <tr>
@@ -236,9 +271,9 @@
         <table class="matrix-table">
           <thead>
             <tr>
-              <th rowspan="2" width="4%">NO</th>
-              <th rowspan="2" width="16%">HARI / TANGGAL</th>
-              <th colspan="<?= count($pList) ?>" class="th-proc" style="background-color: #0284c7 !important; color: #fff !important; font-size: 9px;">
+              <th rowspan="2" width="2.5%">NO</th>
+              <th rowspan="2" width="12%">HARI / TANGGAL</th>
+              <th colspan="<?= count($pList) ?>" class="th-proc" style="background-color: #0284c7 !important; color: #fff !important; font-size: 8.5px;">
                 OUTPUT PER JENIS PROSES PRODUKSI (PCS)
               </th>
               <th colspan="3" class="th-summary">CAPAIAN HARIAN</th>
@@ -249,9 +284,9 @@
                   <?= esc($p->kode_proses) ?>
                 </th>
               <?php endforeach; ?>
-              <th width="8%" class="th-summary" style="color: #047857;">REALISASI</th>
-              <th width="8%" class="th-summary">TARGET</th>
-              <th width="7%" class="th-summary">% CAPAIAN</th>
+              <th width="5%" class="th-summary" style="color: #047857;">REALISASI</th>
+              <th width="5%" class="th-summary">TARGET</th>
+              <th width="4.5%" class="th-summary">% CAPAIAN</th>
             </tr>
           </thead>
           <tbody>

@@ -18,14 +18,28 @@ class KaryawanModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " ky");
 
-        $builder->select("ky.id, ky.id_perusahaan, ky.nip, ky.full_name, ky.email, ky.posisi, ky.tgl_bergabung, ky.jenis_kelamin, 
+        $builder->select("ky.id, ky.id_perusahaan, ky.nip, ky.full_name, ky.email, ky.posisi, ky.kategori_posisi, ky.id_shift, ms.nama_shift as nama_shift_karyawan, ky.tgl_bergabung, ky.jenis_kelamin,
                             ky.tgl_lahir, ky.tempat_lahir, ky.no_hp, ky.alamat, ky.upah_lembur, ky.upah_harian, rp.nama_perusahaan, ro.nama_operator,
-                            ky.upah_lembur_we, ky.upah_jam, ky.premi_kehadiran, ky.type, ky.id_operator, cbx.file_name, ky.nama_bank, ky.no_rekening ");
+                            ky.upah_lembur_we, ky.upah_jam, ky.premi_kehadiran, ky.type, ky.id_operator, cbx.file_name, ky.nama_bank, ky.no_rekening, ky.active,
+                            ky.tgl_mulai_kontrak, ky.durasi_kontrak_bulan, ky.tgl_selesai_kontrak, ky.file_kontrak_id, ky.status_kontrak, fk.file_name as file_kontrak_name, fk.file_name_origin as file_kontrak_origin ");
         $builder->join("_files cbx", "ky.gambar_id = cbx.id", "left");
+        $builder->join("_files fk", "ky.file_kontrak_id = fk.id", "left");
         $builder->join("ref_perusahaan rp", "ky.id_perusahaan = rp.id", "left");
         $builder->join("ref_operator ro", "ky.id_operator = ro.id", "left");
+        $builder->join("m_shift ms", "ky.id_shift = ms.id", "left");
         if ($id == null or $id == "") {
-            $builder->where('ky.active = 1');
+            // CATATAN (2026-08-08): active punya 3 nilai - 1=Aktif, 0=Nonaktif,
+            // 2=Dihapus (soft-delete, datanya tetap ada di DB tapi TIDAK PERNAH
+            // ditampilkan di list karyawan manapun, beda dgn Nonaktif yang masih
+            // tampil di Master Data Karyawan dgn badge & bisa diaktifkan lagi).
+            $builder->where('ky.active !=', 2);
+            // Default-nya cuma karyawan aktif (dipakai dropdown/lookup di modul
+            // lain, mis. SDM/Absensi) - kecuali pemanggil eksplisit minta lihat
+            // aktif+nonaktif lewat $params['show_all_status'] (dipakai oleh
+            // list Master Data Karyawan yang punya toggle Aktif/Nonaktif).
+            if (empty($params['show_all_status'])) {
+                $builder->where('ky.active = 1');
+            }
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                 $builder->where('LOWER(ky.full_name) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -86,7 +100,11 @@ class KaryawanModel extends \App\Models\PrModel
 
         $builder->select("count(1) as _cnt");
 
-        $builder->where('ky.active = 1');
+        // Sama seperti getData() - active=2 (Dihapus) tidak pernah dihitung.
+        $builder->where('ky.active !=', 2);
+        if (empty($params['show_all_status'])) {
+            $builder->where('ky.active = 1');
+        }
 
         $builder->join("ref_perusahaan rp", "ky.id_perusahaan = rp.id", "left");
 

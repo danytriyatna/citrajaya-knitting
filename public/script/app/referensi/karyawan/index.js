@@ -1,63 +1,102 @@
-
-
 $(document).ready(function () {
     $("[data-politespace]").politespace();
     let inpData         = $('#data_id');
-    let inpNip = $('#nip');
-    let inpNama = $('#nama_konsumen');
+    let inpNip          = $('#nip');
+    let inpNama         = $('#nama_konsumen');
     let inpEmail        = $('#email');
     let inpAlamat       = $('#alamat');
     let inpNoHP         = $('#no_hp');
+    let inpTempatLahir  = $('#tempat_lahir');
+    let inpTglLahir     = $('#tgl_lahir');
 
     let inpPosisi        = $('#posisi');
+    let selectKategoriPosisi = $('#kategori_posisi');
+    let selectShift      = $('#id_shift');
     let inpTglBergabung  = $('#tgl_bergabung');
     let inpJenisKelamin  = $('#jenis_kelamin');
-    let inpBank    = $('#nama_bank');
-    let inpRekening    = $('#no_rekening');
+    let inpBank          = $('#nama_bank');
+    let inpRekening      = $('#no_rekening');
     let inpUpahHarian    = $('#upah_harian');
     let inpUpahLembur    = $('#upah_lembur');
     let inpUpahLemburWe  = $('#upah_lembur_we');
     let inpUpahPerjam    = $('#upah_jam');
-    let inpPremiKehadiran    = $('#premi_kehadiran');
-    let selectTipe = $('#tipe');
-    let selectCMT = $('#id_cmt');
+    let inpPremiKehadiran= $('#premi_kehadiran');
+    let selectTipe       = $('#tipe');
+    let selectCMT        = $('#id_cmt');
     let selectPerusahaan = $('#id_perusahaan');
-    let divCMT = $('#div-cmt');
+    let divCMT           = $('#div-cmt');
 
     const fileKaryawan     = $('#fileKaryawan');
     const fileKaryawanOld  = $('#fileKaryawanOld');
     const linkFileKaryawan = $('#linkFileKaryawan');
 
     let isModal       = $("#modal-form-add-po");
-
+    let modalKontrak  = $("#modal-kelola-kontrak");
+    let currentKontrakRow = null;
 
     $('#modal-form-add-po').on('hidden.bs.modal', function () {
         var $modal = $(this);
-
-        // Reset input biasa
-        $modal.find('input[type="text"], input[type="number"], input[type="email"], textarea').val('');
-
-        // Reset checkbox & radio
+        $modal.find('input[type="text"], input[type="number"], input[type="email"], input[type="date"], textarea').val('');
         $modal.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
-
-        // Reset select ke opsi pertama
         $modal.find('select').prop('selectedIndex', 0).trigger('change');
-
-        // Reset file input
         $modal.find('input[type="file"]').val('');
     });
 
     let buttonRowAction = function(cell) {
-        let fmBtnDelete = "";        
-        let fmBtnEdit = "";        
-        fmBtnDelete = "<button class='btn btn-danger btn-xs open_form' type='button' title='delete'><i class='fa fa-trash' title='delete'></i></button>";
-        fmBtnEdit = "<button class='btn btn-warning btn-xs open_form' type='button' title='edit'><i class='fa fa-edit' title='edit'></i></button>";
+        let fmBtnDelete = "<button class='btn btn-danger btn-xs open_form' type='button' title='delete'><i class='fa fa-trash' title='delete'></i></button>";
+        let fmBtnEdit = "<button class='btn btn-warning btn-xs open_form' type='button' title='edit'><i class='fa fa-edit' title='edit'></i></button>";
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
     $("#filter_perusahaan").on("change", function () {
-        dtList.setPage(1); // balik ke halaman 1, otomatis trigger ajax baru
+        dtList.setPage(1);
     });
+
+    function openEditKaryawan(data_row) {
+        resetInput();
+
+        inpData.val(data_row.id);
+        inpNip.val(data_row.nip);
+        inpNama.val(data_row.full_name);
+        inpEmail.val(data_row.email);
+        inpAlamat.val(data_row.alamat);
+        inpNoHP.val(data_row.no_hp);
+        inpPosisi.val(data_row.posisi);
+        inpTempatLahir.val(data_row.tempat_lahir || '');
+        inpTglLahir.val(data_row.tgl_lahir_raw || '');
+        selectKategoriPosisi.val(data_row.kategori_posisi ? data_row.kategori_posisi : '1').trigger('change');
+        selectShift.val(data_row.id_shift ? data_row.id_shift : '1').trigger('change');
+        inpTglBergabung.val(data_row.tgl_bergabung);
+        inpJenisKelamin.val(data_row.jenis_kelamin).trigger('change');
+        selectTipe.val(data_row.type).trigger("change");
+        selectPerusahaan.val(data_row.id_perusahaan).trigger("change");
+
+        if (data_row.type == 1) {
+            divCMT.addClass("d-none");
+            selectCMT.val("").trigger("change");
+        } else {
+            divCMT.removeClass("d-none");
+            selectCMT.val(data_row.id_operator).trigger("change");
+        }
+
+        if (data_row.file_gambar) {
+            fileKaryawanOld.val(data_row.gambar_id);
+            linkFileKaryawan.removeClass("d-none");
+            linkFileKaryawan.attr('src', data_row.file_gambar);
+        }
+
+        setTimeout(() => {
+            inpBank.val(data_row.nama_bank).trigger('change');
+            inpRekening.val(data_row.no_rekening).trigger('change');
+            inpUpahHarian.val(data_row.upah_harian).trigger('change');
+            inpUpahLembur.val(data_row.upah_lembur).trigger('change');
+            inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
+            inpUpahPerjam.val(data_row.upah_jam).trigger('change');
+            inpPremiKehadiran.val(data_row.premi_kehadiran).trigger('change');
+        }, 500);
+
+        isModal.modal("show");
+    }
 
     let dtList = new Tabulator("#dt-list", {
         columns: [
@@ -65,7 +104,7 @@ $(document).ready(function () {
                 headerSort: false,  
                 title: 'Aksi', 
                 formatter: buttonRowAction,
-                width: 100, align: "center", cssClass: "text-center",
+                width: 85, align: "center", cssClass: "text-center",
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let data_row = row.getData();
@@ -73,53 +112,8 @@ $(document).ready(function () {
                         if (confirm("Anda yakin akan menghapus data?")) {
                             window.location.replace(baseUrl + "/master-data/karyawan/delete/" + data_row.id);
                         }
-                    }else if(e.target.title === 'edit'){
-                        resetInput()
-
-                        inpData.val(data_row.id)
-                        
-                        // inpNamaKonsumen.val(data_row.nama)
-                        // inpAlamat.val(data_row.alamat)
-                        // inpNoHP.val(data_row.no_hp)
-                        // inpEmail.val(data_row.email)
-                        
-                        inpNip.val(data_row.nip)
-                        inpNama.val(data_row.full_name)
-                        inpEmail.val(data_row.email)
-                        inpAlamat.val(data_row.alamat)
-                        inpNoHP.val(data_row.no_hp)
-                        inpPosisi.val(data_row.posisi)
-                        inpTglBergabung.val(data_row.tgl_bergabung)
-                        inpJenisKelamin.val(data_row.jenis_kelamin).trigger('change');
-                        selectTipe.val(data_row.type).trigger("change")
-                        selectPerusahaan.val(data_row.id_perusahaan).trigger("change")
-                        if(data_row.type == 1){
-                            divCMT.addClass("d-none")
-                            selectCMT.val("").trigger("change")
-                        } else{
-                            divCMT.removeClass("d-none")
-                            selectCMT.val(data_row.id_operator).trigger("change")
-                        } 
-
-                        if(data_row.file_gambar){
-                            fileKaryawanOld.val(data_row.gambar_id)
-                            linkFileKaryawan.removeClass("d-none")
-                            linkFileKaryawan.attr('src', data_row.file_gambar)
-                        }
-
-
-
-                        setTimeout(() => {
-                            inpBank.val(data_row.nama_bank).trigger('change');
-                            inpRekening.val(data_row.no_rekening).trigger('change');
-                            inpUpahHarian.val(data_row.upah_harian).trigger('change');
-                            inpUpahLembur.val(data_row.upah_lembur).trigger('change');
-                            inpUpahLemburWe.val(data_row.upah_lembur_we).trigger('change');
-                            inpUpahPerjam.val(data_row.upah_jam).trigger('change');
-                            inpPremiKehadiran.val(data_row.premi_kehadiran).trigger('change');
-
-                        }, 500);
-                        isModal.modal("show");
+                    } else if (e.target.title === 'edit') {
+                        openEditKaryawan(data_row);
                     }   
                 }
             },
@@ -129,27 +123,85 @@ $(document).ready(function () {
             },
             {
                 title: "Nama", field: "full_name", headerSort: false,
-                width: "20%",
+                width: "18%",
             },
             {
                 title: "Posisi", field: "posisi", headerSort: false,
-                width: "17%"
+                width: "14%"
             },
-            // {
-            //     title: "Alamat", field: "alamat", formatter: "html", headerSort: false,
-                
-            // },
+            {
+                title: "Kategori Posisi", field: "kategori_posisi_text", headerSort: false,
+                width: "12%", align: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let val = cell.getValue();
+                    if (val === 'Mesin') {
+                        return "<span class='badge bg-info'>Mesin</span>";
+                    } else if (val === 'Non Mesin') {
+                        return "<span class='badge bg-secondary'>Non Mesin</span>";
+                    } else if (val === 'Staff Khusus' || val === 'Staf Khusus') {
+                        return "<span class='badge bg-warning text-dark'>Staff Khusus</span>";
+                    }
+                    return val || '-';
+                }
+            },
+            {
+                title: "Kontrak", field: "status_kontrak", headerSort: false,
+                width: "12%", align: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let row = cell.getData();
+                    // Hanya untuk karyawan internal / NON CMT (type == 1)
+                    if (row.type != 1) {
+                        return "<span class='text-muted small'>-</span>";
+                    }
+                    let st = parseInt(cell.getValue()) || 0;
+                    if (st === 2) {
+                        return "<button type='button' class='btn btn-success btn-xs px-2' title='Kontrak Signed (Sudah TTD)'><i class='fa fa-check-circle me-1'></i> Signed</button>";
+                    } else if (st === 1) {
+                        return "<button type='button' class='btn btn-warning btn-xs px-2 text-dark' title='Draf Kontrak Terbit'><i class='fa fa-file-word-o me-1'></i> Draf</button>";
+                    } else {
+                        return "<button type='button' class='btn btn-outline-secondary btn-xs px-2' title='Belum Ada Kontrak'><i class='fa fa-file-text-o me-1'></i> Belum</button>";
+                    }
+                },
+                cellClick: function (e, cell) {
+                    let row = cell.getData();
+                    if (row.type != 1) return;
+                    openModalKontrak(row);
+                }
+            },
             {
                 title: "Email", field: "email", headerSort: false,
-                width: "16%", cssClass : 'text-center'
+                width: "14%", cssClass : 'text-center'
             },
             {
                 title: "No. HP", field: "no_hp", headerSort: false,
-                width: "15%", cssClass : 'text-center'
+                width: "13%", cssClass : 'text-center'
             },
             {
                 title: "Perusahaan", field: "nama_perusahaan", headerSort: false,
-                width: "15%"
+                width: "13%"
+            },
+            {
+                title: "Status", field: "active", headerSort: false,
+                width: "10%", align: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let isActive = cell.getValue() == 1;
+                    return isActive
+                        ? "<span class='badge bg-success' style='cursor:pointer' title='Aktif - klik untuk nonaktifkan'><i class='fa fa-check-circle'></i> Aktif</span>"
+                        : "<span class='badge bg-secondary' style='cursor:pointer' title='Nonaktif - klik untuk aktifkan'><i class='fa fa-times-circle'></i> Nonaktif</span>";
+                },
+                cellClick: function (e, cell) {
+                    let data_row = cell.getData();
+                    let isActive = data_row.active == 1;
+                    let msg = isActive
+                        ? "Nonaktifkan karyawan ini?"
+                        : "Aktifkan karyawan ini?";
+                    let url = isActive
+                        ? "/master-data/karyawan/deactivate/"
+                        : "/master-data/karyawan/activate/";
+                    if (confirm(msg)) {
+                        window.location.replace(baseUrl + url + data_row.id);
+                    }
+                }
             },
         ],
         locale: 'id',    
@@ -204,7 +256,6 @@ $(document).ready(function () {
         selectableRows: false,
 	});
 
-    
     let searchThread = null;
     let elSearch = $("#tb-search");
     if (elSearch != null) {
@@ -220,28 +271,31 @@ $(document).ready(function () {
     }
 
     $("#btn-add").on("click", function(){
-       
-        resetInput()
+        resetInput();
         isModal.modal("show");
     });
 
     $("#btn-save").on("click", function(e){
-        e.preventDefault()
-        simpanData()
+        e.preventDefault();
+        simpanData();
     });
 
     function resetInput(){
-        inpData.val("")
-        inpNip.val("")
-        inpNama.val("")
-        inpEmail.val("")
-        inpAlamat.val("")
-        inpNoHP.val("")
-        inpPosisi.val("")
-        inpTglBergabung.val("")
-        inpJenisKelamin.val("")
-        fileKaryawanOld.val("")
-        fileKaryawan.val("")
+        inpData.val("");
+        inpNip.val("");
+        inpNama.val("");
+        inpEmail.val("");
+        inpAlamat.val("");
+        inpNoHP.val("");
+        inpTempatLahir.val("");
+        inpTglLahir.val("");
+        inpPosisi.val("");
+        selectKategoriPosisi.val("1").trigger("change");
+        selectShift.val("1").trigger("change");
+        inpTglBergabung.val("");
+        inpJenisKelamin.val("");
+        fileKaryawanOld.val("");
+        fileKaryawan.val("");
         linkFileKaryawan.addClass("d-none");
         linkFileKaryawan.attr('src', '');
 
@@ -256,59 +310,51 @@ $(document).ready(function () {
         }, 500);
     }
 
-    
     function simpanData() {
-        
-        let validation = true
+        let validation = true;
 
-        if(inpNip.val().length == 0) validation = false
-        console.log("masuk nip", inpNip.val())
-        if(inpNama.val().length == 0) validation = false
-        console.log("masuk inpNama", inpNama.val())
-        if(inpEmail.val().length == 0) validation = false
-        console.log("masuk inpEmail", inpEmail.val())
-        if(inpAlamat.val().length == 0) validation = false
-        console.log("masuk inpAlamat", inpAlamat.val())
-        if(inpNoHP.val().length == 0) validation = false
-        console.log("masuk inpNoHP", inpNoHP.val())
-        if(inpPosisi.val().length == 0) validation = false
-        console.log("masuk inpPosisi", inpPosisi.val())
-        if(inpTglBergabung.val().length == 0) validation = false
-        console.log("masuk inpTglBergabung", inpTglBergabung.val())
-        if(inpJenisKelamin.val().length == 0) validation = false
-        console.log("masuk inpJenisKelamin", inpJenisKelamin.val())
-        if(inpUpahHarian.val().length == 0) validation = false
-        console.log("masuk inpUpahHarian", inpUpahHarian.val())
-        if(inpUpahLembur.val().length == 0) validation = false
-        console.log("masuk inpUpahLembur", inpUpahLembur.val())
-        if(inpUpahLemburWe.val().length == 0) validation = false
-        console.log("masuk inpUpahLemburWe", inpUpahLemburWe.val())
-        if(inpUpahPerjam.val().length == 0) validation = false
-        console.log("masuk inpUpahPerjam", inpUpahPerjam.val())
-        if(inpPremiKehadiran.val().length == 0) validation = false
-        console.log("masuk inpPremiKehadiran", inpPremiKehadiran.val())
-        if(selectTipe.val().length == 0) validation = false
-        console.log("masuk selectTipe", selectTipe.val())
-        if(selectPerusahaan.val().length == 0) validation = false
-        console.log("masuk selectPerusahaan", selectPerusahaan.val())
+        if (inpNip.val().length == 0) validation = false;
+        if (inpNama.val().length == 0) validation = false;
+        if (inpEmail.val().length == 0) validation = false;
+        if (inpAlamat.val().length == 0) validation = false;
+        if (inpNoHP.val().length == 0) validation = false;
+        if (inpPosisi.val().length == 0) validation = false;
+        if (!selectKategoriPosisi.val() || selectKategoriPosisi.val().length == 0) validation = false;
+        if (!selectShift.val() || selectShift.val().length == 0) validation = false;
+        if (inpTglBergabung.val().length == 0) validation = false;
+        if (inpJenisKelamin.val().length == 0) validation = false;
+        if (inpUpahHarian.val().length == 0) validation = false;
+        if (inpUpahLembur.val().length == 0) validation = false;
+        if (inpUpahLemburWe.val().length == 0) validation = false;
+        if (inpUpahPerjam.val().length == 0) validation = false;
+        if (inpPremiKehadiran.val().length == 0) validation = false;
+        if (selectTipe.val().length == 0) validation = false;
+        if (selectPerusahaan.val().length == 0) validation = false;
+        if (!inpTempatLahir.val() || inpTempatLahir.val().trim().length == 0) validation = false;
+        if (!inpTglLahir.val() || inpTglLahir.val().trim().length == 0) validation = false;
 
-        if(validation){
+        if (validation) {
             var formData = new FormData();
-            formData.append("dataId",inpData.val());
-            formData.append("nip",inpNip.val());
-            formData.append("full_name",inpNama.val());
-            formData.append("email",inpEmail.val());
-            formData.append("posisi",inpPosisi.val());
-            formData.append("alamat",inpAlamat.val());
-            formData.append("fileKaryawan",fileKaryawan[0].files[0]);
-            formData.append("fileKaryawanOld",fileKaryawanOld.val());
-            formData.append("tgl_bergabung",inpTglBergabung.val());
-            // formData.append("tgl_bergabung",formatLocaleDate(inpTglBergabung.val()));
-            formData.append("jenis_kelamin",inpJenisKelamin.val());
-            formData.append("no_hp",inpNoHP.val());
-            formData.append("nama_bank", inpBank.val())
-            formData.append("no_rekening", inpRekening.val())
-            formData.append("upah_harian", inpUpahHarian.val())
+            formData.append("dataId", inpData.val());
+            formData.append("nip", inpNip.val());
+            formData.append("full_name", inpNama.val());
+            formData.append("email", inpEmail.val());
+            formData.append("posisi", inpPosisi.val());
+            formData.append("kategori_posisi", selectKategoriPosisi.val());
+            formData.append("id_shift", selectShift.val());
+            formData.append("alamat", inpAlamat.val());
+            formData.append("tempat_lahir", inpTempatLahir.val());
+            formData.append("tgl_lahir", inpTglLahir.val());
+            if (fileKaryawan[0].files.length > 0) {
+                formData.append("fileKaryawan", fileKaryawan[0].files[0]);
+            }
+            formData.append("fileKaryawanOld", fileKaryawanOld.val());
+            formData.append("tgl_bergabung", inpTglBergabung.val());
+            formData.append("jenis_kelamin", inpJenisKelamin.val());
+            formData.append("no_hp", inpNoHP.val());
+            formData.append("nama_bank", inpBank.val());
+            formData.append("no_rekening", inpRekening.val());
+            formData.append("upah_harian", inpUpahHarian.val());
             formData.append("upah_lembur", inpUpahLembur.val());
             formData.append("upah_lembur_we", inpUpahLemburWe.val());
             formData.append("upah_jam", inpUpahPerjam.val());
@@ -316,76 +362,293 @@ $(document).ready(function () {
             formData.append("type", selectTipe.val());
             formData.append("id_perusahaan", selectPerusahaan.val());
             formData.append("id_operator", selectCMT.val());
+
             $.ajax({
                 type: 'POST',
                 url: '/master-data/karyawan/simpan',
-
                 data: formData,
-                processData: false,  // Jangan ubah data menjadi string
+                processData: false,
                 contentType: false,
                 beforeSend: function () {
                     Swal.fire({
-                        title: 'Loading...',
+                        title: 'Menyimpan...',
                         allowOutsideClick: false,
                         showConfirmButton: false,
-                        onBeforeOpen: () => {
-                            Swal.showLoading();
-                        }
+                        onBeforeOpen: () => { Swal.showLoading(); }
                     });
                 },
                 success: function (response) {
-        
-                    if(response.status == true){
+                    if (response.status == true) {
                         Swal.fire({
                             text: response.message,
                             icon: 'success',
                             showConfirmButton: false,
                             timer: 2000
                         });
-                        dtList.setData()
-                        Swal.close();
+                        dtList.setData();
                         isModal.modal("hide");
-                        resetInput()
-                    }else{
+                        resetInput();
+                    } else {
                         Swal.fire({
                             text: response.message,
                             icon: 'error',
                             showConfirmButton: false,
-                            timer: 2000
+                            timer: 2500
                         });
                     }
                 },
                 error: function (e) {
-                    let msg = e.responseJSON.message;
-                    Swal.close();
-        
+                    let msg = (e.responseJSON && e.responseJSON.message) ? e.responseJSON.message : "Terjadi kesalahan sistem";
                     Swal.fire({
                         text: msg,
                         icon: 'error',
                         showConfirmButton: false,
-                        timer: 2000
+                        timer: 2500
                     });
                 },
             });
-        }else{
+        } else {
             Swal.fire({
-                text: "Lengkapi isian pada form !",
+                text: "Lengkapi semua isian wajib (*) pada form termasuk Tempat & Tanggal Lahir!",
                 icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
+                showConfirmButton: true
             });
         }
     }    
 
-    selectTipe.on("change",function(e){
+    selectTipe.on("change", function(e){
         var nilai = e.target.value;
-
-        selectCMT.val("").trigger("change")
-        if(nilai == 1){
-            divCMT.addClass("d-none")
-        } else{
-            divCMT.removeClass("d-none")
+        selectCMT.val("").trigger("change");
+        if (nilai == 1) {
+            divCMT.addClass("d-none");
+        } else {
+            divCMT.removeClass("d-none");
         } 
-        
-    })
+    });
+
+    // ==========================================
+    // KELOLA KONTRAK KERJA KARYAWAN
+    // ==========================================
+
+    function calculateTglSelesaiKontrak() {
+        let tglMulai = $('#input_tgl_mulai_kontrak').val();
+        let durasi = parseInt($('#select_durasi_kontrak').val()) || 1;
+        if (!tglMulai) {
+            $('#display_tgl_selesai_kontrak').text('-');
+            return;
+        }
+        let parts = tglMulai.split('-');
+        let d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        d.setMonth(d.getMonth() + durasi);
+        d.setDate(d.getDate() - 1);
+        let y = d.getFullYear();
+        let m = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        $('#display_tgl_selesai_kontrak').text(day + '-' + m + '-' + y);
+    }
+
+    $('#input_tgl_mulai_kontrak, #select_durasi_kontrak').on('change input', function () {
+        calculateTglSelesaiKontrak();
+    });
+
+    function openModalKontrak(row) {
+        currentKontrakRow = row;
+        $('#kontrak-nip').text('NIP: ' + (row.nip || '-'));
+        $('#kontrak-nama').text(row.full_name || '-');
+        $('#kontrak-posisi').text(row.posisi || '-');
+        $('#kontrak_karyawan_id').val(row.id);
+
+        $('#kontrak-alert-warning').addClass('d-none');
+        $('#kontrak-missing-list').empty();
+        $('#file_scan_kontrak').val('');
+
+        Swal.fire({
+            title: 'Memeriksa Data Kontrak...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/check-kontrak',
+            data: { id: row.id },
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (!res.status && !res.data) {
+                    Swal.fire({ text: res.message || 'Gagal memeriksa data karyawan', icon: 'error' });
+                    return;
+                }
+
+                let d = res.data;
+
+                // Status badge
+                let st = parseInt(d.status_kontrak) || 0;
+                let badgeEl = $('#kontrak-status-badge');
+                if (st === 2) {
+                    badgeEl.attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                } else if (st === 1) {
+                    badgeEl.attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                } else {
+                    badgeEl.attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
+                }
+
+                if (!res.is_complete) {
+                    // Ada data profil yang kosong
+                    $('#kontrak-alert-warning').removeClass('d-none');
+                    $('#kontrak-panel-complete').addClass('d-none');
+                    let listEl = $('#kontrak-missing-list');
+                    listEl.empty();
+                    (res.missing_fields || []).forEach(function (f) {
+                        listEl.append('<span class="badge bg-danger p-2"><i class="fa fa-times me-1"></i>' + f + '</span>');
+                    });
+                } else {
+                    $('#kontrak-alert-warning').addClass('d-none');
+                    $('#kontrak-panel-complete').removeClass('d-none');
+
+                    // Ringkasan Identitas
+                    $('#kontrak-preview-ttl').text((d.tempat_lahir || '-') + ', ' + (d.tgl_lahir_ind || '-'));
+                    $('#kontrak-preview-gender').text(d.jenis_kelamin_text || '-');
+                    $('#kontrak-preview-alamat').text(d.alamat || '-');
+                    $('#kontrak-preview-posisi').text(d.posisi || '-');
+                    $('#kontrak-preview-upah').text('Rp. ' + (d.upah_harian_formatted || '0') + ' / hari');
+
+                    // Parameter Kontrak
+                    $('#input_tgl_mulai_kontrak').val(d.tgl_mulai_kontrak || '');
+                    $('#select_durasi_kontrak').val(d.durasi_kontrak_bulan || '3');
+                    calculateTglSelesaiKontrak();
+
+                    // File signed
+                    if (st === 2 && d.file_kontrak_url) {
+                        $('#kontrak-existing-file').removeClass('d-none');
+                        $('#kontrak-file-name').text(d.file_kontrak_origin || d.file_kontrak_name || 'Berkas Kontrak');
+                        $('#link-download-signed-kontrak').attr('href', d.file_kontrak_url);
+                    } else {
+                        $('#kontrak-existing-file').addClass('d-none');
+                    }
+                }
+
+                modalKontrak.modal('show');
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan saat memeriksa data kontrak.', icon: 'error' });
+            }
+        });
+    }
+
+    $('#btn-edit-dari-kontrak').on('click', function () {
+        modalKontrak.modal('hide');
+        if (currentKontrakRow) {
+            openEditKaryawan(currentKontrakRow);
+        }
+    });
+
+    $('#btn-do-generate-kontrak').on('click', function () {
+        let id = $('#kontrak_karyawan_id').val();
+        let tglMulai = $('#input_tgl_mulai_kontrak').val();
+        let durasi = $('#select_durasi_kontrak').val();
+
+        if (!tglMulai) {
+            Swal.fire({ text: 'Tanggal mulai kontrak wajib diisi!', icon: 'warning' });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Memproses Draf Kontrak...',
+            text: 'Harap tunggu, berkas Word sedang disiapkan',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/generate-kontrak',
+            data: {
+                id: id,
+                tgl_mulai_kontrak: tglMulai,
+                durasi_kontrak_bulan: durasi
+            },
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (res.status) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    // Trigger download
+                    window.location.href = res.download_url;
+                    // Update badge
+                    $('#kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                    dtList.setData();
+                } else {
+                    Swal.fire({ text: res.message || 'Gagal menghasilkan kontrak', icon: 'error' });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan sistem saat generate kontrak.', icon: 'error' });
+            }
+        });
+    });
+
+    $('#btn-do-upload-kontrak').on('click', function () {
+        let id = $('#kontrak_karyawan_id').val();
+        let fileInput = $('#file_scan_kontrak')[0];
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            Swal.fire({ text: 'Pilih berkas scan kontrak bertandatangan terlebih dahulu!', icon: 'warning' });
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('id', id);
+        formData.append('file_kontrak', fileInput.files[0]);
+
+        Swal.fire({
+            title: 'Mengunggah Berkas...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/upload-kontrak',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (res.status) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                    $('#file_scan_kontrak').val('');
+                    $('#kontrak-existing-file').removeClass('d-none');
+                    $('#kontrak-file-name').text(res.file_name_origin || res.file_name);
+                    $('#link-download-signed-kontrak').attr('href', res.file_url);
+                    $('#kontrak-status-badge').attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                    dtList.setData();
+                } else {
+                    Swal.fire({ text: res.message || 'Gagal mengunggah berkas kontrak', icon: 'error' });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan sistem saat mengunggah berkas.', icon: 'error' });
+            }
+        });
+    });
 });

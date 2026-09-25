@@ -49,6 +49,16 @@
         </div>
 
         <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="tempat_lahir">Tempat & Tgl Lahir <span class="text-danger">*</span></label>
+          <div class="col-md-4">
+            <input type="text" id="tempat_lahir" name="tempat_lahir" class="form-control" placeholder="Kota lahir" required>
+          </div>
+          <div class="col-md-4">
+            <input type="date" id="tgl_lahir" name="tgl_lahir" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
           <label class="col-md-3 col-form-label text-md-end" for="no_hp">No. WhatsApp <span class="text-danger">*</span></label>
           <div class="col-md-8">
             <div class="input-group">
@@ -59,9 +69,9 @@
         </div>
 
         <div class="row mb-4">
-          <label class="col-md-3 col-form-label text-md-end" for="alamat">Alamat</label>
+          <label class="col-md-3 col-form-label text-md-end" for="alamat">Alamat <span class="text-danger">*</span></label>
           <div class="col-md-8">
-            <textarea name="alamat" id="alamat" class="form-control" rows="3" placeholder="Alamat lengkap..."></textarea>
+            <textarea name="alamat" id="alamat" class="form-control" rows="3" placeholder="Alamat lengkap..." required></textarea>
           </div>
         </div>
 
@@ -71,6 +81,30 @@
           <label class="col-md-3 col-form-label text-md-end" for="posisi">Posisi <span class="text-danger">*</span></label>
           <div class="col-md-8">
             <input type="text" id="posisi" name="posisi" class="form-control" placeholder="Jabatan saat ini" required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="kategori_posisi">Kategori Posisi <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <select id="kategori_posisi" name="kategori_posisi" class="form-select select2" required>
+              <option value="1">Mesin</option>
+              <option value="2">Non Mesin</option>
+              <option value="3">Staff Khusus</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="col-md-3 col-form-label text-md-end" for="id_shift">Shift Kerja <span class="text-danger">*</span></label>
+          <div class="col-md-8">
+            <select id="id_shift" name="id_shift" class="form-select select2" required>
+              <?php if (!empty($shift)) : ?>
+                <?php foreach ($shift as $s) : ?>
+                  <option value="<?= $s->id ?>"><?= $s->nama_shift ?> (<?= substr($s->jam_masuk, 0, 5) ?> - <?= substr($s->jam_pulang, 0, 5) ?>)</option>
+                <?php endforeach ?>
+              <?php endif ?>
+            </select>
           </div>
         </div>
 
@@ -205,6 +239,149 @@
         <button id="btn-save" type="button" class="btn btn-primary px-4">
           <i class="fa fa-save me-1"></i> Simpan Data
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Kelola Kontrak Kerja Karyawan -->
+<div id="modal-kelola-kontrak" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title text-white"><i class="fa fa-file-text-o me-2"></i>Kelola Kontrak Kerja Karyawan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <!-- Info Karyawan Header Card -->
+        <div class="card bg-light border-0 mb-3">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-secondary mb-1" id="kontrak-nip">NIP: -</span>
+                <h5 class="mb-0 fw-bold text-dark" id="kontrak-nama">-</h5>
+                <small class="text-muted" id="kontrak-posisi">-</small>
+              </div>
+              <div class="text-end">
+                <span class="badge" id="kontrak-status-badge">Status Kontrak</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert Validasi Kelengkapan Profil -->
+        <div id="kontrak-alert-warning" class="alert alert-warning d-none" role="alert">
+          <div class="d-flex">
+            <div class="me-3 fs-3 text-warning"><i class="fa fa-exclamation-triangle"></i></div>
+            <div class="flex-grow-1">
+              <h6 class="alert-heading fw-bold mb-1">Data Profil Belum Lengkap!</h6>
+              <div class="small mb-2" id="kontrak-alert-message">
+                Semua data pada draf kontrak bersifat wajib. Silakan lengkapi profil karyawan terlebih dahulu sebelum mengunduh draf kontrak.
+              </div>
+              <div id="kontrak-missing-list" class="d-flex flex-wrap gap-1 mb-2"></div>
+              <button type="button" class="btn btn-sm btn-warning fw-bold text-dark mt-1" id="btn-edit-dari-kontrak">
+                <i class="fa fa-edit me-1"></i> Lengkapi Profil Karyawan Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Kontrak (Hanya tampil jika Profil Lengkap) -->
+        <div id="kontrak-panel-complete">
+          <!-- Ringkasan Data Kontrak -->
+          <div class="border rounded p-3 mb-3 bg-white">
+            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-user me-1"></i> Ringkasan Identitas Kontrak</h6>
+            <div class="row g-2 small">
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless mb-0">
+                  <tr><td class="text-muted" style="width: 130px;">Tempat, Tgl Lahir:</td><td class="fw-semibold" id="kontrak-preview-ttl">-</td></tr>
+                  <tr><td class="text-muted">Jenis Kelamin:</td><td class="fw-semibold" id="kontrak-preview-gender">-</td></tr>
+                  <tr><td class="text-muted">Alamat Domisili:</td><td class="fw-semibold" id="kontrak-preview-alamat">-</td></tr>
+                </table>
+              </div>
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless mb-0">
+                  <tr><td class="text-muted" style="width: 130px;">Posisi / Bagian:</td><td class="fw-semibold" id="kontrak-preview-posisi">-</td></tr>
+                  <tr><td class="text-muted">Upah Harian:</td><td class="fw-semibold text-success" id="kontrak-preview-upah">Rp. -</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Parameter Kontrak -->
+          <div class="border rounded p-3 mb-3 bg-white">
+            <h6 class="fw-bold text-primary mb-3 border-bottom pb-1"><i class="fa fa-calendar-check-o me-1"></i> Periode Masa Kontrak Kerja</h6>
+            <form id="form-generate-kontrak">
+              <input type="hidden" id="kontrak_karyawan_id">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold" for="input_tgl_mulai_kontrak">Tanggal Masuk / Mulai <span class="text-danger">*</span></label>
+                  <input type="date" id="input_tgl_mulai_kontrak" name="input_tgl_mulai_kontrak" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold" for="select_durasi_kontrak">Durasi Kontrak <span class="text-danger">*</span></label>
+                  <select id="select_durasi_kontrak" name="select_durasi_kontrak" class="form-select">
+                    <option value="1">1 Bulan</option>
+                    <option value="2">2 Bulan</option>
+                    <option value="3" selected>3 Bulan</option>
+                    <option value="6">6 Bulan</option>
+                    <option value="12">12 Bulan (1 Tahun)</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">Tanggal Akhir / Selesai</label>
+                  <div class="form-control bg-light fw-bold text-primary" id="display_tgl_selesai_kontrak">-</div>
+                </div>
+              </div>
+
+              <div class="mt-3 text-end">
+                <button type="button" class="btn btn-primary px-3" id="btn-do-generate-kontrak">
+                  <i class="fa fa-download me-1"></i> Unduh Draf Kontrak (.docx)
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Upload Signed Scan -->
+          <div class="border rounded p-3 bg-white">
+            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-cloud-upload me-1"></i> Unggah Berkas Kontrak Bertandatangan</h6>
+            <p class="small text-muted mb-3">
+              Setelah dokumen draf dicetak dan ditandatangani basah oleh kedua belah pihak beserta pimpinan, unggah hasil scan dokumen di sini.
+            </p>
+
+            <div id="kontrak-existing-file" class="alert alert-success d-none mb-3 py-2 px-3">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <i class="fa fa-check-circle me-1"></i> Berkas kontrak bertandatangan tersimpan: 
+                  <strong id="kontrak-file-name">-</strong>
+                </div>
+                <a href="#" target="_blank" class="btn btn-sm btn-success" id="link-download-signed-kontrak">
+                  <i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas
+                </a>
+              </div>
+            </div>
+
+            <form id="form-upload-kontrak" enctype="multipart/form-data">
+              <div class="row align-items-end g-2">
+                <div class="col-md-8">
+                  <label class="form-label small fw-bold" for="file_scan_kontrak">Pilih File Scan (PDF / JPG / PNG / WEBP, Maks. 5MB)</label>
+                  <input type="file" id="file_scan_kontrak" name="file_kontrak" class="form-control" accept=".pdf, .jpg, .jpeg, .png, .webp">
+                </div>
+                <div class="col-md-4">
+                  <button type="button" class="btn btn-success w-100" id="btn-do-upload-kontrak">
+                    <i class="fa fa-upload me-1"></i> Simpan Berkas
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
       </div>
     </div>
   </div>

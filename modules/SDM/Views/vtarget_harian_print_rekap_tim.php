@@ -250,20 +250,20 @@
                 $val = $emp->proses[$p->kode_proses] ?? 0;
               ?>
               <?php if ($val > 0): ?>
-                <td class="cell-num"><?= (float)$val ?></td>
+                <td class="cell-num"><?= number_format((float)$val) ?></td>
               <?php else: ?>
                 <td class="cell-zero">-</td>
               <?php endif; ?>
             <?php endforeach; ?>
 
-            <td class="cell-num" style="color: #047857; font-weight: bold; font-size: 10px; background: #f0fdf4;">
-              <?= (float)$emp->total_realisasi ?>
+            <td class="cell-num" style="color: #047857; font-weight: bold; font-size: 8px; background: #f0fdf4;">
+              <?= number_format((float)$emp->total_realisasi) ?>
             </td>
-            <td class="cell-num" style="font-weight: bold; font-size: 10px; background: #fefce8;">
-              <?= (float)$emp->total_target ?>
+            <td class="cell-num" style="font-weight: bold; font-size: 8px; background: #fefce8;">
+              <?= number_format((float)$emp->total_target) ?>
             </td>
-            <td class="cell-num" style="color: <?= $colorPct ?>; font-weight: bold; font-size: 9.5px; background: #f0f9ff;">
-              <?= $pct ?>%
+            <td class="cell-num" style="color: <?= $colorPct ?>; font-weight: bold; font-size: 8px; background: #f0f9ff;">
+              <?= number_format($pct, 1) ?>%
             </td>
           </tr>
         <?php endforeach; ?>
@@ -277,29 +277,29 @@
 
       <!-- FOOTER TOTAL PER PROSES -->
       <tr class="row-total-footer">
-        <td colspan="3" style="text-align: right; font-weight: bold; padding-right: 8px; font-size: 9.5px; background: #e2e8f0;">
+        <td colspan="3" style="text-align: right; font-weight: bold; padding-right: 6px; font-size: 8.5px; background: #e2e8f0;">
           TOTAL PER PROSES (PCS)
         </td>
         <?php foreach ($proses_list as $p): ?>
           <?php 
             $totP = $proses_totals[$p->kode_proses] ?? 0;
           ?>
-          <td class="cell-num" style="background: #fef9c3; font-size: 9px;">
-            <?= $totP > 0 ? (float)$totP : '-' ?>
+          <td class="cell-num" style="background: #fef9c3; font-size: 8px;">
+            <?= $totP > 0 ? number_format((float)$totP) : '-' ?>
           </td>
         <?php endforeach; ?>
 
-        <td class="cell-num" style="color: #047857; font-size: 10.5px; background: #dcfce7;">
-          <?= (float)$grand_real ?>
+        <td class="cell-num" style="color: #047857; font-size: 8.5px; background: #dcfce7; font-weight: bold;">
+          <?= number_format((float)$grand_real) ?>
         </td>
-        <td class="cell-num" style="font-size: 10.5px; background: #fef08a;">
-          <?= (float)$grand_target ?>
+        <td class="cell-num" style="font-size: 8.5px; background: #fef08a; font-weight: bold;">
+          <?= number_format((float)$grand_target) ?>
         </td>
         <?php 
           $colorGrandPct = ($grand_pct >= 100) ? '#047857' : (($grand_pct >= 80) ? '#b45309' : '#b91c1c');
         ?>
-        <td class="cell-num" style="color: <?= $colorGrandPct ?>; font-size: 10px; background: #bae6fd;">
-          <?= $grand_pct ?>%
+        <td class="cell-num" style="color: <?= $colorGrandPct ?>; font-size: 8.5px; background: #bae6fd; font-weight: bold;">
+          <?= number_format((float)$grand_pct, 1) ?>%
         </td>
       </tr>
     </tbody>

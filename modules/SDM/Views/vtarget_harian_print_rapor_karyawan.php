@@ -309,20 +309,20 @@
                   <?php foreach ($pList as $p): ?>
                     <?php $qVal = $d->proses[$p->kode_proses] ?? 0; ?>
                     <?php if ($qVal > 0): ?>
-                      <td class="cell-num"><?= (float)$qVal ?></td>
+                      <td class="cell-num"><?= number_format((float)$qVal) ?></td>
                     <?php else: ?>
                       <td class="cell-zero">-</td>
                     <?php endif; ?>
                   <?php endforeach; ?>
 
                   <td class="cell-num" style="color: #047857; font-weight: bold; background: #f0fdf4;">
-                    <?= (float)$d->total_realisasi ?>
+                    <?= number_format((float)$d->total_realisasi) ?>
                   </td>
                   <td class="cell-num" style="background: #fefce8;">
-                    <?= (float)$d->target_qty ?>
+                    <?= number_format((float)$d->target_qty) ?>
                   </td>
                   <td class="cell-num" style="color: <?= $colorDay ?>; font-weight: bold; background: #f0f9ff;">
-                    <?= $pctDay ?>%
+                    <?= number_format($pctDay, 1) ?>%
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -336,27 +336,27 @@
 
             <!-- FOOTER TOTAL PERIODE -->
             <tr class="row-total-footer">
-              <td colspan="2" style="text-align: right; font-weight: bold; padding-right: 8px; font-size: 9.5px; background: #e2e8f0;">
+              <td colspan="2" style="text-align: right; font-weight: bold; padding-right: 6px; font-size: 8.5px; background: #e2e8f0;">
                 TOTAL AKUMULASI PERIODE (PCS)
               </td>
               <?php foreach ($pList as $p): ?>
                 <?php $tVal = $pTot[$p->kode_proses] ?? 0; ?>
-                <td class="cell-num" style="background: #e0f2fe; font-size: 9px;">
-                  <?= $tVal > 0 ? (float)$tVal : '-' ?>
+                <td class="cell-num" style="background: #e0f2fe; font-size: 8px;">
+                  <?= $tVal > 0 ? number_format((float)$tVal) : '-' ?>
                 </td>
               <?php endforeach; ?>
 
-              <td class="cell-num" style="color: #047857; font-size: 10.5px; background: #dcfce7;">
-                <?= (float)$totR ?>
+              <td class="cell-num" style="color: #047857; font-size: 8.5px; background: #dcfce7; font-weight: bold;">
+                <?= number_format((float)$totR) ?>
               </td>
-              <td class="cell-num" style="font-size: 10.5px; background: #fef08a;">
-                <?= (float)$totT ?>
+              <td class="cell-num" style="font-size: 8.5px; background: #fef08a; font-weight: bold;">
+                <?= number_format((float)$totT) ?>
               </td>
               <?php 
                 $colorAvg = ($avgP >= 100) ? '#047857' : (($avgP >= 80) ? '#b45309' : '#b91c1c');
               ?>
-              <td class="cell-num" style="color: <?= $colorAvg ?>; font-size: 10.5px; background: #bae6fd;">
-                <?= $avgP ?>%
+              <td class="cell-num" style="color: <?= $colorAvg ?>; font-size: 8.5px; background: #bae6fd; font-weight: bold;">
+                <?= number_format((float)$avgP, 1) ?>%
               </td>
             </tr>
           </tbody>

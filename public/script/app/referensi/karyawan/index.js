@@ -48,7 +48,7 @@ $(document).ready(function () {
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
-    $("#filter_perusahaan").on("change", function () {
+    $("#filter_perusahaan, #filter_tipe").on("change", function () {
         dtList.setPage(1);
     });
 
@@ -104,7 +104,7 @@ $(document).ready(function () {
                 headerSort: false,  
                 title: 'Aksi', 
                 formatter: buttonRowAction,
-                width: 85, align: "center", cssClass: "text-center",
+                width: 75, align: "center", cssClass: "text-center",
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let data_row = row.getData();
@@ -119,19 +119,19 @@ $(document).ready(function () {
             },
             {
                 title: "NIP", field: "nip", headerSort: false,
-                width: "10%"
+                width: 105
             },
             {
                 title: "Nama", field: "full_name", headerSort: false,
-                width: "18%",
+                minWidth: 160
             },
             {
                 title: "Posisi", field: "posisi", headerSort: false,
-                width: "14%"
+                width: 135
             },
             {
-                title: "Kategori Posisi", field: "kategori_posisi_text", headerSort: false,
-                width: "12%", align: "center", cssClass: "text-center",
+                title: "Kategori", field: "kategori_posisi_text", headerSort: false,
+                width: 105, align: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let val = cell.getValue();
                     if (val === 'Mesin') {
@@ -145,22 +145,56 @@ $(document).ready(function () {
                 }
             },
             {
+                title: "Shift", field: "nama_shift", headerSort: false,
+                width: 95, align: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let val = cell.getValue();
+                    if (!val || val.toUpperCase() === 'NORMAL') {
+                        return "<span class='badge bg-light text-dark border'>Normal</span>";
+                    } else if (val.toLowerCase().indexOf('pagi') !== -1 || val.indexOf('1') !== -1) {
+                        return "<span class='badge bg-info text-dark'>" + val + "</span>";
+                    } else if (val.toLowerCase().indexOf('malam') !== -1 || val.indexOf('2') !== -1) {
+                        return "<span class='badge bg-dark'>" + val + "</span>";
+                    }
+                    return "<span class='badge bg-light text-dark border'>" + val + "</span>";
+                }
+            },
+            {
+                title: "Tipe", field: "type", headerSort: false,
+                width: 120, align: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let row = cell.getData();
+                    if (row.type == 1) {
+                        return "<span class='badge bg-primary'><i class='fa fa-building-o me-1'></i> Internal</span>";
+                    } else {
+                        let cmt = row.nama_operator ? (" " + row.nama_operator) : "";
+                        return "<span class='badge bg-secondary' title='CMT" + cmt + "'><i class='fa fa-handshake-o me-1'></i> CMT" + (cmt ? (" " + row.nama_operator) : "") + "</span>";
+                    }
+                }
+            },
+            {
                 title: "Kontrak", field: "status_kontrak", headerSort: false,
-                width: "12%", align: "center", cssClass: "text-center",
+                width: 125, align: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let row = cell.getData();
                     // Hanya untuk karyawan internal / NON CMT (type == 1)
                     if (row.type != 1) {
-                        return "<span class='text-muted small'>-</span>";
+                        return "<span class='text-muted small'>Non-Internal</span>";
                     }
                     let st = parseInt(cell.getValue()) || 0;
+                    let btnHtml = "";
                     if (st === 2) {
-                        return "<button type='button' class='btn btn-success btn-xs px-2' title='Kontrak Signed (Sudah TTD)'><i class='fa fa-check-circle me-1'></i> Signed</button>";
+                        btnHtml = "<button type='button' class='btn btn-success btn-xs px-2 btn-kontrak' title='Kontrak Ditandatangani'><i class='fa fa-check-circle me-1'></i> Signed</button>";
                     } else if (st === 1) {
-                        return "<button type='button' class='btn btn-warning btn-xs px-2 text-dark' title='Draf Kontrak Terbit'><i class='fa fa-file-word-o me-1'></i> Draf</button>";
+                        btnHtml = "<button type='button' class='btn btn-warning btn-xs px-2 text-dark btn-kontrak' title='Draf Kontrak Terbit'><i class='fa fa-file-word-o me-1'></i> Draf</button>";
                     } else {
-                        return "<button type='button' class='btn btn-outline-secondary btn-xs px-2' title='Belum Ada Kontrak'><i class='fa fa-file-text-o me-1'></i> Belum</button>";
+                        btnHtml = "<button type='button' class='btn btn-outline-secondary btn-xs px-2 btn-kontrak' title='Belum Ada Kontrak'><i class='fa fa-file-text-o me-1'></i> Belum</button>";
                     }
+
+                    if (row.tgl_selesai_kontrak_formatted) {
+                        btnHtml += "<div class='text-muted' style='font-size: 10px; line-height: 1.1; margin-top: 3px;'>s/d " + row.tgl_selesai_kontrak_formatted + "</div>";
+                    }
+                    return btnHtml;
                 },
                 cellClick: function (e, cell) {
                     let row = cell.getData();
@@ -169,20 +203,22 @@ $(document).ready(function () {
                 }
             },
             {
-                title: "Email", field: "email", headerSort: false,
-                width: "14%", cssClass : 'text-center'
-            },
-            {
-                title: "No. HP", field: "no_hp", headerSort: false,
-                width: "13%", cssClass : 'text-center'
-            },
-            {
-                title: "Perusahaan", field: "nama_perusahaan", headerSort: false,
-                width: "13%"
+                title: "No. WhatsApp", field: "no_hp", headerSort: false,
+                width: 135, cssClass : 'text-center',
+                formatter: function (cell) {
+                    let val = cell.getValue();
+                    if (!val) return "<span class='text-muted'>-</span>";
+                    let cleanPhone = String(val).replace(/[^0-9]/g, '');
+                    if (cleanPhone.startsWith('0')) {
+                        cleanPhone = '62' + cleanPhone.substring(1);
+                    }
+                    return "<a href='https://wa.me/" + cleanPhone + "' target='_blank' class='text-decoration-none text-dark fw-semibold' title='Chat WhatsApp: " + val + "'>"
+                        + "<i class='fa fa-whatsapp text-success me-1 fs-6'></i>" + val + "</a>";
+                }
             },
             {
                 title: "Status", field: "active", headerSort: false,
-                width: "10%", align: "center", cssClass: "text-center",
+                width: 90, align: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let isActive = cell.getValue() == 1;
                     return isActive
@@ -213,7 +249,8 @@ $(document).ready(function () {
         placeholder: "Tidak ada data",
         ajaxParams: function () {
             return {
-                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
+                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val(),
+                type: $("#filter_tipe").val() === "all" ? "" : $("#filter_tipe").val()
             };
         },
         ajaxRequesting: function (url, params) {

@@ -83,9 +83,11 @@ class RefKaryawan extends BaseController
         $filters    = $this->request->getPost('filter');
         $order      = $this->request->getPost('sort');
         $id_perusahaan = $this->request->getPost('id_perusahaan');
+        $type = $this->request->getPost('type');
 
         $params = [
             'id_perusahaan' => $id_perusahaan,
+            'type' => (!empty($type) && $type !== 'all') ? (int)$type : null,
             // TAMBAHAN (2026-08-08): list Master Data Karyawan sekarang
             // menampilkan karyawan aktif MAUPUN nonaktif (ada kolom status
             // di akhir tabel yang bisa diklik utk toggle) - modul lain yang

@@ -437,6 +437,16 @@
                 </select>
               </div>
 
+              <!-- Filter Tipe (Internal / CMT) -->
+              <div class="col-sm-2">
+                <select id="filter_tipe" name="filter_tipe"
+                  class="form-select select2" data-placeholder="-- Pilih Tipe --">
+                  <option value="all" selected>Semua Tipe Karyawan</option>
+                  <option value="1">Internal (Non CMT)</option>
+                  <option value="2">CMT (Mitra)</option>
+                </select>
+              </div>
+
               <!-- Spacer -->
               <div class="col"></div>
 

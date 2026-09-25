@@ -133,6 +133,10 @@ class KaryawanModel extends \App\Models\PrModel
             $builder->where('ky.nip', $params['nip']);
         }
 
+        if(!empty($params['type'])){
+            $builder->where('ky.type', $params['type']);
+        }
+
         if(!empty($params['not_nip'])){
             $builder->whereNotIn('ky.nip', $params['not_nip']);
         }

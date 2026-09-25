@@ -74,9 +74,32 @@ $(document).ready(function () {
         if (data_row.type == 1) {
             divCMT.addClass("d-none");
             selectCMT.val("").trigger("change");
+            $('#section-kontrak-karyawan').removeClass('d-none');
+            $('#form_tgl_mulai_kontrak').val(data_row.tgl_mulai_kontrak || '');
+            $('#form_durasi_kontrak').val(data_row.durasi_kontrak_bulan || '3');
+            updateFormTglSelesai();
+
+            let st = parseInt(data_row.status_kontrak) || 0;
+            let badgeEl = $('#form-kontrak-status-badge');
+            if (st === 2) {
+                badgeEl.attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+            } else if (st === 1) {
+                badgeEl.attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+            } else {
+                badgeEl.attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
+            }
+
+            if (st === 2 && data_row.file_kontrak_url) {
+                $('#form-kontrak-file-preview').removeClass('d-none');
+                $('#form-kontrak-file-name').text(data_row.file_kontrak_origin || data_row.file_kontrak_name);
+                $('#form-kontrak-file-link').attr('href', data_row.file_kontrak_url);
+            } else {
+                $('#form-kontrak-file-preview').addClass('d-none');
+            }
         } else {
             divCMT.removeClass("d-none");
             selectCMT.val(data_row.id_operator).trigger("change");
+            $('#section-kontrak-karyawan').addClass('d-none');
         }
 
         if (data_row.file_gambar) {
@@ -336,6 +359,13 @@ $(document).ready(function () {
         linkFileKaryawan.addClass("d-none");
         linkFileKaryawan.attr('src', '');
 
+        $('#form_tgl_mulai_kontrak').val('');
+        $('#form_durasi_kontrak').val('3');
+        $('#form_display_tgl_selesai').text('-');
+        $('#form-kontrak-status-badge').attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
+        $('#form-kontrak-file-preview').addClass('d-none');
+        $('#form_file_scan_kontrak').val('');
+
         setTimeout(() => {
             inpBank.val("").trigger('change');
             inpRekening.val("").trigger('change');
@@ -347,7 +377,7 @@ $(document).ready(function () {
         }, 500);
     }
 
-    function simpanData() {
+    function simpanData(closeOnSuccess = true, callback = null) {
         let validation = true;
 
         if (inpNip.val().length == 0) validation = false;
@@ -416,15 +446,21 @@ $(document).ready(function () {
                 },
                 success: function (response) {
                     if (response.status == true) {
-                        Swal.fire({
-                            text: response.message,
-                            icon: 'success',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
                         dtList.setData();
-                        isModal.modal("hide");
-                        resetInput();
+                        if (typeof callback === 'function') {
+                            callback(response);
+                        } else {
+                            Swal.fire({
+                                text: response.message,
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            if (closeOnSuccess) {
+                                isModal.modal("hide");
+                                resetInput();
+                            }
+                        }
                     } else {
                         Swal.fire({
                             text: response.message,
@@ -458,9 +494,146 @@ $(document).ready(function () {
         selectCMT.val("").trigger("change");
         if (nilai == 1) {
             divCMT.addClass("d-none");
+            $('#section-kontrak-karyawan').removeClass('d-none');
         } else {
             divCMT.removeClass("d-none");
+            $('#section-kontrak-karyawan').addClass('d-none');
         } 
+    });
+
+    // Kalkulasi Tanggal Akhir di Form Utama
+    function updateFormTglSelesai() {
+        let tglMulai = $('#form_tgl_mulai_kontrak').val();
+        let durasi = parseInt($('#form_durasi_kontrak').val()) || 1;
+        if (!tglMulai) {
+            $('#form_display_tgl_selesai').text('-');
+            return;
+        }
+        let parts = tglMulai.split('-');
+        let d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        d.setMonth(d.getMonth() + durasi);
+        d.setDate(d.getDate() - 1);
+        let y = d.getFullYear();
+        let m = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        $('#form_display_tgl_selesai').text(day + '-' + m + '-' + y);
+    }
+
+    $('#form_tgl_mulai_kontrak, #form_durasi_kontrak').on('change input', function () {
+        updateFormTglSelesai();
+    });
+
+    $('#btn-form-generate-kontrak').on('click', function () {
+        let id = inpData.val();
+        let tglMulai = $('#form_tgl_mulai_kontrak').val();
+        let durasi = $('#form_durasi_kontrak').val();
+
+        if (!tglMulai) {
+            Swal.fire({ text: 'Tentukan Tanggal Mulai Kontrak terlebih dahulu!', icon: 'warning' });
+            return;
+        }
+
+        // Simpan data karyawan dulu (termasuk Tempat & Tgl Lahir yang baru diinput)
+        simpanData(false, function (resSimpan) {
+            Swal.fire({
+                title: 'Memproses Draf Kontrak...',
+                text: 'Menyiapkan berkas Word (.docx)...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                onBeforeOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                type: 'POST',
+                url: '/master-data/karyawan/generate-kontrak',
+                data: {
+                    id: id,
+                    tgl_mulai_kontrak: tglMulai,
+                    durasi_kontrak_bulan: durasi
+                },
+                dataType: 'json',
+                success: function (res) {
+                    Swal.close();
+                    if (res.status) {
+                        Swal.fire({
+                            title: 'Draf Kontrak Berhasil!',
+                            text: res.message,
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        window.location.href = res.download_url;
+                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                        dtList.setData();
+                    } else {
+                        Swal.fire({ text: res.message || 'Gagal menghasilkan kontrak', icon: 'error' });
+                    }
+                },
+                error: function () {
+                    Swal.close();
+                    Swal.fire({ text: 'Terjadi kesalahan sistem saat generate kontrak.', icon: 'error' });
+                }
+            });
+        });
+    });
+
+    $('#btn-form-upload-kontrak').on('click', function () {
+        let id = inpData.val();
+        let fileInput = $('#form_file_scan_kontrak')[0];
+
+        if (!id) {
+            Swal.fire({ text: 'Simpan data karyawan terlebih dahulu!', icon: 'warning' });
+            return;
+        }
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            Swal.fire({ text: 'Pilih berkas scan kontrak bertandatangan terlebih dahulu!', icon: 'warning' });
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('id', id);
+        formData.append('file_kontrak', fileInput.files[0]);
+
+        Swal.fire({
+            title: 'Mengunggah Berkas...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/upload-kontrak',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (res.status) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    $('#form_file_scan_kontrak').val('');
+                    $('#form-kontrak-file-preview').removeClass('d-none');
+                    $('#form-kontrak-file-name').text(res.file_name_origin || res.file_name);
+                    $('#form-kontrak-file-link').attr('href', res.file_url);
+                    $('#form-kontrak-status-badge').attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                    dtList.setData();
+                } else {
+                    Swal.fire({ text: res.message || 'Gagal mengunggah berkas kontrak', icon: 'error' });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan sistem saat mengunggah berkas.', icon: 'error' });
+            }
+        });
     });
 
     // ==========================================

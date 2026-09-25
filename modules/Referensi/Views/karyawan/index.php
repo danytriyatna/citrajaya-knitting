@@ -220,7 +220,80 @@
           </div>
         </div>
 
-        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Foto Karyawan</h6>
+        <!-- Section Kontrak Kerja di Form Utama -->
+        <div id="section-kontrak-karyawan" class="mt-4 pt-2 border-top">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0 text-primary"><i class="fa fa-file-text-o me-2"></i>Kontrak Kerja (Khusus Karyawan Internal)</h6>
+            <span class="badge" id="form-kontrak-status-badge">Status Kontrak</span>
+          </div>
+
+          <div class="alert alert-info py-2 px-3 small mb-3">
+            <i class="fa fa-info-circle me-1"></i> Setelah data profil dan upah diisi lengkap, tentukan masa kontrak lalu klik <b>Simpan & Unduh Draf Kontrak</b>.
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="row">
+                <label class="col-md-6 col-form-label text-md-end" for="form_tgl_mulai_kontrak">Tgl Mulai Kontrak</label>
+                <div class="col-md-6">
+                  <input type="date" id="form_tgl_mulai_kontrak" name="form_tgl_mulai_kontrak" class="form-control">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <label class="col-md-5 col-form-label text-md-end" for="form_durasi_kontrak">Durasi Kontrak</label>
+                <div class="col-md-6">
+                  <select id="form_durasi_kontrak" name="form_durasi_kontrak" class="form-select">
+                    <option value="1">1 Bulan</option>
+                    <option value="2">2 Bulan</option>
+                    <option value="3" selected>3 Bulan</option>
+                    <option value="6">6 Bulan</option>
+                    <option value="12">12 Bulan (1 Tahun)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="row">
+                <label class="col-md-6 col-form-label text-md-end">Tgl Akhir Kontrak</label>
+                <div class="col-md-6">
+                  <div class="form-control bg-light fw-bold text-primary" id="form_display_tgl_selesai">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-md-11 offset-md-1">
+                  <button type="button" class="btn btn-primary btn-sm w-100 py-2" id="btn-form-generate-kontrak">
+                    <i class="fa fa-file-word-o me-1"></i> Simpan & Unduh Draf Kontrak (.docx)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3" id="form-upload-kontrak-wrapper">
+            <label class="col-md-3 col-form-label text-md-end" for="form_file_scan_kontrak">Upload Berkas Signed</label>
+            <div class="col-md-8">
+              <div class="input-group">
+                <input type="file" id="form_file_scan_kontrak" class="form-control" accept=".pdf, .jpg, .jpeg, .png, .webp">
+                <button type="button" class="btn btn-success" id="btn-form-upload-kontrak">
+                  <i class="fa fa-upload me-1"></i> Simpan Berkas
+                </button>
+              </div>
+              <div id="form-kontrak-file-preview" class="small mt-2 d-none">
+                <i class="fa fa-check-circle text-success me-1"></i> Berkas tersimpan: <strong id="form-kontrak-file-name">-</strong>
+                <a href="#" target="_blank" class="ms-2 btn btn-link btn-sm p-0" id="form-kontrak-file-link"><i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2 mt-4">Foto Karyawan</h6>
         <div class="row">
           <label class="col-md-3 col-form-label text-md-end" for="fileKaryawan">Upload Foto</label>
           <div class="col-md-8">

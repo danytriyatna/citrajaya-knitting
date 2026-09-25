@@ -507,6 +507,26 @@ class MTargetHarian extends Model
         // 3. Untuk setiap karyawan, ambil record harian
         $reportData = [];
         foreach ($karyawanList as $karyawan) {
+            // Ambil daftar proses unik yang HANYA dikerjakan karyawan ini di periode ini
+            $qProsesEmp = $this->db->query("
+                SELECT DISTINCT 
+                    COALESCE(NULLIF(TRIM(tp.kode), ''), NULLIF(TRIM(p.nama_proses), ''), 'OUTPUT') as kode_proses,
+                    COALESCE(tp.nama, p.nama_proses, 'Output') as nama_proses,
+                    COALESCE(tp.seq, 999) as seq
+                FROM sdm_target_harian_proses_hourly p
+                JOIN sdm_target_harian h ON h.id = p.id_header
+                LEFT JOIN ref_target_proses tp ON tp.id = p.id_proses
+                WHERE h.active = 1 AND p.active = 1
+                  AND p.id_karyawan = ?
+                  AND h.tanggal >= ? AND h.tanggal <= ?
+                  AND p.total_realisasi > 0
+                ORDER BY seq ASC, kode_proses ASC
+            ", [$karyawan->id, $fromDate, $toDate]);
+            $empProsesList = $qProsesEmp ? $qProsesEmp->getResult() : [];
+            if (empty($empProsesList)) {
+                $empProsesList = !empty($prosesList) ? $prosesList : [];
+            }
+
             $qDays = $this->db->query("
                 SELECT 
                     h.id as id_header,
@@ -545,7 +565,7 @@ class MTargetHarian extends Model
             }
 
             $prosesTotals = [];
-            foreach ($prosesList as $p) {
+            foreach ($empProsesList as $p) {
                 $prosesTotals[$p->kode_proses] = 0;
             }
 
@@ -555,7 +575,7 @@ class MTargetHarian extends Model
             foreach ($days as &$d) {
                 $d->proses = [];
                 $daySum = 0;
-                foreach ($prosesList as $p) {
+                foreach ($empProsesList as $p) {
                     $qty = $dayProsesMap[$d->tanggal][$p->kode_proses] ?? 0;
                     $d->proses[$p->kode_proses] = $qty;
                     $prosesTotals[$p->kode_proses] += $qty;
@@ -576,7 +596,7 @@ class MTargetHarian extends Model
 
             $reportData[] = [
                 'karyawan'      => $karyawan,
-                'proses_list'   => $prosesList,
+                'proses_list'   => $empProsesList,
                 'days'          => $days,
                 'proses_totals' => $prosesTotals,
                 'total_target'  => $totalTarget,

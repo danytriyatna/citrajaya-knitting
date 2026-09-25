@@ -145,8 +145,36 @@
     }
     .cell-zero {
       text-align: center;
-      color: #94a3b8;
+      color: transparent;
       font-size: 7.5px;
+    }
+    .kpi-banner {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .kpi-card {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 4px 8px;
+      text-align: center;
+    }
+    .kpi-card .kpi-label {
+      font-size: 7.5px;
+      font-weight: bold;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 1px;
+    }
+    .kpi-card .kpi-val {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .matrix-table tbody tr:nth-child(even) td {
+      background-color: #fbfcfe;
     }
     .row-total-footer {
       background-color: #f8fafc;
@@ -206,6 +234,29 @@
     </tr>
   </table>
 
+  <?php 
+    $colorGrandPct = ($grand_pct >= 100) ? '#047857' : (($grand_pct >= 80) ? '#b45309' : '#b91c1c');
+  ?>
+  <!-- KPI Summary Banner -->
+  <div class="kpi-banner">
+    <div class="kpi-card">
+      <div class="kpi-label">TOTAL REALISASI OUTPUT</div>
+      <div class="kpi-val" style="color: #047857;"><?= number_format($grand_real) ?> <span style="font-size: 8px; font-weight: normal; color: #555;">Pcs</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">TOTAL TARGET PERIODE</div>
+      <div class="kpi-val"><?= number_format($grand_target) ?> <span style="font-size: 8px; font-weight: normal; color: #555;">Pcs</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">RATA-RATA CAPAIAN PABRIK</div>
+      <div class="kpi-val" style="color: <?= $colorGrandPct ?>;"><?= number_format((float)$grand_pct, 1) ?>%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">PEGAWAI AKTIF NON-CMT</div>
+      <div class="kpi-val" style="color: #0284c7;"><?= count($pegawai_list) ?> <span style="font-size: 8px; font-weight: normal; color: #555;">Orang</span></div>
+    </div>
+  </div>
+
   <table class="matrix-table">
     <thead>
       <tr>
@@ -252,7 +303,7 @@
               <?php if ($val > 0): ?>
                 <td class="cell-num"><?= number_format((float)$val) ?></td>
               <?php else: ?>
-                <td class="cell-zero">-</td>
+                <td class="cell-zero"></td>
               <?php endif; ?>
             <?php endforeach; ?>
 

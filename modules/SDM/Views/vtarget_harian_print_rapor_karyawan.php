@@ -311,7 +311,7 @@
                     <?php if ($qVal > 0): ?>
                       <td class="cell-num"><?= number_format((float)$qVal) ?></td>
                     <?php else: ?>
-                      <td class="cell-zero">-</td>
+                      <td class="cell-zero"></td>
                     <?php endif; ?>
                   <?php endforeach; ?>
 

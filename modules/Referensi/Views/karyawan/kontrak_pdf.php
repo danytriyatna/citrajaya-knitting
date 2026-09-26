@@ -6,28 +6,22 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 1.4cm 1.8cm 1.4cm 1.8cm;
+            margin: 36pt 36pt 36pt 36pt;
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 10pt;
-            line-height: 1.22;
+            line-height: 1.15;
             color: #000;
         }
         .page-break {
             page-break-after: always;
         }
-        .page-num {
-            text-align: right;
-            font-size: 10pt;
-            margin-bottom: 10px;
-            color: #000;
-        }
         .watermark {
             position: fixed;
-            top: 25%;
-            left: 12%;
-            width: 520px;
+            top: 28%;
+            left: 10%;
+            width: 460px;
             opacity: 0.08;
             z-index: -1000;
         }
@@ -35,120 +29,119 @@
         .header-box {
             text-align: center;
             border-bottom: 1px solid #000;
-            padding-bottom: 8px;
-            margin-bottom: 14px;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
         .header-logo {
-            height: 60px;
+            height: 52px;
             display: block;
-            margin: 0 auto 4px auto;
+            margin: 0 auto 3px auto;
         }
         .header-company-name {
             font-size: 12pt;
             font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         .header-address {
             font-size: 8.5pt;
-            color: #111;
+            color: #000;
         }
         /* JUDUL DOKUMEN */
         .doc-title {
             text-align: center;
             font-size: 11pt;
             font-weight: bold;
-            margin-top: 10px;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
+            margin-top: 8px;
+            margin-bottom: 10px;
         }
         /* PASAL HEADERS */
         .pasal-title {
             text-align: center;
             font-weight: bold;
             font-size: 10pt;
-            margin-top: 8px;
-            margin-bottom: 1px;
+            margin-top: 6pt;
+            margin-bottom: 1pt;
         }
         .pasal-subtitle {
             text-align: center;
             font-weight: bold;
             font-size: 10pt;
-            margin-bottom: 5px;
+            margin-bottom: 4pt;
         }
         .ayat-title {
             font-weight: bold;
             font-size: 10pt;
-            margin-top: 6px;
-            margin-bottom: 3px;
+            margin-top: 5pt;
+            margin-bottom: 3pt;
+        }
+        .ayat-content {
+            padding-left: 24pt;
         }
         p {
             text-align: justify;
-            margin: 0 0 5px 0;
-            line-height: 1.25;
+            margin: 0 0 4pt 0;
+            line-height: 1.15;
         }
         /* TABEL IDENTITAS */
         .identity-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 4px 0 8px 0;
+            margin: 3pt 0 6pt 0;
         }
         .identity-table td {
-            padding: 1px 0;
+            padding: 1.5pt 0;
             vertical-align: top;
             font-size: 10pt;
-            line-height: 1.25;
+            line-height: 1.15;
         }
-        .col-num {
-            width: 18px;
+        .col-indent {
+            width: 25pt;
         }
         .col-label {
-            width: 135px;
+            width: 120pt;
             white-space: nowrap;
         }
         .col-colon {
-            width: 14px;
+            width: 14pt;
             text-align: center;
         }
         .col-val {
             text-align: left;
         }
-        /* LIST ALPHA & SUB-BULLET */
+        /* DAFTAR ALFABET & SUB-BULLET */
         ol.list-alpha {
-            margin: 2px 0 5px 0;
-            padding-left: 20px;
+            margin: 2pt 0 4pt 0;
+            padding-left: 18pt;
             list-style-type: lower-alpha;
         }
         ol.list-alpha > li {
-            margin-bottom: 3px;
+            margin-bottom: 2pt;
             text-align: justify;
-            padding-left: 2px;
-            line-height: 1.25;
+            line-height: 1.15;
         }
         ul.list-sub {
-            margin: 2px 0 2px 0;
-            padding-left: 18px;
+            margin: 2pt 0 2pt 0;
+            padding-left: 16pt;
             list-style-type: circle;
         }
         ul.list-sub > li {
-            margin-bottom: 2px;
+            margin-bottom: 1.5pt;
             text-align: justify;
-            padding-left: 2px;
-            line-height: 1.25;
+            line-height: 1.15;
         }
         ol.list-num {
-            margin: 2px 0 2px 0;
-            padding-left: 18px;
+            margin: 2pt 0 2pt 0;
+            padding-left: 16pt;
             list-style-type: decimal;
         }
         ol.list-num > li {
-            margin-bottom: 2px;
-            padding-left: 2px;
+            margin-bottom: 1.5pt;
+            line-height: 1.15;
         }
         /* TABEL TANDA TANGAN */
         .sig-container {
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8pt;
             page-break-inside: avoid;
         }
         .sig-table {
@@ -160,32 +153,37 @@
             width: 50%;
             text-align: center;
             vertical-align: top;
-            padding: 0 5px;
+            padding: 0 4pt;
         }
         .sig-box {
-            height: 52px;
+            height: 48px;
             vertical-align: middle;
             text-align: center;
         }
         .sig-img {
-            max-height: 48px;
-            max-width: 130px;
+            max-height: 44px;
+            max-width: 125px;
             display: inline-block;
         }
         .sig-name {
-            font-weight: bold;
-            text-decoration: underline;
+            font-size: 10pt;
             margin-top: 2px;
             margin-bottom: 1px;
-            font-size: 10pt;
         }
         .sig-role {
-            font-size: 9.5pt;
-            color: #111;
+            font-size: 10pt;
+            color: #000;
         }
     </style>
 </head>
 <body>
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("Arial, Helvetica, sans-serif", "normal");
+            $pdf->page_text(555, 808, "{PAGE_NUM}", $font, 10, array(0,0,0));
+        }
+    </script>
 
     <?php if (!empty($b64Watermark)): ?>
         <img src="<?= $b64Watermark ?>" class="watermark" alt="Watermark" />
@@ -210,42 +208,48 @@
 
     <table class="identity-table">
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Nama</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Nama</td>
             <td class="col-colon">:</td>
             <td class="col-val"><?= htmlspecialchars($p1Nama) ?></td>
         </tr>
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Jabatan</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Jabatan</td>
             <td class="col-colon">:</td>
             <td class="col-val"><?= htmlspecialchars($p1Jabatan) ?></td>
         </tr>
         <tr>
-            <td colspan="3" style="padding-top: 2px; padding-bottom: 6px;">
+            <td colspan="4" style="padding-top: 3pt; padding-bottom: 5pt;">
                 Dalam hal ini bertindak untuk dan atas nama CV. Citra Jaya Knitting. Selanjutnya disebut <strong>PIHAK PERTAMA</strong>.
             </td>
         </tr>
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Nama</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Nama</td>
             <td class="col-colon">:</td>
-            <td class="col-val" style="font-weight: bold;"><?= htmlspecialchars($karyawan->full_name ?? '-') ?></td>
+            <td class="col-val" style="font-weight: bold;"><?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?></td>
         </tr>
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Tempat, tgl lahir</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Tempat, tgl lahir</td>
             <td class="col-colon">:</td>
-            <td class="col-val"><?= htmlspecialchars(($karyawan->tempat_lahir ?? '-') . ', ' . $ttlIndo) ?></td>
+            <td class="col-val"><?= htmlspecialchars(strtoupper($karyawan->tempat_lahir ?? '-') . ', ' . $ttlIndo) ?></td>
         </tr>
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Jenis Kelamin</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Jenis Kelamin</td>
             <td class="col-colon">:</td>
             <td class="col-val"><?= ($karyawan->jenis_kelamin == 1) ? 'Laki-Laki' : 'Perempuan' ?></td>
         </tr>
         <tr>
-            <td class="col-label" style="padding-left: 15px;">Alamat</td>
+            <td class="col-indent"></td>
+            <td class="col-label">Alamat</td>
             <td class="col-colon">:</td>
-            <td class="col-val"><?= htmlspecialchars($karyawan->alamat ?? '-') ?></td>
+            <td class="col-val"><?= htmlspecialchars(strtoupper($karyawan->alamat ?? '-')) ?></td>
         </tr>
         <tr>
-            <td colspan="3" style="padding-top: 2px;">
+            <td colspan="4" style="padding-top: 3pt; padding-bottom: 2pt;">
                 Dalam hal ini bertindak untuk dan atas nama diri pribadi dan selanjutnya disebut <strong>PIHAK KEDUA</strong>.
             </td>
         </tr>
@@ -295,9 +299,8 @@
     <!-- HALAMAN 2 -->
     <!-- ======================================================== -->
     <div class="page-break"></div>
-    <div class="page-num">2</div>
 
-    <ol class="list-alpha" start="6" style="margin-top: 0;">
+    <ol class="list-alpha" start="6" style="margin-top: 0; margin-bottom: 3pt;">
         <li>
             Untuk Operator Mesin Jam Kerja 12 Jam tidak ada lembur kecuali atas Intruksi dari Atasan.
             <ul class="list-sub">
@@ -360,11 +363,10 @@
     <!-- HALAMAN 3 -->
     <!-- ======================================================== -->
     <div class="page-break"></div>
-    <div class="page-num">3</div>
 
     <div class="pasal-title" style="margin-top: 0;">PASAL 3</div>
     <div class="pasal-subtitle">PENEMPATAN, TUGAS, DAN TANGGUNG JAWAB</div>
-    <p>PIHAK KEDUA bekerja untuk di bagian <?= htmlspecialchars($karyawan->posisi ?? '-') ?>.</p>
+    <p>PIHAK KEDUA bekerja untuk di bagian <?= strtoupper(htmlspecialchars($karyawan->posisi ?? '-')) ?>.</p>
     <p>PIHAK KEDUA menyatakan kesediaan dan berkewajiban untuk melakukan aktivitas sebagaimana jabatan yang telah ditentukan tersebut.</p>
     <p>PIHAK PERTAMA berhak menempatkan PIHAK KEDUA dalam melaksanakan tugas dan pekerjaan lain yang oleh PIHAK PERTAMA dianggap lebih cocok serta sesuai dengan keahlian yang dimiliki PIHAK KEDUA.</p>
 
@@ -378,32 +380,39 @@
     <div class="pasal-subtitle">CUTI</div>
 
     <div class="ayat-title">Ayat (1) Ketentuan Umum Cuti</div>
-    <p>PIHAK KEDUA berhak mendapatkan cuti tahunan yang dibayar sebanyak 12 (dua belas) hari dalam 1 (satu) tahun kerja. Hak cuti tersebut hanya berlaku bagi PIHAK KEDUA yang telah bekerja minimal 1 (satu) tahun di CV. Citra Jaya Knitting.</p>
-    <p>Pengajuan cuti wajib dilakukan paling lambat 3 (tiga) hari sebelum pelaksanaan cuti dengan mengajukan surat izin cuti kepada atasan.</p>
-    <p>Persetujuan cuti ditentukan oleh PIHAK PERTAMA berdasarkan kondisi operasional di lapangan.</p>
-    <p>Apabila dalam 1 (satu) tahun PIHAK KEDUA tidak mengambil cuti atau masih memiliki sisa cuti, maka sisa cuti tersebut dapat diuangkan sesuai dengan kebijakan perusahaan.</p>
+    <div class="ayat-content">
+        <p>PIHAK KEDUA berhak mendapatkan cuti tahunan yang dibayar sebanyak 12 (dua belas) hari dalam 1 (satu) tahun kerja. Hak cuti tersebut hanya berlaku bagi PIHAK KEDUA yang telah bekerja minimal 1 (satu) tahun di CV. Citra Jaya Knitting.</p>
+        <p>Pengajuan cuti wajib dilakukan paling lambat 3 (tiga) hari sebelum pelaksanaan cuti dengan mengajukan surat izin cuti kepada atasan.</p>
+        <p>Persetujuan cuti ditentukan oleh PIHAK PERTAMA berdasarkan kondisi operasional di lapangan.</p>
+        <p>Apabila dalam 1 (satu) tahun PIHAK KEDUA tidak mengambil cuti atau masih memiliki sisa cuti, maka sisa cuti tersebut dapat diuangkan sesuai dengan kebijakan perusahaan.</p>
+    </div>
 
     <div class="ayat-title">Ayat (2) Jenis-Jenis Cuti</div>
-    <p>PIHAK KEDUA berhak mengajukan cuti untuk keperluan sebagai berikut:</p>
-    <p>Cuti menikah selama 3 (tiga) hari, cuti menikahkan anak selama 2 (dua) hari, cuti khitanan anak selama 2 (dua) hari, cuti istri melahirkan/keguguran selama 2 (dua) hari, cuti anggota keluarga meninggal dunia selama 1 (satu) hari, cuti anggota keluarga serumah meninggal dunia selama 2 (dua) hari, serta cuti melahirkan selama 45 (empat puluh lima) hari.</p>
+    <div class="ayat-content">
+        <p>PIHAK KEDUA berhak mengajukan cuti untuk keperluan sebagai berikut:</p>
+        <p>Cuti menikah selama 3 (tiga) hari, cuti menikahkan anak selama 2 (dua) hari, cuti khitanan anak selama 2 (dua) hari, cuti istri melahirkan/keguguran selama 2 (dua) hari, cuti anggota keluarga meninggal dunia selama 1 (satu) hari, cuti anggota keluarga serumah meninggal dunia selama 2 (dua) hari, serta cuti melahirkan selama 45 (empat puluh lima) hari.</p>
+    </div>
 
     <div class="ayat-title">Ayat (3) Ketentuan Pembayaran Cuti</div>
-    <p>Cuti sebagaimana dimaksud pada Ayat (2) akan tetap dibayarkan apabila masih termasuk dalam jatah cuti tahunan sebanyak 12 (dua belas) hari.</p>
-    <p>Apabila jumlah cuti yang diambil melebihi jatah cuti tahunan, maka kelebihan cuti tersebut tidak dibayarkan.</p>
+    <div class="ayat-content">
+        <p>Cuti sebagaimana dimaksud pada Ayat (2) akan tetap dibayarkan apabila masih termasuk dalam jatah cuti tahunan sebanyak 12 (dua belas) hari.</p>
+        <p>Apabila jumlah cuti yang diambil melebihi jatah cuti tahunan, maka kelebihan cuti tersebut tidak dibayarkan.</p>
+    </div>
 
     <div class="ayat-title">Ayat (4) Cuti Sakit</div>
-    <p>Cuti sakit yang dibayarkan di luar jatah cuti tahunan hanya berlaku bagi PIHAK KEDUA yang mengalami sakit hingga memerlukan perawatan medis (rawat inap).</p>
-    <p>PIHAK KEDUA wajib melampirkan Surat Keterangan Dokter atau bukti rawat inap dari rumah sakit sebagai syarat pengajuan cuti sakit yang dibayarkan (sesuai Upah), dengan ketentuan maksimal 3 (tiga) hari.</p>
+    <div class="ayat-content">
+        <p>Cuti sakit yang dibayarkan di luar jatah cuti tahunan hanya berlaku bagi PIHAK KEDUA yang mengalami sakit hingga memerlukan perawatan medis (rawat inap).</p>
+        <p>PIHAK KEDUA wajib melampirkan Surat Keterangan Dokter atau bukti rawat inap dari rumah sakit sebagai syarat pengajuan cuti sakit yang dibayarkan (sesuai Upah), dengan ketentuan maksimal 3 (tiga) hari.</p>
+    </div>
 
     <!-- ======================================================== -->
     <!-- HALAMAN 4 -->
     <!-- ======================================================== -->
     <div class="page-break"></div>
-    <div class="page-num">4</div>
 
     <div class="pasal-title" style="margin-top: 0;">PASAL 6</div>
     <div class="pasal-subtitle">PEMUTUSAN HUBUNGAN KERJA (PHK)</div>
-    <p>Jika terjadi Pemutusan Hubungan Kerja (PHK), maka PIHAK KEDUA diharuskan mengembalikan barang -barang yang selama itu dipercayakan padanya.</p>
+    <p>Jika terjadi Pemutusan Hubungan Kerja (PHK), maka PIHAK KEDUA diharuskan mengembalikan barang-barang yang selama itu dipercayakan padanya.</p>
     <p>PIHAK KEDUA juga diharuskan menyelesaikan hal-hal yang berhubungan dengan administrasi keuangan, seperti hutang atau pinjaman tersebut.</p>
 
     <div class="pasal-title">PASAL 7</div>
@@ -422,15 +431,20 @@
     <div class="pasal-title">PASAL 9</div>
     <div class="pasal-subtitle">PENYELESAIAN PERSELISIHAN</div>
     <p>Apabila terjadi perselisihan antara kedua belah pihak, akan diselesaikan secara musyawarah untuk mencapai mufakat.</p>
-    <p>Apabila dengan cara diatas tidak tercapai kata sepakat, maka kedua belah pihak sepakat untuk menyelesaikan permasalahan tersebut melalui prosedur hukum, dengan memilih kedudukan h ukum di Pengadilan setempat.</p>
+    <p>Apabila dengan cara diatas tidak tercapai kata sepakat, maka kedua belah pihak sepakat untuk menyelesaikan permasalahan tersebut melalui prosedur hukum, dengan memilih kedudukan hukum di Pengadilan setempat.</p>
 
     <div class="pasal-title">PASAL 10</div>
     <div class="pasal-subtitle">PENUTUP</div>
     <p>Demikianlah perjanjian ini dibuat, disetujui, dan ditandatangani dengan keadaan sadar dan tanpa paksaan dari pihak manapun.</p>
 
-    <div style="text-align: right; margin-top: 6px; margin-bottom: 8px;">
-        Bandung, <?= $tglTtd ?>
-    </div>
+    <table style="width: 100%; margin-top: 10pt; margin-bottom: 6pt;">
+        <tr>
+            <td style="width: 50%;"></td>
+            <td style="width: 50%; text-align: center;">
+                Bandung, <?= $tglTtd ?>
+            </td>
+        </tr>
+    </table>
 
     <!-- BLOK TANDA TANGAN (SEMUA DI HALAMAN 4) -->
     <div class="sig-container">
@@ -444,14 +458,14 @@
                     <?php if (!empty($b64Sig1)): ?>
                         <img src="<?= $b64Sig1 ?>" class="sig-img" alt="TTD Pihak 1" />
                     <?php else: ?>
-                        <div style="height: 48px;"></div>
+                        <div style="height: 44px;"></div>
                     <?php endif; ?>
                 </td>
                 <td class="sig-col sig-box">
                     <?php if (!empty($b64Sig2)): ?>
                         <img src="<?= $b64Sig2 ?>" class="sig-img" alt="TTD Pihak 2" />
                     <?php else: ?>
-                        <div style="height: 48px;"></div>
+                        <div style="height: 44px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -461,12 +475,11 @@
                     <div class="sig-role"><?= htmlspecialchars($p1Jabatan) ?></div>
                 </td>
                 <td class="sig-col">
-                    <div class="sig-name">(<?= htmlspecialchars($karyawan->full_name ?? '-') ?>)</div>
-                    <div class="sig-role">Karyawan</div>
+                    <div class="sig-name">(<?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?>)</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2" style="height: 8px;"></td>
+                <td colspan="2" style="height: 6pt;"></td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: center; font-weight: bold;">Mengetahui,</td>
@@ -476,13 +489,13 @@
                     <?php if (!empty($b64Sig3)): ?>
                         <img src="<?= $b64Sig3 ?>" class="sig-img" alt="TTD Mengetahui" />
                     <?php else: ?>
-                        <div style="height: 48px;"></div>
+                        <div style="height: 44px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: center;">
-                    <div class="sig-name" style="display: inline-block; min-width: 150px;"><?= htmlspecialchars($p3Nama) ?></div>
+                    <div class="sig-name"><?= htmlspecialchars($p3Nama) ?></div>
                     <div class="sig-role"><?= htmlspecialchars($p3Jabatan) ?></div>
                 </td>
             </tr>

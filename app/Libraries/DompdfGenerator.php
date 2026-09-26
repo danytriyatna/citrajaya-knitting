@@ -14,6 +14,7 @@ class DompdfGenerator
         // Konfigurasi Dompdf
         $options = new Options();
         $options->set('isRemoteEnabled', true); // Untuk mengakses resource seperti gambar dari URL
+        $options->set('isPhpEnabled', true);
         $this->dompdf = new Dompdf($options);
     }
 

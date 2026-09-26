@@ -47,6 +47,7 @@ $routes->group('sdm/lembur', ['namespace' => 'Modules\SDM\Controllers'], static 
 	$routes->post('delete', 'Lembur::delete');
 	$routes->post('list-karyawan', 'Lembur::listKaryawan');
 	$routes->post('sync-absensi', 'Lembur::syncAbsensi');
+	$routes->post('get-target-harian-karyawan', 'Lembur::getTargetHarianKaryawan');
 	$routes->get('print/(:any)', 'Lembur::printDoc/$1');
 	$routes->get('print/(:any)/(:any)', 'Lembur::printDoc/$1/$2');
 });

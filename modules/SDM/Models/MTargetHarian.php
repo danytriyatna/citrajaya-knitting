@@ -357,6 +357,52 @@ class MTargetHarian extends Model
                 }
             }
 
+            // SYNC TO sdm_lembur_detail IF LEMBUR DOCUMENT EXISTS ON THIS DATE
+            $lemburHeader = $db->table('sdm_lembur_header')
+                ->where('tanggal', $tanggal)
+                ->where('active', 1)
+                ->get()->getRow();
+
+            if ($lemburHeader && !empty($matrix) && is_array($matrix)) {
+                foreach ($matrix as $idKaryawan => $row) {
+                    $idKaryawan = (int)$idKaryawan;
+                    if (!$idKaryawan) continue;
+
+                    $targetLembur    = isset($row['target_lembur']) ? (float) $row['target_lembur'] : 0;
+                    $realisasiLembur = 0;
+                    if (isset($row['hourly']) && is_array($row['hourly'])) {
+                        foreach ($row['hourly'] as $slot => $cellText) {
+                            if (strtoupper($slot) === 'LEMBUR') {
+                                $realisasiLembur += $this->parseRawCellText($cellText);
+                            }
+                        }
+                    }
+
+                    $lemburDet = $db->table('sdm_lembur_detail')
+                        ->where('id_header', (int) $lemburHeader->id)
+                        ->where('id_karyawan', $idKaryawan)
+                        ->where('active', 1)
+                        ->get()->getRow();
+
+                    if ($lemburDet) {
+                        $satuan = isset($row['satuan']) ? trim($row['satuan']) : ($lemburDet->satuan_target ?: 'Pcs');
+                        $persentase = ($targetLembur > 0) ? min(100.00, round(($realisasiLembur / $targetLembur) * 100, 2)) : 0;
+                        $jamAbsen = (float) $lemburDet->jam_lembur_absen;
+                        $jamDihitung = round(($jamAbsen * ($persentase / 100)), 2);
+
+                        $db->table('sdm_lembur_detail')
+                            ->where('id', $lemburDet->id)
+                            ->update([
+                                'target'              => $targetLembur,
+                                'realisasi'           => $realisasiLembur,
+                                'satuan_target'       => $satuan,
+                                'persentase'          => $persentase,
+                                'jam_lembur_dihitung' => $jamDihitung
+                            ]);
+                    }
+                }
+            }
+
             $db->transCommit();
             return $idHeader;
         } catch (\Throwable $e) {

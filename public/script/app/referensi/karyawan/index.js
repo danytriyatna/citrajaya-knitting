@@ -91,6 +91,14 @@ $(document).ready(function () {
 
             $('#form_ttd_pihak2_nama').text(data_row.full_name || '-');
             $('#form_ttd_pihak2_jabatan').text(data_row.posisi || 'Karyawan');
+
+            let sig1 = data_row.ttd_pihak1_url ? { url: data_row.ttd_pihak1_url, tgl: data_row.ttd_pihak1_tgl } : null;
+            let sig2 = data_row.ttd_pihak2_url ? { url: data_row.ttd_pihak2_url, tgl: data_row.ttd_pihak2_tgl } : null;
+            let sig3 = data_row.ttd_mengetahui_url ? { url: data_row.ttd_mengetahui_url, tgl: data_row.ttd_mengetahui_tgl } : null;
+
+            updateSingleSigBox('form', 1, sig1, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
+            updateSingleSigBox('form', 2, sig2, data_row.full_name || 'Karyawan', data_row.posisi || 'Karyawan');
+            updateSingleSigBox('form', 3, sig3, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
         } else {
             divCMT.removeClass("d-none");
             selectCMT.val(data_row.id_operator).trigger("change");
@@ -360,6 +368,10 @@ $(document).ready(function () {
         $('#form-kontrak-status-badge').attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
         $('#form_ttd_pihak2_nama').text('-');
         $('#form_ttd_pihak2_jabatan').text('Karyawan');
+
+        updateSingleSigBox('form', 1, null, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
+        updateSingleSigBox('form', 2, null, '-', 'Karyawan');
+        updateSingleSigBox('form', 3, null, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
 
         setTimeout(() => {
             inpBank.val("").trigger('change');
@@ -635,6 +647,21 @@ $(document).ready(function () {
                     } else {
                         $('#kontrak-existing-file').addClass('d-none');
                     }
+
+                    // Tanda Tangan Digital 3 Pihak
+                    let sig1 = d.ttd_pihak1_url ? { url: d.ttd_pihak1_url, tgl: d.ttd_pihak1_tgl } : null;
+                    let sig2 = d.ttd_pihak2_url ? { url: d.ttd_pihak2_url, tgl: d.ttd_pihak2_tgl } : null;
+                    let sig3 = d.ttd_mengetahui_url ? { url: d.ttd_mengetahui_url, tgl: d.ttd_mengetahui_tgl } : null;
+
+                    updateSingleSigBox('kelola', 1, sig1, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
+                    updateSingleSigBox('kelola', 2, sig2, d.full_name || 'Karyawan', d.posisi || 'Karyawan');
+                    updateSingleSigBox('kelola', 3, sig3, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
+
+                    if (d.all_signed) {
+                        $('#kelola-sig-all-signed-banner').removeClass('d-none');
+                    } else {
+                        $('#kelola-sig-all-signed-banner').addClass('d-none');
+                    }
                 }
 
                 modalKontrak.modal('show');
@@ -756,6 +783,319 @@ $(document).ready(function () {
             error: function () {
                 Swal.close();
                 Swal.fire({ text: 'Terjadi kesalahan sistem saat mengunggah berkas.', icon: 'error' });
+            }
+        });
+    });
+
+    // ==========================================
+    // TANDA TANGAN DIGITAL (CANVAS SIGNATURE PAD)
+    // ==========================================
+    function updateSingleSigBox(prefix, pihak, sigInfo, name, role) {
+        let box = $('#' + prefix + '-sig-box-' + pihak);
+        if (!box.length) return;
+
+        let color = (pihak == 1 ? 'primary' : (pihak == 2 ? 'success' : 'dark'));
+
+        if (sigInfo && sigInfo.url) {
+            box.html(`
+                <div class="mb-1 bg-white border rounded p-1 shadow-sm d-flex align-items-center justify-content-center" style="height: 55px;">
+                    <img src="${sigInfo.url}" alt="TTD" style="max-height: 48px; max-width: 100%; object-fit: contain;">
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-success small fw-bold" style="font-size: 10px;"><i class="fa fa-check-circle me-1"></i> ${sigInfo.tgl || 'Sudah TTD'}</span>
+                    <button type="button" class="btn btn-link text-danger p-0 btn-delete-sig" style="font-size: 11px; text-decoration: none;" title="Hapus TTD" data-pihak="${pihak}" data-nama="${name}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            `);
+        } else {
+            box.html(`
+                <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                <button type="button" class="btn btn-outline-${color} btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="${pihak}" data-nama="${name}" data-role="${role}">
+                    <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                </button>
+            `);
+        }
+    }
+
+    let sigCanvas = document.getElementById('canvas-signature');
+    let sigCtx = sigCanvas ? sigCanvas.getContext('2d') : null;
+    let isDrawing = false;
+    let hasDrawn = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function initSignatureCanvas() {
+        if (!sigCanvas) {
+            sigCanvas = document.getElementById('canvas-signature');
+            if (!sigCanvas) return;
+            sigCtx = sigCanvas.getContext('2d');
+        }
+
+        sigCanvas.width = 480;
+        sigCanvas.height = 200;
+
+        sigCtx.lineWidth = 2.5;
+        sigCtx.lineCap = 'round';
+        sigCtx.lineJoin = 'round';
+        sigCtx.strokeStyle = '#111827';
+    }
+
+    function getCanvasCoords(e) {
+        let r = sigCanvas.getBoundingClientRect();
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        let scaleX = sigCanvas.width / r.width;
+        let scaleY = sigCanvas.height / r.height;
+        return {
+            x: (clientX - r.left) * scaleX,
+            y: (clientY - r.top) * scaleY
+        };
+    }
+
+    function startDraw(e) {
+        if (!sigCtx) return;
+        e.preventDefault();
+        isDrawing = true;
+        let coords = getCanvasCoords(e);
+        lastX = coords.x;
+        lastY = coords.y;
+        sigCtx.beginPath();
+        sigCtx.moveTo(lastX, lastY);
+    }
+
+    function moveDraw(e) {
+        if (!isDrawing || !sigCtx) return;
+        e.preventDefault();
+        let coords = getCanvasCoords(e);
+        sigCtx.lineTo(coords.x, coords.y);
+        sigCtx.stroke();
+        lastX = coords.x;
+        lastY = coords.y;
+        hasDrawn = true;
+    }
+
+    function stopDraw(e) {
+        if (!isDrawing || !sigCtx) return;
+        isDrawing = false;
+        sigCtx.closePath();
+    }
+
+    if (sigCanvas) {
+        sigCanvas.addEventListener('mousedown', startDraw);
+        sigCanvas.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', stopDraw);
+
+        sigCanvas.addEventListener('touchstart', startDraw, { passive: false });
+        sigCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+        window.addEventListener('touchend', stopDraw);
+    }
+
+    function clearSignatureCanvas() {
+        if (!sigCanvas || !sigCtx) return;
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        hasDrawn = false;
+    }
+
+    $('#modal-signature-pad').on('shown.bs.modal', function () {
+        initSignatureCanvas();
+        clearSignatureCanvas();
+    });
+
+    $('#btn-sig-clear').on('click', function () {
+        clearSignatureCanvas();
+    });
+
+    $(document).on('click', '.btn-open-sig', function () {
+        let pihak = $(this).data('pihak');
+        let nama = $(this).data('nama');
+        let role = $(this).data('role');
+
+        let karyawanId = '';
+        if ($('#modal-kelola-kontrak').is(':visible')) {
+            karyawanId = $('#kontrak_karyawan_id').val();
+            if (pihak == 2) {
+                nama = $('#kelola-ttd-pihak2-nama').text();
+                role = $('#kelola-ttd-pihak2-jabatan').text();
+            }
+        } else if ($('#modal-form-add-po').is(':visible')) {
+            karyawanId = inpData.val();
+            if (pihak == 2) {
+                nama = inpNama.val() || 'Karyawan';
+                role = inpPosisi.val() || 'Karyawan';
+            }
+        }
+
+        if (!karyawanId) {
+            Swal.fire({
+                text: 'Data karyawan belum tersimpan di sistem. Silakan simpan data profil karyawan terlebih dahulu sebelum membubuhkan tanda tangan digital!',
+                icon: 'warning'
+            });
+            return;
+        }
+
+        $('#sig-target-karyawan-id').val(karyawanId);
+        $('#sig-target-pihak').val(pihak);
+        $('#sig-target-name').text(nama || '-');
+        $('#sig-target-role').text(role || '-');
+
+        let badgeText = (pihak == 1 ? 'PIHAK PERTAMA' : (pihak == 2 ? 'PIHAK KEDUA' : 'MENGETAHUI'));
+        let badgeClass = (pihak == 1 ? 'badge bg-primary px-2 py-1 mb-1' : (pihak == 2 ? 'badge bg-success px-2 py-1 mb-1' : 'badge bg-dark px-2 py-1 mb-1'));
+        $('#sig-target-badge').attr('class', badgeClass).text(badgeText);
+
+        $('#modal-signature-pad').modal('show');
+    });
+
+    $('#btn-sig-save').on('click', function () {
+        if (!hasDrawn) {
+            Swal.fire({
+                text: 'Silakan bubuhkan tanda tangan terlebih dahulu pada kanvas sebelum menyimpan!',
+                icon: 'warning'
+            });
+            return;
+        }
+
+        let karyawanId = $('#sig-target-karyawan-id').val();
+        let pihak = $('#sig-target-pihak').val();
+        let sigBase64 = sigCanvas.toDataURL('image/png');
+
+        Swal.fire({
+            title: 'Menyimpan Tanda Tangan...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/simpan-ttd-digital',
+            data: {
+                id: karyawanId,
+                pihak: pihak,
+                signature: sigBase64
+            },
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (res.status) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    $('#modal-signature-pad').modal('hide');
+
+                    let sigData = {
+                        file: res.file_name,
+                        url: res.file_url,
+                        tgl: res.tgl
+                    };
+
+                    let defaultName = $('#sig-target-name').text();
+                    let defaultRole = $('#sig-target-role').text();
+
+                    updateSingleSigBox('kelola', pihak, sigData, defaultName, defaultRole);
+                    updateSingleSigBox('form', pihak, sigData, defaultName, defaultRole);
+
+                    if (res.all_signed) {
+                        $('#kelola-sig-all-signed-banner').removeClass('d-none');
+                        $('#kontrak-status-badge, #form-kontrak-status-badge')
+                            .attr('class', 'badge bg-success p-2')
+                            .html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                    }
+
+                    dtList.setData();
+                } else {
+                    Swal.fire({ text: res.message || 'Gagal menyimpan tanda tangan.', icon: 'error' });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan sistem saat menyimpan tanda tangan.', icon: 'error' });
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-delete-sig', function () {
+        let pihak = $(this).data('pihak');
+        let nama = $(this).data('nama') || 'pihak terkait';
+
+        let karyawanId = '';
+        if ($('#modal-kelola-kontrak').is(':visible')) {
+            karyawanId = $('#kontrak_karyawan_id').val();
+        } else if ($('#modal-form-add-po').is(':visible')) {
+            karyawanId = inpData.val();
+        }
+
+        if (!karyawanId) return;
+
+        Swal.fire({
+            title: 'Hapus Tanda Tangan?',
+            text: 'Tanda tangan digital untuk ' + nama + ' akan dihapus dan perlu ditandatangani ulang.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus TTD',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.value) {
+                Swal.fire({
+                    title: 'Mereset Tanda Tangan...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onBeforeOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/master-data/karyawan/hapus-ttd-digital',
+                    data: {
+                        id: karyawanId,
+                        pihak: pihak
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        Swal.close();
+                        if (res.status) {
+                            Swal.fire({
+                                title: 'Direset!',
+                                text: res.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
+                            let defaultName = (pihak == 1 ? 'Eva Fiantina' : (pihak == 2 ? ($('#nama_konsumen').val() || $('#kelola-ttd-pihak2-nama').text()) : 'Edwin Ferdiansyah'));
+                            let defaultRole = (pihak == 1 ? 'HRD Citra Jaya Knitting' : (pihak == 2 ? ($('#posisi').val() || $('#kelola-ttd-pihak2-jabatan').text()) : 'Pimpinan CV. Citra Jaya Knitting'));
+
+                            updateSingleSigBox('kelola', pihak, null, defaultName, defaultRole);
+                            updateSingleSigBox('form', pihak, null, defaultName, defaultRole);
+
+                            $('#kelola-sig-all-signed-banner').addClass('d-none');
+                            if (res.status_kontrak === 1) {
+                                $('#kontrak-status-badge, #form-kontrak-status-badge')
+                                    .attr('class', 'badge bg-warning text-dark p-2')
+                                    .html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                            }
+
+                            dtList.setData();
+                        } else {
+                            Swal.fire({ text: res.message || 'Gagal mereset tanda tangan.', icon: 'error' });
+                        }
+                    },
+                    error: function () {
+                        Swal.close();
+                        Swal.fire({ text: 'Terjadi kesalahan sistem saat mereset tanda tangan.', icon: 'error' });
+                    }
+                });
             }
         });
     });

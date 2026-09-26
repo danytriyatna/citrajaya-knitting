@@ -284,28 +284,52 @@
             <div class="row g-2">
               <!-- Pihak Pertama -->
               <div class="col-md-4">
-                <div class="p-2 rounded border bg-light text-center h-100">
-                  <span class="badge bg-primary px-2 py-1 mb-1" style="font-size: 10px;">PIHAK PERTAMA</span>
-                  <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak1_nama" title="Eva Fiantina">Eva Fiantina</div>
-                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_pihak1_jabatan">HRD Citra Jaya Knitting</div>
+                <div class="p-2 rounded border bg-light text-center h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <span class="badge bg-primary px-2 py-1 mb-1" style="font-size: 10px;">PIHAK PERTAMA</span>
+                    <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak1_nama" title="Eva Fiantina">Eva Fiantina</div>
+                    <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="form_ttd_pihak1_jabatan">HRD Citra Jaya Knitting</div>
+                  </div>
+                  <div id="form-sig-box-1" class="mt-auto">
+                    <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                    <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="1" data-nama="Eva Fiantina" data-role="HRD Citra Jaya Knitting">
+                      <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <!-- Pihak Kedua -->
               <div class="col-md-4">
-                <div class="p-2 rounded border bg-light text-center h-100">
-                  <span class="badge bg-success px-2 py-1 mb-1" style="font-size: 10px;">PIHAK KEDUA</span>
-                  <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak2_nama">-</div>
-                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_pihak2_jabatan">Karyawan</div>
+                <div class="p-2 rounded border bg-light text-center h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <span class="badge bg-success px-2 py-1 mb-1" style="font-size: 10px;">PIHAK KEDUA</span>
+                    <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak2_nama">-</div>
+                    <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="form_ttd_pihak2_jabatan">Karyawan</div>
+                  </div>
+                  <div id="form-sig-box-2" class="mt-auto">
+                    <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                    <button type="button" class="btn btn-outline-success btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="2" data-nama="" data-role="Karyawan">
+                      <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <!-- Mengetahui -->
               <div class="col-md-4">
-                <div class="p-2 rounded border bg-light text-center h-100">
-                  <span class="badge bg-dark px-2 py-1 mb-1" style="font-size: 10px;">MENGETAHUI</span>
-                  <div class="fw-bold text-dark text-truncate" id="form_ttd_mengetahui_nama" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
-                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_mengetahui_jabatan">Pimpinan CV. Citra Jaya Knitting</div>
+                <div class="p-2 rounded border bg-light text-center h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <span class="badge bg-dark px-2 py-1 mb-1" style="font-size: 10px;">MENGETAHUI</span>
+                    <div class="fw-bold text-dark text-truncate" id="form_ttd_mengetahui_nama" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
+                    <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="form_ttd_mengetahui_jabatan">Pimpinan CV. Citra Jaya Knitting</div>
+                  </div>
+                  <div id="form-sig-box-3" class="mt-auto">
+                    <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                    <button type="button" class="btn btn-outline-dark btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="3" data-nama="Edwin Ferdiansyah" data-role="Pimpinan CV. Citra Jaya Knitting">
+                      <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -416,27 +440,74 @@
 
               <!-- Penandatangan Kontrak (3 Pihak) di Modal Kelola -->
               <div class="mt-3 pt-3 border-top">
-                <label class="form-label small fw-bold text-muted mb-2"><i class="fa fa-pencil-square-o me-1"></i> Penandatangan Dokumen Kontrak</label>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <label class="form-label small fw-bold text-muted mb-0"><i class="fa fa-pencil-square-o me-1 text-primary"></i> Penandatangan Dokumen Kontrak Digital</label>
+                  <span class="badge bg-light text-muted border" style="font-size: 10px;">Pengesahan Elektronik</span>
+                </div>
+
+                <!-- Banner jika ketiga pihak sudah bertandatangan -->
+                <div id="kelola-sig-all-signed-banner" class="alert alert-success py-2 px-3 mb-2 d-none">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center">
+                      <i class="fa fa-check-circle text-success fs-4 me-2"></i>
+                      <div>
+                        <strong class="d-block text-success">Semua Pihak Sudah Bertandatangan Digital!</strong>
+                        <span class="small text-muted">Dokumen kontrak sah secara digital. Klik tombol di bawah untuk mengunduh berkas lengkap.</span>
+                      </div>
+                    </div>
+                    <span class="badge bg-success px-2 py-1"><i class="fa fa-certificate me-1"></i> Sah & Terverifikasi</span>
+                  </div>
+                </div>
+
                 <div class="row g-2">
+                  <!-- Pihak Pertama -->
                   <div class="col-md-4">
-                    <div class="border rounded p-2 bg-light text-center h-100">
-                      <span class="badge bg-primary mb-1">PIHAK PERTAMA</span>
-                      <div class="fw-bold text-dark small">Eva Fiantina</div>
-                      <div class="text-muted" style="font-size: 11px;">HRD Citra Jaya Knitting</div>
+                    <div class="border rounded p-2 bg-light text-center h-100 d-flex flex-column justify-content-between">
+                      <div>
+                        <span class="badge bg-primary px-2 py-1 mb-1" style="font-size: 10px;">PIHAK PERTAMA</span>
+                        <div class="fw-bold text-dark small text-truncate" title="Eva Fiantina">Eva Fiantina</div>
+                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;">HRD Citra Jaya Knitting</div>
+                      </div>
+                      <div id="kelola-sig-box-1" class="mt-auto">
+                        <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                        <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="1" data-nama="Eva Fiantina" data-role="HRD Citra Jaya Knitting">
+                          <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                        </button>
+                      </div>
                     </div>
                   </div>
+
+                  <!-- Pihak Kedua -->
                   <div class="col-md-4">
-                    <div class="border rounded p-2 bg-light text-center h-100">
-                      <span class="badge bg-success mb-1">PIHAK KEDUA</span>
-                      <div class="fw-bold text-dark small" id="kelola-ttd-pihak2-nama">-</div>
-                      <div class="text-muted" style="font-size: 11px;" id="kelola-ttd-pihak2-jabatan">Karyawan</div>
+                    <div class="border rounded p-2 bg-light text-center h-100 d-flex flex-column justify-content-between">
+                      <div>
+                        <span class="badge bg-success px-2 py-1 mb-1" style="font-size: 10px;">PIHAK KEDUA</span>
+                        <div class="fw-bold text-dark small text-truncate" id="kelola-ttd-pihak2-nama">-</div>
+                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="kelola-ttd-pihak2-jabatan">Karyawan</div>
+                      </div>
+                      <div id="kelola-sig-box-2" class="mt-auto">
+                        <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                        <button type="button" class="btn btn-outline-success btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="2" data-nama="" data-role="Karyawan">
+                          <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                        </button>
+                      </div>
                     </div>
                   </div>
+
+                  <!-- Mengetahui -->
                   <div class="col-md-4">
-                    <div class="border rounded p-2 bg-light text-center h-100">
-                      <span class="badge bg-dark mb-1">MENGETAHUI</span>
-                      <div class="fw-bold text-dark small">Edwin Ferdiansyah</div>
-                      <div class="text-muted" style="font-size: 11px;">Pimpinan CV. Citra Jaya Knitting</div>
+                    <div class="border rounded p-2 bg-light text-center h-100 d-flex flex-column justify-content-between">
+                      <div>
+                        <span class="badge bg-dark px-2 py-1 mb-1" style="font-size: 10px;">MENGETAHUI</span>
+                        <div class="fw-bold text-dark small text-truncate" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
+                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;">Pimpinan CV. Citra Jaya Knitting</div>
+                      </div>
+                      <div id="kelola-sig-box-3" class="mt-auto">
+                        <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
+                        <button type="button" class="btn btn-outline-dark btn-xs py-1 px-2 w-100 btn-open-sig" data-pihak="3" data-nama="Edwin Ferdiansyah" data-role="Pimpinan CV. Citra Jaya Knitting">
+                          <i class="fa fa-pencil me-1"></i> Tanda Tangan
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -489,6 +560,65 @@
 
       <div class="modal-footer bg-light">
         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Signature Pad -->
+<div class="modal fade" id="modal-signature-pad" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1065;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-dark text-white py-2">
+        <h5 class="modal-title fs-6 text-white" id="modal-sig-title">
+          <i class="fa fa-pencil-square-o me-2"></i> Tanda Tangan Digital
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Target Signatory Info -->
+        <div class="alert alert-light border py-2 px-3 mb-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="badge bg-primary px-2 py-1 mb-1" id="sig-target-badge">PIHAK</span>
+              <div class="fw-bold text-dark" id="sig-target-name">-</div>
+              <div class="text-muted small" id="sig-target-role">-</div>
+            </div>
+            <i class="fa fa-pencil fa-2x text-muted opacity-50"></i>
+          </div>
+        </div>
+
+        <input type="hidden" id="sig-target-karyawan-id" value="">
+        <input type="hidden" id="sig-target-pihak" value="">
+
+        <p class="small text-muted mb-2">
+          Goreskan tanda tangan pada bidang kanvas di bawah menggunakan mouse atau sentuhan layar (touchscreen):
+        </p>
+
+        <!-- Canvas Container -->
+        <div class="border rounded bg-white shadow-sm p-1 position-relative" style="touch-action: none; background-color: #fafbfc;">
+          <canvas id="canvas-signature" width="480" height="200" style="width: 100%; height: 200px; display: block; cursor: crosshair; background: #ffffff; border-radius: 4px;"></canvas>
+          <div class="position-absolute bottom-0 start-0 end-0 text-center pb-2" style="pointer-events: none;">
+            <span class="text-muted" style="font-size: 11px; opacity: 0.6; border-top: 1px dashed #ced4da; display: inline-block; width: 80%; padding-top: 2px;">
+              Garis Tanda Tangan
+            </span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-sig-clear">
+            <i class="fa fa-eraser me-1"></i> Hapus / Bersihkan
+          </button>
+          <span class="text-muted small" style="font-size: 11px;">
+            <i class="fa fa-info-circle me-1"></i> Tinta Hitam Pekat
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary btn-sm px-4" id="btn-sig-save">
+          <i class="fa fa-check me-1"></i> Simpan Tanda Tangan
+        </button>
       </div>
     </div>
   </div>

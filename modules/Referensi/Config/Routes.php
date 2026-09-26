@@ -63,6 +63,8 @@ $routes->group("master-data/karyawan", ['namespace' => 'Modules\Referensi\Contro
     $routes->post('generate-kontrak', 'RefKaryawan::generateKontrak');
     $routes->get('download-kontrak/(:any)', 'RefKaryawan::downloadKontrak/$1');
     $routes->post('upload-kontrak', 'RefKaryawan::uploadKontrak');
+    $routes->post('simpan-ttd-digital', 'RefKaryawan::simpanTtdDigital');
+    $routes->post('hapus-ttd-digital', 'RefKaryawan::hapusTtdDigital');
 });
 
 $routes->group("master-data/operator", ['namespace' => 'Modules\Referensi\Controllers'], static function ($routes) {

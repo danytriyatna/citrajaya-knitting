@@ -21,7 +21,8 @@ class KaryawanModel extends \App\Models\PrModel
         $builder->select("ky.id, ky.id_perusahaan, ky.nip, ky.full_name, ky.email, ky.posisi, ky.kategori_posisi, ky.id_shift, ms.nama_shift as nama_shift_karyawan, ky.tgl_bergabung, ky.jenis_kelamin,
                             ky.tgl_lahir, ky.tempat_lahir, ky.no_hp, ky.alamat, ky.upah_lembur, ky.upah_harian, rp.nama_perusahaan, ro.nama_operator,
                             ky.upah_lembur_we, ky.upah_jam, ky.premi_kehadiran, ky.type, ky.id_operator, cbx.file_name, ky.nama_bank, ky.no_rekening, ky.active,
-                            ky.tgl_mulai_kontrak, ky.durasi_kontrak_bulan, ky.tgl_selesai_kontrak, ky.file_kontrak_id, ky.status_kontrak, fk.file_name as file_kontrak_name, fk.file_name_origin as file_kontrak_origin ");
+                            ky.tgl_mulai_kontrak, ky.durasi_kontrak_bulan, ky.tgl_selesai_kontrak, ky.file_kontrak_id, ky.status_kontrak, fk.file_name as file_kontrak_name, fk.file_name_origin as file_kontrak_origin,
+                            ky.ttd_pihak1_file, ky.ttd_pihak1_tgl, ky.ttd_pihak2_file, ky.ttd_pihak2_tgl, ky.ttd_mengetahui_file, ky.ttd_mengetahui_tgl ");
         $builder->join("_files cbx", "ky.gambar_id = cbx.id", "left");
         $builder->join("_files fk", "ky.file_kontrak_id = fk.id", "left");
         $builder->join("ref_perusahaan rp", "ky.id_perusahaan = rp.id", "left");

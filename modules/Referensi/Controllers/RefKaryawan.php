@@ -182,6 +182,16 @@ class RefKaryawan extends BaseController
                     "file_kontrak_name" => $row->file_kontrak_name,
                     "file_kontrak_origin" => $row->file_kontrak_origin,
                     "file_kontrak_url" => !empty($row->file_kontrak_name) ? base_url() . "uploads/kontrak/"  . $row->file_kontrak_name : "",
+                    "ttd_pihak1_file" => $row->ttd_pihak1_file ?? "",
+                    "ttd_pihak1_url" => !empty($row->ttd_pihak1_file) ? base_url() . "uploads/kontrak/signatures/"  . $row->ttd_pihak1_file : "",
+                    "ttd_pihak1_tgl" => !empty($row->ttd_pihak1_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_pihak1_tgl)) : "",
+                    "ttd_pihak2_file" => $row->ttd_pihak2_file ?? "",
+                    "ttd_pihak2_url" => !empty($row->ttd_pihak2_file) ? base_url() . "uploads/kontrak/signatures/"  . $row->ttd_pihak2_file : "",
+                    "ttd_pihak2_tgl" => !empty($row->ttd_pihak2_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_pihak2_tgl)) : "",
+                    "ttd_mengetahui_file" => $row->ttd_mengetahui_file ?? "",
+                    "ttd_mengetahui_url" => !empty($row->ttd_mengetahui_file) ? base_url() . "uploads/kontrak/signatures/"  . $row->ttd_mengetahui_file : "",
+                    "ttd_mengetahui_tgl" => !empty($row->ttd_mengetahui_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_mengetahui_tgl)) : "",
+                    "all_signed" => (!empty($row->ttd_pihak1_file) && !empty($row->ttd_pihak2_file) && !empty($row->ttd_mengetahui_file)),
                     "active" => (int) $row->active,
                 )
             );
@@ -487,6 +497,16 @@ class RefKaryawan extends BaseController
                 'file_kontrak_name' => $row->file_kontrak_name,
                 'file_kontrak_origin' => $row->file_kontrak_origin,
                 'file_kontrak_url' => !empty($row->file_kontrak_name) ? base_url() . "uploads/kontrak/" . $row->file_kontrak_name : "",
+                'ttd_pihak1_file' => $row->ttd_pihak1_file ?? null,
+                'ttd_pihak1_url' => !empty($row->ttd_pihak1_file) ? base_url() . "uploads/kontrak/signatures/" . $row->ttd_pihak1_file : "",
+                'ttd_pihak1_tgl' => !empty($row->ttd_pihak1_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_pihak1_tgl)) : "",
+                'ttd_pihak2_file' => $row->ttd_pihak2_file ?? null,
+                'ttd_pihak2_url' => !empty($row->ttd_pihak2_file) ? base_url() . "uploads/kontrak/signatures/" . $row->ttd_pihak2_file : "",
+                'ttd_pihak2_tgl' => !empty($row->ttd_pihak2_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_pihak2_tgl)) : "",
+                'ttd_mengetahui_file' => $row->ttd_mengetahui_file ?? null,
+                'ttd_mengetahui_url' => !empty($row->ttd_mengetahui_file) ? base_url() . "uploads/kontrak/signatures/" . $row->ttd_mengetahui_file : "",
+                'ttd_mengetahui_tgl' => !empty($row->ttd_mengetahui_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_mengetahui_tgl)) : "",
+                'all_signed' => (!empty($row->ttd_pihak1_file) && !empty($row->ttd_pihak2_file) && !empty($row->ttd_mengetahui_file)),
             ]
         ]);
     }
@@ -640,6 +660,8 @@ class RefKaryawan extends BaseController
                 $xml = str_replace($key, $val, $xml);
             }
 
+            $this->injectSignaturesToDocx($zip, $xml, $row);
+
             $zip->addFromString('word/document.xml', $xml);
             $zip->close();
 
@@ -754,5 +776,220 @@ class RefKaryawan extends BaseController
             9 => "Sembilan", 10 => "Sepuluh", 11 => "Sebelas", 12 => "Dua Belas"
         ];
         return $bilang[$angka] ?? (string)$angka;
+    }
+
+    public function simpanTtdDigital()
+    {
+        if (!$this->auth->loggedIn()) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Sesi berakhir, silakan login kembali.']);
+        }
+
+        $id = $this->request->getPost('id');
+        $pihak = (int)$this->request->getPost('pihak'); // 1 = Pihak Pertama, 2 = Pihak Kedua, 3 = Mengetahui
+        $sigData = $this->request->getPost('signature_data');
+
+        if (empty($id) || empty($pihak) || empty($sigData)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Parameter tanda tangan tidak lengkap.']);
+        }
+
+        $rawId = decrypt($id);
+        if (empty($rawId)) {
+            $rawId = (int)$id;
+        }
+
+        $row = $this->mkaryawan->getData($rawId);
+        if (!$row) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
+        }
+
+        // Decode base64 PNG
+        if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $type)) {
+            $sigData = substr($sigData, strpos($sigData, ',') + 1);
+            $decoded = base64_decode($sigData);
+            if ($decoded === false) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Format gambar tanda tangan tidak valid.']);
+            }
+        } else {
+            return $this->response->setJSON(['status' => false, 'message' => 'Format base64 tanda tangan tidak dikenali.']);
+        }
+
+        $sigDir = FCPATH . 'uploads/kontrak/signatures/';
+        if (!is_dir($sigDir)) {
+            mkdir($sigDir, 0777, true);
+        }
+
+        $cleanNip = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nip ?? 'KRY');
+        $fileName = 'ttd_' . $pihak . '_' . $cleanNip . '_' . time() . '.png';
+        $targetFile = $sigDir . $fileName;
+
+        file_put_contents($targetFile, $decoded);
+
+        $now = date('Y-m-d H:i:s');
+        $update = [];
+        if ($pihak === 1) {
+            $update['ttd_pihak1_file'] = $fileName;
+            $update['ttd_pihak1_tgl'] = $now;
+        } else if ($pihak === 2) {
+            $update['ttd_pihak2_file'] = $fileName;
+            $update['ttd_pihak2_tgl'] = $now;
+        } else if ($pihak === 3) {
+            $update['ttd_mengetahui_file'] = $fileName;
+            $update['ttd_mengetahui_tgl'] = $now;
+        }
+
+        // Cek kelengkapan tanda tangan ketiga pihak
+        $p1 = ($pihak === 1) ? $fileName : ($row->ttd_pihak1_file ?? null);
+        $p2 = ($pihak === 2) ? $fileName : ($row->ttd_pihak2_file ?? null);
+        $p3 = ($pihak === 3) ? $fileName : ($row->ttd_mengetahui_file ?? null);
+
+        $allSigned = (!empty($p1) && !empty($p2) && !empty($p3));
+        if ($allSigned) {
+            $update['status_kontrak'] = 2; // Signed
+        } else if (empty($row->status_kontrak) || $row->status_kontrak == 0) {
+            $update['status_kontrak'] = 1; // Minimal draf terbit
+        }
+
+        $this->mkaryawan->updateRecord($this->mkaryawan->table, $update, 'id', $rawId);
+
+        return $this->response->setJSON([
+            'status' => true,
+            'message' => 'Tanda tangan digital berhasil disimpan!',
+            'file_name' => $fileName,
+            'file_url' => base_url() . 'uploads/kontrak/signatures/' . $fileName,
+            'tgl_formatted' => date('d/m/Y H:i', strtotime($now)),
+            'all_signed' => $allSigned,
+            'status_kontrak' => $update['status_kontrak'] ?? $row->status_kontrak
+        ]);
+    }
+
+    public function hapusTtdDigital()
+    {
+        if (!$this->auth->loggedIn()) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Sesi berakhir, silakan login kembali.']);
+        }
+
+        $id = $this->request->getPost('id');
+        $pihak = (int)$this->request->getPost('pihak');
+
+        if (empty($id) || empty($pihak)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Parameter tidak valid.']);
+        }
+
+        $rawId = decrypt($id);
+        if (empty($rawId)) {
+            $rawId = (int)$id;
+        }
+
+        $row = $this->mkaryawan->getData($rawId);
+        if (!$row) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
+        }
+
+        $update = [];
+        if ($pihak === 1) {
+            $update['ttd_pihak1_file'] = null;
+            $update['ttd_pihak1_tgl'] = null;
+        } else if ($pihak === 2) {
+            $update['ttd_pihak2_file'] = null;
+            $update['ttd_pihak2_tgl'] = null;
+        } else if ($pihak === 3) {
+            $update['ttd_mengetahui_file'] = null;
+            $update['ttd_mengetahui_tgl'] = null;
+        }
+
+        if (($row->status_kontrak ?? 0) == 2 && empty($row->file_kontrak_id)) {
+            $update['status_kontrak'] = 1;
+        }
+
+        $this->mkaryawan->updateRecord($this->mkaryawan->table, $update, 'id', $rawId);
+
+        return $this->response->setJSON([
+            'status' => true,
+            'message' => 'Tanda tangan digital berhasil direset.',
+            'status_kontrak' => $update['status_kontrak'] ?? $row->status_kontrak
+        ]);
+    }
+
+    private function injectSignaturesToDocx(&$zip, &$xml, $row)
+    {
+        $sig1Path = !empty($row->ttd_pihak1_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_pihak1_file : null;
+        $sig2Path = !empty($row->ttd_pihak2_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_pihak2_file : null;
+        $sig3Path = !empty($row->ttd_mengetahui_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_mengetahui_file : null;
+
+        $has1 = ($sig1Path && file_exists($sig1Path));
+        $has2 = ($sig2Path && file_exists($sig2Path));
+        $has3 = ($sig3Path && file_exists($sig3Path));
+
+        if (!$has1 && !$has2 && !$has3) {
+            return;
+        }
+
+        $rels = $zip->getFromName('word/_rels/document.xml.rels');
+        $newRels = '';
+
+        $drawSig1 = '';
+        $drawSig2 = '';
+        $drawSig3 = '';
+
+        if ($has1) {
+            $zip->addFile($sig1Path, 'word/media/ttd_pihak1.png');
+            $newRels .= '<Relationship Id="rIdTtd1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/ttd_pihak1.png"/>';
+            $drawSig1 = $this->buildDrawingXml('rIdTtd1', 9991, 'TTD_Pihak_1');
+        }
+
+        if ($has2) {
+            $zip->addFile($sig2Path, 'word/media/ttd_pihak2.png');
+            $newRels .= '<Relationship Id="rIdTtd2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/ttd_pihak2.png"/>';
+            $drawSig2 = $this->buildDrawingXml('rIdTtd2', 9992, 'TTD_Pihak_2');
+        }
+
+        if ($has3) {
+            $zip->addFile($sig3Path, 'word/media/ttd_mengetahui.png');
+            $newRels .= '<Relationship Id="rIdTtd3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/ttd_mengetahui.png"/>';
+            $drawSig3 = $this->buildDrawingXml('rIdTtd3', 9993, 'TTD_Mengetahui');
+        }
+
+        if (!empty($newRels)) {
+            $rels = str_replace('</Relationships>', $newRels . '</Relationships>', $rels);
+            $zip->addFromString('word/_rels/document.xml.rels', $rels);
+        }
+
+        // Sematkan ke document.xml
+        // 1. Baris Pihak Pertama & Kedua:
+        if ($has1 || $has2) {
+            $replacementRow1 = '<w:p w14:paraId="00101CFB" w14:textId="221C93B7" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00D17176" w:rsidP="00D17176"><w:pPr><w:tabs><w:tab w:val="left" w:pos="6643"/></w:tabs><w:spacing w:line="192" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
+                . (!empty($drawSig1) ? $drawSig1 : '<w:r><w:t xml:space="preserve">                </w:t></w:r>')
+                . '<w:r><w:tab/><w:tab/><w:tab/><w:tab/></w:r>'
+                . (!empty($drawSig2) ? $drawSig2 : '')
+                . '</w:p>';
+            $xml = preg_replace('/<w:p w14:paraId="00101CFB".*?<\/w:p>/s', $replacementRow1, $xml);
+        }
+
+        // 2. Baris Mengetahui:
+        if ($has3) {
+            $replacementRow2 = '<w:p w14:paraId="658818E4" w14:textId="77777777" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00BD78BE" w:rsidP="00BD78BE"><w:pPr><w:spacing w:line="192" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
+                . '<w:r><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/></w:r>'
+                . $drawSig3
+                . '</w:p>';
+            $xml = preg_replace('/<w:p w14:paraId="658818E4".*?<\/w:p>/s', $replacementRow2, $xml);
+        }
+    }
+
+    private function buildDrawingXml($rId, $docPrId, $name, $cx = 1371600, $cy = 685800)
+    {
+        return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'
+            . '<wp:extent cx="' . $cx . '" cy="' . $cy . '"/>'
+            . '<wp:effectExtent l="0" t="0" r="0" b="0"/>'
+            . '<wp:docPr id="' . $docPrId . '" name="' . $name . '"/>'
+            . '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'
+            . '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+            . '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+            . '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+            . '<pic:nvPicPr><pic:cNvPr id="0" name="' . $name . '.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+            . '<pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="' . $rId . '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+            . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' . $cx . '" cy="' . $cy . '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+            . '</pic:pic>'
+            . '</a:graphicData></a:graphic>'
+            . '</wp:inline></w:drawing></w:r>';
     }
 }

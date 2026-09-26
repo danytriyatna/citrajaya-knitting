@@ -966,6 +966,18 @@ class WalkorderModel extends \App\Models\PrModel
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_qty_pakai,
              (
+                SELECT ROUND(COALESCE(SUM(tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb_sub.harga_satuan, 0)), 0)::numeric, 2)
+                FROM trans_barang_detail tbd
+                INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                LEFT JOIN ref_barang rb_sub ON rb_sub.id = tbd.id_barang
+                WHERE tbh.no_ref_wo = (
+                        SELECT wo3.kode_walkorder
+                        FROM trans_walkorder wo3
+                        WHERE wo3.id = " . (int)$id . "
+                    )
+                AND tbd.id_barang      = abx.id_barang
+            ) AS total_nilai_pakai,
+             (
                 (
                     SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
                     FROM trans_barang_trf_detail tbtd

@@ -69,11 +69,15 @@
 
         <!-- TABEL REKAPITULASI PEMAKAIAN BAHAN BAKU (WARNA TEGAS) -->
         <div class="card mb-4 shadow-sm" style="border: 2px solid #d97706 !important;">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background-color: #fffbeb; border-bottom: 1px solid #fde68a;">
+          <div class="card-header py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2" style="background-color: #fffbeb; border-bottom: 1px solid #fde68a;">
             <h6 class="m-0 fw-bold" style="color: #b45309;">
               <i class="fa fa-boxes me-2"></i>REKAPITULASI PEMAKAIAN BAHAN BAKU
             </h6>
-            <span class="badge px-2 py-1 fw-bold text-white shadow-sm" style="background-color: #d97706;" id="mdl-rekap-badge-kebutuhan">Total Kebutuhan: 0 Kg</span>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="badge px-2 py-1 fw-bold text-white shadow-sm" style="background-color: #1e40af;" id="mdl-rekap-badge-kebutuhan">Kebutuhan: 0 Kg</span>
+              <span class="badge px-2 py-1 fw-bold text-white shadow-sm" style="background-color: #d97706;" id="mdl-rekap-badge-pakai">Pemakaian: 0 Kg</span>
+              <span class="badge px-2 py-1 fw-bold text-white shadow-sm" style="background-color: #15803d;" id="mdl-rekap-badge-nilai">Nilai Pemakaian: Rp 0</span>
+            </div>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -82,15 +86,16 @@
                   <tr>
                     <th class="text-center" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
                     <th style="background-color: #1e293b !important; color: #ffffff !important;">Warna / Benang</th>
-                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Kebutuhan (Kg)</th>
-                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pengiriman (Kg)</th>
-                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pengembalian (Kg)</th>
-                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pemakaian (Kg)</th>
-                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Sisa (Kg)</th>
+                    <th class="text-end" style="width: 12%; background-color: #1e293b !important; color: #ffffff !important;">Kebutuhan (Kg)</th>
+                    <th class="text-end" style="width: 12%; background-color: #1e293b !important; color: #ffffff !important;">Pengiriman (Kg)</th>
+                    <th class="text-end" style="width: 12%; background-color: #1e293b !important; color: #ffffff !important;">Pengembalian (Kg)</th>
+                    <th class="text-end" style="width: 12%; background-color: #1e293b !important; color: #ffffff !important;">Pemakaian (Kg)</th>
+                    <th class="text-end" style="width: 12%; background-color: #1e293b !important; color: #ffffff !important;">Sisa (Kg)</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Nilai Pemakaian</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td colspan="7" class="text-center text-muted py-2">Memuat data rekapitulasi bahan baku...</td></tr>
+                  <tr><td colspan="8" class="text-center text-muted py-2">Memuat data rekapitulasi bahan baku...</td></tr>
                 </tbody>
                 <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
                   <tr>
@@ -100,6 +105,7 @@
                     <td class="text-end text-secondary" id="mdl-tot-rekap-kembali">0.00</td>
                     <td class="text-end text-warning" id="mdl-tot-rekap-pakai">0.00</td>
                     <td class="text-end" id="mdl-tot-rekap-sisa">0.00</td>
+                    <td class="text-end fw-bold" style="color: #15803d;" id="mdl-tot-rekap-nilai">Rp 0</td>
                   </tr>
                 </tfoot>
               </table>

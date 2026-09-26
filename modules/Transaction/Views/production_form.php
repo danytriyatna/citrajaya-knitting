@@ -318,11 +318,11 @@
                               <th class="text-center" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
                               <th style="background-color: #1e293b !important; color: #ffffff !important;">Tahapan Proses</th>
                               <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty SO</th>
-                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod</th>
-                              <th class="text-end" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan</th>
-                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Total Qty</th>
+                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod (P1)</th>
+                              <th class="text-end" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan (P2)</th>
+                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Total Qty (P1)</th>
                               <th class="text-end" style="width: 18%; background-color: #1e293b !important; color: #ffffff !important;">Rata-rata Tarif / Pcs</th>
-                              <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Ongkos</th>
+                              <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Ongkos (P1)</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -336,7 +336,7 @@
                                 foreach ($breakdown['tenaga_kerja'] as $tk) : 
                                   $fTotProd += (float)($tk->qty_prod ?? 0);
                                   $fTotFix  += (float)($tk->qty_fix ?? 0);
-                                  $fTotAll  += (float)($tk->total_qty ?? 0);
+                                  $fTotAll  += (float)($tk->total_qty ?? $tk->qty_prod ?? 0);
                               ?>
                                 <tr>
                                   <td class="text-center"><?= $no++; ?></td>
@@ -344,7 +344,7 @@
                                   <td class="text-end fw-bold" style="color: #1e40af;"><?= number_format((float)($tk->qty_so ?? $fTotSo), 0, ',', '.'); ?></td>
                                   <td class="text-end fw-bold" style="color: #16a34a;"><?= number_format((float)($tk->qty_prod ?? 0), 0, ',', '.'); ?></td>
                                   <td class="text-end fw-bold" style="color: #d97706;"><?= number_format((float)($tk->qty_fix ?? 0), 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold text-dark"><?= number_format((float)($tk->total_qty ?? 0), 0, ',', '.'); ?></td>
+                                  <td class="text-end fw-bold text-dark"><?= number_format((float)($tk->total_qty ?? $tk->qty_prod ?? 0), 0, ',', '.'); ?></td>
                                   <td class="text-end">Rp <?= number_format($tk->avg_harga, 0, ',', '.'); ?></td>
                                   <td class="text-end fw-bold text-danger">Rp <?= number_format($tk->subtotal_ongkos, 0, ',', '.'); ?></td>
                                 </tr>
@@ -361,7 +361,7 @@
                               <td class="text-end text-success"><?= number_format($fTotProd, 0, ',', '.'); ?></td>
                               <td class="text-end text-warning"><?= number_format($fTotFix, 0, ',', '.'); ?></td>
                               <td class="text-end text-dark"><?= number_format($fTotAll, 0, ',', '.'); ?></td>
-                              <td class="text-end text-dark">TOTAL BIAYA:</td>
+                              <td class="text-end text-dark">TOTAL BIAYA (P1):</td>
                               <td class="text-end text-danger fs-6"><?= $laba_kotor['f_nilai_tk']; ?></td>
                             </tr>
                           </tfoot>

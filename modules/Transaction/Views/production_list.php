@@ -137,11 +137,11 @@
                     <th class="text-center" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
                     <th style="background-color: #1e293b !important; color: #ffffff !important;">Tahapan Proses</th>
                     <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty SO</th>
-                    <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod</th>
-                    <th class="text-end" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan</th>
-                    <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Total Qty</th>
+                    <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod (P1)</th>
+                    <th class="text-end" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan (P2)</th>
+                    <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Total Qty (P1)</th>
                     <th class="text-end" style="width: 18%; background-color: #1e293b !important; color: #ffffff !important;">Rata-rata Tarif / Pcs</th>
-                    <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Ongkos</th>
+                    <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Ongkos (P1)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,7 +154,7 @@
                     <td class="text-end text-success" id="mdl-total-qty-prod">0</td>
                     <td class="text-end text-warning" id="mdl-total-qty-fix">0</td>
                     <td class="text-end text-dark" id="mdl-total-qty-all">0</td>
-                    <td class="text-end text-dark">TOTAL BIAYA:</td>
+                    <td class="text-end text-dark">TOTAL BIAYA (P1):</td>
                     <td class="text-end text-danger fs-6" id="mdl-total-tk">Rp 0</td>
                   </tr>
                 </tfoot>

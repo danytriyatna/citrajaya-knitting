@@ -605,7 +605,7 @@ $(document).ready(function () {
                         let rowQtySo = Number(item.qty_so || qtySo || 0);
                         let rowQtyProd = Number(item.qty_prod || 0);
                         let rowQtyFix = Number(item.qty_fix || 0);
-                        let rowQtyTotal = Number(item.total_qty || (rowQtyProd + rowQtyFix));
+                        let rowQtyTotal = Number(item.total_qty !== undefined ? item.total_qty : rowQtyProd);
 
                         totQtySo += rowQtySo;
                         totQtyProd += rowQtyProd;

@@ -141,7 +141,7 @@ class ProductionModel extends \App\Models\PrModel
         $builder->select("bbx.seq,bbx.nama,bbx.id ,SUM(COALESCE(qty, 0)) AS qty, SUM(COALESCE(qty_prod, 0)) AS qty_prod,
                            COALESCE((select sum(COALESCE(tpp.harga_total, 0)) 
                                      from trans_produksi_operator tpp inner join trans_produksi tp on tp.id = tpp.id_produksi
-                                     where tp.id_walkorder = abx.id_walkorder and tpp.id_proses = abx.id_proses),0) as harga_proses");
+                                     where tp.id_walkorder = abx.id_walkorder and tpp.id_proses = abx.id_proses and (tpp.print_type = 1 or tpp.print_type is null)),0) as harga_proses");
         $builder->join("_jenis_proses_produksi bbx", "abx.id_proses = bbx.id", "inner");
         $builder->join("trans_walkorder_proses_ukuran cbx", "cbx.id_walkorder_proses = abx.id", "inner");
         if(!empty($params['id_walkorder'])){
@@ -901,12 +901,13 @@ class ProductionModel extends \App\Models\PrModel
             $nilai_bahan = (float)($bbRow->total_bahan ?? 0);
         }
 
-        // 4. Nilai Tenaga Kerja (trans_produksi_operator)
+        // 4. Nilai Tenaga Kerja (trans_produksi_operator) - Hanya P1 (Produksi), P2 tidak dihitung
         if (!empty($idProd)) {
             $tkRow = $this->db->query("
                 SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as total_tk
                 FROM trans_produksi_operator tpo
                 WHERE tpo.id_produksi = {$idProd}
+                AND (tpo.print_type = 1 OR tpo.print_type IS NULL)
             ")->getRow();
             $nilai_tk = (float)($tkRow->total_tk ?? 0);
         }
@@ -989,9 +990,9 @@ class ProductionModel extends \App\Models\PrModel
                 SELECT jpp.nama as nama_proses, jpp.seq,
                        SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod,
                        SUM(CASE WHEN tpo.print_type = 2 THEN tpo.qty ELSE 0 END) AS qty_fix,
-                       COALESCE(SUM(tpo.qty), 0) as total_qty,
-                       COALESCE(AVG(tpo.harga), 0) as avg_harga,
-                       COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as subtotal_ongkos
+                       SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS total_qty,
+                       COALESCE(AVG(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.harga ELSE NULL END), 0) as avg_harga,
+                       COALESCE(SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0) ELSE 0 END), 0) as subtotal_ongkos
                 FROM trans_produksi_operator tpo
                 INNER JOIN _jenis_proses_produksi jpp ON jpp.id = tpo.id_proses
                 WHERE tpo.id_produksi = {$idProd}
@@ -1134,6 +1135,7 @@ class ProductionModel extends \App\Models\PrModel
                     SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as tot_tk
                     FROM trans_produksi_operator tpo
                     WHERE tpo.id_produksi IN ({$prodList})
+                    AND (tpo.print_type = 1 OR tpo.print_type IS NULL)
                 ")->getRow();
                 $tot_tk = (float)($tkRow->tot_tk ?? 0);
             }

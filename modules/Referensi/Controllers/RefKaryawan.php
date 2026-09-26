@@ -84,10 +84,12 @@ class RefKaryawan extends BaseController
         $order      = $this->request->getPost('sort');
         $id_perusahaan = $this->request->getPost('id_perusahaan');
         $type = $this->request->getPost('type');
+        $filter_kontrak = $this->request->getPost('filter_kontrak');
 
         $params = [
             'id_perusahaan' => $id_perusahaan,
             'type' => (!empty($type) && $type !== 'all') ? (int)$type : null,
+            'filter_kontrak' => (!empty($filter_kontrak) && $filter_kontrak !== 'all') ? $filter_kontrak : null,
             // TAMBAHAN (2026-08-08): list Master Data Karyawan sekarang
             // menampilkan karyawan aktif MAUPUN nonaktif (ada kolom status
             // di akhir tabel yang bisa diklik utk toggle) - modul lain yang
@@ -152,8 +154,21 @@ class RefKaryawan extends BaseController
             if($atr_edit || $atr_del)
                 $btnAction = btn_action_group($id, $atr_edit, $atr_del);
 
-            // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
-            //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
+            $sisaHariKontrak = null;
+            $statusExpiredKontrak = null; // 'expired', 'warning', 'safe'
+            if (!empty($row->tgl_selesai_kontrak)) {
+                $today = new \DateTime(date('Y-m-d'));
+                $tglSelesai = new \DateTime($row->tgl_selesai_kontrak);
+                $diff = (int)$today->diff($tglSelesai)->format('%r%a');
+                $sisaHariKontrak = $diff;
+                if ($diff < 0) {
+                    $statusExpiredKontrak = 'expired';
+                } elseif ($diff <= 30) {
+                    $statusExpiredKontrak = 'warning';
+                } else {
+                    $statusExpiredKontrak = 'safe';
+                }
+            }
 
             array_push($build_array["data"],
                 array(
@@ -193,6 +208,8 @@ class RefKaryawan extends BaseController
                     "durasi_kontrak_bulan" => (int)($row->durasi_kontrak_bulan ?? 0),
                     "tgl_selesai_kontrak" => !empty($row->tgl_selesai_kontrak) ? $row->tgl_selesai_kontrak : "",
                     "tgl_selesai_kontrak_formatted" => !empty($row->tgl_selesai_kontrak) ? \fdate_eng_to_ind($row->tgl_selesai_kontrak) : "",
+                    "sisa_hari_kontrak" => $sisaHariKontrak,
+                    "status_expired_kontrak" => $statusExpiredKontrak,
                     "status_kontrak" => (int)($row->status_kontrak ?? 0),
                     "file_kontrak_id" => $row->file_kontrak_id,
                     "file_kontrak_name" => $row->file_kontrak_name,

@@ -70,6 +70,27 @@ class KaryawanModel extends \App\Models\PrModel
                 $builder->where('ky.type', $params['type']);
             }
 
+            if (!empty($params['filter_kontrak']) && $params['filter_kontrak'] !== 'all') {
+                $todayStr = date('Y-m-d');
+                $next30Days = date('Y-m-d', strtotime('+30 days'));
+                $builder->where('ky.type', 1);
+                if ($params['filter_kontrak'] === 'warning') {
+                    // Akan habis dalam 30 hari (antara hari ini s/d 30 hari ke depan)
+                    $builder->where('ky.tgl_selesai_kontrak >=', $todayStr);
+                    $builder->where('ky.tgl_selesai_kontrak <=', $next30Days);
+                } elseif ($params['filter_kontrak'] === 'expired') {
+                    // Sudah habis (tgl_selesai_kontrak < hari ini)
+                    $builder->where('ky.tgl_selesai_kontrak IS NOT NULL');
+                    $builder->where('ky.tgl_selesai_kontrak <', $todayStr);
+                } elseif ($params['filter_kontrak'] === 'active') {
+                    // Masih aman / aktif (> 30 hari ke depan)
+                    $builder->where('ky.tgl_selesai_kontrak >', $next30Days);
+                } elseif ($params['filter_kontrak'] === 'none') {
+                    // Belum ada kontrak (internal)
+                    $builder->where('ky.tgl_selesai_kontrak IS NULL');
+                }
+            }
+
             if(!empty($params['not_nip'])){
                 $builder->whereNotIn('ky.nip', $params['not_nip']);
             }
@@ -136,6 +157,27 @@ class KaryawanModel extends \App\Models\PrModel
 
         if(!empty($params['type'])){
             $builder->where('ky.type', $params['type']);
+        }
+
+        if (!empty($params['filter_kontrak']) && $params['filter_kontrak'] !== 'all') {
+            $todayStr = date('Y-m-d');
+            $next30Days = date('Y-m-d', strtotime('+30 days'));
+            $builder->where('ky.type', 1);
+            if ($params['filter_kontrak'] === 'warning') {
+                // Akan habis dalam 30 hari (antara hari ini s/d 30 hari ke depan)
+                $builder->where('ky.tgl_selesai_kontrak >=', $todayStr);
+                $builder->where('ky.tgl_selesai_kontrak <=', $next30Days);
+            } elseif ($params['filter_kontrak'] === 'expired') {
+                // Sudah habis (tgl_selesai_kontrak < hari ini)
+                $builder->where('ky.tgl_selesai_kontrak IS NOT NULL');
+                $builder->where('ky.tgl_selesai_kontrak <', $todayStr);
+            } elseif ($params['filter_kontrak'] === 'active') {
+                // Masih aman / aktif (> 30 hari ke depan)
+                $builder->where('ky.tgl_selesai_kontrak >', $next30Days);
+            } elseif ($params['filter_kontrak'] === 'none') {
+                // Belum ada kontrak (internal)
+                $builder->where('ky.tgl_selesai_kontrak IS NULL');
+            }
         }
 
         if(!empty($params['not_nip'])){

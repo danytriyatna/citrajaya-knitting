@@ -48,7 +48,7 @@ $(document).ready(function () {
         return fmBtnEdit + " " + fmBtnDelete;
     };
 
-    $("#filter_perusahaan, #filter_tipe").on("change", function () {
+    $("#filter_perusahaan, #filter_tipe, #filter_kontrak").on("change", function () {
         dtList.setPage(1);
     });
 
@@ -224,7 +224,7 @@ $(document).ready(function () {
             },
             {
                 title: "Kontrak", field: "status_kontrak", headerSort: false,
-                width: 125, hozAlign: "center", cssClass: "text-center",
+                width: 105, hozAlign: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let row = cell.getData();
                     // Hanya untuk karyawan internal / NON CMT (type == 1)
@@ -240,11 +240,57 @@ $(document).ready(function () {
                     } else {
                         btnHtml = "<button type='button' class='btn btn-outline-secondary btn-xs px-2 btn-kontrak' title='Belum Ada Kontrak'><i class='fa fa-file-text-o me-1'></i> Belum</button>";
                     }
-
-                    if (row.tgl_selesai_kontrak_formatted) {
-                        btnHtml += "<div class='text-muted' style='font-size: 10px; line-height: 1.1; margin-top: 3px;'>s/d " + row.tgl_selesai_kontrak_formatted + "</div>";
-                    }
                     return btnHtml;
+                },
+                cellClick: function (e, cell) {
+                    let row = cell.getData();
+                    if (row.type != 1) return;
+                    openModalKontrak(row);
+                }
+            },
+            {
+                title: "Akhir Kontrak", field: "tgl_selesai_kontrak", headerSort: false,
+                width: 145, hozAlign: "center", cssClass: "text-center",
+                formatter: function (cell) {
+                    let row = cell.getData();
+                    // Hanya untuk karyawan internal / NON CMT (type == 1)
+                    if (row.type != 1) {
+                        return "<span class='text-muted small'>-</span>";
+                    }
+                    if (!row.tgl_selesai_kontrak) {
+                        return "<span class='text-muted small'>Belum diatur</span>";
+                    }
+
+                    let tglFormatted = row.tgl_selesai_kontrak_formatted || row.tgl_selesai_kontrak;
+                    let sisaHari = row.sisa_hari_kontrak;
+                    let statusExpired = row.status_expired_kontrak;
+
+                    // 1. Sudah habis / Expired
+                    if (statusExpired === 'expired') {
+                        let daysAgo = Math.abs(sisaHari);
+                        return "<div style='cursor:pointer;' title='Kontrak telah berakhir " + daysAgo + " hari lalu (" + tglFormatted + ")'>"
+                            + "<span class='badge bg-danger py-1 px-2 text-white shadow-sm'>"
+                            + "<i class='fa fa-exclamation-triangle me-1'></i>" + tglFormatted + "</span>"
+                            + "<div class='text-danger fw-bold' style='font-size:10px; margin-top:2px;'>Sudah Habis (" + daysAgo + " hr lalu)</div>"
+                            + "</div>";
+                    }
+                    // 2. Akan habis dalam 1 bulan (<= 30 hari)
+                    else if (statusExpired === 'warning') {
+                        return "<div style='cursor:pointer;' title='PERINGATAN: Kontrak akan berakhir dalam " + sisaHari + " hari!'>"
+                            + "<span class='badge bg-warning text-dark py-1 px-2 border border-warning shadow-sm'>"
+                            + "<i class='fa fa-clock-o me-1'></i>" + tglFormatted + "</span>"
+                            + "<div class='text-warning-emphasis fw-bold' style='font-size:10px; margin-top:2px;'><i class='fa fa-hourglass-half me-1'></i>Sisa " + sisaHari + " hari lagi!</div>"
+                            + "</div>";
+                    }
+                    // 3. Masih berlaku aman (> 30 hari)
+                    else {
+                        let blnSisa = Math.max(1, Math.round(sisaHari / 30));
+                        return "<div style='cursor:pointer;' title='Kontrak aktif s/d " + tglFormatted + "'>"
+                            + "<span class='badge bg-light text-dark border py-1 px-2'>"
+                            + "<i class='fa fa-calendar-check-o text-success me-1'></i>" + tglFormatted + "</span>"
+                            + "<div class='text-muted' style='font-size:10px; margin-top:2px;'>Sisa ~" + blnSisa + " bln</div>"
+                            + "</div>";
+                    }
                 },
                 cellClick: function (e, cell) {
                     let row = cell.getData();
@@ -299,7 +345,8 @@ $(document).ready(function () {
         ajaxParams: function () {
             return {
                 id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val(),
-                type: $("#filter_tipe").val() === "all" ? "" : $("#filter_tipe").val()
+                type: $("#filter_tipe").val() === "all" ? "" : $("#filter_tipe").val(),
+                filter_kontrak: $("#filter_kontrak").val() === "all" ? "" : $("#filter_kontrak").val()
             };
         },
         ajaxRequesting: function (url, params) {

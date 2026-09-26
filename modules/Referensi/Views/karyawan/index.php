@@ -682,6 +682,18 @@
                 </select>
               </div>
 
+              <!-- Filter Status Kontrak -->
+              <div class="col-sm-2">
+                <select id="filter_kontrak" name="filter_kontrak"
+                  class="form-select select2" data-placeholder="-- Status Kontrak --">
+                  <option value="all" selected>Semua Kontrak</option>
+                  <option value="warning">&#9888;&#65039; Akan Habis (&le; 1 Bulan)</option>
+                  <option value="expired">&#9940; Sudah Habis</option>
+                  <option value="active">&#9989; Kontrak Aktif</option>
+                  <option value="none">Belum Ada Kontrak</option>
+                </select>
+              </div>
+
               <!-- Spacer -->
               <div class="col"></div>
 

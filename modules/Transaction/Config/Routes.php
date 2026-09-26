@@ -71,6 +71,7 @@ $routes->group('trans/production', ['namespace' => 'Modules\Transaction\Controll
   $routes->post('list_detail', 'Production::getDataListProd');
   $routes->post('cari_produk', 'Production::getDataProduksiItem');
   $routes->post('src_produk', 'Production::getCariProduk');
+  $routes->post('get_laba_detail', 'Production::get_laba_detail');
 });
 
 $routes->group('trans/sales-invoice', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {

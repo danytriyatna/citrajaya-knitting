@@ -25,17 +25,52 @@ $(document).ready(function () {
         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
         }
         
+        let lk = data.laba_kotor || {
+            f_nilai_so: 'Rp 0',
+            f_nilai_pendapatan: 'Rp 0',
+            f_nilai_bahan: 'Rp 0',
+            f_nilai_tk: 'Rp 0',
+            f_laba_kotor: 'Rp 0',
+            laba_kotor: 0,
+            margin_persen: 0
+        };
+
+        let isUntung = (lk.laba_kotor >= 0);
+        let badgeLabaClass = isUntung ? 'bg-success text-white' : 'bg-danger text-white';
+        
         // HTML Card Layout
-        var cardHtml = `<div class="card shadow-sm">
-                  <div class="card-header">
-                    <div class="row">
-                      <div class="col-sm-6 text-start">
+        var cardHtml = `<div class="card shadow-sm mb-3 border">
+                  <div class="card-header py-2" style="background-color: #f8fafc; border-bottom: 1px solid #e9ecef;">
+                    <div class="row align-items-center">
+                      <div class="col-xl-3 col-lg-4 col-sm-12 text-start mb-2 mb-lg-0 d-flex align-items-center gap-1">
                           ${aksi}
+                          <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
+                            <i class="fa fa-chart-line me-1"></i> Rincian Laba
+                          </button>
                       </div>
-                      <div class="col-sm-6">
-                        <div class="d-flex justify-content-end" style="column-gap: 8px;">
-
-
+                      <div class="col-xl-9 col-lg-8 col-sm-12">
+                        <div class="d-flex flex-wrap justify-content-lg-end align-items-center gap-1">
+                          <div class="badge border py-1 px-2 text-start" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
+                            <div class="f-s-9 text-muted text-uppercase">NILAI SO</div>
+                            <div class="f-w-700 f-s-12 text-primary">${lk.f_nilai_so}</div>
+                          </div>
+                          <div class="badge border py-1 px-2 text-start" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
+                            <div class="f-s-9 text-muted text-uppercase">PENDAPATAN</div>
+                            <div class="f-w-700 f-s-12 text-info">${lk.f_nilai_pendapatan}</div>
+                          </div>
+                          <div class="badge border py-1 px-2 text-start" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
+                            <div class="f-s-9 text-muted text-uppercase">BAHAN BAKU</div>
+                            <div class="f-w-700 f-s-12 text-warning">${lk.f_nilai_bahan}</div>
+                          </div>
+                          <div class="badge border py-1 px-2 text-start" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
+                            <div class="f-s-9 text-muted text-uppercase">TENAGA KERJA</div>
+                            <div class="f-w-700 f-s-12 text-danger">${lk.f_nilai_tk}</div>
+                          </div>
+                          <div class="badge border ${badgeLabaClass} py-1 px-2 text-start">
+                            <div class="f-s-9 text-uppercase" style="opacity: 0.85;">LABA KOTOR</div>
+                            <div class="f-w-700 f-s-12">${lk.f_laba_kotor}</div>
+                            <div class="f-s-9">Margin: ${lk.margin_persen}%</div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -246,6 +281,25 @@ $(document).ready(function () {
                 elTotalFilteredRow.text(" (disaring dari " + recordsTotal
                     + " entri keseluruhan)");
             }
+
+            if (response.summary_global) {
+                let s = response.summary_global;
+                $('#sum-glob-so').text(s.f_total_nilai_so);
+                $('#sum-glob-pendapatan').text(s.f_total_nilai_pendapatan);
+                $('#sum-glob-bahan').text(s.f_total_nilai_bahan);
+                $('#sum-glob-tk').text(s.f_total_nilai_tk);
+                $('#sum-glob-laba').text(s.f_total_laba_kotor);
+                $('#sum-glob-margin').text('Margin: ' + s.total_margin_persen + '%');
+
+                if (s.total_laba_kotor < 0) {
+                    $('#card-glob-laba').css({'background-color': '#fdeeee', 'border-color': '#ef9a9a'});
+                    $('#sum-glob-laba').removeClass('text-success').addClass('text-danger');
+                } else {
+                    $('#card-glob-laba').css({'background-color': '#e8f5e9', 'border-color': '#a5d6a7'});
+                    $('#sum-glob-laba').removeClass('text-danger').addClass('text-success');
+                }
+            }
+
             return response;
         },
         footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
@@ -401,5 +455,95 @@ $(document).ready(function () {
     $("#filter_status").on("change",  function(){
         const val = $(this).val()
         dtList.setData();
+    });
+
+    // Detail Analisis Laba Kotor Modal
+    $(document).on("click", ".btn-detail-laba", function(e) {
+        e.preventDefault();
+        let prodId = $(this).data("id");
+        if (!prodId) return;
+
+        $("#modal-laba-detail").modal("show");
+        
+        // Reset modal state
+        $("#tbl-mdl-tk tbody").html('<tr><td colspan="5" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data tenaga kerja...</td></tr>');
+        $("#tbl-mdl-bahan tbody").html('<tr><td colspan="6" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data bahan baku...</td></tr>');
+
+        $.ajax({
+            url: baseUrl + "/trans/production/get_laba_detail",
+            type: "POST",
+            data: { id: prodId },
+            dataType: "json",
+            success: function(res) {
+                if (!res.status) {
+                    alert(res.message || "Gagal mengambil data rincian laba kotor");
+                    return;
+                }
+
+                $("#mdl-lbl-prod").text(res.info.kode_prod || "-");
+                $("#mdl-lbl-wo").text(res.info.kode_walkorder || "-");
+                $("#mdl-lbl-konsumen").text(res.info.konsumen_nama || "-");
+                $("#mdl-lbl-style").text(res.info.keterangan_style || "-");
+
+                let l = res.laba_data;
+                $("#mdl-val-so").text(l.f_nilai_so);
+                $("#mdl-val-pendapatan").text(l.f_nilai_pendapatan);
+                $("#mdl-val-bahan").text(l.f_nilai_bahan);
+                $("#mdl-val-tk").text(l.f_nilai_tk);
+                $("#mdl-val-laba").text(l.f_laba_kotor);
+                $("#mdl-val-margin").text("Margin: " + l.margin_persen + "%");
+
+                if (l.laba_kotor < 0) {
+                    $("#mdl-badge-laba").removeClass("bg-success").addClass("bg-danger").text("Laba Kotor: " + l.f_laba_kotor + " (Rugi)");
+                    $("#mdl-val-laba").removeClass("text-success").addClass("text-danger");
+                } else {
+                    $("#mdl-badge-laba").removeClass("bg-danger").addClass("bg-success").text("Laba Kotor: " + l.f_laba_kotor + " (Untung)");
+                    $("#mdl-val-laba").removeClass("text-danger").addClass("text-success");
+                }
+
+                // Render Breakdown Tenaga Kerja Operator
+                let htmlTk = "";
+                if (res.breakdown && res.breakdown.tenaga_kerja && res.breakdown.tenaga_kerja.length > 0) {
+                    let no = 1;
+                    res.breakdown.tenaga_kerja.forEach(function(item) {
+                        htmlTk += `<tr>
+                            <td class="text-center">${no++}</td>
+                            <td class="fw-semibold">${item.nama_proses}</td>
+                            <td class="text-end">${Number(item.total_qty).toLocaleString("id-ID")}</td>
+                            <td class="text-end">Rp ${Number(item.avg_harga).toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold text-danger">Rp ${Number(item.subtotal_ongkos).toLocaleString("id-ID")}</td>
+                        </tr>`;
+                    });
+                } else {
+                    htmlTk = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data pengerjaan operator pada transaksi produksi ini</td></tr>';
+                }
+                $("#tbl-mdl-tk tbody").html(htmlTk);
+                $("#mdl-total-tk").text(l.f_nilai_tk);
+
+                // Render Breakdown Bahan Baku
+                let htmlBahan = "";
+                if (res.breakdown && res.breakdown.bahan_baku && res.breakdown.bahan_baku.length > 0) {
+                    let no = 1;
+                    res.breakdown.bahan_baku.forEach(function(item) {
+                        let warna = (item.kode_warna ? item.kode_warna : "") + (item.nama_warna ? " - " + item.nama_warna : "");
+                        htmlBahan += `<tr>
+                            <td class="text-center">${no++}</td>
+                            <td class="fw-semibold">${item.kode_barang} - ${item.nama_barang}</td>
+                            <td>${warna || "-"}</td>
+                            <td class="text-end">${Number(item.qty_pakai).toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end">Rp ${Number(item.harga_satuan).toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold text-warning">Rp ${Number(item.subtotal_bahan).toLocaleString("id-ID")}</td>
+                        </tr>`;
+                    });
+                } else {
+                    htmlBahan = '<tr><td colspan="6" class="text-center text-muted py-3">Belum ada data pemakaian bahan baku (BTK) untuk nomor WO ini</td></tr>';
+                }
+                $("#tbl-mdl-bahan tbody").html(htmlBahan);
+                $("#mdl-total-bahan").text(l.f_nilai_bahan);
+            },
+            error: function() {
+                alert("Gagal menghubungi server untuk memuat rincian laba kotor");
+            }
+        });
     });
 });

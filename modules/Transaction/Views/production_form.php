@@ -248,6 +248,148 @@
 
           <hr>
 
+          <!-- CARD ANALISIS LABA KOTOR PRODUKSI -->
+          <?php if (!empty($laba_kotor)) : ?>
+          <?php 
+            $isUntung = ($laba_kotor['laba_kotor'] >= 0);
+            $cardBorder = $isUntung ? 'border-success' : 'border-danger';
+            $badgeLaba = $isUntung ? 'bg-success text-white' : 'bg-danger text-white';
+          ?>
+          <div class="card <?= $cardBorder ?> mb-4 shadow-sm border">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+              <h6 class="m-0 fw-bold text-dark"><i class="fa fa-chart-line text-primary me-2"></i>ANALISIS LABA KOTOR TRANSAKSI INI</h6>
+              <span class="badge <?= $badgeLaba ?> px-3 py-2 f-s-12">
+                <?= $isUntung ? 'PROFIT' : 'DEFISIT' ?>: <?= $laba_kotor['f_laba_kotor']; ?> (Margin: <?= $laba_kotor['margin_persen']; ?>%)
+              </span>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-2 text-center mb-3">
+                <div class="col-md col-sm-4">
+                  <div class="p-2 border rounded" style="background-color: #f0f7ff;">
+                    <div class="f-s-11 text-muted text-uppercase fw-bold">Nilai SO</div>
+                    <div class="f-w-700 text-primary f-s-14"><?= $laba_kotor['f_nilai_so']; ?></div>
+                    <small class="f-s-10 text-muted">Target Kontrak</small>
+                  </div>
+                </div>
+                <div class="col-md col-sm-4">
+                  <div class="p-2 border rounded" style="background-color: #e8f4fd;">
+                    <div class="f-s-11 text-muted text-uppercase fw-bold">Pendapatan Masuk</div>
+                    <div class="f-w-700 text-info f-s-14"><?= $laba_kotor['f_nilai_pendapatan']; ?></div>
+                    <small class="f-s-10 text-muted">DP &amp; Pelunasan CR</small>
+                  </div>
+                </div>
+                <div class="col-md col-sm-4">
+                  <div class="p-2 border rounded" style="background-color: #fff9e6;">
+                    <div class="f-s-11 text-muted text-uppercase fw-bold">Bahan Baku</div>
+                    <div class="f-w-700 text-warning f-s-14"><?= $laba_kotor['f_nilai_bahan']; ?></div>
+                    <small class="f-s-10 text-muted">BTK Pemakaian</small>
+                  </div>
+                </div>
+                <div class="col-md col-sm-6">
+                  <div class="p-2 border rounded" style="background-color: #fdeeee;">
+                    <div class="f-s-11 text-muted text-uppercase fw-bold">Tenaga Kerja</div>
+                    <div class="f-w-700 text-danger f-s-14"><?= $laba_kotor['f_nilai_tk']; ?></div>
+                    <small class="f-s-10 text-muted">Upah Operator</small>
+                  </div>
+                </div>
+                <div class="col-md col-sm-6">
+                  <div class="p-2 border rounded" style="background-color: <?= $isUntung ? '#e8f5e9' : '#fdeeee' ?>;">
+                    <div class="f-s-11 text-muted text-uppercase fw-bold">Laba Kotor</div>
+                    <div class="f-w-700 <?= $isUntung ? 'text-success' : 'text-danger' ?> f-s-14"><?= $laba_kotor['f_laba_kotor']; ?></div>
+                    <small class="f-s-10 text-muted">Margin: <?= $laba_kotor['margin_persen']; ?>%</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACCORDION DETAIL ONGKOS & BAHAN -->
+              <div class="accordion" id="accordionLabaDetail">
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingLabaTk">
+                    <button class="accordion-button collapsed py-2 fw-semibold text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLabaTk" aria-expanded="false" aria-controls="collapseLabaTk">
+                      <i class="fa fa-users me-2"></i> Rincian Biaya Tenaga Kerja Operator (trans_produksi_operator) &mdash; Total: <?= $laba_kotor['f_nilai_tk']; ?>
+                    </button>
+                  </h2>
+                  <div id="collapseLabaTk" class="accordion-collapse collapse" aria-labelledby="headingLabaTk" data-bs-parent="#accordionLabaDetail">
+                    <div class="accordion-body p-2">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-striped align-middle mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th style="width: 5%">No</th>
+                              <th>Tahapan Proses</th>
+                              <th class="text-end" style="width: 20%">Total Qty</th>
+                              <th class="text-end" style="width: 25%">Rata-rata Tarif / Pcs</th>
+                              <th class="text-end" style="width: 25%">Subtotal Ongkos</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php if (!empty($breakdown['tenaga_kerja'])) : ?>
+                              <?php $no = 1; foreach ($breakdown['tenaga_kerja'] as $tk) : ?>
+                                <tr>
+                                  <td class="text-center"><?= $no++; ?></td>
+                                  <td class="fw-semibold"><?= $tk->nama_proses; ?></td>
+                                  <td class="text-end"><?= number_format($tk->total_qty, 0, ',', '.'); ?></td>
+                                  <td class="text-end">Rp <?= number_format($tk->avg_harga, 0, ',', '.'); ?></td>
+                                  <td class="text-end fw-bold text-danger">Rp <?= number_format($tk->subtotal_ongkos, 0, ',', '.'); ?></td>
+                                </tr>
+                              <?php endforeach; ?>
+                            <?php else : ?>
+                              <tr><td colspan="5" class="text-center text-muted py-2">Belum ada input pengerjaan operator</td></tr>
+                            <?php endif; ?>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingLabaBahan">
+                    <button class="accordion-button collapsed py-2 fw-semibold text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLabaBahan" aria-expanded="false" aria-controls="collapseLabaBahan">
+                      <i class="fa fa-boxes me-2"></i> Rincian Biaya Pemakaian Bahan Baku (BTK) &mdash; Total: <?= $laba_kotor['f_nilai_bahan']; ?>
+                    </button>
+                  </h2>
+                  <div id="collapseLabaBahan" class="accordion-collapse collapse" aria-labelledby="headingLabaBahan" data-bs-parent="#accordionLabaDetail">
+                    <div class="accordion-body p-2">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-striped align-middle mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th style="width: 5%">No</th>
+                              <th>Kode / Nama Barang</th>
+                              <th>Warna</th>
+                              <th class="text-end" style="width: 15%">Qty Pakai</th>
+                              <th class="text-end" style="width: 20%">Harga Satuan</th>
+                              <th class="text-end" style="width: 20%">Subtotal Bahan</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php if (!empty($breakdown['bahan_baku'])) : ?>
+                              <?php $no = 1; foreach ($breakdown['bahan_baku'] as $bb) : ?>
+                                <tr>
+                                  <td class="text-center"><?= $no++; ?></td>
+                                  <td class="fw-semibold"><?= $bb->kode_barang; ?> - <?= $bb->nama_barang; ?></td>
+                                  <td><?= (!empty($bb->kode_warna) ? $bb->kode_warna : '') . (!empty($bb->nama_warna) ? ' - ' . $bb->nama_warna : ''); ?></td>
+                                  <td class="text-end"><?= number_format($bb->qty_pakai, 2, ',', '.'); ?></td>
+                                  <td class="text-end">Rp <?= number_format($bb->harga_satuan, 0, ',', '.'); ?></td>
+                                  <td class="text-end fw-bold text-warning">Rp <?= number_format($bb->subtotal_bahan, 0, ',', '.'); ?></td>
+                                </tr>
+                              <?php endforeach; ?>
+                            <?php else : ?>
+                              <tr><td colspan="6" class="text-center text-muted py-2">Belum ada data pemakaian bahan baku untuk nomor WO ini</td></tr>
+                            <?php endif; ?>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <?php endif; ?>
+
           <div class="row">
             <div class="col-sm-12">
               <h5><b>PRODUCTION PROCESS</b></h5>

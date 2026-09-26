@@ -852,5 +852,262 @@ class ProductionModel extends \App\Models\PrModel
         }
         return $randomNumber;
     }
+
+    public function getLabaKotorData($id_produksi, $id_walkorder, $id_so, $tipe_id, $kode_walkorder)
+    {
+        $idSo = (int)$id_so;
+        $idProd = (int)$id_produksi;
+        $kodeWo = trim((string)$kode_walkorder);
+
+        $nilai_so = 0;
+        $nilai_pendapatan = 0;
+        $nilai_bahan = 0;
+        $nilai_tk = 0;
+
+        if ($tipe_id == 2 && !empty($idSo)) {
+            // 1. Nilai SO (Target/Kontrak)
+            $soUk = $this->db->query("
+                SELECT COALESCE(SUM(qty * harga_satuan), 0) as total_so 
+                FROM trans_sales_order_ukuran 
+                WHERE id_sales_order = {$idSo}
+            ")->getRow();
+            $soRow = $this->db->table('trans_sales_order')->select('uang_dp, uang_dp_2, pengiriman')->where('id', $idSo)->get()->getRow();
+            $nilai_so = (float)($soUk->total_so ?? 0) + (float)($soRow->pengiriman ?? 0);
+
+            // 2. Pendapatan (DP1 + DP2 + Pembayaran Pelunasan CR)
+            $dp1 = (float)($soRow->uang_dp ?? 0);
+            $dp2 = (float)($soRow->uang_dp_2 ?? 0);
+
+            $crRow = $this->db->query("
+                SELECT COALESCE(SUM(crd.pay_item), 0) as total_cr
+                FROM trans_customer_receipt_detail crd
+                INNER JOIN trans_customer_receipt cr ON cr.id = crd.id_cr
+                INNER JOIN trans_invoice_detail tid ON tid.id_invoice = crd.id_invoice
+                WHERE tid.id_ref = {$idSo} AND cr.active = 1 AND cr.status = 1
+            ")->getRow();
+            $crPay = (float)($crRow->total_cr ?? 0);
+            $nilai_pendapatan = $dp1 + $dp2 + $crPay;
+        }
+
+        // 3. Nilai Bahan Baku (BTK Pemakaian id_kategori = 5)
+        if (!empty($kodeWo)) {
+            $bbRow = $this->db->query("
+                SELECT COALESCE(SUM(tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)), 0) as total_bahan
+                FROM trans_barang_detail tbd
+                INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+            ", [$kodeWo])->getRow();
+            $nilai_bahan = (float)($bbRow->total_bahan ?? 0);
+        }
+
+        // 4. Nilai Tenaga Kerja (trans_produksi_operator)
+        if (!empty($idProd)) {
+            $tkRow = $this->db->query("
+                SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as total_tk
+                FROM trans_produksi_operator tpo
+                WHERE tpo.id_produksi = {$idProd}
+            ")->getRow();
+            $nilai_tk = (float)($tkRow->total_tk ?? 0);
+        }
+
+        // 5. Laba Kotor
+        $laba_kotor = $nilai_pendapatan - ($nilai_bahan + $nilai_tk);
+        $laba_kotor_so = $nilai_so - ($nilai_bahan + $nilai_tk);
+
+        $margin_persen = ($nilai_pendapatan > 0) ? round(($laba_kotor / $nilai_pendapatan) * 100, 1) : 0;
+        $margin_so_persen = ($nilai_so > 0) ? round(($laba_kotor_so / $nilai_so) * 100, 1) : 0;
+
+        return [
+            'nilai_so'          => $nilai_so,
+            'nilai_pendapatan'  => $nilai_pendapatan,
+            'nilai_bahan'       => $nilai_bahan,
+            'nilai_tk'          => $nilai_tk,
+            'laba_kotor'        => $laba_kotor,
+            'laba_kotor_so'     => $laba_kotor_so,
+            'margin_persen'     => $margin_persen,
+            'margin_so_persen'  => $margin_so_persen,
+            'f_nilai_so'        => 'Rp ' . number_format($nilai_so, 0, ',', '.'),
+            'f_nilai_pendapatan'=> 'Rp ' . number_format($nilai_pendapatan, 0, ',', '.'),
+            'f_nilai_bahan'     => 'Rp ' . number_format($nilai_bahan, 0, ',', '.'),
+            'f_nilai_tk'        => 'Rp ' . number_format($nilai_tk, 0, ',', '.'),
+            'f_laba_kotor'      => 'Rp ' . number_format($laba_kotor, 0, ',', '.'),
+            'f_laba_kotor_so'   => 'Rp ' . number_format($laba_kotor_so, 0, ',', '.')
+        ];
+    }
+
+    public function getLabaKotorBreakdown($id_produksi, $kode_walkorder)
+    {
+        $idProd = (int)$id_produksi;
+        $kodeWo = trim((string)$kode_walkorder);
+
+        // Breakdown Tenaga Kerja
+        $tk_list = [];
+        if (!empty($idProd)) {
+            $tk_list = $this->db->query("
+                SELECT jpp.nama as nama_proses, jpp.seq,
+                       COALESCE(SUM(tpo.qty), 0) as total_qty,
+                       COALESCE(AVG(tpo.harga), 0) as avg_harga,
+                       COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as subtotal_ongkos
+                FROM trans_produksi_operator tpo
+                INNER JOIN _jenis_proses_produksi jpp ON jpp.id = tpo.id_proses
+                WHERE tpo.id_produksi = {$idProd}
+                GROUP BY jpp.nama, jpp.seq, jpp.id
+                ORDER BY jpp.seq ASC
+            ")->getResult();
+        }
+
+        // Breakdown Bahan Baku
+        $bb_list = [];
+        if (!empty($kodeWo)) {
+            $bb_list = $this->db->query("
+                SELECT rb.kode_barang, rb.nama_barang, rw.kode_warna, rw.keterangan as nama_warna,
+                       SUM(tbd.qty) as qty_pakai,
+                       COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0) as harga_satuan,
+                       SUM(tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) as subtotal_bahan
+                FROM trans_barang_detail tbd
+                INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+                LEFT JOIN ref_warna rw ON rw.id = rb.id_warna
+                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+                GROUP BY rb.kode_barang, rb.nama_barang, rw.kode_warna, rw.keterangan, tbd.price, rb.harga_satuan
+                ORDER BY rb.nama_barang ASC
+            ", [$kodeWo])->getResult();
+        }
+
+        return [
+            'tenaga_kerja' => $tk_list,
+            'bahan_baku'   => $bb_list
+        ];
+    }
+
+    public function getGlobalLabaKotorSummary($filters = null, $params = null)
+    {
+        $builder = $this->db->table($this->table . " abx");
+        $builder->select("abx.id, abx.kode_walkorder, twx.ref_id as id_so, twx.tipe_id");
+        $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->join("trans_walkorder twx", "abx.id_walkorder = twx.id", "inner");
+        $builder->join("trans_sales_order tso", "tso.id = twx.ref_id and twx.tipe_id = 2", "left");
+        $builder->where('abx.active = 1');
+        $builder->where("(tso.status IS NULL OR tso.status <> 3)");
+
+        if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $val = strtolower(trim($filters[0]['value']));
+            $value = "%{$val}%";
+            $builder->groupStart();
+            $builder->where('LOWER(abx.kode_prod) LIKE', $value);
+            $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', $value);
+            $builder->orWhere('LOWER(twx.ref_kode) LIKE', $value);
+            $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', $value);
+            $builder->orWhere('LOWER(abx.keterangan_style) LIKE', $value);
+            $builder->orWhere('LOWER(bbx.nama) LIKE', $value);
+            $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
+            $builder->groupEnd();
+        }
+
+        if (!empty($params['id_konsumen'])) {
+            $builder->where('abx.id_konsumen', $params['id_konsumen']);
+        }
+        if (!empty($params['tipe_id'])) {
+            $builder->where('abx.tipe_id', $params['tipe_id']);
+        }
+
+        $prodRows = $builder->get()->getResult();
+
+        $tot_nilai_so = 0;
+        $tot_pendapatan = 0;
+        $tot_bahan = 0;
+        $tot_tk = 0;
+
+        if (!empty($prodRows)) {
+            $soIds = [];
+            $woCodes = [];
+            $prodIds = [];
+            foreach ($prodRows as $pr) {
+                if ($pr->tipe_id == 2 && !empty($pr->id_so)) {
+                    $soIds[$pr->id_so] = (int)$pr->id_so;
+                }
+                if (!empty($pr->kode_walkorder)) {
+                    $woCodes[] = "'" . addslashes(trim($pr->kode_walkorder)) . "'";
+                }
+                $prodIds[] = (int)$pr->id;
+            }
+
+            // A. Total Nilai SO & DP
+            if (!empty($soIds)) {
+                $soIdList = implode(',', $soIds);
+                $soUk = $this->db->query("
+                    SELECT COALESCE(SUM(qty * harga_satuan), 0) as tot_so 
+                    FROM trans_sales_order_ukuran 
+                    WHERE id_sales_order IN ({$soIdList})
+                ")->getRow();
+                $soHead = $this->db->query("
+                    SELECT COALESCE(SUM(uang_dp), 0) + COALESCE(SUM(uang_dp_2), 0) as tot_dp,
+                           COALESCE(SUM(pengiriman), 0) as tot_ongkir
+                    FROM trans_sales_order 
+                    WHERE id IN ({$soIdList})
+                ")->getRow();
+                $tot_nilai_so = (float)($soUk->tot_so ?? 0) + (float)($soHead->tot_ongkir ?? 0);
+                $tot_dp = (float)($soHead->tot_dp ?? 0);
+
+                // CR payments
+                $crRow = $this->db->query("
+                    SELECT COALESCE(SUM(crd.pay_item), 0) as tot_cr
+                    FROM trans_customer_receipt_detail crd
+                    INNER JOIN trans_customer_receipt cr ON cr.id = crd.id_cr
+                    INNER JOIN trans_invoice_detail tid ON tid.id_invoice = crd.id_invoice
+                    WHERE tid.id_ref IN ({$soIdList}) AND cr.active = 1 AND cr.status = 1
+                ")->getRow();
+                $tot_cr = (float)($crRow->tot_cr ?? 0);
+                $tot_pendapatan = $tot_dp + $tot_cr;
+            }
+
+            // B. Total Bahan Baku
+            if (!empty($woCodes)) {
+                $woList = implode(',', array_unique($woCodes));
+                $bbRow = $this->db->query("
+                    SELECT COALESCE(SUM(tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)), 0) as tot_bahan
+                    FROM trans_barang_detail tbd
+                    INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                    LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+                    WHERE tbh.no_ref_wo IN ({$woList}) AND tbh.id_kategori = 5 AND tbh.active = 1
+                ")->getRow();
+                $tot_bahan = (float)($bbRow->tot_bahan ?? 0);
+            }
+
+            // C. Total Tenaga Kerja
+            if (!empty($prodIds)) {
+                $prodList = implode(',', $prodIds);
+                $tkRow = $this->db->query("
+                    SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as tot_tk
+                    FROM trans_produksi_operator tpo
+                    WHERE tpo.id_produksi IN ({$prodList})
+                ")->getRow();
+                $tot_tk = (float)($tkRow->tot_tk ?? 0);
+            }
+        }
+
+        $tot_laba_kotor = $tot_pendapatan - ($tot_bahan + $tot_tk);
+        $tot_margin_persen = ($tot_pendapatan > 0) ? round(($tot_laba_kotor / $tot_pendapatan) * 100, 1) : 0;
+        $tot_laba_kotor_so = $tot_nilai_so - ($tot_bahan + $tot_tk);
+        $tot_margin_so_persen = ($tot_nilai_so > 0) ? round(($tot_laba_kotor_so / $tot_nilai_so) * 100, 1) : 0;
+
+        return [
+            'total_nilai_so'        => $tot_nilai_so,
+            'total_nilai_pendapatan'=> $tot_pendapatan,
+            'total_nilai_bahan'     => $tot_bahan,
+            'total_nilai_tk'        => $tot_tk,
+            'total_laba_kotor'      => $tot_laba_kotor,
+            'total_margin_persen'   => $tot_margin_persen,
+            'total_laba_kotor_so'   => $tot_laba_kotor_so,
+            'total_margin_so_persen'=> $tot_margin_so_persen,
+            'f_total_nilai_so'      => 'Rp ' . number_format($tot_nilai_so, 0, ',', '.'),
+            'f_total_nilai_pendapatan' => 'Rp ' . number_format($tot_pendapatan, 0, ',', '.'),
+            'f_total_nilai_bahan'   => 'Rp ' . number_format($tot_bahan, 0, ',', '.'),
+            'f_total_nilai_tk'      => 'Rp ' . number_format($tot_tk, 0, ',', '.'),
+            'f_total_laba_kotor'    => 'Rp ' . number_format($tot_laba_kotor, 0, ',', '.'),
+            'f_total_laba_kotor_so' => 'Rp ' . number_format($tot_laba_kotor_so, 0, ',', '.')
+        ];
+    }
      
 }

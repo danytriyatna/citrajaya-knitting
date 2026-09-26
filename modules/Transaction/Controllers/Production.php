@@ -172,6 +172,8 @@ class Production extends BaseController
         $file_gambar = !empty($ref_data->file_name) ? base_url() . "uploads/sales_order/"  . $ref_data->file_name : "";
       }
 
+      $laba_kotor_data = $this->mProduksi->getLabaKotorData($row->id, $row->id_walkorder, $row->id_walkorder_ref, $row->tipe_id, $row->kode_walkorder);
+
       array_push(
         $build_array["data"],
         array(
@@ -196,11 +198,44 @@ class Production extends BaseController
           "key_ukuran" => $dtUkuran,
           "url_edit" => $url_edit,
           "url_delete" => $url_delete,
-          "ref_data" => $ref_data
+          "ref_data" => $ref_data,
+          "laba_kotor" => $laba_kotor_data
         )
       );
     }
+    $build_array["summary_global"] = $this->mProduksi->getGlobalLabaKotorSummary($filters, $params);
     return $this->response->setJSON($build_array);
+  }
+
+  public function get_laba_detail()
+  {
+    $id = $this->request->getPost('id');
+    if (!empty($id)) {
+      $id = decrypt($id);
+    }
+    if (empty($id)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'ID Produksi tidak valid']);
+    }
+
+    $row = $this->mProduksi->getData($id);
+    if (empty($row)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Data Produksi tidak ditemukan']);
+    }
+
+    $labaData = $this->mProduksi->getLabaKotorData($row->id, $row->id_walkorder, $row->id_walkorder_ref, $row->tipe_id, $row->kode_walkorder);
+    $breakdown = $this->mProduksi->getLabaKotorBreakdown($row->id, $row->kode_walkorder);
+
+    return $this->response->setJSON([
+      'status' => true,
+      'info' => [
+        'kode_prod' => $row->kode_prod,
+        'kode_walkorder' => $row->kode_walkorder,
+        'konsumen_nama' => $row->konsumen_nama,
+        'keterangan_style' => $row->keterangan_style,
+      ],
+      'laba_data' => $labaData,
+      'breakdown' => $breakdown
+    ]);
   }
 
   public function lists_ukuran()
@@ -395,6 +430,11 @@ class Production extends BaseController
       $this->data['detail'] = json_encode($list_detail);
       $this->data['dtUkuran'] = json_encode($dtUkuran);
       $this->data['walk_order_det'] = !empty($walkOrderDet) ? json_encode($walkOrderDet) : null;
+
+      $labaKotorForm = $this->mProduksi->getLabaKotorData($resData->id, $resData->id_walkorder, $stdData->ref_id, $stdData->tipe_id, $resData->kode_walkorder);
+      $breakdownForm = $this->mProduksi->getLabaKotorBreakdown($resData->id, $resData->kode_walkorder);
+      $this->data['laba_kotor'] = $labaKotorForm;
+      $this->data['breakdown'] = $breakdownForm;
 
       $status = $stdData->status;
     }

@@ -730,6 +730,153 @@ class LaporanPersediaanModel extends \App\Models\PrModel
               AND trans_barang.tanggal::date <> trh.rec_date::date
         ");
     }
+
+    /**
+     * Menyelaraskan harga-harga transaksi yang anomali (harga 0, null, atau menyimpang
+     * pada Barang Keluar / Transfer) sesuai aturan kronologis mundur:
+     * - Harga SELALU mengacu pada transaksi masuk (Receive Item / Barang Masuk) yang
+     *   tanggalnya <= tanggal transaksi yang sedang diupdate (tidak boleh mengintip tanggal ke depan).
+     * - Mengambil transaksi masuk terdekat sebelum/pada tanggal tersebut (ORDER BY tanggal DESC).
+     * - Fallback ke harga master ref_barang.harga_satuan jika belum ada transaksi masuk s.d. tanggal tersebut.
+     */
+    public function syncHargaTransaksiAnomali($idGudang = null, $year = null, $month = null)
+    {
+        $wherePeriodTb = "1=1";
+        $bindsTb = [];
+
+        if (!empty($year) && !empty($month)) {
+            $wherePeriodTb .= " AND EXTRACT(YEAR FROM tb.tanggal) = ? AND EXTRACT(MONTH FROM tb.tanggal) = ?";
+            $bindsTb[] = (int)$year;
+            $bindsTb[] = (int)$month;
+        } elseif (!empty($year)) {
+            $wherePeriodTb .= " AND EXTRACT(YEAR FROM tb.tanggal) = ?";
+            $bindsTb[] = (int)$year;
+        }
+
+        if (!empty($idGudang)) {
+            $wherePeriodTb .= " AND (tb.id_gudang_asal = ? OR tb.id_gudang_tujuan = ?)";
+            $bindsTb[] = (int)$idGudang;
+            $bindsTb[] = (int)$idGudang;
+        }
+
+        // 1. Update trans_barang: cari harga masuk resmi <= tb.tanggal
+        $sqlTb = "
+            UPDATE trans_barang
+            SET price = sub.authentic_price
+            FROM (
+                SELECT
+                    tb.id,
+                    COALESCE(
+                        -- Prioritas 1: Receive PO (trans_receive_detail) pada tanggal <= tb.tanggal
+                        (
+                            SELECT trd.price
+                            FROM trans_receive_detail trd
+                            JOIN trans_receive_header trh ON trh.id = trd.id_header
+                            WHERE trd.id_barang = tb.id_barang
+                              AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
+                              AND trd.price > 0
+                              AND trd.active = 1
+                              AND trh.rec_date::date <= tb.tanggal::date
+                            ORDER BY trh.rec_date DESC, trh.id DESC
+                            LIMIT 1
+                        ),
+                        -- Prioritas 2: Transaksi Masuk BTM pada tanggal <= tb.tanggal
+                        (
+                            SELECT tbd.price
+                            FROM trans_barang_detail tbd
+                            JOIN trans_barang_header tbh ON tbh.id = tbd.id_header
+                            WHERE tbd.id_barang = tb.id_barang
+                              AND COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
+                              AND tbd.price > 0
+                              AND tbh.status = 1
+                              AND tbh.jenis_transaksi = 1
+                              AND tbh.tanggal::date <= tb.tanggal::date
+                            ORDER BY tbh.tanggal DESC, tbh.id DESC
+                            LIMIT 1
+                        ),
+                        -- Prioritas 3: Fallback ke harga master ref_barang
+                        (
+                            SELECT rb.harga_satuan
+                            FROM ref_barang rb
+                            WHERE rb.id = tb.id_barang AND rb.harga_satuan > 0
+                        )
+                    ) AS authentic_price
+                FROM trans_barang tb
+                WHERE {$wherePeriodTb}
+            ) sub
+            WHERE trans_barang.id = sub.id
+              AND sub.authentic_price IS NOT NULL
+              AND sub.authentic_price > 0
+              AND (
+                  trans_barang.price IS NULL 
+                  OR trans_barang.price <= 0 
+                  OR (LEFT(trans_barang.kode_transaksi, 3) IN ('BTK', 'TRF') AND trans_barang.price <> sub.authentic_price)
+              )
+        ";
+        $this->db->query($sqlTb, $bindsTb);
+
+        // 2. Sinkronisasi balik ke trans_barang_detail (BTK / BTM) yang ada di periode ini
+        $wherePeriodHdr = "1=1";
+        $bindsHdr = [];
+        if (!empty($year) && !empty($month)) {
+            $wherePeriodHdr .= " AND EXTRACT(YEAR FROM tbh.tanggal) = ? AND EXTRACT(MONTH FROM tbh.tanggal) = ?";
+            $bindsHdr[] = (int)$year;
+            $bindsHdr[] = (int)$month;
+        } elseif (!empty($year)) {
+            $wherePeriodHdr .= " AND EXTRACT(YEAR FROM tbh.tanggal) = ?";
+            $bindsHdr[] = (int)$year;
+        }
+        if (!empty($idGudang)) {
+            $wherePeriodHdr .= " AND tbh.id_gudang = ?";
+            $bindsHdr[] = (int)$idGudang;
+        }
+
+        $sqlTbd = "
+            UPDATE trans_barang_detail tbd
+            SET price = tb.price
+            FROM trans_barang tb
+            JOIN trans_barang_header tbh ON tbh.kode_transaksi = tb.kode_transaksi
+            WHERE tbd.id_header = tbh.id
+              AND tbd.id_barang = tb.id_barang
+              AND COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
+              AND tb.price > 0
+              AND (tbd.price IS NULL OR tbd.price <> tb.price)
+              AND {$wherePeriodHdr}
+        ";
+        $this->db->query($sqlTbd, $bindsHdr);
+
+        // 3. Sinkronisasi balik ke trans_transfer_detail (TRF) yang ada di periode ini
+        $wherePeriodTrf = "1=1";
+        $bindsTrf = [];
+        if (!empty($year) && !empty($month)) {
+            $wherePeriodTrf .= " AND EXTRACT(YEAR FROM tth.tanggal) = ? AND EXTRACT(MONTH FROM tth.tanggal) = ?";
+            $bindsTrf[] = (int)$year;
+            $bindsTrf[] = (int)$month;
+        } elseif (!empty($year)) {
+            $wherePeriodTrf .= " AND EXTRACT(YEAR FROM tth.tanggal) = ?";
+            $bindsTrf[] = (int)$year;
+        }
+        if (!empty($idGudang)) {
+            $wherePeriodTrf .= " AND (tth.id_gudang_asal = ? OR tth.id_gudang_tujuan = ?)";
+            $bindsTrf[] = (int)$idGudang;
+            $bindsTrf[] = (int)$idGudang;
+        }
+
+        $sqlTtd = "
+            UPDATE trans_transfer_detail ttd
+            SET price = tb.price
+            FROM trans_barang tb
+            JOIN trans_barang_trf_header tth ON tth.kode_transaksi = tb.kode_transaksi
+            WHERE ttd.id_header = tth.id
+              AND ttd.id_barang = tb.id_barang
+              AND COALESCE(NULLIF(TRIM(ttd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
+              AND tb.price > 0
+              AND (ttd.price IS NULL OR ttd.price <> tb.price)
+              AND {$wherePeriodTrf}
+        ";
+        $this->db->query($sqlTtd, $bindsTrf);
+    }
+
     public function resyncMutasiDariDokumen($idGudang = null, $year = null, $month = null)
     {
         $builder = $this->db->table('trans_barang_header');
@@ -813,6 +960,10 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         // nomor transaksinya) SEBELUM histori bulanan dihitung ulang, supaya
         // snapshot trans_barang_history tidak ikut mewarisi tanggal yang salah.
         $this->syncTanggalDariKodeTransaksi($idGudang, $year, $month);
+
+        // 2. perbaiki harga transaksi anomali (harga 0, null, atau typo) pada periode ini
+        // dengan selalu mengacu ke transaksi masuk pada atau sebelum tanggal transaksi (tanggal <= T)
+        $this->syncHargaTransaksiAnomali($idGudang, $year, $month);
 
         $dataOld =  $this->getLaporanPersediaan($idJenisBarang, $idGudang, $year, $month);
         $nextMonth = $month;
@@ -917,23 +1068,42 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     -- itu di sini - lalu snapshot ini dipakai lagi utk prefill form
                     -- Transfer berikutnya, jadi salahnya menyebar terus-menerus. Dengan
                     -- prioritas ini, harga selalu mengacu ke transaksi pembelian aslinya.
-                    (
-                        SELECT abx2.price
-                        FROM trans_barang abx2
-                        WHERE abx2.id_barang = :id_barang:
-                        -- :lot_no: sudah dinormalisasi (dash utk lot kosong) - dibandingkan
-                        -- ke versi ternormalisasi dari kolom mentah juga, supaya baris yg
-                        -- lot_no aslinya NULL/'' tidak diam-diam kelewat cuma krn tidak
-                        -- persis sama dgn literal '-' (akar bug Masuk/Keluar hilang di
-                        -- Laporan Persediaan utk barang tanpa lot).
-                        AND COALESCE(NULLIF(abx2.lot_no, ''), '-') = :lot_no:
-                        AND abx2.pack_id $pack_id_clause
-                        AND abx2.tanggal < :next_cutoff:
-                        AND abx2.price IS NOT NULL
-                        ORDER BY
-                            CASE WHEN LEFT(abx2.kode_transaksi, 3) IN ('BTM', 'REC') THEN 0 ELSE 1 END,
-                            abx2.tanggal DESC
-                        LIMIT 1
+                    COALESCE(
+                        -- Prioritas 1: Receive PO (trans_receive_detail) pada tanggal < next_cutoff
+                        (
+                            SELECT trd.price
+                            FROM trans_receive_detail trd
+                            JOIN trans_receive_header trh ON trh.id = trd.id_header
+                            WHERE trd.id_barang = :id_barang:
+                              AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = :lot_no:
+                              AND trd.price > 0
+                              AND trd.active = 1
+                              AND trh.rec_date < :next_cutoff:
+                            ORDER BY trh.rec_date DESC, trh.id DESC
+                            LIMIT 1
+                        ),
+                        -- Prioritas 2: Transaksi pembelian / masuk BTM/REC pada tanggal < next_cutoff
+                        (
+                            SELECT abx2.price
+                            FROM trans_barang abx2
+                            WHERE abx2.id_barang = :id_barang:
+                            AND COALESCE(NULLIF(abx2.lot_no, ''), '-') = :lot_no:
+                            AND abx2.pack_id $pack_id_clause
+                            AND abx2.tanggal < :next_cutoff:
+                            AND abx2.price IS NOT NULL
+                            AND abx2.price > 0
+                            ORDER BY
+                                CASE WHEN LEFT(abx2.kode_transaksi, 3) IN ('BTM', 'REC') THEN 0 ELSE 1 END,
+                                abx2.tanggal DESC
+                            LIMIT 1
+                        ),
+                        -- Prioritas 3: Fallback ke master ref_barang
+                        (
+                            SELECT rb.harga_satuan
+                            FROM ref_barang rb
+                            WHERE rb.id = :id_barang:
+                        ),
+                        0
                     ) AS price,
 
                     -- Subquery ambil tanggal transaksi terakhir s.d. akhir bulan yang

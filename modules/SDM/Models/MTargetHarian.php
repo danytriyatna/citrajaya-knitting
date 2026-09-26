@@ -265,8 +265,8 @@ class MTargetHarian extends Model
             }
 
             if (!empty($matrix) && is_array($matrix)) {
-                $sqlDet = "INSERT INTO sdm_target_harian_det (id_header, id_karyawan, posisi, target_qty, satuan, ref_job, total_realisasi, persentase, active, created_by, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())";
+                $sqlDet = "INSERT INTO sdm_target_harian_det (id_header, id_karyawan, posisi, target_qty, target_lembur, satuan, ref_job, total_realisasi, realisasi_lembur, persentase, active, created_by, created_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())";
 
                 $sqlHour = "INSERT INTO sdm_target_harian_hourly (id_header, id_karyawan, jam_slot, raw_text, total_qty, active)
                             VALUES (?, ?, ?, ?, ?, 1)";
@@ -274,33 +274,40 @@ class MTargetHarian extends Model
                 $sqlProses = "INSERT INTO sdm_target_harian_proses_hourly (
                                 id_header, id_karyawan, id_proses, nama_proses, target_qty, satuan,
                                 jam_08_09, jam_09_10, jam_10_11, jam_11_12, jam_13_14, jam_14_15, jam_15_16, jam_16_17,
+                                target_lembur, jam_lembur,
                                 total_realisasi, seq, active, created_at
-                              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
+                              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
 
                 foreach ($matrix as $idKaryawan => $row) {
                     $idKaryawan = (int)$idKaryawan;
                     if (!$idKaryawan) continue;
 
-                    $targetQty = isset($row['target_qty']) ? (float) $row['target_qty'] : 0;
-                    $satuan    = isset($row['satuan']) ? trim($row['satuan']) : 'Pcs';
-                    $refJob    = isset($row['ref_job']) ? trim($row['ref_job']) : '';
-                    $posisi    = isset($row['posisi']) ? trim($row['posisi']) : '';
+                    $targetQty    = isset($row['target_qty']) ? (float) $row['target_qty'] : 0;
+                    $targetLembur = isset($row['target_lembur']) ? (float) $row['target_lembur'] : 0;
+                    $satuan       = isset($row['satuan']) ? trim($row['satuan']) : 'Pcs';
+                    $refJob       = isset($row['ref_job']) ? trim($row['ref_job']) : '';
+                    $posisi       = isset($row['posisi']) ? trim($row['posisi']) : '';
 
-                    $totalRealisasi = 0;
-                    $hourlyCells = isset($row['hourly']) && is_array($row['hourly']) ? $row['hourly'] : [];
+                    $totalRealisasi  = 0;
+                    $realisasiLembur = 0;
+                    $hourlyCells     = isset($row['hourly']) && is_array($row['hourly']) ? $row['hourly'] : [];
 
                     foreach ($hourlyCells as $slot => $cellText) {
                         $rawText = trim($cellText);
                         if ($rawText !== '' && $rawText !== '-') {
                             $cellQty = $this->parseRawCellText($rawText);
                             $totalRealisasi += $cellQty;
+                            if (strtoupper($slot) === 'LEMBUR') {
+                                $realisasiLembur += $cellQty;
+                            }
 
                             $db->query($sqlHour, [$idHeader, $idKaryawan, $slot, $rawText, $cellQty]);
                         }
                     }
 
-                    $persentase = ($targetQty > 0) ? round(($totalRealisasi / $targetQty) * 100, 2) : 0;
-                    $db->query($sqlDet, [$idHeader, $idKaryawan, $posisi, $targetQty, $satuan, $refJob, $totalRealisasi, $persentase, $userId]);
+                    $grandTarget = $targetQty + $targetLembur;
+                    $persentase  = ($grandTarget > 0) ? round(($totalRealisasi / $grandTarget) * 100, 2) : 0;
+                    $db->query($sqlDet, [$idHeader, $idKaryawan, $posisi, $targetQty, $targetLembur, $satuan, $refJob, $totalRealisasi, $realisasiLembur, $persentase, $userId]);
 
                     // Save breakdown processes if submitted
                     if (!empty($row['breakdown_json'])) {
@@ -308,10 +315,11 @@ class MTargetHarian extends Model
                         if (is_array($breakdown)) {
                             $seq = 1;
                             foreach ($breakdown as $b) {
-                                $idProses   = !empty($b['id_proses']) ? (int)$b['id_proses'] : null;
-                                $namaProses = !empty($b['nama_proses']) ? trim($b['nama_proses']) : '';
-                                $bTarget    = isset($b['target_qty']) ? (float)$b['target_qty'] : 0;
-                                $bSatuan    = !empty($b['satuan']) ? trim($b['satuan']) : 'Pcs';
+                                $idProses      = !empty($b['id_proses']) ? (int)$b['id_proses'] : null;
+                                $namaProses    = !empty($b['nama_proses']) ? trim($b['nama_proses']) : '';
+                                $bTarget       = isset($b['target_qty']) ? (float)$b['target_qty'] : 0;
+                                $bTargetLembur = isset($b['target_lembur']) ? (float)$b['target_lembur'] : 0;
+                                $bSatuan       = !empty($b['satuan']) ? trim($b['satuan']) : 'Pcs';
                                 $j08 = isset($b['jam_08_09']) ? trim((string)$b['jam_08_09']) : '';
                                 $j09 = isset($b['jam_09_10']) ? trim((string)$b['jam_09_10']) : '';
                                 $j10 = isset($b['jam_10_11']) ? trim((string)$b['jam_10_11']) : '';
@@ -320,6 +328,7 @@ class MTargetHarian extends Model
                                 $j14 = isset($b['jam_14_15']) ? trim((string)$b['jam_14_15']) : '';
                                 $j15 = isset($b['jam_15_16']) ? trim((string)$b['jam_15_16']) : '';
                                 $j16 = isset($b['jam_16_17']) ? trim((string)$b['jam_16_17']) : '';
+                                $jLembur = isset($b['jam_lembur']) ? trim((string)$b['jam_lembur']) : '';
 
                                 $r08 = $this->parseRawCellText($j08);
                                 $r09 = $this->parseRawCellText($j09);
@@ -329,13 +338,15 @@ class MTargetHarian extends Model
                                 $r14 = $this->parseRawCellText($j14);
                                 $r15 = $this->parseRawCellText($j15);
                                 $r16 = $this->parseRawCellText($j16);
+                                $rLembur = $this->parseRawCellText($jLembur);
 
-                                $bTot = $r08 + $r09 + $r10 + $r11 + $r13 + $r14 + $r15 + $r16;
+                                $bTot = $r08 + $r09 + $r10 + $r11 + $r13 + $r14 + $r15 + $r16 + $rLembur;
 
-                                if ($bTarget > 0 || $bTot > 0 || !empty($namaProses)) {
+                                if ($bTarget > 0 || $bTargetLembur > 0 || $bTot > 0 || !empty($namaProses)) {
                                     $db->query($sqlProses, [
                                         $idHeader, $idKaryawan, $idProses, $namaProses, $bTarget, $bSatuan,
                                         $j08, $j09, $j10, $j11, $j13, $j14, $j15, $j16,
+                                        $bTargetLembur, $jLembur,
                                         $bTot, $seq
                                     ]);
                                     $seq++;

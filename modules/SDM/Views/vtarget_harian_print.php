@@ -240,12 +240,20 @@
 
         $globalBreakdown = [];
         $empBreakdown = [];
+
+        $hasLembur = false;
+        foreach ($activeEmployees as $emp) {
+            if (!empty($hourlyMap[$emp->id_karyawan]['LEMBUR']) || (float)($emp->target_lembur ?? 0) > 0 || (float)($emp->realisasi_lembur ?? 0) > 0) {
+                $hasLembur = true;
+                break;
+            }
+        }
       ?>
 
       <?php foreach ($time_slots as $idx => $slot): ?>
         <tr>
           <?php if ($idx === 0): ?>
-            <td rowspan="<?= count($time_slots) + 1 ?>" style="font-weight: bold; font-size: 11px; background: #fff;">
+            <td rowspan="<?= count($time_slots) + 1 + ($hasLembur ? 1 : 0) ?>" style="font-weight: bold; font-size: 11px; background: #fff;">
               <?= $hariIndo ?><br>
               <span style="font-weight: normal; font-size: 9.5px;"><?= $tglFmt ?></span>
             </td>
@@ -296,6 +304,40 @@
 
       <?php endforeach; ?>
 
+      <?php if ($hasLembur): ?>
+        <tr style="background-color: #fffdf5;">
+          <td style="font-weight: bold; background: #fff3cd; color: #856404;">LEMBUR</td>
+          <?php foreach ($activeEmployees as $emp): ?>
+            <?php 
+              $valLembur = isset($hourlyMap[$emp->id_karyawan]['LEMBUR']) ? $hourlyMap[$emp->id_karyawan]['LEMBUR'] : (!empty($emp->realisasi_lembur) && (float)$emp->realisasi_lembur > 0 ? (float)$emp->realisasi_lembur : '');
+              if ($valLembur === '-') $valLembur = '';
+              if (!empty($valLembur)) {
+                $items = explode(',', $valLembur);
+                foreach ($items as $it) {
+                  $it = trim($it);
+                  if (preg_match('/[=:\-]/', $it)) {
+                    $m = preg_split('/[=:\-]+/', $it);
+                    $c = strtoupper(trim($m[0]));
+                    $v = isset($m[1]) ? (float)$m[1] : 0;
+                    if ($v > 0) {
+                      $globalBreakdown[$c] = ($globalBreakdown[$c] ?? 0) + $v;
+                      $empBreakdown[$emp->id_karyawan][$c] = ($empBreakdown[$emp->id_karyawan][$c] ?? 0) + $v;
+                    }
+                  } elseif (is_numeric($it)) {
+                    $v = (float)$it;
+                    if ($v > 0) {
+                      $globalBreakdown['OUTPUT'] = ($globalBreakdown['OUTPUT'] ?? 0) + $v;
+                      $empBreakdown[$emp->id_karyawan]['OUTPUT'] = ($empBreakdown[$emp->id_karyawan]['OUTPUT'] ?? 0) + $v;
+                    }
+                  }
+                }
+              }
+            ?>
+            <td class="cell-val" style="background-color: #fffdf5; <?= (trim($valLembur) !== '' && is_numeric(trim($valLembur))) ? 'text-align: right !important; padding-right: 5px !important;' : '' ?>"><?= esc($valLembur) ?></td>
+          <?php endforeach; ?>
+        </tr>
+      <?php endif; ?>
+
       <!-- BARIS TOTAL REALISASI -->
       <tr class="row-total">
         <td colspan="2" style="text-align: right; font-weight: bold;">TOTAL REALISASI</td>
@@ -308,10 +350,18 @@
 
       <!-- BARIS TARGET -->
       <tr class="row-target">
-        <td colspan="2" style="text-align: right; font-weight: bold;">TARGET HARIAN</td>
+        <td colspan="2" style="text-align: right; font-weight: bold;">TARGET TOTAL</td>
         <?php foreach ($activeEmployees as $emp): ?>
+          <?php 
+            $tReg = (float)$emp->target_qty;
+            $tLbr = (float)($emp->target_lembur ?? 0);
+            $tTot = $tReg + $tLbr;
+          ?>
           <td style="font-size: 10px; font-weight: bold; text-align: right !important; padding-right: 6px !important;">
-            <?= (float)$emp->target_qty ?>
+            <?= $tTot ?>
+            <?php if ($tLbr > 0): ?>
+              <div style="font-size: 7.5px; color: #b45309; font-weight: normal;">(Lbr: <?= $tLbr ?>)</div>
+            <?php endif; ?>
           </td>
         <?php endforeach; ?>
       </tr>

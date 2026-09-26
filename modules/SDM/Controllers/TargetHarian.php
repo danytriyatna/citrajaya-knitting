@@ -195,6 +195,8 @@ class TargetHarian extends BaseController
                     'jam_14_15'       => (string)($ph->jam_14_15 ?? ''),
                     'jam_15_16'       => (string)($ph->jam_15_16 ?? ''),
                     'jam_16_17'       => (string)($ph->jam_16_17 ?? ''),
+                    'target_lembur'   => (float)($ph->target_lembur ?? 0),
+                    'jam_lembur'      => (string)($ph->jam_lembur ?? ''),
                     'total_realisasi' => (float)$ph->total_realisasi,
                 ];
             }
@@ -219,17 +221,19 @@ class TargetHarian extends BaseController
             $details   = [];
             foreach ($employees as $emp) {
                 $details[] = (object)[
-                    'id'              => '',
-                    'id_karyawan'     => $emp->id,
-                    'nip'             => $emp->nip,
-                    'full_name'       => $emp->full_name,
-                    'posisi'          => $emp->posisi,
-                    'target_qty'      => 0,
-                    'satuan'          => 'Pcs',
-                    'ref_job'         => '',
-                    'total_realisasi' => 0,
-                    'persentase'      => 0,
-                    'keterangan'      => ''
+                    'id'               => '',
+                    'id_karyawan'      => $emp->id,
+                    'nip'              => $emp->nip,
+                    'full_name'        => $emp->full_name,
+                    'posisi'           => $emp->posisi,
+                    'target_qty'       => 0,
+                    'target_lembur'    => 0,
+                    'realisasi_lembur' => 0,
+                    'satuan'           => 'Pcs',
+                    'ref_job'          => '',
+                    'total_realisasi'  => 0,
+                    'persentase'       => 0,
+                    'keterangan'       => ''
                 ];
             }
 

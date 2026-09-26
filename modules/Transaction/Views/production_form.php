@@ -314,15 +314,15 @@
                       <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped align-middle mb-0">
                           <thead style="background-color: #1e293b !important; color: #ffffff !important;">
-                            <tr>
-                              <th class="text-center" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
-                              <th style="background-color: #1e293b !important; color: #ffffff !important;">Tahapan Proses</th>
-                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty SO</th>
-                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod (P1)</th>
-                              <th class="text-end" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan (P2)</th>
-                              <th class="text-end" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important;">Total Qty (P1)</th>
-                              <th class="text-end" style="width: 18%; background-color: #1e293b !important; color: #ffffff !important;">Rata-rata Tarif / Pcs</th>
-                              <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Ongkos (P1)</th>
+                            <tr class="text-nowrap" style="white-space: nowrap !important;">
+                              <th class="text-center text-nowrap" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">No</th>
+                              <th class="text-nowrap" style="background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Tahapan Proses</th>
+                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty SO</th>
+                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty Prod</th>
+                              <th class="text-end text-nowrap" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty Perbaikan</th>
+                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Total Qty</th>
+                              <th class="text-end text-nowrap" style="width: 17%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Tarif / Pcs</th>
+                              <th class="text-end text-nowrap" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Subtotal Ongkos</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -355,14 +355,14 @@
                           </tbody>
                           <?php if (!empty($breakdown['tenaga_kerja'])) : ?>
                           <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
-                            <tr>
-                              <td colspan="2" class="text-end text-dark">TOTAL:</td>
+                            <tr class="text-nowrap" style="white-space: nowrap !important;">
+                              <td colspan="2" class="text-end text-dark text-nowrap" style="white-space: nowrap !important;">TOTAL:</td>
                               <td class="text-end text-primary"><?= number_format($fTotSo, 0, ',', '.'); ?></td>
                               <td class="text-end text-success"><?= number_format($fTotProd, 0, ',', '.'); ?></td>
                               <td class="text-end text-warning"><?= number_format($fTotFix, 0, ',', '.'); ?></td>
                               <td class="text-end text-dark"><?= number_format($fTotAll, 0, ',', '.'); ?></td>
-                              <td class="text-end text-dark">TOTAL BIAYA (P1):</td>
-                              <td class="text-end text-danger fs-6"><?= $laba_kotor['f_nilai_tk']; ?></td>
+                              <td class="text-end text-dark text-nowrap" style="white-space: nowrap !important;">TOTAL BIAYA:</td>
+                              <td class="text-end text-danger fs-6 text-nowrap" style="white-space: nowrap !important;"><?= $laba_kotor['f_nilai_tk']; ?></td>
                             </tr>
                           </tfoot>
                           <?php endif; ?>

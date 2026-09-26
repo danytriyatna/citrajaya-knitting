@@ -416,29 +416,32 @@ class Lembur extends BaseController
     public function syncAbsensi()
     {
         $tanggal     = $this->request->getPost('tanggal');
-        $idKaryawans = $this->request->getPost('id_karyawan'); // array or single
+        $idKaryawans = $this->request->getPost('id_karyawan'); // array or single, optional
 
-        if (empty($tanggal) || empty($idKaryawans)) {
+        if (empty($tanggal)) {
             return $this->response->setJSON([
-                'status' => false,
-                'message'=> 'Parameter tanggal dan karyawan tidak valid',
-                'data'   => []
+                'status'  => false,
+                'message' => 'Parameter tanggal tidak valid',
+                'data'    => []
             ]);
         }
 
-        if (!is_array($idKaryawans)) {
+        if (!empty($idKaryawans) && !is_array($idKaryawans)) {
             $idKaryawans = [$idKaryawans];
         }
-
-        $idKaryawans = array_map('intval', $idKaryawans);
+        $idKaryawans = !empty($idKaryawans) ? array_map('intval', $idKaryawans) : [];
 
         $db = \Config\Database::connect();
         
-        // 1. Ambil data absensi karyawan
+        // 1. Ambil data absensi: karyawan yang sudah ada di tabel ATAU yang memiliki status lembur pada tanggal ini
         $builder = $db->table('sdm_absensi sa');
         $builder->select("
             sa.id as id_absensi,
             sa.id_karyawan,
+            rk.nip,
+            rk.full_name,
+            rk.posisi,
+            rp.nama_perusahaan,
             sa.tgl_absen,
             sa.jam_masuk,
             sa.jam_keluar,
@@ -446,9 +449,25 @@ class Lembur extends BaseController
             sa.status_lembur,
             COALESCE(sa.jml_lembur, 0) as jml_lembur
         ");
-        $builder->whereIn('sa.id_karyawan', $idKaryawans);
+        $builder->join('ref_karyawan rk', 'rk.id = sa.id_karyawan');
+        $builder->join('ref_perusahaan rp', 'rp.id = rk.id_perusahaan', 'left');
         $builder->where('sa.tgl_absen', $tanggal);
         $builder->where('sa.active', 1);
+
+        if (!empty($idKaryawans)) {
+            $builder->groupStart()
+                ->whereIn('sa.id_karyawan', $idKaryawans)
+                ->orGroupStart()
+                    ->where('sa.status_lembur > 0')
+                    ->orWhere('sa.jml_lembur > 0')
+                ->groupEnd()
+            ->groupEnd();
+        } else {
+            $builder->groupStart()
+                ->where('sa.status_lembur > 0')
+                ->orWhere('sa.jml_lembur > 0')
+            ->groupEnd();
+        }
 
         $results = $builder->get()->getResult();
         $absMap = [];
@@ -460,50 +479,115 @@ class Lembur extends BaseController
         $tgtBuilder = $db->table('sdm_target_harian_det td');
         $tgtBuilder->select("
             td.id_karyawan,
+            rk.nip,
+            rk.full_name,
+            rk.posisi,
+            rp.nama_perusahaan,
             SUM(COALESCE(td.target_lembur, 0)) as target_lembur,
             SUM(COALESCE(td.realisasi_lembur, 0)) as realisasi_lembur,
             MAX(td.satuan) as satuan,
             MAX(h.kode_transaksi) as kode_target_harian
         ");
         $tgtBuilder->join('sdm_target_harian h', 'h.id = td.id_header');
-        $tgtBuilder->whereIn('td.id_karyawan', $idKaryawans);
+        $tgtBuilder->join('ref_karyawan rk', 'rk.id = td.id_karyawan');
+        $tgtBuilder->join('ref_perusahaan rp', 'rp.id = rk.id_perusahaan', 'left');
         $tgtBuilder->where('h.tanggal', $tanggal);
         $tgtBuilder->where('h.active', 1);
         $tgtBuilder->where('td.active', 1);
-        $tgtBuilder->groupBy('td.id_karyawan');
 
+        if (!empty($idKaryawans)) {
+            $tgtBuilder->groupStart()
+                ->whereIn('td.id_karyawan', $idKaryawans)
+                ->orGroupStart()
+                    ->where('td.target_lembur > 0')
+                    ->orWhere('td.realisasi_lembur > 0')
+                ->groupEnd()
+            ->groupEnd();
+        } else {
+            $tgtBuilder->groupStart()
+                ->where('td.target_lembur > 0')
+                ->orWhere('td.realisasi_lembur > 0')
+            ->groupEnd();
+        }
+
+        $tgtBuilder->groupBy('td.id_karyawan, rk.nip, rk.full_name, rk.posisi, rp.nama_perusahaan');
         $tgtResults = $tgtBuilder->get()->getResult();
         $tgtMap = [];
         foreach ($tgtResults as $t) {
             $tgtMap[$t->id_karyawan] = $t;
         }
 
-        $map = [];
-        foreach ($idKaryawans as $empId) {
+        // Kumpulkan semua ID karyawan unik (dari yang sudah ada di tabel + absensi lembur + target harian lembur)
+        $allEmpIds = array_unique(array_merge(
+            $idKaryawans,
+            array_keys($absMap),
+            array_keys($tgtMap)
+        ));
+
+        // Jika ada karyawan dari $idKaryawans yang belum ada di absensi atau target harian, ambil profil ref_karyawan
+        $missingEmpIds = array_diff($allEmpIds, array_keys($absMap), array_keys($tgtMap));
+        $missingEmpMap = [];
+        if (!empty($missingEmpIds)) {
+            $missingRows = $db->table('ref_karyawan rk')
+                ->select('rk.id, rk.nip, rk.full_name, rk.posisi')
+                ->whereIn('rk.id', array_values($missingEmpIds))
+                ->get()->getResult();
+            foreach ($missingRows as $mr) {
+                $missingEmpMap[$mr->id] = $mr;
+            }
+        }
+
+        $list = [];
+        foreach ($allEmpIds as $empId) {
             $r = $absMap[$empId] ?? null;
             $t = $tgtMap[$empId] ?? null;
+            $m = $missingEmpMap[$empId] ?? null;
 
-            $jamMasuk = ($r && !empty($r->jam_masuk)) ? date('H:i', strtotime($r->jam_masuk)) : '';
-            $jamKeluar = ($r && !empty($r->jam_keluar)) ? date('H:i', strtotime($r->jam_keluar)) : '';
+            $nip = $r ? $r->nip : ($t ? $t->nip : ($m ? $m->nip : '-'));
+            $fullName = $r ? $r->full_name : ($t ? $t->full_name : ($m ? $m->full_name : ''));
+            $posisi = $r ? $r->posisi : ($t ? $t->posisi : ($m ? $m->posisi : '-'));
 
-            $map[$empId] = [
-                'id_absensi'         => $r ? (int) $r->id_absensi : null,
-                'jam_masuk'          => $jamMasuk,
-                'jam_keluar'         => $jamKeluar,
-                'status_kehadiran'   => $r ? (int) $r->status_kehadiran : null,
-                'status_lembur'      => $r ? (int) $r->status_lembur : null,
-                'jam_lembur_absen'   => $r ? (float) $r->jml_lembur : 0,
-                'has_target_harian'  => !empty($t),
-                'target_lembur'      => $t ? (float) $t->target_lembur : 0,
-                'realisasi_lembur'   => $t ? (float) $t->realisasi_lembur : 0,
-                'satuan'             => $t ? ($t->satuan ?: 'Pcs') : 'Pcs',
-                'kode_target_harian' => $t ? $t->kode_target_harian : null
+            $jamMasuk = ($r && !empty($r->jam_masuk)) ? date('H:i', strtotime($r->jam_masuk)) : '-';
+            $jamKeluar = ($r && !empty($r->jam_keluar)) ? date('H:i', strtotime($r->jam_keluar)) : '-';
+            $jamAbsen = $r ? (float) $r->jml_lembur : 0;
+
+            $target = $t ? (float) $t->target_lembur : 0;
+            $realisasi = $t ? (float) $t->realisasi_lembur : 0;
+            $satuan = $t ? ($t->satuan ?: 'Pcs') : 'Pcs';
+
+            $persentase = ($target > 0) ? min(100.00, round(($realisasi / target) * 100, 2)) : 0;
+            $jamDihitung = round(($jamAbsen * ($persentase / 100)), 2);
+
+            $list[] = [
+                'id_karyawan'         => (int) $empId,
+                'id_absensi'          => $r ? (int) $r->id_absensi : null,
+                'nip'                 => $nip,
+                'full_name'           => $fullName,
+                'posisi'              => $posisi,
+                'jam_masuk'           => $jamMasuk,
+                'jam_keluar'          => $jamKeluar,
+                'status_kehadiran'    => $r ? (int) $r->status_kehadiran : null,
+                'status_lembur'       => $r ? (int) $r->status_lembur : null,
+                'jam_lembur_absen'    => $jamAbsen,
+                'has_target_harian'   => !empty($t),
+                'target'              => $target,
+                'realisasi'           => $realisasi,
+                'satuan_target'       => $satuan,
+                'persentase'          => $persentase,
+                'jam_lembur_dihitung' => $jamDihitung,
+                'kode_target_harian'  => $t ? $t->kode_target_harian : null,
+                'is_synced'           => true
             ];
         }
 
+        // Urutkan list berdasarkan nama lengkap
+        usort($list, function($a, $b) {
+            return strcmp($a['full_name'], $b['full_name']);
+        });
+
         return $this->response->setJSON([
             'status' => true,
-            'data'   => $map
+            'data'   => $list
         ]);
     }
 

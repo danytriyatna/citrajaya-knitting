@@ -380,17 +380,10 @@ $(document).ready(function () {
         }
 
         let currentRows = dtDetail.getData();
-        if (currentRows.length === 0) {
-            if (showManualAlert) {
-                Swal.fire({ icon: "warning", title: "Perhatian", text: "Tabel detail karyawan masih kosong!" });
-            }
-            return;
-        }
-
         let idKaryawans = currentRows.map(r => parseInt(r.id_karyawan));
 
         let btn = $("#btn-sync-absensi");
-        btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin me-1"></i> Menarik data...');
+        btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin me-1"></i> Sinkronisasi & menarik data...');
 
         $.ajax({
             url: "/sdm/lembur/sync-absensi",
@@ -404,63 +397,80 @@ $(document).ready(function () {
                 btn.prop("disabled", false).html('<i class="fa fa-sync me-1"></i> 🔄 Tarik / Sinkronisasi Absensi & Target');
 
                 if (res.status && res.data) {
-                    let mapData = res.data;
-                    let allRows = dtDetail.getRows();
+                    let listData = res.data;
+                    let addedCount = 0;
+                    let updatedCount = 0;
 
-                    allRows.forEach(row => {
-                        let rData = row.getData();
-                        let empId = parseInt(rData.id_karyawan);
+                    listData.forEach(item => {
+                        let empId = parseInt(item.id_karyawan);
+                        let existingRow = dtDetail.getRows().find(r => parseInt(r.getData().id_karyawan) === empId);
 
-                        if (mapData[empId]) {
-                            let abs = mapData[empId];
-                            let target = (abs.has_target_harian && abs.target_lembur !== undefined) 
-                                ? parseFloat(abs.target_lembur) 
-                                : (parseFloat(rData.target) || 0);
-                            let realisasi = (abs.has_target_harian && abs.realisasi_lembur !== undefined) 
-                                ? parseFloat(abs.realisasi_lembur) 
-                                : (parseFloat(rData.realisasi) || 0);
-                            let satuan = (abs.has_target_harian && abs.satuan) ? abs.satuan : (rData.satuan_target || "Pcs");
+                        if (existingRow) {
+                            let rData = existingRow.getData();
+                            // Jika target harian memiliki data, perbarui target & realisasi
+                            let target = item.has_target_harian ? item.target : (parseFloat(rData.target) || 0);
+                            let realisasi = item.has_target_harian ? item.realisasi : (parseFloat(rData.realisasi) || 0);
+                            let satuan = item.has_target_harian ? item.satuan_target : (rData.satuan_target || "Pcs");
 
                             let persentase = target > 0 ? Math.min(100.00, (realisasi / target) * 100) : 0;
-                            let jamAbsen = parseFloat(abs.jam_lembur_absen) || 0;
+                            let jamAbsen = parseFloat(item.jam_lembur_absen) || 0;
                             let jamDihitung = (jamAbsen * (persentase / 100));
 
-                            row.update({
-                                id_absensi: abs.id_absensi,
+                            existingRow.update({
+                                id_absensi: item.id_absensi,
                                 target: target,
                                 realisasi: realisasi,
                                 satuan_target: satuan,
                                 persentase: Math.round(persentase * 100) / 100,
-                                jam_masuk: abs.jam_masuk || "-",
-                                jam_keluar: abs.jam_keluar || "-",
-                                status_kehadiran: abs.status_kehadiran,
-                                status_lembur: abs.status_lembur,
+                                jam_masuk: item.jam_masuk || "-",
+                                jam_keluar: item.jam_keluar || "-",
+                                status_kehadiran: item.status_kehadiran,
+                                status_lembur: item.status_lembur,
                                 jam_lembur_absen: jamAbsen,
                                 jam_lembur_dihitung: Math.round(jamDihitung * 100) / 100,
                                 is_synced: true
                             });
+                            updatedCount++;
                         } else {
-                            row.update({
-                                id_absensi: null,
-                                jam_masuk: "-",
-                                jam_keluar: "-",
-                                status_kehadiran: null,
-                                status_lembur: null,
-                                jam_lembur_absen: 0,
-                                jam_lembur_dihitung: 0,
+                            // Karyawan baru yang ditarik karena absensinya memiliki status lembur atau ada di target harian
+                            dtDetail.addRow({
+                                id_karyawan: empId,
+                                id_absensi: item.id_absensi,
+                                nip: item.nip,
+                                full_name: item.full_name,
+                                posisi: item.posisi,
+                                pekerjaan: "",
+                                target: item.target,
+                                satuan_target: item.satuan_target || "Pcs",
+                                realisasi: item.realisasi,
+                                persentase: item.persentase,
+                                jam_masuk: item.jam_masuk || "-",
+                                jam_keluar: item.jam_keluar || "-",
+                                status_kehadiran: item.status_kehadiran,
+                                status_lembur: item.status_lembur,
+                                jam_lembur_absen: item.jam_lembur_absen,
+                                jam_lembur_dihitung: item.jam_lembur_dihitung,
+                                catatan: "",
                                 is_synced: true
                             });
+                            addedCount++;
                         }
                     });
 
                     updateSummaryTotals();
 
                     if (showManualAlert) {
+                        let textDesc = `Data berhasil disinkronkan (${updatedCount} karyawan diperbarui).`;
+                        if (addedCount > 0) {
+                            textDesc = `Ditemukan ${addedCount} karyawan berstatus lembur baru yang ditarik, dan ${updatedCount} karyawan diperbarui.`;
+                        } else if (listData.length === 0) {
+                            textDesc = "Tidak ditemukan karyawan dengan status lembur di absensi atau target harian pada tanggal ini.";
+                        }
                         Swal.fire({
                             icon: "success",
                             title: "Sinkronisasi Berhasil",
-                            text: "Data kehadiran, absensi, serta target & realisasi lembur dari Target Harian berhasil disinkronkan. Baris dengan lembur 0 ditandai warna merah.",
-                            timer: 2500,
+                            text: textDesc,
+                            timer: 3000,
                             showConfirmButton: false
                         });
                     }

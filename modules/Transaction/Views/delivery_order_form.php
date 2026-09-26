@@ -227,15 +227,19 @@
                     <a href="trans/delivery-order" class="btn btn-default m-e-5">
                       <span class="fa fa-arrow-left"></span> Kembali
                     </a>
-                    <button type="button" id="btn-save" class='btn btn-success'>
-                      <span class="fa fa-save"></span> Simpan
-                    </button>
                     <?php if($status == 1) { ?>
+                      <button type="button" id="btn-save" class='btn btn-success'>
+                        <span class="fa fa-save"></span> Simpan
+                      </button>
                       <?php if(!empty($id)) { ?>
                       <button type="button" id="btn-send" class='btn btn-info'>
                         <span class="fa fa-paper-plane"></span> Approval
                       </button>
                       <?php } ?>
+                    <?php } else if($status == 2 && in_array((int) session()->get('role_id'), [1, 2, 4, 5], true)) { ?>
+                      <button type="button" id="btn-cancel-approve" class='btn btn-warning'>
+                        <span class="fa fa-undo"></span> Batalkan Approve
+                      </button>
                     <?php } ?>
                     <input type="hidden" name="actionf" id="actionf">
                     <input type="hidden" name="status" id="status" value="<?= !empty($status)? $status : '0' ?>">

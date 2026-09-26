@@ -760,4 +760,59 @@ $(document).ready(function () {
             }
         })
     });
+
+    $("#btn-cancel-approve").on("click", function (e) {
+        e.preventDefault();
+        let encId = $("#id").val();
+        let doNo = $("#do_no").val() || "dokumen ini";
+
+        Swal.fire({
+            title: "Batalkan Approve DO?",
+            text: "Status " + doNo + " akan dikembalikan ke Draft, dan alokasi stok fisik yang pernah terpotong akan dipulihkan secara penuh.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Batalkan Approve",
+            confirmButtonColor: "#f39c12",
+            cancelButtonText: "Batal",
+            cancelButtonColor: "#6c757d"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(".preloader").css("opacity", "0.7").show();
+                $.ajax({
+                    url: "/trans/delivery-order/cancel-approve",
+                    type: "POST",
+                    dataType: "json",
+                    data: { id: encId },
+                    success: function (res) {
+                        $(".preloader").hide().css("opacity", "1");
+                        if (res.status) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil!",
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Gagal",
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function () {
+                        $(".preloader").hide().css("opacity", "1");
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Terjadi kesalahan saat membatalkan Approve DO."
+                        });
+                    }
+                });
+            }
+        });
+    });
 });

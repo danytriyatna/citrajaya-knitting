@@ -87,36 +87,31 @@ class DeliveryOrder extends BaseController
       "data" => array()
     );
 
+    $isAllowedRole = in_array((int) session()->get('role_id'), [1, 2, 4, 5], true);
+
     foreach ($results as $row) {
       $id = encrypt($row->id);
 
-      $atr_edit  = null;
-      $atr_del   = null;
-      $atr_other   = null;
-      $btnAction = null;
-      // if ($this->_edit) {
-      if (true) {
-        $atr_edit['title'] = 'Edit';
-        $atr_edit['url'] = $this->urlv . '/form/';
-        $atr_edit['class'] = '';
-      }
-      // if ($this->_delete) {
-      if (false) {
-        $atr_del['title'] = 'Hapus';
-        $atr_del['url'] = $this->urlv . '/delete/';
-        $atr_del['class'] = '';
-        $atr_del['onclick'] = "return confirm('Hapus Data ?')";
+      $btnAction = '<div class="btn-group">
+                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog"></i> Aksi <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-act" role="menu">';
+      
+      $btnAction .= '<li><a href="' . base_url('trans/delivery-order/form/' . $id) . '" title="Edit"><i class="fa fa-fw fa-edit"></i> Edit</a></li>';
+      $btnAction .= '<li><a href="' . base_url('trans/delivery-order/print/' . $id) . '" target="_blank" title="Print"><i class="fa fa-fw fa-print"></i> Print</a></li>';
+
+      if ((int)$row->status === 2 && $isAllowedRole) {
+        $btnAction .= '<li><a href="javascript:void(0)" class="btn-cancel-approve-row text-warning" data-id="' . $id . '" data-kode="' . $row->delivery_kode . '" title="Batalkan Approve"><i class="fa fa-fw fa-undo"></i> Batalkan Approve</a></li>';
       }
 
-      $atr_other['title'] = 'Print';
-      $atr_other['target'] = "blank";
-      $atr_other['url'] = $this->urlv . '/print/';
-      $atr_other['class'] = '';
-      $atr_other['icon_class'] = 'fa-print';
-      // if ($atr_edit || $atr_del)
-      $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
+      if ($isAllowedRole || $this->_delete) {
+        $btnAction .= '<li><a href="javascript:void(0)" class="btn-delete-row text-danger" data-id="' . $id . '" data-kode="' . $row->delivery_kode . '" title="Hapus"><i class="fa fa-fw fa-trash"></i> Hapus</a></li>';
+      }
 
-      $status = $row->status  == 1 ? "Draft" : "Approved";
+      $btnAction .= '</ul></div>';
+
+      $status = (int)$row->status === 1 ? "<span class='badge bg-secondary'>Draft</span>" : "<span class='badge bg-success'>Approved</span>";
       $tipe   = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
       $qty      = $row->sisa_qty;
@@ -688,6 +683,97 @@ class DeliveryOrder extends BaseController
     }
   }
 
+  // "Batalkan Approve" - membalik semua efek approve (stok & ledger) & kembalikan status DO ke Draft
+  public function cancelApprove()
+  {
+    if (!in_array((int) session()->get('role_id'), [1, 2, 4, 5], true)) {
+      return $this->response->setJSON([
+        'status' => false,
+        'message' => 'Hanya Superadmin, Admin Aplikasi, Admin Keuangan, dan Admin Citraknitt yang dapat membatalkan Approve!',
+      ]);
+    }
+
+    $id = $this->request->getPost('id');
+    if (empty($id)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'ID tidak valid.']);
+    }
+
+    try {
+      $idDec = decrypt($id);
+      $res = $this->mDelivery->cancelApprove($idDec, $this->get_userid());
+      if ($res) {
+        $this->mcommon->setLog($this->get_userid(), $this->MOD_ALIAS, $idDec, "Cancel Approve Delivery");
+        return $this->response->setJSON([
+          'status' => true,
+          'message' => 'Approve Delivery Order berhasil dibatalkan, status kembali ke Draft.'
+        ]);
+      }
+    } catch (\Throwable $e) {
+      return $this->response->setJSON([
+        'status' => false,
+        'message' => $e->getMessage()
+      ]);
+    }
+
+    return $this->response->setJSON(['status' => false, 'message' => 'Gagal membatalkan Approve.']);
+  }
+
+  // "Hapus Delivery Order" (Soft delete & rollback stok jika status Approved)
+  public function delete($id = null)
+  {
+    $isAllowed = in_array((int) session()->get('role_id'), [1, 2, 4, 5], true) || $this->_delete;
+    if (!$isAllowed) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON([
+          'status' => false,
+          'message' => 'Anda tidak memiliki hak akses untuk menghapus Delivery Order!',
+        ]);
+      }
+      $this->session->setFlashdata('error', 'Anda tidak memiliki hak akses untuk menghapus Delivery Order!');
+      return redirect()->to('/trans/delivery-order');
+    }
+
+    if (empty($id)) {
+      $id = $this->request->getPost('id');
+    }
+
+    if (empty($id)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => false, 'message' => 'ID tidak valid.']);
+      }
+      return redirect()->to('/trans/delivery-order');
+    }
+
+    try {
+      $idDec = decrypt($id);
+      $res = $this->mDelivery->deleteDelivery($idDec, $this->get_userid());
+      if ($res) {
+        $this->mcommon->setLog($this->get_userid(), $this->MOD_ALIAS, $idDec, "Delete Delivery");
+        if ($this->request->isAJAX()) {
+          return $this->response->setJSON([
+            'status' => true,
+            'message' => 'Delivery Order berhasil dihapus.'
+          ]);
+        }
+        $this->session->setFlashdata('message', 'Delivery Order berhasil dihapus.');
+        return redirect()->to('/trans/delivery-order');
+      }
+    } catch (\Throwable $e) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON([
+          'status' => false,
+          'message' => $e->getMessage()
+        ]);
+      }
+      $this->session->setFlashdata('error', $e->getMessage());
+      return redirect()->to('/trans/delivery-order');
+    }
+
+    if ($this->request->isAJAX()) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Gagal menghapus data.']);
+    }
+    return redirect()->to('/trans/delivery-order');
+  }
 
   // get data produksi
   public function lists_produksi()

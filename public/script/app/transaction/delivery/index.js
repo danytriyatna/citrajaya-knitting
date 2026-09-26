@@ -162,4 +162,112 @@ $(document).ready(function () {
         return new Date(parts[2], parts[1] - 1, parts[0]); 
         // year, monthIndex (0=Jan), day
     }
+
+    $(document).on("click", ".btn-cancel-approve-row", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        let kode = $(this).data("kode") || "dokumen";
+
+        Swal.fire({
+            title: "Batalkan Approve DO?",
+            text: "Status " + kode + " akan dikembalikan ke Draft, dan alokasi pengeluaran stok fisik akan dipulihkan secara penuh.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Batalkan Approve",
+            confirmButtonColor: "#f39c12",
+            cancelButtonText: "Batal",
+            cancelButtonColor: "#6c757d"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(".preloader").css("opacity", "0.7").show();
+                $.ajax({
+                    url: "/trans/delivery-order/cancel-approve",
+                    type: "POST",
+                    dataType: "json",
+                    data: { id: id },
+                    success: function (res) {
+                        $(".preloader").hide().css("opacity", "1");
+                        if (res.status) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil!",
+                                text: res.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            dtList.replaceData();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Gagal",
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function () {
+                        $(".preloader").hide().css("opacity", "1");
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Terjadi kesalahan saat membatalkan Approve DO."
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    $(document).on("click", ".btn-delete-row", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        let kode = $(this).data("kode") || "dokumen";
+
+        Swal.fire({
+            title: "Hapus Delivery Order?",
+            text: "Anda yakin ingin menghapus " + kode + "? Jika dokumen sudah di-Approve, mutasi stok fisik akan dipulihkan terlebih dahulu sebelum dihapus.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Hapus!",
+            confirmButtonColor: "#d33",
+            cancelButtonText: "Batal",
+            cancelButtonColor: "#6c757d"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(".preloader").css("opacity", "0.7").show();
+                $.ajax({
+                    url: "/trans/delivery-order/delete",
+                    type: "POST",
+                    dataType: "json",
+                    data: { id: id },
+                    success: function (res) {
+                        $(".preloader").hide().css("opacity", "1");
+                        if (res.status) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil!",
+                                text: res.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            dtList.replaceData();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Gagal",
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function () {
+                        $(".preloader").hide().css("opacity", "1");
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Terjadi kesalahan saat menghapus Delivery Order."
+                        });
+                    }
+                });
+            }
+        });
+    });
 });

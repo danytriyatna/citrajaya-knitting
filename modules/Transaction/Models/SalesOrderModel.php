@@ -136,12 +136,12 @@ class SalesOrderModel extends \App\Models\PrModel
         $totalQtySo = (float)($stmtUk->total_qty_so ?? 0);
         $totalAmountSo = (float)($stmtUk->total_amount_so ?? 0) + (float)($so->pengiriman ?? 0);
 
-        // 2. Total Qty DO (Approved: status = 1)
+        // 2. Total Qty DO (Approved: status = 2)
         $stmtDo = $this->db->query("
             SELECT COALESCE(SUM(td.qty), 0) as total_qty_do
             FROM trans_delivery td
             INNER JOIN trans_walkorder tw ON tw.id = td.id_walkorder
-            WHERE tw.ref_id = {$idSo} AND tw.tipe_id = 2 AND td.active = 1 AND td.status = 1
+            WHERE tw.ref_id = {$idSo} AND tw.tipe_id = 2 AND td.active = 1 AND td.status = 2
         ")->getRow();
         $totalQtyDo = (float)($stmtDo->total_qty_do ?? 0);
 

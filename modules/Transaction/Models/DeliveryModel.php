@@ -358,4 +358,184 @@ class DeliveryModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getRow()->total_qty_do;
         return $this->_data;
     }
+
+    /**
+     * Membatalkan status Approve (Kirim) pada Delivery Order:
+     * - Validasi kaitan faktur/invoice (tidak boleh batal jika sudah terbit invoice)
+     * - Mengembalikan stok trans_lots & menyamakan trans_barang_balances jika ada pencatatan trans_barang
+     * - Menghapus pencatatan kartu stok trans_barang milik DO ini
+     * - Mengembalikan status header trans_delivery ke 1 (Draft)
+     * - Menyinkronkan kembali status Sales Order (evaluateAndSyncClosedStatus)
+     */
+    function cancelApprove($id, $updatedBy = null)
+    {
+        $this->db->transStart();
+        try {
+            $header = $this->getData($id);
+            if (empty($header)) {
+                throw new \Exception("Data Delivery Order tidak ditemukan.");
+            }
+            if ((int) $header->status !== 2) {
+                throw new \Exception("Dokumen Delivery Order ini belum di-Approve, tidak bisa dibatalkan.");
+            }
+
+            // 1. Cek kaitan invoice
+            if (!empty($header->id_invoice) || !empty($header->invoice_status)) {
+                throw new \Exception("Delivery Order tidak dapat dibatalkan karena sudah masuk ke Faktur Penjualan (Invoice)!");
+            }
+            $invCheck = $this->db->table('trans_invoice_delivery')->where('id_delivery', $id)->countAllResults();
+            if ($invCheck > 0) {
+                throw new \Exception("Delivery Order tidak dapat dibatalkan karena sudah terhubung ke Faktur Penjualan (Invoice)!");
+            }
+
+            // 2. Rollback stok trans_lots & samakan trans_barang_balances jika pernah tercatat di trans_barang
+            $trxRows = $this->db->table('trans_barang')
+                ->select('id_barang, lot_id, id_gudang_asal, SUM(jumlah) as jumlah')
+                ->where('kode_transaksi', $header->delivery_kode)
+                ->groupBy('id_barang, lot_id, id_gudang_asal')
+                ->get()->getResult();
+
+            if (!empty($trxRows)) {
+                foreach ($trxRows as $row) {
+                    if (empty($row->lot_id)) continue;
+
+                    $this->db->table('trans_lots')
+                        ->where('id', $row->lot_id)
+                        ->set('qty', 'qty + ' . (float) $row->jumlah, false)
+                        ->update();
+
+                    $lotBaru = $this->db->table('trans_lots')->where('id', $row->lot_id)->get()->getRow();
+                    if (!empty($lotBaru)) {
+                        $this->db->table('trans_barang_balances')
+                            ->where('id_barang', $row->id_barang)
+                            ->where('id_gudang', $row->id_gudang_asal)
+                            ->where('lot_id', $row->lot_id)
+                            ->where('tanggal', date('Y-m-d'))
+                            ->set('saldo_akhir', $lotBaru->qty)
+                            ->update();
+                    }
+                }
+                // Hapus pencatatan kartu stok trans_barang milik DO ini
+                $this->db->table('trans_barang')->where('kode_transaksi', $header->delivery_kode)->delete();
+            }
+
+            // 3. Kembalikan status header ke Draft (1)
+            $updateHeader = [
+                'status'     => 1,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            if (!empty($updatedBy)) {
+                $updateHeader['updated_by'] = $updatedBy;
+            }
+            $this->updateRecord($this->table, $updateHeader, 'id', $id);
+
+            // 4. Sinkronkan status Sales Order terkait
+            if (!empty($header->id_walkorder)) {
+                $dtWo = $this->db->table('trans_walkorder')->where('id', $header->id_walkorder)->get()->getRow();
+                if (!empty($dtWo) && (int)$dtWo->tipe_id === 2 && !empty($dtWo->ref_id)) {
+                    $mSalesOrder = new \Modules\Transaction\Models\SalesOrderModel();
+                    $mSalesOrder->evaluateAndSyncClosedStatus($dtWo->ref_id);
+                }
+            }
+
+            $this->db->transComplete();
+            if ($this->db->transStatus() === false) {
+                throw new \Exception("Gagal memproses pembatalan Approve di database.");
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->transRollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Menghapus (soft delete) Delivery Order:
+     * - Validasi kaitan faktur/invoice (tidak boleh hapus jika sudah terbit invoice)
+     * - Jika status masih Approved (2), rollback stok & kartu stok terlebih dahulu
+     * - Set active = 0 pada trans_delivery
+     * - Menyinkronkan kembali status Sales Order (evaluateAndSyncClosedStatus)
+     */
+    function deleteDelivery($id, $updatedBy = null)
+    {
+        $this->db->transStart();
+        try {
+            $header = $this->getData($id);
+            if (empty($header)) {
+                throw new \Exception("Data Delivery Order tidak ditemukan.");
+            }
+
+            // 1. Cek kaitan invoice
+            if (!empty($header->id_invoice) || !empty($header->invoice_status)) {
+                throw new \Exception("Delivery Order tidak dapat dihapus karena sudah masuk ke Faktur Penjualan (Invoice)!");
+            }
+            $invCheck = $this->db->table('trans_invoice_delivery')->where('id_delivery', $id)->countAllResults();
+            if ($invCheck > 0) {
+                throw new \Exception("Delivery Order tidak dapat dihapus karena sudah terhubung ke Faktur Penjualan (Invoice)!");
+            }
+
+            // 2. Jika status saat ini masih Approved (2), pulihkan stok trans_lots & bersihkan trans_barang dulu
+            if ((int)$header->status === 2) {
+                $trxRows = $this->db->table('trans_barang')
+                    ->select('id_barang, lot_id, id_gudang_asal, SUM(jumlah) as jumlah')
+                    ->where('kode_transaksi', $header->delivery_kode)
+                    ->groupBy('id_barang, lot_id, id_gudang_asal')
+                    ->get()->getResult();
+
+                if (!empty($trxRows)) {
+                    foreach ($trxRows as $row) {
+                        if (empty($row->lot_id)) continue;
+
+                        $this->db->table('trans_lots')
+                            ->where('id', $row->lot_id)
+                            ->set('qty', 'qty + ' . (float) $row->jumlah, false)
+                            ->update();
+
+                        $lotBaru = $this->db->table('trans_lots')->where('id', $row->lot_id)->get()->getRow();
+                        if (!empty($lotBaru)) {
+                            $this->db->table('trans_barang_balances')
+                                ->where('id_barang', $row->id_barang)
+                                ->where('id_gudang', $row->id_gudang_asal)
+                                ->where('lot_id', $row->lot_id)
+                                ->where('tanggal', date('Y-m-d'))
+                                ->set('saldo_akhir', $lotBaru->qty)
+                                ->update();
+                        }
+                    }
+                    $this->db->table('trans_barang')->where('kode_transaksi', $header->delivery_kode)->delete();
+                }
+            }
+
+            // 3. Soft delete header
+            $updateHeader = [
+                'active'     => 0,
+                'status'     => 1, // normalkan status ke draft
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            if (!empty($updatedBy)) {
+                $updateHeader['updated_by'] = $updatedBy;
+            }
+            $this->updateRecord($this->table, $updateHeader, 'id', $id);
+
+            // 4. Sinkronkan status Sales Order terkait
+            if (!empty($header->id_walkorder)) {
+                $dtWo = $this->db->table('trans_walkorder')->where('id', $header->id_walkorder)->get()->getRow();
+                if (!empty($dtWo) && (int)$dtWo->tipe_id === 2 && !empty($dtWo->ref_id)) {
+                    $mSalesOrder = new \Modules\Transaction\Models\SalesOrderModel();
+                    $mSalesOrder->evaluateAndSyncClosedStatus($dtWo->ref_id);
+                }
+            }
+
+            $this->db->transComplete();
+            if ($this->db->transStatus() === false) {
+                throw new \Exception("Gagal menghapus Delivery Order di database.");
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->transRollback();
+            throw $e;
+        }
+    }
 }

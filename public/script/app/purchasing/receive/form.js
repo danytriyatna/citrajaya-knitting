@@ -26,6 +26,8 @@ let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
+let inpGudangUtamaId = $('#gudang_utama_id');
+let inpGudangUtamaNama = $('#gudang_utama_nama');
 
 if (inpStatus.val() == 0) {
     btnAdd.show()
@@ -37,7 +39,10 @@ if (inpStatus.val() == 0) {
     btnApprove.hide()
 }
 // const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
-const regex = /^[0-9.,]+$/;
+// Angka, maksimal 2 desimal (permintaan user - qty sebelumnya bisa diisi
+// desimal sebanyak apapun, jadi hasil penjumlahan di kolom QTY suka
+// "kotor" seperti 293.09999999999997).
+const regex = /^[0-9]+([.,][0-9]{1,2})?$/;
 let dtList = new Tabulator("#dt-list", {
     columns: [
         {
@@ -125,12 +130,68 @@ dtList.on("rowClick", function (e, row) {
     var poNo = row._row.data.po_no.replace(/<[^>]*>/g, '');
     var ShipDate = row._row.data.date_exc.replace(/<[^>]*>/g, '');
     var idPo = row._row.data.id;
-    inpPoNo.val(poNo)
-    inpIdPo.val(idPo)
-    inpNamaVendor.val(namaVendor)
-    inpTglShip.val(formatterDate(ShipDate))
-    $("#modal-po").modal("hide");
+
+    var lanjutkan = function () {
+        inpPoNo.val(poNo)
+        inpIdPo.val(idPo)
+        inpNamaVendor.val(namaVendor)
+        inpTglShip.val(formatterDate(ShipDate))
+        $("#modal-po").modal("hide");
+        loadDataPo(idPo);
+    };
+
+    // Kalau baris detail sudah ada isinya (mis. tambah manual sebelumnya atau
+    // ganti PO), auto-isi akan MENGGANTI seluruh baris - konfirmasi dulu
+    // supaya tidak ada data yang hilang tanpa sengaja.
+    if (dtListDetail.getData().length > 0) {
+        $("#modal-po").modal("hide");
+        Swal.fire({
+            title: "Ganti PO akan mengganti seluruh baris detail yang sudah ada. Lanjutkan?",
+            icon: 'question',
+            confirmButtonText: 'Lanjutkan',
+            confirmButtonColor: '#198754',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#6C757D'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                lanjutkan();
+            }
+        });
+    } else {
+        lanjutkan();
+    }
 })
+
+// Ambil baris PO (item code, description, qty sisa, unit, price) dan isi
+// langsung ke tabel detail - menggantikan alur tambah manual satu-per-satu.
+// Warehouse default "Gudang Utama" (bisa diubah), Lot No & Pack dikosongkan
+// karena tidak ada di data PO - dilengkapi user lewat tombol edit per baris.
+function loadDataPo(idPo) {
+    Swal.fire({
+        title: 'Loading...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        onBeforeOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    $.ajax({
+        url: `/purchasing/receive-item/data-po?idPo=${idPo}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            Swal.close();
+            if (data.status) {
+                dtListDetail.setData(data.data);
+            }
+        },
+        error: function (xhr, status, error) {
+            Swal.close();
+            console.error('Error fetching data PO:', error);
+        }
+    });
+}
 
 let dtListBarang = new Tabulator("#dt-list-barang", {
     columns: [
@@ -339,7 +400,15 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "15%" },
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: customSumQtyReceive },
+        {
+            title: "QTY", field: "qty", hozAlign: "center", width: "10%", bottomCalc: customSumQtyReceive,
+            // Tampilan dibulatkan 2 desimal - dokumen lama datanya bisa masih
+            // "kotor" (mis. 293.09999999999997) walau input baru sudah dibatasi.
+            formatter: function (cell) {
+                let val = parseFloat(cell.getValue());
+                return isNaN(val) ? cell.getValue() : val.toFixed(2);
+            }
+        },
         { title: "UNIT", field: "nama_unit", hozAlign: "center", width: "10%" },
         {
             title: "PRICE", field: "price", formatter: "money",
@@ -352,7 +421,7 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         },
         { title: "WAREHOUSE", field: "nama_gudang", hozAlign: "center", width: "20%" },
         { title: "LOT NO", width: "10%", field: "lot_no", hozAlign: "left" },
-        { title: "PACK NAME", width: "10%", field: "pack_name", hozAlign: "left", bottomCalc: customSumPackReceive },
+        { title: "Pack", width: "10%", field: "pack_name", hozAlign: "left", bottomCalc: customSumPackReceive },
     ],
     locale: 'id',
     placeholder: "Tidak ada data",
@@ -399,23 +468,27 @@ function isDuplicateCombination(lotNo, packId, gudangId, excludeLot = null) {
     );
 }
 
-inpLotNo.keyup(function (e) {
-    let lotNo = inpLotNo.val();
+inpLotNo.on("change", function (e) {
+    let lotNo = inpLotNo.val().trim();
     let packId = selectPack.val();
     let gudangId = selectGudang.val();
 
-    // cek kombinasi barang + lot + pack + gudang
+    if (!lotNo) return;
+
+    // cek kombinasi barang + lot + pack + gudang di grid tabel
     if (packId && gudangId && isDuplicateCombination(lotNo, packId, gudangId, inpEdit.val())) {
         e.target.value = "";
         return Swal.fire({
-            text: `Kombinasi Barang, Lot No ${lotNo}, Pack, dan Gudang sudah ada`,
+            text: `Kombinasi Barang, Lot No ${lotNo}, Pack, dan Gudang sudah ada di tabel`,
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
         });
     }
 
-    checkLotNo(e.target.value);
+    if (packId) {
+        checkLotNo(lotNo);
+    }
 });
 
 selectPack.change(function () {
@@ -435,6 +508,12 @@ selectPack.change(function () {
             timer: 2000
         });
     }
+
+    // Di form ini Lot No diisi SEBELUM Pack, jadi saat checkLotNo() pertama
+    // kali jalan (dari keyup Lot No), pack_id belum ada nilainya. Cek ulang
+    // ke server di sini supaya validasi "lot dipakai barang lain" ikut
+    // mempertimbangkan pack yang baru saja dipilih.
+    checkLotNo(lotNo);
 });
 
 selectGudang.change(function () {
@@ -475,7 +554,7 @@ inpQtyItem.keyup(function (e) {
     if (!regex.test(e.target.value)) {
         e.target.value = ""
         return Swal.fire({
-            text: "Quantity harus berupa angka",
+            text: "Quantity harus berupa angka, maksimal 2 desimal",
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
@@ -523,6 +602,38 @@ spanBarang.click(function () {
     dtListBarang.deselectRow();
 });
 
+// Dipanggil sebelum Simpan/Approve dokumen - mengecek SEMUA baris detail
+// sekaligus, karena setelah auto-isi dari PO banyak baris bisa kosong
+// Lot No/Pack secara bersamaan (baru dilengkapi user satu-satu lewat tombol
+// edit). Mengembalikan pesan error baris pertama yang bermasalah, atau null
+// kalau semua baris valid.
+function validateDetailRows() {
+    let rows = dtListDetail.getData();
+    for (let i = 0; i < rows.length; i++) {
+        let r = rows[i];
+        let namaBrg = r.nama_barang || `baris ke-${i + 1}`;
+
+        let qty = parseFloat(r.qty);
+        let qtySisa = parseFloat(r.qty_receive);
+        if (!isNaN(qtySisa) && !isNaN(qty) && qty > qtySisa) {
+            return `Quantity ${namaBrg} tidak boleh melebihi qty sisa PO (${qtySisa})`;
+        }
+
+        if (!r.id_gudang) {
+            return `Warehouse pada ${namaBrg} belum terisi`;
+        }
+
+        if (!r.lot_no || r.lot_no.toString().trim().length == 0) {
+            return `Lot No. pada ${namaBrg} belum diisi`;
+        }
+
+        if (!r.pack_id) {
+            return `Pack pada ${namaBrg} belum dipilih`;
+        }
+    }
+    return null;
+}
+
 function submitData(status, message) {
     if (inpTglReceive.val().length == 0) {
         return Swal.fire({
@@ -548,6 +659,16 @@ function submitData(status, message) {
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
+        });
+    }
+
+    let errDetail = validateDetailRows();
+    if (errDetail) {
+        return Swal.fire({
+            text: errDetail,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2500
         });
     }
 
@@ -583,14 +704,19 @@ btnAdd.click(function () {
 })
 
 function checkLotNo(value) {
+    let lotNo = (value || '').toString().trim();
+    let packId = selectPack.val();
+    let idBarang = inpIdBarang.val();
+
+    if (!lotNo || !packId || !idBarang) return;
+
     $.ajax({
-        url: `/purchasing/receive-item/check-lot?id_barang=${inpIdBarang.val()}&lot_no=${value}`,
+        url: `/purchasing/receive-item/check-lot?id_barang=${encodeURIComponent(idBarang)}&lot_no=${encodeURIComponent(lotNo)}&pack_id=${encodeURIComponent(packId)}`,
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-
             if (data.status) {
-                inpLotNo.val('')
+                inpLotNo.val('');
                 return Swal.fire({
                     text: data.message,
                     icon: 'error',
@@ -598,7 +724,6 @@ function checkLotNo(value) {
                     timer: 2000
                 });
             }
-
         },
         error: function (xhr, status, error) {
             console.error('Error fetching data:', error);
@@ -609,6 +734,13 @@ function checkLotNo(value) {
 function openModalDetail(row = null) {
     if (row) {
         let data = row.getData()
+        // inpEdit (lot_no asli baris ini, dipakai utk mengecualikan baris sendiri
+        // dari cek duplikat) HARUS diisi duluan, sebelum Gudang/Pack di-trigger
+        // change di bawah - sebelumnya diisi paling akhir, jadi saat validasi
+        // duplikat jalan (dipicu trigger change Pack), inpEdit masih kosong/nilai
+        // lama, dan baris yang sedang diedit malah dianggap duplikat dgn dirinya
+        // sendiri walau belum ada yang diubah.
+        inpEdit.val(data.lot_no)
         inpBarang.val(data.nama_barang)
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
@@ -618,7 +750,10 @@ function openModalDetail(row = null) {
         selectGudang.val(data.id_gudang).trigger("change")
         inpLotNo.val(data.lot_no)
         selectPack.val(data.pack_id).trigger("change")
-        inpEdit.val(data.lot_no)
+        // qty_receive dipakai sbg referensi qty sisa PO (lihat loadDataPo &
+        // btnSimpanDetail) - dipulihkan di sini supaya validasi qty saat edit
+        // tetap membandingkan ke sisa PO baris ini, bukan sisa item lain.
+        inpQtyPO.val(data.qty_receive)
     } else {
         inpBarang.val("")
         inpIdBarang.val("")
@@ -627,8 +762,10 @@ function openModalDetail(row = null) {
         inpPrice.val("")
         inpLotNo.val("")
         inpEdit.val("")
+        inpQtyPO.val("")
         selectPack.val("").trigger("change")
-        selectGudang.val("").trigger("change")
+        // Default Warehouse ke Gudang Utama utk baris baru (bisa diubah user).
+        selectGudang.val(inpGudangUtamaId.val() || "").trigger("change")
     }
     modalDet.modal("show")
 
@@ -655,16 +792,40 @@ function openModalDetail(row = null) {
 
         if (!regex.test(inpQtyItem.val())) {
             return Swal.fire({
-                text: "Quantity harus berupa angka",
+                text: "Quantity harus berupa angka, maksimal 2 desimal",
                 icon: 'error',
                 showConfirmButton: false,
                 timer: 2000
             });
         }
 
+        // Qty tidak boleh melebihi sisa PO (qty PO - qty yg sudah diterima).
+        let qtySisaPo = parseFloat(inpQtyPO.val());
+        // Dibulatkan 2 desimal di sini (bukan cuma divalidasi via regex),
+        // supaya nilai yg akhirnya disimpan ke baris & dijumlahkan tetap
+        // bersih walau ada rounding error kecil dari parseFloat.
+        let qtyDiedit = Math.round(parseFloat(inpQtyItem.val().toString().replace(",", ".")) * 100) / 100;
+        if (!isNaN(qtySisaPo) && qtyDiedit > qtySisaPo) {
+            return Swal.fire({
+                text: `Quantity tidak boleh melebihi qty sisa PO (${qtySisaPo})`,
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2500
+            });
+        }
+
         if (selectGudang.val().length == 0) {
             return Swal.fire({
                 text: "Warehouse harus dipilih",
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+
+        if (inpLotNo.val().trim().length == 0) {
+            return Swal.fire({
+                text: "Lot No. harus diisi",
                 icon: 'error',
                 showConfirmButton: false,
                 timer: 2000
@@ -680,18 +841,15 @@ function openModalDetail(row = null) {
             });
         }
 
-        let dataDetail = dtListDetail.getData(); // ganti 'tableDetail' dengan variabel instance Tabulator Anda
-
-        let isDuplicate = dataDetail.some(function (row) {
-            return row.id_barang == inpIdBarang.val().trim() &&
-                row.gudang == selectGudang.val() &&
-                row.lo_no == inpLoNo.val().trim() &&
-                row.pack == selectPack.val();
-        });
-
-        if (isDuplicate) {
+        // Sebelumnya di sini ada pengecekan duplikat terpisah yang selalu error
+        // (memakai variabel inpLoNo yang tidak pernah dideklarasikan, dan nama
+        // field row.gudang/row.lo_no/row.pack yang tidak sesuai data asli
+        // id_gudang/lot_no/pack_id) - jadi akan crash begitu baris ke-2 dst
+        // disimpan. Diganti pakai isDuplicateCombination() yang sudah benar
+        // dan dipakai juga di listener Lot No/Pack/Gudang di atas.
+        if (isDuplicateCombination(inpLotNo.val(), selectPack.val(), selectGudang.val(), inpEdit.val())) {
             return Swal.fire({
-                text: "Barang dengan Gudang, LO No, dan Pack yang sama sudah ada",
+                text: "Kombinasi Barang, Lot No, Pack, dan Gudang yang sama sudah ada",
                 icon: 'error',
                 showConfirmButton: false,
                 timer: 2000
@@ -704,7 +862,7 @@ function openModalDetail(row = null) {
                 nama_barang: inpBarang.val(),
                 kode_barang: inpKodeBarang.val(),
                 id_barang: inpIdBarang.val(),
-                qty: inpQtyItem.val(),
+                qty: qtyDiedit,
                 price: price,
                 id_gudang: selectGudang.val(),
                 qty_receive: inpQtyPO.val(),
@@ -725,7 +883,7 @@ function openModalDetail(row = null) {
                 price: price,
                 qty_receive: inpQtyPO.val(),
                 nama_gudang: $('#select_warehouse option:selected').text(),
-                qty: inpQtyItem.val(),
+                qty: qtyDiedit,
                 lot_no: inpLotNo.val(),
                 pack_id: selectPack.val(),
                 pack_name: selectPack.find('option:selected').text(),
@@ -740,7 +898,9 @@ function openModalDetail(row = null) {
 
 
 function simpanData(status) {
-    let totalQty = dtListDetail.getData().reduce((sum, item) => sum + parseFloat(item.qty), 0);
+    // Dibulatkan 2 desimal - penjumlahan float di JS bisa hasilkan angka
+    // "kotor" (mis. 293.09999999999997) walau tiap baris qty-nya sudah rapi.
+    let totalQty = Math.round(dtListDetail.getData().reduce((sum, item) => sum + parseFloat(item.qty), 0) * 100) / 100;
     $.ajax({
         type: 'POST',
         url: '/purchasing/receive-item/save',

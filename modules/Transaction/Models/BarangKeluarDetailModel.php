@@ -25,11 +25,19 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
         $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join("ref_pack rp", "uk.pack_id = rp.id", "left");
-        $builder->join("trans_barang_header tbh", "uk.pack_id = tbh.id", "left");
+        // NOTE: join sebelumnya salah kolom ("uk.pack_id = tbh.id" - membandingkan pack_id
+        // dgn id header, hampir tidak pernah cocok) sehingga no_ref_trf/no_ref_wo/kode_walkorder
+        // selalu NULL. Sudah dibetulkan jadi uk.id_header = tbh.id (FK yang benar ke header).
+        $builder->join("trans_barang_header tbh", "uk.id_header = tbh.id", "left");
         // $builder->join($this->tblTrxLots . " gbx", "uk.lot_no = gbx.lot_no AND gbx.id_gudang = $params[id_gudang] ", "inner");
 
         // $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no,gbx.id as lot_id, uk.id_barang,fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, uk.price");
-        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.lot_id,uk.id_barang,fbx.nama_satuan as nama_unit, rp.pack_name, uk.pack_id, ebx.kode_barang, ebx.nama_barang, uk.price, tbh.no_ref_trf, tbh.no_ref_wo");
+        // uk.qty_terima/qty_retur/qty_pemakaian_sebelumnya/qty_sisa: snapshot yang dibekukan
+        // saat transaksi disimpan (lihat BarangKeluarModel::trxInsertUpdateRecord) - sebelumnya
+        // tidak ikut di-select di sini, jadi kolom2 itu kosong saat form dibuka utk Edit.
+        // tbh.no_ref_wo dialiaskan jadi kode_walkorder supaya field-nya cocok dgn yang dipakai
+        // Tabulator (kolom "NO WORKORDER") & dgn data hasil getDataByWalkorder() saat Tambah baru.
+        $builder->select("uk.id,uk.id_header,uk.qty,uk.lot_no, uk.lot_id,uk.id_barang,fbx.nama_satuan as nama_unit, rp.pack_name, uk.pack_id, ebx.kode_barang, ebx.nama_barang, uk.price, tbh.no_ref_trf, tbh.no_ref_wo, tbh.no_ref_wo AS kode_walkorder, uk.qty_terima, uk.qty_retur, uk.qty_pemakaian_sebelumnya, uk.qty_sisa");
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', $params['id_header']);
@@ -91,11 +99,14 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
     function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $id_header = $params['id_header'];
-        $id_gudang = $params['id_gudang'] ?? null;
-        $kode_wo = $params['kode_wo'] ? "AND td.kode_walkorder = '{$params['kode_wo']}'" : '';
 
+        // qty_terima, qty_retur, qty_pemakaian_sebelumnya, qty_sisa adalah snapshot yang
+        // sudah dibekukan & disimpan langsung di trans_barang_detail pada saat transaksi
+        // ini disimpan (lihat BarangKeluarModel::trxInsertUpdateRecord). Tidak dihitung
+        // ulang di sini supaya angka di cetakan tetap konsisten walau ada transaksi
+        // Barang Keluar lain untuk WO yang sama dibuat sesudahnya.
         $sql = "
-        SELECT 
+        SELECT
             sub.id_barang,
             sub.id_header,
             sub.lot_no,
@@ -106,9 +117,12 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
             STRING_AGG(sub.pack_qty, '|' ORDER BY sub.urutan) AS pack_data,
             SUM(sub.qty) AS qty,
             SUM(sub.qty * sub.price) AS jumlah,
-            SUM(sub.qty_transfer) AS qty_transfer
+            SUM(COALESCE(sub.qty_terima, 0)) AS qty_terima,
+            SUM(COALESCE(sub.qty_retur, 0)) AS qty_retur,
+            SUM(COALESCE(sub.qty_pemakaian_sebelumnya, 0)) AS qty_pemakaian_sebelumnya,
+            SUM(COALESCE(sub.qty_sisa, 0)) AS qty_sisa
         FROM (
-            SELECT 
+            SELECT
                 uk.id AS urutan,
                 uk.id_barang,
                 uk.id_header,
@@ -116,21 +130,15 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
                 uk.price,
                 uk.qty,
                 uk.pack_id,
-                hd.no_ref_wo AS kode_walkorder,
+                uk.qty_terima,
+                uk.qty_retur,
+                uk.qty_pemakaian_sebelumnya,
+                uk.qty_sisa,
                 ebx.kode_barang,
                 ebx.nama_barang,
                 fbx.nama_satuan AS nama_unit,
                 rw.keterangan as kode_warna,
-                CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty,
-                (
-                    SELECT COALESCE(SUM(td.qty), 0)
-                    FROM trans_barang_trf_detail td
-                    INNER JOIN trans_barang_trf_header th ON th.id = td.id_header::int
-                    WHERE td.pack_id = uk.pack_id
-                      AND td.lot_no = uk.lot_no
-                      AND td.kode_walkorder = hd.no_ref_wo
-                      AND th.id_gudang_tujuan = ?
-                ) AS qty_transfer
+                CONCAT(COALESCE(rp.pack_name, '-'), ':', uk.qty::text) AS pack_qty
             FROM trans_barang_detail uk
             INNER JOIN trans_barang_header hd ON uk.id_header = hd.id
             INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
@@ -140,7 +148,7 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
             WHERE uk.id_header = ?
             AND uk.active = 1
         ) sub
-        GROUP BY 
+        GROUP BY
             sub.id_barang, sub.id_header, sub.lot_no,
             sub.kode_barang, sub.nama_barang, sub.nama_unit, sub.kode_warna
         ORDER BY sub.id_barang
@@ -150,7 +158,7 @@ class BarangKeluarDetailModel extends \App\Models\PrModel
     $offset = empty($offset) ? 0 : $offset;
     $limit  = empty($limit)  ? 10 : $limit;
 
-    $this->_data = $this->db->query($sql, [$id_gudang, $id_header, $limit, $offset])->getResult();
+    $this->_data = $this->db->query($sql, [$id_header, $limit, $offset])->getResult();
     return $this->_data;
 }
 }

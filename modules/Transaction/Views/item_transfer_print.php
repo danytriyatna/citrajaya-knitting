@@ -151,7 +151,7 @@
         <thead>
             <tr>
                 <td colspan="4" style="text-align: center;">
-                    <h1 class="uppercase text-md mb-0 mt-0 text-left">TRANSFER ITEM</h1>
+                    <h1 class="uppercase text-md mb-0 mt-0 text-left">SURAT JALAN</h1>
                 </td>
                 <td colspan="2" style="text-align: center;">
                     <h1 class="uppercase text-md mb-0 mt-0">TGL: <?= !empty($data->tanggal) ? formatTanggalIndonesia($data->tanggal) : "-T" ?></h1>
@@ -200,21 +200,25 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 3%;">No.</th>
-                <th class="text-center" style="width: 15%;">No SO</th>
-                <th class="text-center" style="width: 10%;">Style</th>
-                <th class="text-center" style="width: 35%;">Colour</th>
-                <th class="text-center" style="width: 10%;">Qty</th>
-                <th class="text-center" style="width: 10%;">Satuan</th>
-                <th class="text-center" style="width: 15%;">Keterangan</th>
+                <th class="text-center" style="width: 14%;">No SO</th>
+                <th class="text-center" style="width: 9%;">Style</th>
+                <th class="text-center" style="width: 24%;">Colour</th>
+                <th class="text-center" style="width: 7%;">Qty</th>
+                <th class="text-center" style="width: 8%;">Berat (Kg)</th>
+                <th class="text-center" style="width: 8%;">Satuan</th>
+                <th class="text-center" style="width: 17%;">Keterangan</th>
+                <th class="text-center" style="width: 10%;">Reject</th>
 
             </tr>
         </thead>
         <tbody>
             <?php $i = 1;
             $xqty1 = 0;
+            $xberat1 = 0;
             $scanned = 0;
             foreach ($dataSO as $row) {
-                $xqty1 = $xqty1 + (int) $row->qty;
+                $xqty1 = $xqty1 + (float) $row->qty;
+                $xberat1 = $xberat1 + (float) $row->berat;
                 // if (!empty($row->keterangan) && preg_match('/\d+\s*Ikat/i', $row->keterangan)) {
                 //     // mengandung pola seperti "1 Ikat", "10 Ikat", "5Ikat", dll
                 // }
@@ -230,9 +234,11 @@
                     </td>
                     <td class="text-left"><?= !empty($row->deskripsi) ? $row->deskripsi : $row->color ?></td>
                     <td class="text-right"><?= $row->qty ?></td>
+                    <td class="text-right"><?= !empty($row->berat) && (float)$row->berat > 0 ? number_format((float)$row->berat, 2, '.', '') : '0.00' ?></td>
                     <!-- <td class="text-right"><?= !empty($row->amount) ? "Rp." . number_format(round($row->amount)) : "" ?></td> -->
                     <td class="text-left"><?= $row->kode_ukuran ?></td>
                     <td class="text-left"><?= $row->keterangan ?></td>
+                    <td class="text-center"><?= !empty($row->is_reject) && $row->is_reject == 1 ? '<b style="color:red;">REJECT</b>' : '-' ?></td>
                 </tr>
             <?php } ?>
 
@@ -241,8 +247,10 @@
             <tr>
                 <td colspan="4" class="text-right"><b>Jumlah</b></td>
                 <td class="text-right"><b><?= !empty($xqty1) ? $xqty1 : 0 ?></b></td>
+                <td class="text-right"><b><?= !empty($xberat1) && (float)$xberat1 > 0 ? number_format((float)$xberat1, 2, '.', '') : '0.00' ?></b></td>
                 <td></td>
                 <td><?= $scanned != 0 ? $scanned." Ikat" : null ?></td>
+                <td></td>
             </tr>
         </tfoot>
     </table>

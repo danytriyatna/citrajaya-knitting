@@ -48,6 +48,11 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
+                // TAMBAHAN (2026-08-09): ikutkan kolom style (dari trans_sample.style
+                // atau trans_sales_order.style, tergantung tipe_id) ke pencarian -
+                // dipakai jg oleh picker "Referensi Work Order" yg skrg menampilkan
+                // kolom STYLE.
+                $builder->orWhere("LOWER(COALESCE(ts.style, tso.style)) LIKE", $value);
                 $builder->groupEnd();
             }
 
@@ -66,6 +71,8 @@ class WalkorderModel extends \App\Models\PrModel
             if (!empty($params['tipe_id'])) {
                 $builder->where('abx.tipe_id', $params['tipe_id']);
             }
+
+            $this->applyHideSelesaiFilter($builder, $params);
 
             // if (!empty($params['id'])) {
             //     $builder->where('abx.id <>', $params['id']);
@@ -111,9 +118,67 @@ class WalkorderModel extends \App\Models\PrModel
             $builder->groupEnd();
         }
 
+        // TAMBAHAN (2026-08-08): getDataCnt() sebelumnya sama sekali tidak
+        // menerapkan $params (tipe_id, dst) - jadi recordsTotal/recordsFiltered
+        // di picker WO bisa salah kalau filter_trans dipakai. Disamakan dgn
+        // getData().
+        if (!empty($params['tipe_id'])) {
+            $builder->where('abx.tipe_id', $params['tipe_id']);
+        }
+
+        $this->applyHideSelesaiFilter($builder, $params);
+
         $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;
+    }
+
+    /**
+     * TAMBAHAN (2026-08-08, diperluas 2026-08-09): dipakai getData()/
+     * getDataCnt() - kalau $params['hide_selesai'] aktif, sembunyikan WO
+     * yang Qty order-nya SUDAH SAMA PERSIS dgn Qty yang sudah di-Delivery
+     * Order (berarti sudah selesai dikirim semua, tidak ada lagi sisa yg
+     * perlu direferensikan lagi mis. di form Barang Keluar). Berlaku utk
+     * KEDUA tipe WO:
+     * - tipe_id=2 (Sales Order): pakai VIEW v_traking_order_so - qty = Qty
+     *   SO, qty_kirim = Qty Delivery Order.
+     * - tipe_id=1 (Sample): pakai VIEW v_traking_order_sample - qty = Qty
+     *   Sample, qty_kirim = Qty Delivery Order.
+     * Kedua VIEW ini sumber data yg sama dgn Dashboard "Tracking Produksi"
+     * supaya konsisten. WO yang Qty order/DO-nya belum sama TETAP
+     * ditampilkan apa adanya.
+     */
+    private function applyHideSelesaiFilter($builder, $params)
+    {
+        if (empty($params['hide_selesai'])) {
+            return;
+        }
+
+        $builder->where(
+            "NOT (
+                (
+                    abx.tipe_id = 2
+                    AND EXISTS (
+                        SELECT 1 FROM v_traking_order_so vso
+                        WHERE vso.trans_id = abx.ref_id
+                        AND vso.qty > 0
+                        AND vso.qty = vso.qty_kirim
+                    )
+                )
+                OR
+                (
+                    abx.tipe_id = 1
+                    AND EXISTS (
+                        SELECT 1 FROM v_traking_order_sample vts
+                        WHERE vts.trans_id = abx.ref_id
+                        AND vts.qty > 0
+                        AND vts.qty = vts.qty_kirim
+                    )
+                )
+            )",
+            null,
+            false
+        );
     }
 
     function getDataDetailWOApproveSO($style = null, $id_proses = null, $current_id_wo = null, $type = null)
@@ -861,36 +926,53 @@ class WalkorderModel extends \App\Models\PrModel
             SUM(abx.kuota_tambah) as kuota_tambah,
             '-' as total_sementara,
             (
-                SELECT COALESCE(SUM(tbtd.qty), 0)
+                -- Dibulatkan 2 desimal di sini (bukan cuma saat tampil) - qty di
+                -- trans_barang_trf_detail bertipe double precision, jadi SUM-nya
+                -- rawan residu float super kecil (mis. 16.999999999998) yang bikin
+                -- kolom Sisa di bawah jadi -0.00 alih-alih 0.00 kalau tidak
+                -- dibulatkan dulu sebelum dikurangkan.
+                SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
                 FROM trans_barang_trf_detail tbtd
                 INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
                 WHERE tbtd.kode_walkorder = (
-                        SELECT wo2.kode_walkorder 
-                        FROM trans_walkorder wo2 
+                        SELECT wo2.kode_walkorder
+                        FROM trans_walkorder wo2
                         WHERE wo2.id = " . (int)$id . "
                     )
                 AND tbtd.id_barang      = abx.id_barang
                 AND tbth.id_gudang_asal = 1
             ) AS total_qty_trf,
+            (
+                SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
+                FROM trans_barang_trf_detail tbtd
+                INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+                WHERE tbtd.kode_walkorder = (
+                        SELECT wo2.kode_walkorder
+                        FROM trans_walkorder wo2
+                        WHERE wo2.id = " . (int)$id . "
+                    )
+                AND tbtd.id_barang         = abx.id_barang
+                AND tbth.id_gudang_tujuan  = 1
+            ) AS total_qty_kembali,
              (
-                SELECT COALESCE(SUM(tbd.qty), 0)
+                SELECT ROUND(COALESCE(SUM(tbd.qty), 0)::numeric, 2)
                 FROM trans_barang_detail tbd
                 INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
                  WHERE tbh.no_ref_wo = (
-                        SELECT wo3.kode_walkorder 
-                        FROM trans_walkorder wo3 
+                        SELECT wo3.kode_walkorder
+                        FROM trans_walkorder wo3
                         WHERE wo3.id = " . (int)$id . "
                     )
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_qty_pakai,
              (
                 (
-                    SELECT COALESCE(SUM(tbtd.qty), 0)
+                    SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
                     FROM trans_barang_trf_detail tbtd
                     INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
                     WHERE tbtd.kode_walkorder = (
-                            SELECT wo2.kode_walkorder 
-                            FROM trans_walkorder wo2 
+                            SELECT wo2.kode_walkorder
+                            FROM trans_walkorder wo2
                             WHERE wo2.id = " . (int)$id . "
                         )
                     AND tbtd.id_barang      = abx.id_barang
@@ -898,12 +980,25 @@ class WalkorderModel extends \App\Models\PrModel
                 )
                 -
                 (
-                    SELECT COALESCE(SUM(tbd.qty), 0)
+                    SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
+                    FROM trans_barang_trf_detail tbtd
+                    INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+                    WHERE tbtd.kode_walkorder = (
+                            SELECT wo2.kode_walkorder
+                            FROM trans_walkorder wo2
+                            WHERE wo2.id = " . (int)$id . "
+                        )
+                    AND tbtd.id_barang        = abx.id_barang
+                    AND tbth.id_gudang_tujuan = 1
+                )
+                -
+                (
+                    SELECT ROUND(COALESCE(SUM(tbd.qty), 0)::numeric, 2)
                     FROM trans_barang_detail tbd
                     INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
                     WHERE tbh.no_ref_wo = (
-                            SELECT wo3.kode_walkorder 
-                            FROM trans_walkorder wo3 
+                            SELECT wo3.kode_walkorder
+                            FROM trans_walkorder wo3
                             WHERE wo3.id = " . (int)$id . "
                         )
                     AND tbd.id_barang      = abx.id_barang

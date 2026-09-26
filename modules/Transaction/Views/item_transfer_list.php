@@ -14,7 +14,10 @@
     </div>
     <div class="col-md-7 align-self-center text-right">
       <div class="d-flex justify-content-end align-items-center">
-        <ol class="breadcrumb">
+        <a href="<?= base_url('trans/item-transfer/panduan') ?>" target="_blank" class="btn btn-sm btn-info text-white shadow-sm me-3">
+          <i class="fa fa-book me-1"></i> Panduan Penggunaan
+        </a>
+        <ol class="breadcrumb mb-0">
           <li class="breadcrumb-item"><?= $name_app ?></li>
           <li class="breadcrumb-item">Transaksi</li>
           <li class="breadcrumb-item active"><?= $titlehead ?></li>
@@ -52,15 +55,31 @@
             </div>
 
             <div class="col-sm-1 mb-3">
-              <a href="trans/item-transfer/form" class="btn btn-sm btn-success btn-block" id="btn-add"> 
+              <a href="trans/item-transfer/form" class="btn btn-sm btn-success btn-block" id="btn-add">
                 <i class="fa fa-plus"></i> Tambah
               </a>
             </div>
 
             <div class="col-sm-2 mb-3">
+              <select id="filter_perusahaan" name="filter_perusahaan"
+                class="form-select select2" data-placeholder="-- Pilih Perusahaan --"
+                <?= !empty($lock_perusahaan ?? false) ? 'disabled' : '' ?>>
+                <?php if (empty($lock_perusahaan ?? false)) : ?>
+                  <option value="all" selected>Semua Perusahaan</option>
+                <?php endif; ?>
+                <?php foreach ($perusahaan as $item) : ?>
+                  <option <?= $user_perusahaan == $item->id ? 'selected' : '' ?>
+                    value="<?= $item->id ?>">
+                    <?= $item->nama_perusahaan ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <div class="col-sm-1 mb-3">
               <input type="text" id="from_date" name="from_date" class="form-control datepickerx" placeholder="FROM DATE">
             </div>
-            <div class="col-sm-2 mb-3">
+            <div class="col-sm-1 mb-3">
               <input type="text" id="to_date" name="to_date" class="form-control datepickerx" placeholder="TO DATE">
             </div>
 
@@ -71,13 +90,13 @@
               </select>
             </div>
 
-            <div class="col-sm-2 mb-3">
-              <button id="btn_excel" class="btn btn-success" type="button">
+            <div class="col-sm-1 mb-3">
+              <button id="btn_excel" class="btn btn-success btn-block" type="button">
                 <i class="fa fa-file-excel"></i> Export
               </button>
             </div>
 
-            <div class="col-sm-3 mb-3">
+            <div class="col-sm-4 mb-3">
               <div class="input-group">
                 <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;">
                   <i class="ti-search"></i>

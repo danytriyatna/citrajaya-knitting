@@ -119,27 +119,27 @@ $(document).ready(function () {
         columns: [
             {
                 title: " ", field: "print", headerSort: false, formatter: "html",
-                width: "8%"
+                width: "8%", hozAlign: "center", headerHozAlign: "center"
             },
             {
 				title: 'Tanggal', field: 'tgl_transaksi', headerSort:false, sorter: 'string', frozen: true,
-				align:'center', width: "10%"
+				hozAlign: 'center', headerHozAlign: 'center', width: "10%"
 			} ,
             // {
 			// 	title: 'No. Produksi', field: 'kode_prod', headerSort:false, sorter: 'string', frozen: true,
-			// 	align:'center', width: "13%"
+			// 	hozAlign: 'center', headerHozAlign: 'center', width: "13%"
             // } ,
             {
                 title: 'Kode Barang Masuk', field: 'kode_transaksi', headerSort:false, sorter: 'string', frozen: true,
-                align:'center', width: "10%"
+                hozAlign: 'center', headerHozAlign: 'center', width: "10%"
             } ,
             {
                 title: 'Proses', field: 'proses', headerSort:false, sorter: 'string', frozen: true,
-                align:'center', width: "17%"
+                hozAlign: 'center', headerHozAlign: 'center', width: "17%"
             } ,
             {
                 title: 'Style', field: 'keterangan_style', headerSort:false, sorter: 'string', frozen: true,
-                align:'center'
+                hozAlign: 'center', headerHozAlign: 'center'
             } ,
             
             {
@@ -151,7 +151,7 @@ $(document).ready(function () {
                     if (isNaN(num)) return val;
                     return formatRibuan(num);
                 },
-                width: 180, cssClass: "text-right", hozAlign: "right",
+                width: 180, cssClass: "text-right", hozAlign: "right", headerHozAlign: "right",
             }, 
                 
             {
@@ -163,7 +163,7 @@ $(document).ready(function () {
                     if (isNaN(num)) return val;
                     return formatRibuan(num);
                 },
-                width: 180, cssClass: "text-right", hozAlign: "right",
+                width: 180, cssClass: "text-right", hozAlign: "right", headerHozAlign: "right",
                 bottomCalc: "sum", 
                 bottomCalcFormatter: function(cell) {
                     let val = cell.getValue();
@@ -183,7 +183,7 @@ $(document).ready(function () {
                     if (isNaN(num)) return val;
                     return formatRibuan(num);
                 },
-                width: 180, cssClass: "text-right", hozAlign: "right",
+                width: 180, cssClass: "text-right", hozAlign: "right", headerHozAlign: "right",
                 bottomCalc: "sum", 
                 bottomCalcFormatter: function(cell) {
                     let val = cell.getValue();
@@ -203,7 +203,7 @@ $(document).ready(function () {
                     if (isNaN(num)) return val;
                     return formatRibuan(num);
                 },
-                width: 180, cssClass: "text-right", hozAlign: "right",
+                width: 180, cssClass: "text-right", hozAlign: "right", headerHozAlign: "right",
                 bottomCalc: "sum", 
                 bottomCalcFormatter: function(cell) {
                     let val = cell.getValue();
@@ -270,6 +270,10 @@ $(document).ready(function () {
     });
 
     $("#btn-filter").on("click", function(){
+        dtList.setData();
+    });
+
+    $("#filter_perusahaan").on("change", function(){
         dtList.setData();
     });
 

@@ -728,5 +728,5 @@
 
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/sample/index.js"></script>
+<script src="script/app/transaction/sample/index.js?v=<?= time(); ?>"></script>
 <?= $this->endSection('script'); ?>

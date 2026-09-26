@@ -37,6 +37,17 @@
             <textarea name="keterangan" id="keterangan" class="form-control" rows="5"></textarea>
           </div>
         </div>
+        <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="is_rajut">Rajut</label>
+          <div class="col-md-9 d-flex align-items-center">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_rajut" name="is_rajut" value="1">
+              <label class="form-check-label" for="is_rajut">
+                Tandai sebagai proses Rajut
+              </label>
+            </div>
+          </div>
+        </div>
         
       </div>
       <div class="modal-footer">
@@ -100,7 +111,7 @@
                 <div class="form-group">
                   <div class="input-group mb-3">
                     <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
+                    <input type="text" id="tb-search" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
                   </div>
                 </div>
               </div>

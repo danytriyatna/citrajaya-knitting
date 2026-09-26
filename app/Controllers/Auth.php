@@ -264,18 +264,23 @@ class Auth extends \IonAuth\Controllers\Auth
 	public function req_captcha()
 	{
 		$cap = substr(str_shuffle("123456789"), 0, 4);
+		$session = \Config\Services::session();
+		$session->set('numcha', $cap);
 		$_SESSION['numcha'] = $cap;
-		return $this->response->setContentType('text/plain')->setStatusCode(200)->setBody($cap);
+		return $this->response->setStatusCode(200)->setJSON($cap);
 	}
 
 	public function validate_captcha()
 	{
-		$numcha = $this->request->getVar('numcha');
+		$json = $this->request->getJSON(true);
+		$numcha = !empty($json['numcha']) ? $json['numcha'] : $this->request->getVar('numcha');
+		$session = \Config\Services::session();
+		$sessNumcha = $session->get('numcha') ?? ($_SESSION['numcha'] ?? null);
 
-		if ($_SESSION['numcha'] === $numcha) {
-			return $this->response->setStatusCode(200)->setJson(['status' => true]);
+		if ($sessNumcha !== null && (string)$sessNumcha === (string)$numcha) {
+			return $this->response->setStatusCode(200)->setJSON(['status' => true]);
 		} else {
-			return $this->response->setStatusCode(401)->setJson(['status' => false]);
+			return $this->response->setStatusCode(401)->setJSON(['status' => false]);
 		}
 	}
 }

@@ -3,11 +3,33 @@
 $(document).ready(function () {
     let inpData         = $('#data_id');
     let inpRekeningNo = $('#rekening_no');
-    let inpRekeningNama = $('#rekening_an');
-    let inpRekeningAn = $('#rekening_bank');
+    // NOTE: sebelumnya nama variabel & id field ini tertukar (inpRekeningNama
+    // dipasang ke #rekening_an, inpRekeningAn ke #rekening_bank) - akibatnya saat
+    // Edit, isian Atasnama & Nama Rekening/Bank ikut tertukar juga. Sudah dibetulkan
+    // supaya nama variabel cocok dengan id field yang sebenarnya.
+    let inpRekeningBank = $('#rekening_bank');
+    let inpRekeningAn = $('#rekening_an');
     let inpKeterangan       = $('#keterangan');
+    let inpCoaId       = $('#coa_id');
 
     let isModal       = $("#modal-form-add-po");
+
+    // Isi dropdown Akun COA (dibatasi kode kepala 1/2/3/4 - lihat RefRekening::get_coa_list())
+    $.ajax({
+        type: 'GET',
+        url: '/master-data/rekening/get_coa_list',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status && response.data) {
+                response.data.forEach(function (item) {
+                    inpCoaId.append(new Option(item.kode + ' - ' + item.nama, item.id));
+                });
+            }
+            if (typeof inpCoaId.select2 === 'function') {
+                inpCoaId.select2({ dropdownParent: isModal });
+            }
+        }
+    });
 
     let buttonRowAction = function(cell) {
         let fmBtnDelete = "";        
@@ -34,30 +56,34 @@ $(document).ready(function () {
                     }else if(e.target.title === 'edit'){
                         inpData.val(data_row.id)
                         inpRekeningNo.val(data_row.rekening_no)
-                        inpRekeningNama.val(data_row.rekening_bank)
+                        inpRekeningBank.val(data_row.rekening_bank)
                         inpRekeningAn.val(data_row.rekening_an)
                         inpKeterangan.val(data_row.keterangan)
+                        inpCoaId.val(data_row.coa_id).trigger('change')
 
                         isModal.modal("show");
-                    }   
+                    }
                 }
             },
             {
                 title: "No Rekening", field: "rekening_no", headerSort: false,
-                width: "20%"
+                width: "18%"
             },
             {
-                title: "Nama Rekening", field: "rekening_no", headerSort: false,
-                width: "20%"
+                title: "Nama Rekening", field: "rekening_bank", headerSort: false,
+                width: "18%"
             },
             {
                 title: "Atasnama", field: "rekening_an", headerSort: false,
-                width: "20%"
+                width: "18%"
             },
-           
+            {
+                title: "Akun COA", field: "coa_label", headerSort: false,
+                width: "18%"
+            },
             {
                 title: "Keterangan", field: "keterangan", formatter: "html", headerSort: false,
-                
+
             },
         ],
         locale: 'id',    
@@ -124,10 +150,11 @@ $(document).ready(function () {
 
     $("#btn-add").on("click", function(){
         inpData.val("")
-        inpRekeningNama.val("")
+        inpRekeningBank.val("")
         inpRekeningNo.val("")
         inpRekeningAn.val("")
         inpKeterangan.val("")
+        inpCoaId.val("").trigger('change')
 
         isModal.modal("show");
     });
@@ -137,14 +164,15 @@ $(document).ready(function () {
         simpanData()
     });
 
-    
+
     function simpanData() {
-        
+
         let validation = true
         if(inpRekeningNo.val().length == 0) validation = false
-        if(inpRekeningNama.val().length == 0) validation = false
+        if(inpRekeningBank.val().length == 0) validation = false
         if(inpRekeningAn.val().length == 0) validation = false
-    
+        if(!inpCoaId.val()) validation = false
+
         if(validation){
             $.ajax({
                 type: 'POST',
@@ -152,9 +180,10 @@ $(document).ready(function () {
                 data: {
                     dataId : inpData.val(),
                     rekening_no   : inpRekeningNo.val(),
-                    rekening_an   : inpRekeningNama.val(),
-                    rekening_bank   : inpRekeningAn.val(),
+                    rekening_an   : inpRekeningAn.val(),
+                    rekening_bank   : inpRekeningBank.val(),
                     keterangan : inpKeterangan.val(),
+                    coa_id : inpCoaId.val(),
                 },
                 dataType: "json",
                 beforeSend: function () {

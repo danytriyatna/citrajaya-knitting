@@ -43,7 +43,10 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <input type="text" id="price" name="price" pattern="\d{10,13}" class="form-control" placeholder="Ketikkan Price" value="">
+            <!-- Dikunci (readonly): harga otomatis mengikuti riwayat transfer/lot, tidak
+                 boleh diubah manual staff - ini sumber utama harga menyimpang dari Receive
+                 asli yang dilaporkan user. Disamakan dgn perlakuan field price di Transfer Item. -->
+            <input type="text" id="price" name="price" pattern="\d{10,13}" class="form-control" placeholder="Ketikkan Price" value="" readonly>
           </div>
         </div>
 
@@ -199,6 +202,23 @@
 
 <?= $this->section('content'); ?>
 
+<style>
+  /*
+   * Penanda visual untuk field yang terisi otomatis oleh sistem (readonly/disabled),
+   * supaya beda dengan field yang memang bisa diisi/diedit user.
+   * (Sementara hanya di halaman Barang Keluar dulu, rencana akan diterapkan ke
+   * halaman lain menyusul.)
+   */
+  input.form-control[readonly],
+  textarea.form-control[readonly],
+  input.form-control:disabled,
+  select.form-select:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+  }
+</style>
+
 <div class="container-fluid">
 
   <div class="row page-titles">
@@ -231,6 +251,7 @@
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
+                      <input type="hidden" id="role_id" value="<?= !empty($role_id) ? $role_id : null ?>">
                       <input type="text" id="kode_transaksi" name="kode_transaksi" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->kode_transaksi) ? $resData->kode_transaksi : null ?>" readonly>
                     </div>
                   </div>
@@ -262,12 +283,13 @@
                       </div>
                     </div>
                   </div>
+                </div>
                 <div class="col-sm-6" id="divTransfer">
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nama">No. Transfer</label>
                     <div class="col-md-9">
                       <div class="input-group">
-                        <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="<?= !empty($resData) ? $resData->no_ref_trf : "" ?>">
+                        <input type="text" id="no_ref_transfer" name="no_ref_transfer" class="form-control" placeholder="Pilih referensi No. Transaksi" value="<?= !empty($resData) ? $resData->no_ref_trf : "" ?>" readonly>
                         <span class="input-group-text bg-white" id="ic_ref_transfer"><i class="ti-search"></i></span>
                       </div>
                     </div>
@@ -297,7 +319,7 @@
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="no_ref_wo">No. WO</label>
                     <div class="col-md-9">
                       <div class="input-group">
-                        <input type="text" id="no_ref_wo" name="no_ref_wo" class="form-control" placeholder="Pilih referensi No. Work Order" value="<?= !empty($resData) ? $resData->no_ref_wo : "" ?>">
+                        <input type="text" id="no_ref_wo" name="no_ref_wo" class="form-control" placeholder="Pilih referensi No. Work Order" value="<?= !empty($resData) ? $resData->no_ref_wo : "" ?>" readonly>
                         <span class="input-group-text bg-white" id="ic_ref_wo"><i class="ti-search"></i></span>
                       </div>
                     </div>
@@ -307,7 +329,7 @@
                     <div class="col-md-9">
                       <div class="input-group">
                         <input type="hidden" id="id_vendor" name="id_vendor" value="<?= !empty($resData->id_vendor) ? $resData->id_vendor : null ?>" class="form-control" required>
-                        <input type="text" id="nama_vendor" name="nama_vendor" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->nama) ? $resData->nama : null ?>" required>
+                        <input type="text" id="nama_vendor" name="nama_vendor" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->nama) ? $resData->nama : null ?>" required readonly>
                         <span id="spanVendor" class="input-group-text bg-white" id="basic-addon11"><i class="ti-search"></i></span>
                       </div>
                       <div class="invalid-feedback">
@@ -336,8 +358,17 @@
             </div>
           </div>
           <hr>
-          <div class="col-sm-3 mb-2">
-            <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+          <div class="row mb-2">
+            <div class="col-sm-3" id="divBtnAdd">
+              <button type="button" class="btn btn-sm btn-primary" id="btn-add"> <i class="fa fa-plus"></i></button>
+            </div>
+            <div class="col-sm-12 d-none d-flex align-items-center justify-content-end" id="divTotalPemakaian">
+              <label class="control-label text-start mb-0 me-2 text-nowrap" for="total_pemakaian">Total Pemakaian Barang (Kg)</label>
+              <input type="text" id="total_pemakaian" name="total_pemakaian" class="form-control me-4" style="max-width: 200px;" placeholder="Ketikkan total qty pemakaian">
+
+              <label class="control-label text-start mb-0 me-2 text-nowrap" for="btm_kg">BTM (Kg)</label>
+              <input type="text" id="btm_kg" name="btm_kg" class="form-control" style="max-width: 200px;" placeholder="0" value="<?= !empty($btmKg ?? null) ? $btmKg : '' ?>" readonly>
+            </div>
           </div>
           <div class="row">
             <div class="col-sm-12">
@@ -349,14 +380,20 @@
 
               <div class="row">
                 <div class="col-sm-10">
-                  <a href="trans/outgoing-goods" class="btn btn-default m-e-5">
+                  <a href="<?= base_url('trans/outgoing-goods') ?>" class="btn btn-default m-e-5">
                     <span class="fa fa-arrow-left"></span> Kembali
                   </a>
+                  <?php if (!empty($id)) { ?>
+                    <a href="<?= base_url('trans/outgoing-goods/print/' . encrypt($id)) ?>" target="_blank" class="btn btn-warning me-1 text-white">
+                      <i class="fa fa-print"></i> Cetak
+                    </a>
+                  <?php } ?>
                   <button class='btn btn-success' id="btn-simpan">
                     <span class="fa fa-save"></span> Simpan
                   </button>
 
                   <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
+                  <button <?= !empty($role_id) && ($role_id == 1 || $role_id == 2 || $role_id == 4) ? null : 'hidden' ?> type="button" class="m-s-5 btn btn-danger" id="btn-cancel-approve"> <i class="fa fa-undo"></i> Batalkan Approve</button>
                 </div>
               </div>
             </div>

@@ -20,11 +20,23 @@ $(document).ready(function () {
     });
 
     $('#role_id').select2().on("change", function (e) {
+        var roleId = $(this).val();
+        if (!roleId || roleId == '0' || roleId == '') {
+            $('#dt-listpriv').DataTable().clear().draw();
+            return;
+        }
         iLoader.start();
-        var $this = $(this);
-        var newUrlPriv = window.location.origin + '/utilitas/privileges/getprivby/'
-            + $this.val();
+        var newUrlPriv = window.location.origin + '/utilitas/privileges/getprivby/' + roleId;
         $('#dt-listpriv').DataTable().ajax.url(newUrlPriv).load(() => { iLoader.stop(); });
+    });
+
+    $('form').on('submit', function (e) {
+        var roleId = $('#role_id').val();
+        if (!roleId || roleId == '0' || roleId == '') {
+            e.preventDefault();
+            alert('Silakan pilih role terlebih dahulu!');
+            return false;
+        }
     });
 });
 

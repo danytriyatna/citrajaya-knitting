@@ -81,7 +81,8 @@ class RefProsesProduksi extends BaseController
                     "id"   => ($id),
                     "seq" => $row->seq,
                     "nama" => $row->nama,
-                    "keterangan" => $row->keterangan
+                    "keterangan" => $row->keterangan,
+                    "is_rajut" => (int)$row->is_rajut
                 )
             );
         }
@@ -93,7 +94,8 @@ class RefProsesProduksi extends BaseController
         $nama = $this->request->getPost('nama');
         $keterangan = $this->request->getPost('keterangan');
         $noUrut = $this->request->getPost('seq');
-
+        $isRajut = $this->request->getPost('is_rajut');
+        $isRajutVal = (!empty($isRajut) && ($isRajut == '1' || $isRajut === 1 || $isRajut === true || $isRajut === 'true')) ? 1 : 0;
 
         $msg    = "Data gagal ditambahkan !";
         $status = false;
@@ -101,7 +103,8 @@ class RefProsesProduksi extends BaseController
         $arr_isi = [
             'nama' => $nama, 
             'keterangan' => $keterangan,
-            'seq' => $noUrut
+            'seq' => $noUrut,
+            'is_rajut' => $isRajutVal
         ];
 
         
@@ -124,24 +127,42 @@ class RefProsesProduksi extends BaseController
 
     public function deactivate($id = NULL)
     {
-        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
-			throw new \Exception('You must be an administrator to view this page.');
+        if (!$this->auth->loggedIn()) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Silakan login terlebih dahulu.']);
+            }
+            return redirect()->to('/auth/login');
         }
         
+        if (empty($id)) {
+            $id = $this->request->getPost('id');
+        }
+
         if ($id != null && $id != "") {
             $id = decrypt($id);
         }
 
         $id = (int)$id;
-        if ($id == 1) {
-		    return redirect()->to($this->urlv);
+        if ($id <= 0) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => false, 'message' => 'ID data tidak valid.']);
+            }
+            return redirect()->to($this->urlv);
         }
+
         $data = ['active' => 0];
         $deactivate = $this->mproses->updateRecord($this->mproses->table, $data, 'id', $id);
         if ($deactivate) {
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Data Proses Dinonaktifkan");        
-            $this->session->setFlashdata('message', "Data Proses berhasil di Hapus ");
+            $userId = $this->currentUser->user_id ?? 1;
+            $this->mcommon->setLog($userId, $this->MOD_ALIAS, $id, "Data Proses Dinonaktifkan (Soft Delete)");        
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => true, 'message' => 'Data Proses berhasil dihapus!']);
+            }
+            $this->session->setFlashdata('message', "Data Proses berhasil di Hapus");
         } else {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => false, 'message' => 'Data Proses gagal dihapus!']);
+            }
             $this->session->setFlashdata('err', "Data Proses gagal di Hapus !");
         }
 		return redirect()->to($this->urlv);
@@ -149,26 +170,6 @@ class RefProsesProduksi extends BaseController
 
     public function delete($id = NULL)
     {
-        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
-			throw new \Exception('You must be an administrator to view this page.');
-        }
-
-        if ($id != null && $id != "") {
-            $id = decrypt($id);
-        }
-
-        $id = (int)$id;
-        if ($id == 1) {
-		    return redirect()->to($this->urlv);
-        }
-        
-        $res = $this->mproses->deleteUser($id);
-        if ($res) {
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Master Proses Dihapus");        
-            $this->session->setFlashdata('message', "Master Proses berhasil dihapus");
-        } else {
-            $this->session->setFlashdata('err', "Master Proses gagal dihapus");
-        }
-		return redirect()->to($this->urlv);
+        return $this->deactivate($id);
     }
 }

@@ -183,8 +183,16 @@ class BarangKeluarModel extends \App\Models\PrModel
             $kode = 1;
         }
 
-        $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
+        $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT);
         $kodejadi = $kd . date('y') . date('m') . $kodemax;
+
+        // Anti-collision verification
+        while ($this->db->table($this->table)->where('kode_transaksi', $kodejadi)->countAllResults() > 0) {
+            $kode++;
+            $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT);
+            $kodejadi = $kd . date('y') . date('m') . $kodemax;
+        }
+
         // hasilnya SOD24100001 dst.
         return $kodejadi;
     }
@@ -212,7 +220,7 @@ class BarangKeluarModel extends \App\Models\PrModel
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 
-            foreach ($detail as $rowData) {
+            foreach ($detail as $key => $rowData) {
                 if ($rowData['id_barang'] != "") {
                     // $idBarang = decrypt($rowData['id_barang']);
                     $idBarang = $rowData['id_barang'];
@@ -226,8 +234,48 @@ class BarangKeluarModel extends \App\Models\PrModel
                     "id_header" => $id,
                     "qty" => $rowData['qty'],
                     "price" => !empty($rowData['price']) ? $rowData['price'] : null,
+                    // Snapshot saldo No. WO (hanya terisi utk Tipe "Pemakaian Bahan Baku atau
+                    // Barang"), dibekukan di sini supaya cetakan transaksi ini konsisten walau
+                    // ada transaksi Barang Keluar lain utk WO yang sama dibuat sesudahnya.
+                    // Pakai pengecekan '' eksplisit (bukan isset() saja) - Tabulator selalu
+                    // mengirim key ini walau kosong, jadi isset() tetap true untuk string
+                    // kosong dan itu bikin error "invalid input syntax for type numeric"
+                    // saat insert ke Postgres pada Tipe selain "Pemakaian Bahan Baku atau Barang".
+                    "qty_terima" => (isset($rowData['qty_terima']) && $rowData['qty_terima'] !== '') ? $rowData['qty_terima'] : null,
+                    "qty_retur" => (isset($rowData['qty_retur']) && $rowData['qty_retur'] !== '') ? $rowData['qty_retur'] : null,
+                    "qty_pemakaian_sebelumnya" => (isset($rowData['qty_pemakaian_sebelumnya']) && $rowData['qty_pemakaian_sebelumnya'] !== '') ? $rowData['qty_pemakaian_sebelumnya'] : null,
+                    "qty_sisa" => (isset($rowData['qty_sisa']) && $rowData['qty_sisa'] !== '') ? $rowData['qty_sisa'] : null,
                 ];
                 $this->insertRecordGetid($this->tblDet, $dataDetail);
+
+                // Hapus dulu baris trans_barang lama utk dokumen ini (sekali saja, di
+                // iterasi pertama) sebelum insert ulang - supaya edit berulang pada
+                // dokumen yang sudah Approved tidak menumpuk baris ledger duplikat.
+                if ($data['status'] == 1 && $key === 0 && !empty($data['kode_transaksi'])) {
+                    // CATATAN (2026-08-08): sebelum baris trans_barang lama dihapus, qty
+                    // yang PERNAH dikurangi dari trans_lots akibat dokumen ini (kalau
+                    // dokumen ini sudah pernah disimpan/di-approve sebelumnya lalu diedit
+                    // ulang) harus dikembalikan dulu - baris trans_barang lama adalah
+                    // catatan persis berapa & dari lot mana. Tanpa ini, trans_lots akan
+                    // terus berkurang dobel setiap kali dokumen Barang Keluar yang sama
+                    // diedit/disimpan ulang - pola bug sama seperti yang sudah diperbaiki
+                    // di Item Transfer, Purchasing Terima Barang & Delivery Order.
+                    $oldTransBarangBk = $this->db->table($this->tblTrxBarang)
+                        ->select('lot_id, SUM(jumlah) as jumlah')
+                        ->where('kode_transaksi', $data['kode_transaksi'])
+                        ->groupBy('lot_id')
+                        ->get()->getResult();
+
+                    foreach ($oldTransBarangBk as $otb) {
+                        if (empty($otb->lot_id)) continue;
+                        $this->db->table($this->tblTrxLots)
+                            ->where('id', $otb->lot_id)
+                            ->set('qty', 'qty + ' . (float) $otb->jumlah, false)
+                            ->update();
+                    }
+
+                    $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $data['kode_transaksi'])->delete();
+                }
 
                 if ($data['status'] == 1) {
 
@@ -237,11 +285,22 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "id_gudang" => $data['id_gudang'],
                     ];
 
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $data['id_gudang']);
+                    // "-" dipakai di berbagai tempat sbg penanda "tidak ada Lot No."
+                    // (bukan lot_no sungguhan), jadi harus diperlakukan sama seperti kosong.
+                    $lotNoValue = trim((string) ($rowData['lot_no'] ?? ''));
+                    $hasLotNo = $lotNoValue !== '' && $lotNoValue !== '-';
+
+                    $idLots = null;
+                    $resLotNo = $hasLotNo ? $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang']) : null;
                     // $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     if (!empty($resLotNo)) {
                         $idLots = $resLotNo->id;
                         $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));
+                    } elseif ($hasLotNo) {
+                        // Lot No. beneran diisi tapi tidak ditemukan di gudang ini - jangan
+                        // lanjut dengan lot_id kosong (data ledger jadi tidak valid), batalkan
+                        // seluruh proses approve.
+                        throw new \Exception("Lot No. '" . $lotNoValue . "' tidak ditemukan di gudang tujuan untuk barang ini. Approve dibatalkan.");
                     }
 
                     $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
@@ -294,7 +353,10 @@ class BarangKeluarModel extends \App\Models\PrModel
 
                 throw new \Exception("Transaction failed");
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // \Throwable (bukan cuma \Exception) supaya fatal error/TypeError PHP
+            // (mis. operasi angka pada data yang ternyata bukan angka) juga ke-rollback
+            // dan pesannya bisa diteruskan ke user, bukan jadi 500 kosong.
             $this->db->transRollback();
             throw $e;
         }
@@ -314,12 +376,90 @@ class BarangKeluarModel extends \App\Models\PrModel
 
         $builder->where('tbh.active', 1);
         $builder->where('tbh.jenis_transaksi', 2);
-        $builder->where('tbh.id_kategori', 5);
+        // Sebelumnya ada filter id_kategori = 5 ("Pemakaian Bahan Baku atau
+        // Barang") di sini - jadi export Excel selalu cuma nampilin tipe itu
+        // saja, padahal list on-screen (BarangKeluarModel::getData()) tidak
+        // membatasi kategori sama sekali. Dihapus supaya export ikut semua
+        // tipe Barang Keluar sesuai rentang tanggal yang dipilih, konsisten
+        // dgn list-nya.
 
         $builder->where("tbh.tanggal BETWEEN'$from_date' AND '$to_date'");
         $builder->orderBy("tbh.tanggal", "asc");
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;
+    }
+
+    /**
+     * Membatalkan Approve dokumen Barang Keluar (BTK).
+     * Membalikkan semua efek transaksi:
+     *  1. Mengembalikan saldo qty ke trans_lots (qty = qty + jumlah)
+     *  2. Menyinkronkan saldo akhir di trans_barang_balances hari ini
+     *  3. Menghapus baris mutasi trans_barang milik dokumen ini
+     *  4. Mengembalikan status dokumen ke Draft (status = 0)
+     */
+    function cancelApprove($id, $updatedBy = null)
+    {
+        $this->db->transStart();
+        try {
+            $header = $this->getData($id);
+            if (empty($header)) {
+                throw new \Exception("Data barang keluar tidak ditemukan.");
+            }
+            if ((int) $header->status !== 1) {
+                throw new \Exception("Dokumen ini belum di-Approve, tidak bisa dibatalkan.");
+            }
+
+            // 1) & 2) Balikkan trans_lots + samakan snapshot trans_barang_balances hari ini,
+            // berdasarkan baris trans_barang yang tercatat utk kode_transaksi ini.
+            // Barang Keluar hanya memiliki sisi "keluar" (jenis_transaksi = 2, dari id_gudang_asal).
+            $trxRows = $this->db->table($this->tblTrxBarang)
+                ->select('id_barang, lot_id, pack_id, id_gudang_asal, SUM(jumlah) as jumlah')
+                ->where('kode_transaksi', $header->kode_transaksi)
+                ->groupBy('id_barang, lot_id, pack_id, id_gudang_asal')
+                ->get()->getResult();
+
+            foreach ($trxRows as $row) {
+                if (empty($row->lot_id)) continue;
+
+                $this->db->table($this->tblTrxLots)
+                    ->where('id', $row->lot_id)
+                    ->set('qty', 'qty + ' . (float) $row->jumlah, false)
+                    ->update();
+
+                $lotBaru = $this->db->table($this->tblTrxLots)->where('id', $row->lot_id)->get()->getRow();
+                if (!empty($lotBaru)) {
+                    $this->db->table($this->tblTrxBalances)
+                        ->where('id_barang', $row->id_barang)
+                        ->where('id_gudang', $row->id_gudang_asal)
+                        ->where('lot_id', $row->lot_id)
+                        ->where('pack_id', $row->pack_id)
+                        ->where('tanggal', date('Y-m-d'))
+                        ->set('saldo_akhir', $lotBaru->qty)
+                        ->update();
+                }
+            }
+
+            // 3) Hapus baris trans_barang milik dokumen ini
+            $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $header->kode_transaksi)->delete();
+
+            // 4) Kembalikan status dokumen ke Draft
+            $updateHeader = ['status' => 0, 'updated_at' => date('Y-m-d H:i:s')];
+            if (!empty($updatedBy)) {
+                $updateHeader['updated_by'] = $updatedBy;
+            }
+            $this->updateRecords($this->table, $updateHeader, ['id' => $id]);
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === TRUE) {
+                return true;
+            } else {
+                throw new \Exception("Transaction failed");
+            }
+        } catch (\Throwable $e) {
+            $this->db->transRollback();
+            throw $e;
+        }
     }
 }

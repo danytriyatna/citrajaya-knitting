@@ -205,13 +205,14 @@ class RefOperator extends BaseController
 
     public function getOperator()
     {
-        $id_perusahaan = $this->request->getPost('id_perusahaan');
-
-        $params = [
-            'id_perusahaan' => $id_perusahaan
+        $sort = [
+            [
+                'field' => 'nama_operator',
+                'dir' => 'ASC'
+            ]
         ];
 
-        $data = $this->mOperator->getData(null, 0, 99999, null, null, $params);
+        $data = $this->mOperator->getData(null, 0, 99999, $sort);
 
         return $this->response->setJSON([
             'status' => true,

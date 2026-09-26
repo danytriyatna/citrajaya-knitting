@@ -656,6 +656,17 @@
               </select>
             </div>
 
+            <!-- Filter Status -->
+            <div class="col-sm-2">
+              <select id="filter_status" name="filter_status"
+                class="form-select select2" data-placeholder="-- Semua Status --">
+                <option value="all" selected>Semua Status</option>
+                <option value="2">Approved (Open)</option>
+                <option value="3">Closed (Selesai)</option>
+                <option value="1">Draft</option>
+              </select>
+            </div>
+
             <!-- From Date -->
             <div class="col-sm-2 <?= $print_access == true ? '' : 'd-none' ?>">
               <input type="text" id="from_date" name="from_date"

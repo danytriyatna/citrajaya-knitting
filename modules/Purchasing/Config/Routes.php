@@ -17,6 +17,7 @@ $routes->group('purchasing/receive-item', ['namespace' => 'Modules\Purchasing\Co
   $routes->get('print/(:any)', 'ReceiveItem::print/$1');
   $routes->post('list', 'ReceiveItem::lists');
   $routes->post('list-barang', 'ReceiveItem::listsBarang');
+  $routes->get('data-po', 'ReceiveItem::dataPo');
   $routes->post('save', 'ReceiveItem::save');
   $routes->get('form/(:any)', 'ReceiveItem::form/$1');
   $routes->get('check-lot', 'ReceiveItem::checkLotsNo');

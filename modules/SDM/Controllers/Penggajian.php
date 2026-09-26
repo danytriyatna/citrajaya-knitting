@@ -10,6 +10,9 @@ use Modules\Referensi\Models\BarangModel;
 use Modules\Referensi\Models\SatuanModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Modules\Referensi\Models\KaryawanModel;
 use Modules\Referensi\Models\JenisBarangModel;
 use Modules\Referensi\Models\PerusahaanModel;
@@ -50,20 +53,9 @@ class Penggajian extends BaseController
                 'dir' => 'ASC'
             ]
         ];
-    $this->data['superadmin'] = $this->auth->isSuperadmin();
-    if (!$this->auth->isSuperadmin()) {
-        if (empty($this->currentUser->id_perusahaan)) {
-            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
-        }
-        else {
-            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
-        }
-        $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
-    }
-    else {
-        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
-        $this->data['user_perusahaan'] = null;
-    }
+    $this->data['superadmin'] = true;
+    $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+    $this->data['user_perusahaan'] = null;
     
     return view($this->views . '\penggajian_list', $this->data);
   }
@@ -315,20 +307,9 @@ class Penggajian extends BaseController
         'dir' => 'ASC'
         ]
     ];
-    $this->data['superadmin'] = $this->auth->isSuperadmin();
-    if (!$this->auth->isSuperadmin()) {
-        if (empty($this->currentUser->id_perusahaan)) {
-            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
-        }
-        else {
-            $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
-        }
-        $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
-    }
-    else {
-        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
-        $this->data['user_perusahaan'] = null;
-    }
+    $this->data['superadmin'] = true;
+    $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
+    $this->data['user_perusahaan'] = null;
     $this->data['disabled_input'] = $is_read;
     $show_approve_btn = false; 
     $show_reject_btn = false; 
@@ -508,7 +489,14 @@ class Penggajian extends BaseController
           $data_laporan[$i]->premi = 0;
         }
 
-        $data_laporan[$i]->total = ($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus + $data_laporan[$i]->premi + $data_laporan[$i]->jml_sample) - $data_laporan[$i]->potongan;
+        $data_laporan[$i]->gaji_jam = round((float)($data_laporan[$i]->gaji_jam ?? 0));
+        $data_laporan[$i]->uang_lembur = round((float)($data_laporan[$i]->uang_lembur ?? 0));
+        $data_laporan[$i]->bonus = round((float)($data_laporan[$i]->bonus ?? 0));
+        $data_laporan[$i]->jml_sample = round((float)($data_laporan[$i]->jml_sample ?? 0));
+        $data_laporan[$i]->potongan = round((float)($data_laporan[$i]->potongan ?? 0));
+        $data_laporan[$i]->premi = round((float)($data_laporan[$i]->premi ?? 0));
+
+        $data_laporan[$i]->total = round(($data_laporan[$i]->uang_lembur + $data_laporan[$i]->gaji_jam + $data_laporan[$i]->bonus + $data_laporan[$i]->premi + $data_laporan[$i]->jml_sample) - $data_laporan[$i]->potongan);
       
       }
       $status = true;
@@ -568,6 +556,21 @@ class Penggajian extends BaseController
 
 
   
+  function printRekap_gaji(){
+    $id = $this->request->getGet('data_id');
+    $id = decrypt($id);
+
+    $stdData = $this->mgaji->getData($id);  
+    $stdData->periode_awal  = fdate_eng_to_ind($stdData->periode_awal);
+    $stdData->periode_akhir  = fdate_eng_to_ind($stdData->periode_akhir);
+    $this->data['row'] = $stdData;
+
+    $params_det['id_sdm_gaji'] = $id;
+    $list = $this->mgaji->getDataDet(null, 0, 9999, null, null, $params_det);  
+
+    $this->data['detail'] = $list;
+    return view($this->views.'\vprint_sdm_rekap', $this->data);
+  }
   function printSlip_gaji_all(){
     $id = $this->request->getGet('data_id');
 
@@ -1067,5 +1070,391 @@ class Penggajian extends BaseController
         ob_end_clean();
         $writer->save('php://output'); // download file 
         exit;
+    }
+
+    public function printRekapExcel_gaji(){
+        $fileName = "rekap-penggajian-".date('Ymd-His').".xlsx";
+
+        $id = $this->request->getGet('data_id');
+        $id = decrypt($id);
+
+        $stdData = $this->mgaji->getData($id);  
+        $params_det['id_sdm_gaji'] = $id;
+        $list = $this->mgaji->getDataDet(null, 0, 9999, null, null, $params_det);  
+
+        $upahList = [];
+        $kasbonList = [];
+
+        foreach ($list as $r) {
+            if ((float)($r->gaji ?? 0) > 0) {
+                $upahList[] = $r;
+            }
+            if ((float)($r->potongan ?? 0) > 0) {
+                $kasbonList[] = $r;
+            }
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Penggajian');
+
+        $blueHeader = 'BDD7EE';
+        $pinkHeader = 'F8CBAD';
+
+        $thinBorder = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => '595959'],
+                ],
+            ],
+        ];
+
+        // Set Column widths
+        $sheet->getColumnDimension('A')->setWidth(5);
+        $sheet->getColumnDimension('B')->setWidth(38);
+        $sheet->getColumnDimension('C')->setWidth(18);
+        $sheet->getColumnDimension('D')->setWidth(4);
+        $sheet->getColumnDimension('E')->setWidth(5);
+        $sheet->getColumnDimension('F')->setWidth(35);
+        $sheet->getColumnDimension('G')->setWidth(18);
+
+        // Headers (Row 1)
+        $sheet->setCellValue('A1', '☐');
+        $sheet->setCellValue('B1', 'UPAH HARIAN & MESIN');
+        $sheet->setCellValue('C1', date('d-m-y'));
+
+        $sheet->setCellValue('E1', '☐');
+        $sheet->setCellValue('F1', 'PEMBAYARAN KASBON');
+        $sheet->setCellValue('G1', '');
+
+        // Header formatting
+        $sheet->getStyle('A1:C1')->getFont()->setName('Calibri')->setSize(11)->setBold(true);
+        $sheet->getStyle('E1:G1')->getFont()->setName('Calibri')->setSize(11)->setBold(true);
+
+        $sheet->getStyle('A1:C1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($blueHeader);
+        $sheet->getStyle('E1:G1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($pinkHeader);
+
+        $sheet->getStyle('A1:C1')->applyFromArray($thinBorder);
+        $sheet->getStyle('E1:G1')->applyFromArray($thinBorder);
+
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getStyle('E1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Populate Upah Rows
+        $rowU = 2;
+        foreach ($upahList as $u) {
+            $sheet->setCellValue('A' . $rowU, '☐');
+            $sheet->setCellValue('B' . $rowU, strtoupper(!empty($u->full_name) ? $u->full_name : $u->nip));
+            $sheet->setCellValue('C' . $rowU, (float)$u->gaji);
+
+            $sheet->getStyle('A' . $rowU)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C' . $rowU)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle('A' . $rowU . ':C' . $rowU)->applyFromArray($thinBorder);
+            $rowU++;
+        }
+
+        // Total Upah Row
+        $sheet->setCellValue('A' . $rowU, '☐');
+        $sheet->setCellValue('B' . $rowU, 'TOTAL');
+        $sheet->setCellValue('C' . $rowU, '=SUM(C2:C' . ($rowU - 1) . ')');
+
+        $sheet->getStyle('A' . $rowU)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B' . $rowU . ':C' . $rowU)->getFont()->setName('Calibri')->setSize(11)->setBold(true);
+        $sheet->getStyle('C' . $rowU)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle('A' . $rowU . ':C' . $rowU)->applyFromArray($thinBorder);
+
+        // Populate Kasbon Rows
+        $rowK = 2;
+        foreach ($kasbonList as $k) {
+            $sheet->setCellValue('E' . $rowK, '☐');
+            $sheet->setCellValue('F' . $rowK, strtoupper(!empty($k->full_name) ? $k->full_name : $k->nip));
+            $sheet->setCellValue('G' . $rowK, (float)$k->potongan);
+
+            $sheet->getStyle('E' . $rowK)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('G' . $rowK)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle('E' . $rowK . ':G' . $rowK)->applyFromArray($thinBorder);
+            $rowK++;
+        }
+
+        // Total Transfer Row for Kasbon
+        $sheet->setCellValue('E' . $rowK, '☐');
+        $sheet->setCellValue('F' . $rowK, 'TOTAL TRANSFER');
+        $sheet->setCellValue('G' . $rowK, '=SUM(G2:G' . ($rowK - 1) . ')');
+
+        $sheet->getStyle('E' . $rowK)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('F' . $rowK . ':G' . $rowK)->getFont()->setName('Calibri')->setSize(11)->setBold(true);
+        $sheet->getStyle('G' . $rowK)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle('E' . $rowK . ':G' . $rowK)->applyFromArray($thinBorder);
+
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="'.$fileName.'"'); 
+        header('Cache-Control: max-age=0');
+        ob_end_clean();
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function syncTbmpTpo()
+    {
+        if (!$this->auth->loggedIn()) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+
+        $tglFromRaw   = trim($this->request->getPost('tgl_mulai') ?? '');
+        $tglToRaw     = trim($this->request->getPost('tgl_akhir') ?? '');
+        $idPerusahaan = (int) $this->request->getPost('id_perusahaan');
+
+        if (empty($tglFromRaw) || empty($tglToRaw)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Harap tentukan periode tanggal awal dan akhir!']);
+        }
+        if (empty($idPerusahaan)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Harap pilih perusahaan terlebih dahulu!']);
+        }
+
+        $tglAwal  = fdate_ind_to_eng($tglFromRaw);
+        $tglAkhir = fdate_ind_to_eng($tglToRaw);
+
+        $db = \Config\Database::connect();
+
+        // 1. Filter dokumen Approved (status = 1) pada rentang tanggal & perusahaan
+        $builder = $db->table('trans_barang_header tbh');
+        $builder->select('tbh.id, tbh.kode_transaksi, tbh.id_proses, tbh.id_cmt, tbh.tanggal');
+        $builder->where('tbh.status', 1);
+        $builder->where('tbh.tanggal >=', $tglAwal);
+        $builder->where('tbh.tanggal <=', $tglAkhir);
+
+        if ($idPerusahaan == 2) {
+            $builder->like('tbh.kode_transaksi', 'BTMC', 'after');
+        } else {
+            $builder->notLike('tbh.kode_transaksi', 'BTMC', 'after');
+        }
+
+        $headers = $builder->get()->getResult();
+
+        // Hitung juga jumlah dokumen TBMP yang masih DRAFT (status = 0)
+        $builderDraft = $db->table('trans_barang_header tbh');
+        $builderDraft->where('tbh.status', 0);
+        $builderDraft->where('tbh.tanggal >=', $tglAwal);
+        $builderDraft->where('tbh.tanggal <=', $tglAkhir);
+
+        if ($idPerusahaan == 2) {
+            $builderDraft->like('tbh.kode_transaksi', 'BTMC', 'after');
+        } else {
+            $builderDraft->notLike('tbh.kode_transaksi', 'BTMC', 'after');
+        }
+
+        $draftCount = $builderDraft->countAllResults();
+
+        if (empty($headers)) {
+            return $this->response->setJSON([
+                'status'        => true,
+                'message'       => "Tidak ada dokumen BTM/BTMC Approved pada periode $tglFromRaw s.d $tglToRaw.",
+                'total_dokumen' => 0,
+                'synced_count'  => 0,
+                'draft_count'   => $draftCount
+            ]);
+        }
+
+        $syncedCount = 0;
+        $totalDoc = count($headers);
+
+        foreach ($headers as $h) {
+            $tbmpSummary = $db->table('trans_barang_masuk_produksi')
+                ->select('SUM(qty) as total_qty, SUM(qty * COALESCE(harga, 0)) as total_nilai')
+                ->where('id_header', $h->id)
+                ->get()->getRow();
+
+            if (empty($tbmpSummary) || (float)$tbmpSummary->total_qty <= 0) {
+                continue;
+            }
+
+            $totalQtyTbmp   = (float)$tbmpSummary->total_qty;
+            $totalNilaiTbmp = (float)$tbmpSummary->total_nilai;
+
+            $tpoRows = $db->table('trans_produksi_operator')
+                ->where('kode_transaksi', $h->kode_transaksi)
+                ->get()->getResult();
+
+            if (empty($tpoRows)) {
+                $tbmpDetails = $db->table('trans_barang_masuk_produksi')
+                    ->select('kode_sales_order, kode_ukuran, SUM(qty) as qty, AVG(COALESCE(harga, 0)) as harga, SUM(qty * COALESCE(harga, 0)) as total')
+                    ->where('id_header', $h->id)
+                    ->groupBy('kode_sales_order, kode_ukuran')
+                    ->get()->getResult();
+
+                foreach ($tbmpDetails as $det) {
+                    $db->table('trans_produksi_operator')->insert([
+                        'kode_transaksi' => $h->kode_transaksi,
+                        'id_operator'    => $h->id_cmt,
+                        'id_proses'      => $h->id_proses,
+                        'tgl_transaksi'  => $h->tanggal,
+                        'qty'            => (float)$det->qty,
+                        'harga'          => (float)$det->harga,
+                        'harga_total'    => (float)$det->total,
+                        'active'         => 1,
+                        'created_at'     => date('Y-m-d H:i:s'),
+                        'created_by'     => session()->get('user_id') ?? 1
+                    ]);
+                }
+                $syncedCount++;
+            } else {
+                $totalQtyTpo   = 0;
+                $totalNilaiTpo = 0;
+                foreach ($tpoRows as $tp) {
+                    $totalQtyTpo   += (float)$tp->qty;
+                    $totalNilaiTpo += (float)$tp->harga_total;
+                }
+
+                if (abs($totalQtyTpo - $totalQtyTbmp) > 0.001 || abs($totalNilaiTpo - $totalNilaiTbmp) > 0.01) {
+                    if (count($tpoRows) == 1) {
+                        $db->table('trans_produksi_operator')
+                            ->where('id', $tpoRows[0]->id)
+                            ->update([
+                                'qty'         => $totalQtyTbmp,
+                                'harga'       => ($totalQtyTbmp > 0 ? ($totalNilaiTbmp / $totalQtyTbmp) : 0),
+                                'harga_total' => $totalNilaiTbmp,
+                                'updated_at'  => date('Y-m-d H:i:s')
+                            ]);
+                    } else {
+                        $tbmpDetails = $db->table('trans_barang_masuk_produksi')
+                            ->select('kode_sales_order, kode_ukuran, SUM(qty) as qty, AVG(COALESCE(harga, 0)) as harga, SUM(qty * COALESCE(harga, 0)) as total')
+                            ->where('id_header', $h->id)
+                            ->groupBy('kode_sales_order, kode_ukuran')
+                            ->get()->getResult();
+
+                        $tmpl = $tpoRows[0];
+                        $db->table('trans_produksi_operator')->where('kode_transaksi', $h->kode_transaksi)->delete();
+
+                        foreach ($tbmpDetails as $det) {
+                            $db->table('trans_produksi_operator')->insert([
+                                'id_produksi'                => $tmpl->id_produksi,
+                                'id_walkorder_proses_ukuran' => $tmpl->id_walkorder_proses_ukuran,
+                                'id_ukuran'                  => $tmpl->id_ukuran,
+                                'tgl_transaksi'              => $h->tanggal,
+                                'id_operator'                => $h->id_cmt,
+                                'qty'                        => (float)$det->qty,
+                                'harga'                      => (float)$det->harga,
+                                'harga_total'                => (float)$det->total,
+                                'active'                     => 1,
+                                'created_by'                 => session()->get('user_id') ?? 1,
+                                'created_at'                 => date('Y-m-d H:i:s'),
+                                'id_proses'                  => $h->id_proses,
+                                'id_warna'                   => $tmpl->id_warna,
+                                'kode_transaksi'             => $h->kode_transaksi,
+                                'id_category'                => $tmpl->id_category,
+                                'berat'                      => $tmpl->berat ?? 0,
+                                'print_type'                 => $tmpl->print_type ?? 1
+                            ]);
+                        }
+                    }
+                    $syncedCount++;
+                } else {
+                    foreach ($tpoRows as $tp) {
+                        if (((float)$tp->harga_total == 0) && (float)$tp->harga > 0 && (float)$tp->qty > 0) {
+                            $db->table('trans_produksi_operator')
+                                ->where('id', $tp->id)
+                                ->update(['harga_total' => ((float)$tp->qty * (float)$tp->harga)]);
+                            $syncedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Query Summary Per Karyawan / CMT setelah sinkronisasi (divalidasi sesuai ref_karyawan perusahaannya)
+        $wherePerusahaanSql = ($idPerusahaan == 2) ? "tbh.kode_transaksi LIKE 'BTMC%'" : "tbh.kode_transaksi NOT LIKE 'BTMC%'";
+        $whereKaryawanPerusahaan = ($idPerusahaan == 2) 
+            ? "AND (rk.id_perusahaan = 2 OR (rk.id IS NULL AND rk2.id_perusahaan = 2))"
+            : "AND (rk.id_perusahaan = 1 OR rk.id_perusahaan IS NULL OR (rk.id IS NULL AND (rk2.id_perusahaan = 1 OR rk2.id_perusahaan IS NULL)))";
+
+        $summaryKaryawan = $db->query("
+            SELECT 
+                tbh.id_cmt as id_operator,
+                COALESCE(rk.nip, rk2.nip, '-') as nip,
+                COALESCE(ro.nama_operator, rk.full_name, rk2.full_name, 'Operator ' || tbh.id_cmt) as nama_karyawan,
+                COALESCE(rk.posisi, rk2.posisi, '-') as posisi,
+                SUM(tbmp.qty) as qty_tbmp,
+                SUM(tbmp.qty * COALESCE(tbmp.harga, 0)) as nilai_tbmp
+            FROM trans_barang_masuk_produksi tbmp
+            JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
+            LEFT JOIN ref_operator ro ON ro.id = tbh.id_cmt
+            LEFT JOIN ref_karyawan rk ON rk.id_operator = tbh.id_cmt AND rk.active = 1
+            LEFT JOIN ref_karyawan rk2 ON rk2.id = tbh.id_cmt AND rk2.active = 1
+            WHERE tbh.status = 1
+              AND tbh.tanggal >= '$tglAwal' AND tbh.tanggal <= '$tglAkhir'
+              AND $wherePerusahaanSql
+              $whereKaryawanPerusahaan
+            GROUP BY tbh.id_cmt, rk.nip, rk2.nip, ro.nama_operator, rk.full_name, rk2.full_name, rk.posisi, rk2.posisi
+            ORDER BY nilai_tbmp DESC
+        ")->getResultArray();
+
+        $grandTbmp = 0;
+        $grandTpo = 0;
+
+        foreach ($summaryKaryawan as &$row) {
+            $tpoOp = $db->query("
+                SELECT SUM(tpo.qty) as qty_tpo, SUM(tpo.harga_total) as nilai_tpo
+                FROM trans_produksi_operator tpo
+                JOIN trans_barang_header tbh ON tbh.kode_transaksi = tpo.kode_transaksi
+                WHERE tbh.status = 1
+                  AND tbh.id_cmt = {$row['id_operator']}
+                  AND tbh.tanggal >= '$tglAwal' AND tbh.tanggal <= '$tglAkhir'
+                  AND $wherePerusahaanSql
+            ")->getRow();
+
+            $row['qty_tpo']     = (float)($tpoOp->qty_tpo ?? 0);
+            $row['nilai_tpo']   = (float)($tpoOp->nilai_tpo ?? 0);
+            $row['nilai_tbmp']  = (float)$row['nilai_tbmp'];
+            $diff               = abs($row['nilai_tpo'] - $row['nilai_tbmp']);
+            $row['status']      = ($diff < 1) ? 'MATCH 100%' : 'Selisih Rp ' . number_format($diff, 0, ',', '.');
+
+            $grandTbmp += $row['nilai_tbmp'];
+            $grandTpo  += $row['nilai_tpo'];
+        }
+
+        // 3. Query Detail Dokumen TBMP yang masih Draft untuk Perusahaan terpilih (nama CMT persis seperti di BTM)
+        $draftList = $db->query("
+            SELECT 
+                tbh.id,
+                tbh.kode_transaksi,
+                tbh.tanggal,
+                COALESCE(ro.nama_operator, rk.full_name, rk2.full_name, 'Operator ' || tbh.id_cmt) as nama_cmt,
+                COALESCE(p.nama, '-') as nama_proses,
+                COALESCE(SUM(tbmp.qty), 0) as total_qty,
+                COALESCE(SUM(tbmp.qty * COALESCE(tbmp.harga, 0)), 0) as total_nilai
+            FROM trans_barang_header tbh
+            LEFT JOIN trans_barang_masuk_produksi tbmp ON tbmp.id_header = tbh.id
+            LEFT JOIN ref_operator ro ON ro.id = tbh.id_cmt
+            LEFT JOIN ref_karyawan rk ON rk.id_operator = tbh.id_cmt AND rk.active = 1
+            LEFT JOIN ref_karyawan rk2 ON rk2.id = tbh.id_cmt AND rk2.active = 1
+            LEFT JOIN _jenis_proses_produksi p ON p.id = tbh.id_proses
+            WHERE tbh.status = 0
+              AND tbh.tanggal >= '$tglAwal' AND tbh.tanggal <= '$tglAkhir'
+              AND $wherePerusahaanSql
+            GROUP BY tbh.id, tbh.kode_transaksi, tbh.tanggal, ro.nama_operator, rk.full_name, rk2.full_name, tbh.id_cmt, p.nama
+            ORDER BY tbh.tanggal ASC, tbh.kode_transaksi ASC
+        ")->getResultArray();
+
+        $draftCount = count($draftList);
+
+        return $this->response->setJSON([
+            'status'           => true,
+            'message'          => "Sinkronisasi Berhasil!",
+            'total_dokumen'    => $totalDoc,
+            'synced_count'     => $syncedCount,
+            'draft_count'      => $draftCount,
+            'summary_karyawan' => $summaryKaryawan,
+            'grand_tbmp'       => $grandTbmp,
+            'grand_tpo'        => $grandTpo,
+            'draft_list'       => $draftList
+        ]);
     }
 }

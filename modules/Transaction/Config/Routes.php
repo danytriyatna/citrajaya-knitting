@@ -22,8 +22,8 @@ $routes->group('trans/sales-order', ['namespace' => 'Modules\Transaction\Control
   $routes->post('list', 'SalesOrder::lists');
   $routes->post('save', 'SalesOrder::save');
   $routes->post('save-detail', 'SalesOrder::saveDetail');
-  $routes->get('delete/list/(:any)', 'SalesOrder::deleteList/$1');
-  $routes->get('delete/detail/(:any)', 'SalesOrder::deleteDetailList/$1');
+  $routes->match(['get', 'post'], 'delete/list/(:any)', 'SalesOrder::deleteList/$1');
+  $routes->match(['get', 'post'], 'delete/detail/(:any)', 'SalesOrder::deleteDetailList/$1');
   $routes->post('generate', 'SalesOrder::generateQRCode');
   $routes->get('generate', 'SalesOrder::getQrcode');
   $routes->post('getSample', 'SalesOrder::getSampleBuyer');
@@ -99,6 +99,7 @@ $routes->group('trans/customer-receipt', ['namespace' => 'Modules\Transaction\Co
 
 $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
   $routes->get('/', 'ItemTransfer::index');
+  $routes->get('panduan', 'ItemTransfer::panduan');
   $routes->get('form_static', 'ItemTransfer::form_static_v2');
   $routes->post('list', 'ItemTransfer::lists');
   $routes->post('list-ref', 'ItemTransfer::lists_ref');
@@ -108,6 +109,7 @@ $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('form', 'ItemTransfer::form_static');
   $routes->get('edit/(:any)', 'ItemTransfer::form_static/$1');
   $routes->post('save', 'ItemTransfer::save');
+  $routes->post('cancel-approve', 'ItemTransfer::cancelApprove');
   $routes->post('list-barang', 'ItemTransfer::lists_persediaan');
   $routes->get('print_excel_lists/(:any)/(:any)', 'ItemTransfer::print_excel_lists/$1/$2');
   $routes->get('print_excel_trans/(:any)/(:any)', 'ItemTransfer::print_excel_trans/$1/$2');
@@ -127,23 +129,27 @@ $routes->group('trans/issue-item', ['namespace' => 'Modules\Transaction\Controll
 });
 $routes->group('trans/incoming-goods', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
   $routes->get('/', 'BarangMasuk::index');
+  $routes->get('panduan', 'BarangMasuk::panduan');
   $routes->post('list', 'BarangMasuk::lists');
   $routes->get('form', 'BarangMasuk::form');
   $routes->get('edit/(:any)', 'BarangMasuk::form/$1');
   $routes->post('last-stock', 'IncomingGoods::getLastStock');
   $routes->get('last-price', 'BarangMasuk::getLastPrice');
   $routes->post('save', 'BarangMasuk::save');
+  $routes->post('cancel-approve', 'BarangMasuk::cancelApprove');
   $routes->get('print/(:any)', 'BarangMasuk::print/$1');
   $routes->get('print-faktur/(:any)', 'BarangMasuk::print_faktur/$1');
   $routes->get('print_excel_lists/(:any)/(:any)', 'BarangMasuk::print_excel_lists/$1/$2');
 });
 $routes->group('trans/outgoing-goods', ['namespace' => 'Modules\Transaction\Controllers'], static function ($routes) {
   $routes->get('/', 'BarangKeluar::index');
+  $routes->get('panduan', 'BarangKeluar::panduan');
   $routes->post('list', 'BarangKeluar::lists');
   $routes->post('list-barang', 'BarangKeluar::listsBarang');
   $routes->get('form', 'BarangKeluar::form');
   $routes->get('edit/(:any)', 'BarangKeluar::form/$1');
   $routes->post('save', 'BarangKeluar::save');
+  $routes->post('cancel-approve', 'BarangKeluar::cancelApprove');
   $routes->get('print/(:any)', 'BarangKeluar::print/$1');
   $routes->get('print_excel_lists/(:any)/(:any)', 'BarangKeluar::print_excel_lists/$1/$2');
 });

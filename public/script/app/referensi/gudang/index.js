@@ -6,6 +6,7 @@ $(document).ready(function () {
     let inpKeterangan       = $('#keterangan');
     let selectTipe = $('#tipe');
     let selectCMT = $('#id_cmt');
+    let selectPerusahaan = $('#id_perusahaan');
     let isModal       = $("#modal-form-add-po");
     let divCMT = $('#div-cmt');
     selectTipe.on("change",function(e){
@@ -53,8 +54,9 @@ $(document).ready(function () {
                         } else{
                             divCMT.removeClass("d-none")
                             selectCMT.val(data_row.id_cmt).trigger("change")
-                        } 
-                       
+                        }
+                        selectPerusahaan.val(data_row.id_perusahaan || "").trigger("change")
+
                         isModal.modal("show");
                     }   
                 }
@@ -71,7 +73,11 @@ $(document).ready(function () {
                 title: "CMT", field: "cmt", headerSort: false,
                 width: "20%"
             },
-           
+            {
+                title: "Perusahaan", field: "nama_perusahaan", headerSort: false,
+                width: "20%"
+            },
+
             {
                 title: "Keterangan", field: "keterangan", formatter: "html", headerSort: false,
                 
@@ -144,6 +150,7 @@ $(document).ready(function () {
         inpNamaGudang.val("")
         inpKeterangan.val("")
         selectCMT.val("").trigger("change")
+        selectPerusahaan.val("").trigger("change")
         isModal.modal("show");
     });
 
@@ -168,6 +175,7 @@ $(document).ready(function () {
                     keterangan : inpKeterangan.val(),
                     tipe : selectTipe.val(),
                     cmt : selectCMT.val(),
+                    id_perusahaan : selectPerusahaan.val(),
                 },
                 dataType: "json",
                 beforeSend: function () {

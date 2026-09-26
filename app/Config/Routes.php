@@ -47,6 +47,9 @@ $routes->post('/dashboard/list_saldo', 'Dashboard::lists_saldo',  ['filter' => '
 $routes->get('/dashboard/update_saldo/(:any)/(:any)', 'Dashboard::update_saldo/$1/$2',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/list_laba', 'Dashboard::lists_laba',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/persediaan_ringkasan', 'Dashboard::persediaan_ringkasan',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/persediaan_update', 'Dashboard::persediaan_update',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/persediaan_detail', 'Dashboard::persediaan_detail',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 
 $routes->post('api/login', 'API\Auth::login');
 
@@ -85,7 +88,7 @@ if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php'))
  */
 if (file_exists(ROOTPATH . 'modules')) {
 	$modulesPath = ROOTPATH . 'modules/';
-	$modules = ['Keuangan', 'Laporan', 'Purchasing', 'Referensi', 'SDM', 'Transaction', 'Utility', 'Vip'];
+	$modules = ['Keuangan', 'Laporan', 'Purchasing', 'Referensi', 'SDM', 'Transaction', 'Utility', 'Vip', 'Assistant'];
 
 	foreach ($modules as $module) {
 		$routesPath = $modulesPath . $module . '/Config/Routes.php';

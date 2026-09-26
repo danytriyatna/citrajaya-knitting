@@ -902,28 +902,47 @@ class Mdashboard extends Model
         return $this->_data;
     }
 
-    function getDataPemakaian($month = null, $year = null)
+            function getDataPemakaian($month = null, $year = null)
     {
-        $builder = $this->db->table("trans_po_pembayaran tpp");
-        
-        $builder->select("SUM(COALESCE(tpp.total_bayar, 0)) AS grand_total");
-        // $builder->where('bbx.active = 1');
-        // $builder->where('bbx.jenis_transaksi', 2);
-        // $builder->where('bbx.id_kategori !=', 13);
+        $m = (int)$month;
+        $y = (int)$year;
 
+        // Mulai Agustus 2026 dan seterusnya: diambil dari BTK Pemakaian Barang/Bahan (Approved)
+        if ($y > 2026 || ($y == 2026 && $m >= 8)) {
+            $builder = $this->db->table("trans_barang_detail tbd");
+            $builder->select("SUM(COALESCE(tbd.qty, 0) * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) AS grand_total");
+            $builder->join("trans_barang_header tbh", "CAST(tbd.id_header AS INTEGER) = tbh.id", "inner");
+            $builder->join("ref_barang rb", "rb.id = tbd.id_barang", "left");
+            $builder->where("tbh.jenis_transaksi", 2);
+            $builder->where("tbh.id_kategori", 5);
+            $builder->where("tbh.status", 1);
+            $builder->where("tbh.active", 1);
+
+            if (!empty($month)) {
+                $builder->where("EXTRACT(MONTH FROM tbh.tanggal) =", $m);
+            }
+            if (!empty($year)) {
+                $builder->where("EXTRACT(YEAR FROM tbh.tanggal) =", $y);
+            }
+
+            $row = $builder->get()->getRow();
+            return $row ? (float)$row->grand_total : 0;
+        }
+
+        // Sebelum Agustus 2026: mengambil nilai pembelian (trans_po_pembayaran)
+        $builder = $this->db->table("trans_po_pembayaran tpp");
+        $builder->select("SUM(COALESCE(tpp.total_bayar, 0)) AS grand_total");
         $builder->where("tpp.active", 1);
-        
-        // Filter Bulan dan Tahun
+
         if (!empty($month)) {
-            $builder->where("EXTRACT(MONTH FROM tpp.pay_date) =", $month);
+            $builder->where("EXTRACT(MONTH FROM tpp.pay_date) =", $m);
         }
         if (!empty($year)) {
-            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $year);
-        }  
+            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $y);
+        }
 
-        $this->_data = $builder->get()->getRow()->grand_total;
-
-        return $this->_data;
+        $row = $builder->get()->getRow();
+        return $row ? (float)$row->grand_total : 0;
     }
 
     function getDataBiaya($month = null, $year = null)
@@ -1035,33 +1054,43 @@ class Mdashboard extends Model
         return $data;
     }
 
-    function getGrafikDataPemakaian($year = null)
+            function getGrafikDataPemakaian($year = null)
     {
-        $builder = $this->db->table("trans_po_pembayaran tpp");
-        $builder->select("
-            EXTRACT(MONTH FROM tpp.pay_date) AS bulan,
-            SUM(COALESCE(tpp.total_bayar, 0)) AS total_pemakaian
-        ");
-        // $builder->where("bbx.jenis_transaksi", 2);
-        // $builder->where("bbx.id_kategori <>", 13);
-        $builder->where("tpp.active", 1);
-        
-        // Filter Bulan dan Tahun
-        if (!empty($year)) {
-            $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $year);
-        }  
-        $builder->groupBy("EXTRACT(MONTH FROM tpp.pay_date)");
-        $builder->orderBy("bulan", "ASC");
-
-        $result = $builder->get()->getResult();
-
+        $y = (int)$year;
         $data = [];
         for ($i = 0; $i < 12; $i++) {
             $data[$i] = 0;
         }
 
-        foreach ($result as $row) {
-            $data[(int)$row->bulan-1] = (float)$row->total_pemakaian;
+        for ($m = 1; $m <= 12; $m++) {
+            // Mulai Agustus 2026 dan seterusnya: BTK Pemakaian
+            if ($y > 2026 || ($y == 2026 && $m >= 8)) {
+                $builder = $this->db->table("trans_barang_detail tbd");
+                $builder->select("SUM(COALESCE(tbd.qty, 0) * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) AS total_pemakaian");
+                $builder->join("trans_barang_header tbh", "CAST(tbd.id_header AS INTEGER) = tbh.id", "inner");
+                $builder->join("ref_barang rb", "rb.id = tbd.id_barang", "left");
+                $builder->where("tbh.jenis_transaksi", 2);
+                $builder->where("tbh.id_kategori", 5);
+                $builder->where("tbh.status", 1);
+                $builder->where("tbh.active", 1);
+                $builder->where("EXTRACT(MONTH FROM tbh.tanggal) =", $m);
+                if (!empty($year)) {
+                    $builder->where("EXTRACT(YEAR FROM tbh.tanggal) =", $y);
+                }
+                $row = $builder->get()->getRow();
+                $data[$m - 1] = $row ? (float)$row->total_pemakaian : 0;
+            } else {
+                // Sebelum Agustus 2026: PO Pembayaran
+                $builder = $this->db->table("trans_po_pembayaran tpp");
+                $builder->select("SUM(COALESCE(tpp.total_bayar, 0)) AS total_pemakaian");
+                $builder->where("tpp.active", 1);
+                $builder->where("EXTRACT(MONTH FROM tpp.pay_date) =", $m);
+                if (!empty($year)) {
+                    $builder->where("EXTRACT(YEAR FROM tpp.pay_date) =", $y);
+                }
+                $row = $builder->get()->getRow();
+                $data[$m - 1] = $row ? (float)$row->total_pemakaian : 0;
+            }
         }
 
         return $data;
@@ -1218,6 +1247,27 @@ class Mdashboard extends Model
         $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;
+    }
+
+    /**
+     * TAMBAHAN (2026-08-08): cek apakah m_mutasi_history SUDAH PERNAH diisi
+     * (lewat tombol "Update" di Dashboard) utk bulan/tahun tertentu, TANPA
+     * ikut menyaring saldo > 0 (beda dari getDataSaldoCnt()). Dipakai utk
+     * membedakan "belum pernah di-update sama sekali" (grid kosong karena
+     * datanya memang belum dihitung) dari "sudah di-update, semua akun
+     * kebetulan saldo 0" (grid kosong tapi datanya valid) - supaya widget
+     * bisa kasih pesan yang jelas ke user, bukan cuma tabel kosong.
+     */
+    function hasDataSaldo($month, $year)
+    {
+        $builder = $this->db->table("m_mutasi_history mmh");
+        $builder->join("m_coa mc", "mc.id = mmh.coa_id", "inner");
+        $builder->where("LOWER(mc.kode) LIKE", "13%");
+        $builder->where("mmh.month", $month);
+        $builder->where("mmh.year", $year);
+        $builder->limit(1);
+        $row = $builder->get()->getRow();
+        return !empty($row);
     }
 
 }

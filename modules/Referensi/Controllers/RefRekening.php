@@ -5,10 +5,12 @@ namespace Modules\Referensi\Controllers;
 use App\Controllers\BaseController;
 use App\Models\FileModel;
 use Modules\Referensi\Models\RekeningModel;
+use Modules\Keuangan\Models\Mcoa;
 
 class RefRekening extends BaseController
 {
     protected $mRef;
+    protected $mCoa;
 
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/rekening';
@@ -18,6 +20,7 @@ class RefRekening extends BaseController
         $this->MOD_ALIAS = "MOD_REFERENSI_REKENING";
 
         $this->mRef = new RekeningModel();
+        $this->mCoa = new Mcoa();
         $this->files  = new FileModel();
     }
 
@@ -86,10 +89,34 @@ class RefRekening extends BaseController
                     "rekening_bank" => $row->rekening_bank,
                     "rekening_an" => $row->rekening_an,
                     "keterangan" => $row->keterangan,
+                    "coa_id" => $row->coa_id,
+                    "coa_label" => !empty($row->coa_kode) ? ($row->coa_kode . ' - ' . $row->coa_nama) : '-',
                 )
             );
         }
         return $this->response->setJSON($build_array);
+    }
+
+    /**
+     * Daftar akun COA utk dropdown "Akun COA" di form Tipe Pembayaran - dibatasi
+     * ke kode kepala 1/2/3/4 (Aset/Liability/Ekuitas/Pendapatan), tidak termasuk
+     * 5 (Beban) - sesuai permintaan user.
+     */
+    function get_coa_list()
+    {
+        $builder = $this->db->table('m_coa');
+        $builder->select('id, kode, nama');
+        $builder->where('active', 1);
+        $builder->groupStart();
+            $builder->where("LEFT(kode, 1)", '1');
+            $builder->orWhere("LEFT(kode, 1)", '2');
+            $builder->orWhere("LEFT(kode, 1)", '3');
+            $builder->orWhere("LEFT(kode, 1)", '4');
+        $builder->groupEnd();
+        $builder->orderBy('CAST(kode as numeric)', 'ASC');
+        $result = $builder->get()->getResult();
+
+        return $this->response->setJSON(['status' => true, 'data' => $result]);
     }
 
     function save()
@@ -99,8 +126,14 @@ class RefRekening extends BaseController
         $rekening_bank = $this->request->getPost('rekening_bank');
         $rekening_no = $this->request->getPost('rekening_no');
         $keterangan = $this->request->getPost('keterangan');
+        $coa_id = $this->request->getPost('coa_id');
 
-
+        if (empty($coa_id)) {
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => 'Akun COA wajib dipilih !',
+            ]);
+        }
 
         $msg    = "Data gagal ditambahkan !";
         $status = false;
@@ -110,6 +143,7 @@ class RefRekening extends BaseController
             'rekening_an' => $rekening_an,
             'rekening_bank' => $rekening_bank,
             'keterangan' => $keterangan,
+            'coa_id' => $coa_id,
         ];
 
 

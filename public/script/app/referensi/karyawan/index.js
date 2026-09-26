@@ -130,7 +130,7 @@ $(document).ready(function () {
                 headerSort: false,  
                 title: 'Aksi', 
                 formatter: buttonRowAction,
-                width: 75, align: "center", cssClass: "text-center",
+                width: 75, hozAlign: "center", cssClass: "text-center",
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let data_row = row.getData();
@@ -187,7 +187,7 @@ $(document).ready(function () {
             },
             {
                 title: "Tipe", field: "type", headerSort: false,
-                width: 120, align: "center", cssClass: "text-center",
+                width: 120, hozAlign: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let row = cell.getData();
                     if (row.type == 1) {
@@ -200,7 +200,7 @@ $(document).ready(function () {
             },
             {
                 title: "Kontrak", field: "status_kontrak", headerSort: false,
-                width: 125, align: "center", cssClass: "text-center",
+                width: 125, hozAlign: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let row = cell.getData();
                     // Hanya untuk karyawan internal / NON CMT (type == 1)
@@ -244,7 +244,7 @@ $(document).ready(function () {
             },
             {
                 title: "Status", field: "active", headerSort: false,
-                width: 90, align: "center", cssClass: "text-center",
+                width: 90, hozAlign: "center", cssClass: "text-center",
                 formatter: function (cell) {
                     let isActive = cell.getValue() == 1;
                     return isActive
@@ -266,7 +266,6 @@ $(document).ready(function () {
                 }
             },
         ],
-        locale: 'id',    
         layout: 'fitColumns',
         ajaxURL: "/master-data/karyawan/list",
         ajaxConfig: "POST",

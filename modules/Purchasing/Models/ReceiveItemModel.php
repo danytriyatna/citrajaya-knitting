@@ -196,7 +196,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
 
-            foreach ($detail as $rowData) {
+            foreach ($detail as $key => $rowData) {
                 if ($rowData['id_barang'] != "") {
                     // $idBarang = decrypt($rowData['id_barang']);
                     $idBarang = $rowData['id_barang'];
@@ -214,6 +214,35 @@ class ReceiveItemModel extends \App\Models\PrModel
 
                 $this->insertRecordGetid($this->tblDet, $dataDetail);
 
+                // Hapus dulu baris trans_barang lama utk dokumen ini (sekali saja, di
+                // iterasi pertama) sebelum insert ulang - supaya edit berulang pada
+                // dokumen yang sudah Approved tidak menumpuk baris ledger duplikat.
+                if ($data['status'] == 1 && $key === 0 && !empty($data['rec_no'])) {
+                    // CATATAN (2026-08-08): sebelum baris trans_barang lama dihapus, qty
+                    // yang PERNAH ditambahkan ke trans_lots akibat dokumen ini (kalau
+                    // dokumen ini sudah pernah disimpan/di-approve sebelumnya lalu diedit
+                    // ulang) harus dibalik (dikurangi) dulu - baris trans_barang lama
+                    // adalah catatan persis berapa & dari lot mana. Tanpa ini, trans_lots
+                    // akan terus bertambah dobel setiap kali dokumen Terima Barang yang
+                    // sama diedit/disimpan ulang - pola bug sama seperti yang sudah
+                    // diperbaiki di Item Transfer & Delivery Order.
+                    $oldTransBarangRi = $this->db->table($this->tblTrxBarang)
+                        ->select('lot_id, SUM(jumlah) as jumlah')
+                        ->where('kode_transaksi', $data['rec_no'])
+                        ->groupBy('lot_id')
+                        ->get()->getResult();
+
+                    foreach ($oldTransBarangRi as $otb) {
+                        if (empty($otb->lot_id)) continue;
+                        $this->db->table($this->tblTrxLots)
+                            ->where('id', $otb->lot_id)
+                            ->set('qty', 'qty - ' . (float) $otb->jumlah, false)
+                            ->update();
+                    }
+
+                    $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $data['rec_no'])->delete();
+                }
+
                 if ($data['status'] == 1) {
 
                     
@@ -230,19 +259,26 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "id_barang" => $idBarang,
                         "id_gudang" => $rowData['id_gudang'],
                     ];
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $rowData['id_gudang']);
+                    // Sebelumnya id_gudang dikirim ke slot ke-3 (idLotNo, dibandingkan ke
+                    // trans_lots.id) - salah slot, harusnya idGudang di slot ke-4. Sekarang
+                    // dibetulkan, dan pack_id (slot ke-5) ikut dikirim supaya lot yang sama
+                    // tapi pack beda dianggap baris trans_lots yang berbeda.
+                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $rowData['id_gudang'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
                     $dataLots = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
                         "tanggal" => date("Y-m-d H:i:s"),
                         "lot_no" => $rowData['lot_no'],
+                        "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "qty" => $rowData['qty'],
                         "active" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                     ];
                     if (!empty($resLotNo)) {
                         $idLots = $resLotNo->id;
-                        $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData->qty), array("id" => $idLots));
+                        // FIX (2026-08-08): sebelumnya $rowData->qty (akses object),
+                        // padahal $rowData array - tidak pernah menambah qty dgn benar.
+                        $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData['qty']), array("id" => $idLots));
                     } else {
                         $idLots = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
                     }

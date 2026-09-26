@@ -49,7 +49,7 @@
                   <label class="control-label text-start col-form-label" for="filter_perusahaan">Perusahaan</label>
                   <select id="filter_perusahaan" name="filter_perusahaan" class="form-control custom-select select2">
                     <?php if ($superadmin == true) : ?>
-                      <option value="all" selected>Semua Perusahaan</option>
+                      <option value="all" <?= empty($user_perusahaan) ? 'selected' : '' ?>>Semua Perusahaan</option>
                     <?php endif; ?>
                     <?php foreach ($perusahaan as $item) : ?>
                       <option <?= $user_perusahaan == $item->id ? 'selected' : '' ?>
@@ -129,5 +129,5 @@
   })
 </script> -->
 
-<script src="script/app/sdm/borongan/index.js"></script>
+<script src="script/app/sdm/borongan/index.js?v=<?= time(); ?>"></script>
 <?= $this->endSection('script') ?>

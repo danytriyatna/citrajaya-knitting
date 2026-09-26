@@ -5,6 +5,7 @@ $(document).ready(function () {
     let inpNama  = $('#nama');
     let inpKeterangan = $('#keterangan');
     let inpUrutan = $('#seq');
+    let inpIsRajut = $('#is_rajut');
 
     let isModal       = $("#modal-form-add-po");
 
@@ -26,15 +27,58 @@ $(document).ready(function () {
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let data_row = row.getData();
-                    if (e.target.title === 'delete') {
-                        if (confirm("Anda yakin akan menghapus data?")) {
-                            window.location.replace(baseUrl + "/master-data/proses/delete/" + data_row.id);
+                    let target = $(e.target).closest('button');
+                    let action = target.attr('title') || $(e.target).attr('title');
+
+                    if (action === 'delete') {
+                        let namaProses = data_row.nama || 'ini';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Konfirmasi Hapus',
+                                text: 'Anda yakin ingin menghapus data proses "' + namaProses + '"?',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#d33',
+                                cancelButtonColor: '#6c757d',
+                                confirmButtonText: '<i class="fa fa-trash me-1"></i> Ya, Hapus!',
+                                cancelButtonText: 'Batal'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        url: baseUrl + "/master-data/proses/delete/" + data_row.id,
+                                        type: "GET",
+                                        dataType: "json",
+                                        success: function(res) {
+                                            if (res && res.status) {
+                                                Swal.fire({
+                                                    title: 'Berhasil!',
+                                                    text: res.message || 'Data Proses berhasil dihapus.',
+                                                    icon: 'success',
+                                                    timer: 1500,
+                                                    showConfirmButton: false
+                                                });
+                                                dtList.setData();
+                                            } else {
+                                                Swal.fire('Gagal!', (res && res.message) ? res.message : 'Gagal menghapus data.', 'error');
+                                            }
+                                        },
+                                        error: function() {
+                                            window.location.href = baseUrl + "/master-data/proses/delete/" + data_row.id;
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            if (confirm("Anda yakin akan menghapus data proses \"" + namaProses + "\"?")) {
+                                window.location.replace(baseUrl + "/master-data/proses/delete/" + data_row.id);
+                            }
                         }
-                    }else if(e.target.title === 'edit'){
-                        inpData.val(data_row.id)
-                        inpNama.val(data_row.nama)
-                        inpKeterangan.val(data_row.keterangan)
-                        inpUrutan.val(data_row.seq)
+                    } else if(action === 'edit'){
+                        inpData.val(data_row.id);
+                        inpNama.val(data_row.nama);
+                        inpKeterangan.val(data_row.keterangan);
+                        inpUrutan.val(data_row.seq);
+                        inpIsRajut.prop('checked', data_row.is_rajut == 1 || data_row.is_rajut === true || data_row.is_rajut === '1');
 
                         isModal.modal("show");
                     }   
@@ -42,11 +86,22 @@ $(document).ready(function () {
             },
             {
                 title: "Urutan Proses", field: "seq", headerSort: false,
-                width: "10%", cssClass : 'text-center'
+                width: "12%", cssClass : 'text-center'
             },
             {
                 title: "Nama Proses", field: "nama", headerSort: false,
-                width: "10%", cssClass : 'text-start'
+                width: "25%", cssClass : 'text-start'
+            },
+            {
+                title: "Rajut", field: "is_rajut", headerSort: false,
+                width: "12%", cssClass: "text-center",
+                formatter: function(cell) {
+                    let val = cell.getValue();
+                    if (val == 1 || val === true || val === "1") {
+                        return '<span class="badge bg-success"><i class="fa fa-check"></i> Ya</span>';
+                    }
+                    return '<span class="badge bg-light text-muted">Tidak</span>';
+                }
             },
             {
                 title: "Keterangan", field: "keterangan", formatter: "html", headerSort: false,
@@ -120,7 +175,7 @@ $(document).ready(function () {
         inpNama.val("")
         inpKeterangan.val("")
         inpUrutan.val(0)
-
+        inpIsRajut.prop("checked", false)
 
         isModal.modal("show");
     });
@@ -145,7 +200,8 @@ $(document).ready(function () {
                     dataId     : inpData.val(),
                     nama  : inpNama.val(),
                     keterangan : inpKeterangan.val(),
-                    seq : inpUrutan.val()
+                    seq : inpUrutan.val(),
+                    is_rajut : inpIsRajut.is(':checked') ? 1 : 0
                 },
                 dataType: "json",
                 beforeSend: function () {

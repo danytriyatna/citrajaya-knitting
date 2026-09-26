@@ -123,36 +123,28 @@
             <div class="col-sm-2 text-right">
               <div class="form-group m-b-0">
                   <label class="control-label text-left text-md-right" for="total_awal">Total Awal</label>
-                  <input type="text" id="total_awal" name="total_awal" class="form-control" readonly value="<?= isset($total_awal) ? $total_awal : 0 ?>">
+                  <input type="text" id="total_awal" name="total_awal" class="form-control" readonly value="<?= isset($total_awal) ? number_format((float)$total_awal, 2, '.', '') : '0.00' ?>">
               </div>
-              
-              <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
-              <!-- <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a> -->
-              <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
-              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
             </div>
             <div class="col-sm-2 text-right">
               <div class="form-group m-b-0">
                   <label class="control-label text-left text-md-right" for="total_akhir">Total akhir</label>
-                  <input type="text" id="total_akhir" name="total_akhir" class="form-control" readonly value="<?= isset($total_akhir) ? $total_akhir : 0 ?>">
+                  <input type="text" id="total_akhir" name="total_akhir" class="form-control" readonly value="<?= isset($total_akhir) ? number_format((float)$total_akhir, 2, '.', '') : '0.00' ?>">
               </div>
-              
-              <!-- <button class="btn btn-info m-l-5" id="filter">Lihat Laporan</button> -->
-              <!-- <a class="btn btn-success m-l-5 exportExcel">Export to XLSX</a> -->
-              <!-- <?= base_url('adminpanel/laporan_indeks/print_pdf') ?> -->
-              <!-- <a class="btn btn-danger m-l-5 exportPDF">Export to PDF</a> -->
             </div>
           </div>
         </div>
         <div class="card-body">
-
-          <div class="form-group row">
-            <div class="col-sm-3 offset-sm-9">
-
+          <div class="row d-flex justify-content-start align-items-center mb-3">
+            <div class="col-sm-3">
+              <div class="input-group">
+                <span class="input-group-text bg-white" id="basic-addon-search" style="border-right-width: 0px;">
+                  <i class="ti-search"></i>
+                </span>
+                <input type="text" id="tb-search-detail" class="form-control p-s-0" placeholder="Cari No. Transaksi / Lot..." style="border-left-width: 0px;">
+              </div>
             </div>
           </div>
-          <!--<div id="dt-list" tabulator-movableRows="true" class="table-responsive table-striped"></div> -->
-          <br>
           <div class="col-sm-12">
             <div id="dt-list" class="table-responsive table-striped"></div>
           </div>

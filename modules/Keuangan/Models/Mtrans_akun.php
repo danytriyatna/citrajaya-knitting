@@ -27,15 +27,15 @@ class Mtrans_akun extends PrModel
 
             $builder->where("a.active = 1");
 
-            if (!empty($filters)) {
-                if (is_array($filters) && count($filters) >= 1) {
-                    $builder->groupStart();
-                        $builder->like('upper(a.trans_akun_date)', strtoupper($filters[0]['value']));
-                        $builder->orLike('upper(a.trans_akun_kode)', strtoupper($filters[0]['value']));
-                        $builder->orLike('upper(b.rekening_no)', strtoupper($filters[0]['value']));
-                        $builder->orLike('upper(b.rekening_bank)', strtoupper($filters[0]['value']));
-                    $builder->groupEnd();
-                }
+            if (!empty($filters) && is_array($filters) && count($filters) >= 1 && !empty($filters[0]['value'])) {
+                $val = strtolower($filters[0]['value']);
+                $builder->groupStart();
+                    $builder->where('LOWER(a.trans_akun_kode) LIKE', "%{$val}%");
+                    $builder->orWhere('LOWER(a.keterangan) LIKE', "%{$val}%");
+                    $builder->orWhere('LOWER(b.rekening_no) LIKE', "%{$val}%");
+                    $builder->orWhere('LOWER(b.rekening_bank) LIKE', "%{$val}%");
+                    $builder->orWhere('CAST(a.trans_akun_date AS TEXT) LIKE', "%{$val}%");
+                $builder->groupEnd();
             }
 
             if (!empty($order)) {
@@ -44,12 +44,20 @@ class Mtrans_akun extends PrModel
                 $builder->orderBy('a.id DESC');
             }
 
-            if(!empty($params['tahun'])){
-                $builder->where("EXTRACT('YEAR' FROM a.trans_akun_date)", $params['tahun']);
+            if(!empty($params['tahun']) && !empty($params['bulan'])){
+                $bulan = str_pad($params['bulan'], 2, "0", STR_PAD_LEFT);
+                $tahun = $params['tahun'];
+                $startDate = "{$tahun}-{$bulan}-01";
+                $endDate = date("Y-m-t", strtotime($startDate));
+                $builder->where("a.trans_akun_date >=", $startDate);
+                $builder->where("a.trans_akun_date <=", $endDate);
+            } elseif(!empty($params['tahun'])){
+                $builder->where("a.trans_akun_date >=", "{$params['tahun']}-01-01");
+                $builder->where("a.trans_akun_date <=", "{$params['tahun']}-12-31");
             }
 
-            if(!empty($params['bulan'])){
-                $builder->where("EXTRACT('MONTH' FROM a.trans_akun_date)", $params['bulan']);
+            if(!empty($params['tipe_transaksi'])){
+                $builder->where("a.tipe_transaksi", $params['tipe_transaksi']);
             }
 
             if (empty($offset)) $offset = 0;
@@ -73,67 +81,73 @@ class Mtrans_akun extends PrModel
         $builder->select('count(1) as _cnt');
         $builder->where("a.active = 1");
 
-        $builder->join('ref_rekening b', "a.ref_rekening_id = b.id", "left");
-        
-        if (!empty($filters)) {
-            if (is_array($filters) && count($filters) >= 1) {
-                $builder->groupStart();
-                    $builder->like('upper(a.trans_akun_date)', strtoupper($filters[0]['value']));
-                    $builder->orLike('upper(a.trans_akun_kode)', strtoupper($filters[0]['value']));
-                    $builder->orLike('upper(b.rekening_no)', strtoupper($filters[0]['value']));
-                    $builder->orLike('upper(b.rekening_bank)', strtoupper($filters[0]['value']));
-                $builder->groupEnd();
-            }
+        $hasSearch = (!empty($filters) && is_array($filters) && count($filters) >= 1 && !empty($filters[0]['value']));
+        if ($hasSearch) {
+            $builder->join('ref_rekening b', "a.ref_rekening_id = b.id", "left");
+            $val = strtolower($filters[0]['value']);
+            $builder->groupStart();
+                $builder->where('LOWER(a.trans_akun_kode) LIKE', "%{$val}%");
+                $builder->orWhere('LOWER(a.keterangan) LIKE', "%{$val}%");
+                $builder->orWhere('LOWER(b.rekening_no) LIKE', "%{$val}%");
+                $builder->orWhere('LOWER(b.rekening_bank) LIKE', "%{$val}%");
+                $builder->orWhere('CAST(a.trans_akun_date AS TEXT) LIKE', "%{$val}%");
+            $builder->groupEnd();
         }
 
-        if(!empty($params['tahun'])){
-            $builder->where("EXTRACT('YEAR' FROM a.trans_akun_date)", $params['tahun']);
+        if(!empty($params['tahun']) && !empty($params['bulan'])){
+            $bulan = str_pad($params['bulan'], 2, "0", STR_PAD_LEFT);
+            $tahun = $params['tahun'];
+            $startDate = "{$tahun}-{$bulan}-01";
+            $endDate = date("Y-m-t", strtotime($startDate));
+            $builder->where("a.trans_akun_date >=", $startDate);
+            $builder->where("a.trans_akun_date <=", $endDate);
+        } elseif(!empty($params['tahun'])){
+            $builder->where("a.trans_akun_date >=", "{$params['tahun']}-01-01");
+            $builder->where("a.trans_akun_date <=", "{$params['tahun']}-12-31");
         }
 
-        if(!empty($params['bulan'])){
-            $builder->where("EXTRACT('MONTH' FROM a.trans_akun_date)", $params['bulan']);
+        if(!empty($params['tipe_transaksi'])){
+            $builder->where("a.tipe_transaksi", $params['tipe_transaksi']);
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
         return $this->_data;
     }
 
-    public function generateAutoNo()
+    public function generateAutoNo($prefix = 'KK.')
     {
+        $prefixLen = strlen($prefix);
         $builder = $this->db->table('trans_akun');
-        $builder->select('LEFT(trans_akun_kode, 9) AS tgl,RIGHT ( trans_akun_kode, 3 ) AS kode ');
-        // $builder->orderBy('sl_order_id', "DESC");
+        $builder->select("LEFT(trans_akun_kode, " . ($prefixLen + 6) . ") AS tgl, RIGHT(trans_akun_kode, 3) AS kode");
+        $builder->where("LEFT(trans_akun_kode, {$prefixLen})", $prefix);
         $builder->orderBy("id", "DESC");
         $builder->limit(1);
         $query = $builder->get()->getRow();
         
+        $tglTarget = $prefix . date('Y') . date("m");
         if ($query != NULL) {
-            if ($query->tgl == "TR." . date('Y') . date("m")) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
-                //jika tahun dan bulan ternyata sudah ada.      
-                // $data = $query->row();
+            if ($query->tgl == $tglTarget) {
                 $kode = intval($query->kode) + 1;
             } else {
-                //jika tahun dan belum ada      
                 $kode = 1;
             }
         } else {
             $kode = 1;
         }
-        $kodemax = str_pad($kode, 3, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
-        $kodejadi = "TR."  . date('Y') . date("m") . "." . $kodemax;
-        // hasilnya SO.202108.0001 dst.
+        $kodemax = str_pad($kode, 3, "0", STR_PAD_LEFT);
+        $kodejadi = $prefix . date('Y') . date("m") . "." . $kodemax;
         return $kodejadi;
     }
 
     function get_tahun(){
-        $builder = $this->db->table('trans_akun');
-        $builder->select("EXTRACT ( YEAR FROM trans_akun_date ) as tahun");
-        $builder->groupBy("EXTRACT ( YEAR FROM trans_akun_date )");
-
-        $builder->orderBy("EXTRACT ( YEAR FROM trans_akun_date ) DESC");
-
-        $this->_data = $builder->get()->getResult();
-        return $this->_data;
+        $curYear = (int)date('Y');
+        $years = [];
+        for ($y = $curYear + 1; $y >= $curYear - 4; $y--) {
+            $obj = new \stdClass();
+            $obj->tahun = $y;
+            $years[] = $obj;
+        }
+        return $years;
     }
 
     public function get_nomor_sample_dan_sales()

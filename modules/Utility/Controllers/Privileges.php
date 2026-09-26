@@ -40,6 +40,7 @@ class Privileges extends BaseController
 			throw new \Exception('You must be an administrator to view this page.');
         }
 
+        $list_roles[''] = '-- Pilih Role --';
         $data_roles = $this->modules->getRoles();
         foreach ($data_roles as $row) {
             $list_roles[$row->id] = $row->description;
@@ -133,6 +134,7 @@ class Privileges extends BaseController
             //     $role_id = $this->encrypter->decrypt(hex2bin($role_id));
             if ($this->validation->withRequest($this->request)->run() === TRUE ) {
                 if ($this->privileges->updatePrivilege($role_id)) {
+                    $this->mcommon->clearMenuCache($role_id);
                     $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$role_id,"Update Otorisasi");        
                     $this->session->setFlashdata('message', "Update otorisasi berhasil..");
                 } else {

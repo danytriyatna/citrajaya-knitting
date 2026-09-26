@@ -85,24 +85,20 @@
                 <div class="col-md-12">
                   <label class="control-label text-start col-form-label" for="id_perusahaan">&nbsp;</label>
                   <select <?= empty($id) ? '' : 'disabled' ?> id="id_perusahaan" name="id_perusahaan" class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
-                    <?php if ($superadmin == true) : ?>
-                            <option value="" selected disabled>-- Pilih Perusahaan --</option>
-                    <?php endif; ?>
+                    <option value="" <?= empty($row->id_perusahaan) ? 'selected' : '' ?> disabled>-- Pilih Perusahaan --</option>
                     <?php foreach ($perusahaan as $item) : ?>
-                      <?php if (!empty($row->id_perusahaan) && $row->id_perusahaan == $item->id) { ?>
-                        <option selected value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
-                      <?php } else { ?>
-                        <option value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
-                      <?php } ?>
-
+                      <option value="<?= $item->id ?>" <?= (!empty($row->id_perusahaan) && $row->id_perusahaan == $item->id) ? 'selected' : '' ?>>
+                        <?= $item->nama_perusahaan ?>
+                      </option>
                     <?php endforeach; ?>
                   </select>
                 </div>
               </div>
             </div>
             <?php if(empty($id) || $row->status != 2) {?>
-              <div class="col-sm-3 align-self-end mb-3">
-                <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table"></i>&nbsp; Generate</button>
+              <div class="col-sm-auto align-self-end mb-3 d-flex gap-2">
+                <button id="btn-generate" class="btn btn-primary" type="button"><i class="fa fa-table me-1"></i> Generate</button>
+                <button id="btn-sync-tbmp" class="btn btn-warning text-dark font-weight-bold" type="button"><i class="fa fa-refresh me-1"></i> Sinkronisasi</button>
               </div>
             <?php }?>
           </div>
@@ -114,18 +110,22 @@
 
           <hr>
           <div class="row">
-              <div class="col-sm-9">
+              <div class="col-sm-5">
 
               </div>
-              <div class="col-sm-3 align-self-end">
-                <a href="sdm/penggajian" class="btn btn-default m-e-5">
+              <div class="col-sm-7 align-self-end text-end d-flex justify-content-end align-items-center">
+                <a href="sdm/penggajian" class="btn btn-default me-2">
                   <span class="fa fa-arrow-left"></span> Kembali
                 </a>
                 <?php if($row->status != 2){ ?>
-                  <button id="btn-save" class="btn btn-primary" type="button"><i class="fa fa-save"></i>&nbsp; Simpan</button>
+                  <button id="btn-save" class="btn btn-primary me-1" type="button"><i class="fa fa-save"></i>&nbsp; Simpan</button>
                   <button id="btn-approve" class="btn btn-success" type="button"><i class="fa fa-check"></i>&nbsp; Approve</button>
                 <?php }else { ?>
-                  <button id="btn-cetak-print" class="btn btn-danger" type="button"><i class="fa fa-print"></i>&nbsp; Print PDF</button>
+                  <select id="tipe_cetak" class="form-control d-inline-block w-auto me-2" style="max-width: 180px;">
+                    <option value="detail">Detail Penggajian</option>
+                    <option value="rekap">Rekap Penggajian</option>
+                  </select>
+                  <button id="btn-cetak-print" class="btn btn-danger me-1" type="button"><i class="fa fa-print"></i>&nbsp; Print PDF</button>
                   <button id="btn-cetak-export" class="btn btn-success" type="button"><i class="fa fa-file-excel"></i>&nbsp; Print .xlsx</button>
                 <?php } ?>
                 <input type="hidden" name="detailData" id="detailData" value='<?= !empty($Ldetail) ? $Ldetail : ''?>'>

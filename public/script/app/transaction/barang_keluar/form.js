@@ -1,4 +1,10 @@
 
+const appUrl = (path) => {
+    let base = (typeof baseUrl !== 'undefined' && baseUrl) ? baseUrl : ((typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : '/');
+    if (!base.endsWith('/')) base += '/';
+    return base + path.replace(/^\//, '');
+};
+
 let inpIdVendor = $('#id_vendor');
 let inpVendor = $('#nama_vendor');
 let inpTglReceive = $('#tanggal');
@@ -25,8 +31,14 @@ let inpPackId = $('#id_lot');
 let detailData = $("#data-details").val().replace(/&quot;/ig, '"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
 let btnAdd = $('#btn-add');
+let divBtnAdd = $('#divBtnAdd');
+let divTotalPemakaian = $('#divTotalPemakaian');
+let inpTotalPemakaian = $('#total_pemakaian');
+let inpBtmKg = $('#btm_kg');
 let btnSimpan = $('#btn-simpan');
 let btnApprove = $('#btn-approve');
+let btnCancelApprove = $('#btn-cancel-approve');
+let inpRole = $('#role_id');
 let inpNoRefTrf = $('#no_ref_transfer');
 let inpNoRefWO = $('#no_ref_wo');
 let btnSimpanDetail = $('#btn-simpan-det');
@@ -38,7 +50,11 @@ let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
 
 if (inpIdHeader.val().length == 0) {
-    selectGudang.val("").trigger("change")
+    // Default Warehouse ke "Gudang Utama" utk transaksi baru (sebelumnya dikosongkan).
+    let optGudangUtama = selectGudang.find('option').filter(function () {
+        return $(this).val() == "1" || $(this).text().trim().toLowerCase() === "gudang utama";
+    }).first().val();
+    selectGudang.val(optGudangUtama || "1").trigger("change")
     selectKategori.val("").trigger("change")
 }
 
@@ -48,16 +64,32 @@ if (selectKategori.val() == 8) {
 
 if (selectKategori.val() == 5) {
     divWO.removeClass("d-none")
+    divBtnAdd.addClass("d-none")
+    divTotalPemakaian.removeClass("d-none")
 }
 
 if (inpStatus.val() == 0) {
     btnAdd.show()
     btnSimpan.show()
     btnApprove.show()
+    btnCancelApprove.hide()
 } else {
     btnAdd.hide()
     btnSimpan.hide()
     btnApprove.hide()
+    // TAMBAHAN (2026-08-09): tombol "Batalkan Approve" hanya muncul kalau
+    // dokumen sudah Approved (status == 1), sedang mengedit dokumen yg
+    // sudah tersimpan (ada id_header - bukan form transaksi baru), DAN role
+    // user termasuk Superadmin (1)/Admin Aplikasi (2)/Admin Keuangan (4) -
+    // dicek lagi di sini (bukan cuma atribut "hidden" dari PHP) supaya tidak
+    // ke-override oleh .show() di atas kalau role-nya tidak diizinkan.
+    const roleId = parseInt(inpRole.val());
+    const isAllowedCancelRole = [1, 2, 4].includes(roleId);
+    if (inpIdHeader.val().length > 0 && isAllowedCancelRole) {
+        btnCancelApprove.show()
+    } else {
+        btnCancelApprove.hide()
+    }
 }
 // const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 const regex = /^[0-9.,]+$/;
@@ -205,7 +237,7 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     ],
     locale: 'id',
     // ajaxURL: "/trans/outgoing-goods/list-barang",
-    ajaxURL: "/trans/item-transfer/list-barang",
+    ajaxURL: appUrl("trans/item-transfer/list-barang"),
     ajaxConfig: "POST",
     sortMode: "remote",
     filterMode: "remote",
@@ -328,23 +360,11 @@ dtListBarang.on("rowClick", function (e, row) {
 })
 
 
-let buttonRowAction = function (cell) {
-    let fmBtnDelete = "";
-    let fmBtnEdit = "";
-
-    if (inpStatus.val() == 0) {
-        fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
-        fmBtnEdit = ` <button type="button" class="btn btn-sm btn-warning text-dark" title='edit'><i class="fa fa-edit" title='edit'></i></button>`;
-    }
-
-
-    return fmBtnEdit + " " + fmBtnDelete;
-};
-
 let dtListDetail = new Tabulator("#dt-list-detail", {
     pagination: true,
     paginationSize: 10,
     paginationButtonCount: 5,
+    layout: "fitColumns",
     columns: [
         { field: "id", visible: false },
         { field: "isEdit", visible: false },
@@ -353,42 +373,45 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         { field: "lot_id", visible: false },
         { field: "pack_id", visible: false },
         { field: "qty_exist", visible: false },
-        { field: "nama_unit", visible: false },
         {
-            headerSort: false,
-            title: '#',
-            formatter: buttonRowAction,
-            width: '10%', align: "center", cssClass: "text-center",
+            title: "Aksi", headerSort: false, hozAlign: "center", width: "7%",
+            formatter: function () {
+                // Tombol Edit/Hapus per baris detail - hanya tampil selagi dokumen
+                // masih Draft (status 0), mengikuti perilaku tombol Simpan/Approve/Tambah.
+                if (inpStatus.val() != 0) {
+                    return "";
+                }
+                return "<button type='button' class='btn btn-warning btn-xs btn-edit-detail' title='edit'><i class='fa fa-edit'></i></button> "
+                     + "<button type='button' class='btn btn-danger btn-xs btn-delete-detail' title='delete'><i class='fa fa-trash'></i></button>";
+            },
             cellClick: function (e, cell) {
                 let row = cell.getRow();
-                if (e.target.title === 'delete') {
-                    Swal.fire({
-                        title: "Apakah anda yakin ingin menghapus data?",
-                        icon: 'question',
-                        confirmButtonText: 'Hapus',
-                        confirmButtonColor: '#dc3545',
-                        showCancelButton: true,
-                        cancelButtonText: 'Batal',
-                        cancelButtonColor: '#6C757D'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            row.delete();
-                        }
-                    })
-                } else if (e.target.title === 'edit') {
-
-                    openModalDetail(row)
-
+                if ($(e.target).closest('.btn-edit-detail').length) {
+                    openModalDetail(row);
+                } else if ($(e.target).closest('.btn-delete-detail').length) {
+                    if (confirm("Anda yakin akan menghapus baris ini?")) {
+                        row.delete();
+                    }
                 }
-
             }
         },
-        { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", width: "10%" },
-        { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", width: "25%" },
-        { title: "QTY TRANSFER", field: "qty_transfer", hozAlign: "right", width: "10%" },
-        { title: "QTY RETURN", field: "qty_return", hozAlign: "right", width: "10%" },
-        { title: "QTY", field: "qty", hozAlign: "right", width: "10%" },
-        { title: "UNIT", field: "nama_unit", hozAlign: "left", width: "10%" },
+        { title: "NO WORKORDER", field: "kode_walkorder", hozAlign: "left", headerHozAlign: "left", width: "10%" },
+        { title: "ITEM CODE", field: "kode_barang", hozAlign: "left", headerHozAlign: "left", width: "8%" },
+        { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", headerHozAlign: "left", width: "15%" },
+        { title: "QTY TERIMA", field: "qty_terima", hozAlign: "right", headerHozAlign: "right", width: "8%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        { title: "QTY RETUR", field: "qty_retur", hozAlign: "right", headerHozAlign: "right", width: "8%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        { title: "PEMAKAIAN SEBELUMNYA", field: "qty_pemakaian_sebelumnya", hozAlign: "right", headerHozAlign: "right", width: "10%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        {
+            title: "QTY SISA", field: "qty_sisa", hozAlign: "right", headerHozAlign: "right", width: "7%",
+            formatter: function (cell) {
+                let val = parseFloat(cell.getValue()) || 0;
+                if (val < 0) val = 0;
+                return val.toFixed(2);
+            },
+            bottomCalc: "sum", bottomCalcParams: { precision: 2 }
+        },
+        { title: "QTY", field: "qty", hozAlign: "right", headerHozAlign: "right", width: "7%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        { title: "UNIT", field: "nama_unit", hozAlign: "left", headerHozAlign: "left", width: "6%" },
         {
             title: "PRICE", field: "price", formatter: "money",
             formatterParams: {
@@ -396,13 +419,12 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
-            }, width: "10%", hozAlign: "right"
+            }, width: "9%", hozAlign: "right", headerHozAlign: "right"
         },
-        { title: "LOT NO", width: "10%", field: "lot_no", hozAlign: "left" },
-        { title: "PACK NAME", width: "10%", field: "pack_name", hozAlign: "left" },
+        { title: "LOT NO", width: "7%", field: "lot_no", hozAlign: "left", headerHozAlign: "left" },
+        { title: "PACK NAME", width: "7%", field: "pack_name", hozAlign: "left", headerHozAlign: "left" },
     ],
     locale: 'id',
-    // layout: 'fitColumns',
     placeholder: "Tidak ada data",
 });
 
@@ -410,7 +432,16 @@ if (detailData.length > 0) {
     setTimeout(() => {
         try {
             let isdata = JSON.parse(detailData);
-            dtListDetail.setData(isdata);
+            dtListDetail.setData(isdata).then(function () {
+                if (selectKategori.val() == 5) {
+                    let totalPemakaianAwal = isdata.reduce(function (sum, r) {
+                        return sum + (parseFloat(r.qty) || 0);
+                    }, 0);
+                    if (totalPemakaianAwal > 0 && (!inpTotalPemakaian.val() || inpTotalPemakaian.val() == '')) {
+                        inpTotalPemakaian.val(totalPemakaianAwal.toFixed(2));
+                    }
+                }
+            });
         } catch (e) {
             console.error("Error parsing JSON:", e);
         }
@@ -488,7 +519,7 @@ let dtListSO = new Tabulator("#dt-list-sample", {
     ],
 
     locale: 'id',
-    ajaxURL: "/trans/item-transfer/list",
+    ajaxURL: appUrl("trans/item-transfer/list"),
     ajaxConfig: "POST",
     sortMode: "remote",
     filterMode: "remote",
@@ -539,20 +570,24 @@ let dtListWO = new Tabulator("#dt-list-wo", {
         { title: "ID", field: "id", visible: false },
         {
             title: 'WO NO.', field: 'kode_walkorder', headerSort: false, sorter: 'string',
-            width: "30%", formatter: "html"
+            width: "25%", formatter: "html"
         },
         {
             title: 'SAMPLE/SO NO.', field: 'ref_kode', headerSort: false, sorter: 'string',
-            width: "30%", formatter: "html"
+            width: "25%", formatter: "html"
+        },
+        {
+            title: 'STYLE', field: 'style', formatter: "html", align: "center", cssClass: "text-center", headerSort: false,
+            width: "20%",
         },
         {
             title: 'BUYER', field: 'konsumen_nama', formatter: "html", align: "center", cssClass: "text-center", headerSort: false,
-            width: "40%",
+            width: "30%",
         },
     ],
 
     locale: 'id',
-    ajaxURL: "/trans/work-order/list",
+    ajaxURL: appUrl("trans/work-order/list"),
     ajaxConfig: "POST",
     sortMode: "remote",
     filterMode: "remote",
@@ -629,7 +664,7 @@ if (elSearchWO != null) {
 dtListSO.on("rowClick", function (e, row) {
     inpNoRefTrf.val(row.getData().kode_transaksi)
     $.ajax({
-        url: `/trans/item-transfer/data-so?noSO=${row.getData().kode_transaksi}`,
+        url: appUrl(`trans/item-transfer/data-so?noSO=${row.getData().kode_transaksi}`),
         type: 'GET',
         dataType: 'json',
         success: function (data) {
@@ -649,12 +684,88 @@ dtListSO.on("rowClick", function (e, row) {
 })
 
 dtListWO.on("rowClick", function (e, row) {
-    inpNoRefWO.val(row.getData().kode_walkorder)
+    if (selectGudang.val() == null || selectGudang.val() == "") {
+        return Swal.fire({
+            text: "Warehouse harus dipilih dahulu.",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    var kodeWalkorder = row.getData().kode_walkorder;
+    inpNoRefWO.val(kodeWalkorder)
+
+    $.ajax({
+        url: appUrl(`trans/item-transfer/data-so?noWO=${kodeWalkorder}&idGudang=${selectGudang.val()}&idHeader=${inpIdHeader.val()}`),
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            if (data.status) {
+                dtList.setData(data.dataSO || [])
+                dtListDetail.setData(data.dataSODet || []).then(function () {
+                    recalcAlokasiPemakaian();
+                });
+                inpBtmKg.val(parseFloat(data.btm_kg || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
 
     $("#modal-wo").modal("hide");
 })
 
+/**
+ * Alokasi proporsional Total Pemakaian Barang ke tiap baris detail (per lot/pack),
+ * berdasarkan Qty Sisa (Qty Terima - Qty Retur - Total Pemakaian Sebelumnya)
+ * masing-masing baris terhadap total Qty Sisa seluruh baris:
+ *
+ *   Qty (baris) = Total Pemakaian * (Qty Sisa baris) / (total Qty Sisa semua baris)
+ *
+ * Baris dengan Qty Sisa <= 0 dikecualikan dari alokasi (Qty diset 0), karena
+ * baris tsb sudah habis terpakai di transfer/transaksi Barang Keluar lain.
+ */
+function recalcAlokasiPemakaian() {
+    let totalPemakaian = parseFloat((inpTotalPemakaian.val() || '0').toString().replace(',', '.')) || 0;
+    let rows = dtListDetail.getData();
 
+    if (rows.length == 0) {
+        return;
+    }
+
+    let sisaArr = rows.map(function (r) {
+        return parseFloat(r.qty_sisa) || 0;
+    });
+
+    let totalSisa = sisaArr.reduce(function (sum, sisa) {
+        return sisa > 0 ? sum + sisa : sum;
+    }, 0);
+
+    if (totalSisa > 0 && totalPemakaian > totalSisa) {
+        toastr.warning('Total Pemakaian Barang (' + totalPemakaian + ') melebihi total Qty Sisa yang tersedia (' + totalSisa + ')', "Warning", {
+            positionClass: "toast-top-right"
+        });
+    }
+
+    rows.forEach(function (r, idx) {
+        let sisa = sisaArr[idx];
+        let alokasi = 0;
+        if (sisa > 0 && totalSisa > 0) {
+            alokasi = totalPemakaian * (sisa / totalSisa);
+            alokasi = Math.round(alokasi * 100) / 100;
+        }
+        r.qty = alokasi;
+    });
+
+    dtListDetail.setData(rows);
+}
+
+inpTotalPemakaian.on("input", function (e) {
+    e.target.value = e.target.value.replace(",", ".");
+    recalcAlokasiPemakaian();
+})
 
 inpPrice.on("input", function (e) {
     e.target.value = formatRupiah(e.target.value)
@@ -780,16 +891,26 @@ selectKategori.on("change", function (e) {
         divNamaVendor.removeClass("d-none")
         divWO.addClass("d-none")
         divTransfer.removeClass("d-none")
+        divBtnAdd.removeClass("d-none")
+        divTotalPemakaian.addClass("d-none")
+        inpTotalPemakaian.val("")
+        inpBtmKg.val("")
     }
     else if (nilai == 5) {
         divNamaVendor.addClass("d-none")
         divWO.removeClass("d-none")
         divTransfer.addClass("d-none")
         inpNoRefTrf.val("")
+        divBtnAdd.addClass("d-none")
+        divTotalPemakaian.removeClass("d-none")
     } else {
         divNamaVendor.addClass("d-none")
         divWO.addClass("d-none")
         divTransfer.removeClass("d-none")
+        divBtnAdd.removeClass("d-none")
+        divTotalPemakaian.addClass("d-none")
+        inpTotalPemakaian.val("")
+        inpBtmKg.val("")
     }
 })
 
@@ -836,6 +957,50 @@ function submitData(status, message) {
                 positionClass: "toast-top-right"
             });
         }
+
+        let detailRowsValidasi = dtListDetail.getData();
+        let totalQtyDariDetail = detailRowsValidasi.reduce(function (sum, r) {
+            return sum + (parseFloat(r.qty) || 0);
+        }, 0);
+        let totalQtyDariInput = parseFloat((inpTotalPemakaian.val() || '0').toString().replace(',', '.')) || 0;
+        let totalQtyValidasi = Math.max(totalQtyDariDetail, totalQtyDariInput);
+
+        let totalQtySisaValidasi = detailRowsValidasi.reduce(function (sum, r) {
+            return sum + (parseFloat(r.qty_sisa) || 0);
+        }, 0);
+
+        if (totalQtyValidasi <= 0) {
+            return toastr.warning('Apabila kategori: <strong style="color: cyan;">' + selectKategori.select2('data')[0].text + '</strong> Maka <strong style="color: black;">Total Pemakaian Barang</strong> Wajib Diisi!', "Warning", {
+                positionClass: "toast-top-right"
+            });
+        }
+
+        // Total Pemakaian (baik input maupun akumulasi detail) tidak boleh
+        // melebihi Total Qty Sisa yang tersedia (dari data transfer per WO).
+        let toleransiSisa = 0.01;
+        if (totalQtyValidasi > totalQtySisaValidasi + toleransiSisa) {
+            return Swal.fire({
+                text: 'Total Pemakaian (' + totalQtyValidasi.toFixed(2) + ') tidak boleh melebihi Total Qty Sisa (' + totalQtySisaValidasi.toFixed(2) + ')!',
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 3500
+            });
+        }
+
+        // Pengecekan per baris detail: pastikan tidak ada baris yang qty-nya melebihi qty_sisa
+        for (let i = 0; i < detailRowsValidasi.length; i++) {
+            let r = detailRowsValidasi[i];
+            let qBaris = parseFloat(r.qty) || 0;
+            let sBaris = parseFloat(r.qty_sisa) || 0;
+            if (sBaris > 0 && qBaris > (sBaris + toleransiSisa)) {
+                return Swal.fire({
+                    text: 'Qty pada baris ' + (r.nama_barang || ('ke-' + (i + 1))) + ' (' + qBaris.toFixed(2) + ') melebihi Qty Sisa (' + sBaris.toFixed(2) + ')!',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 3500
+                });
+            }
+        }
     }
 
 
@@ -872,6 +1037,67 @@ btnSimpan.on("click", function (e) {
 btnApprove.on("click", function (e) {
     e.preventDefault()
     submitData(1, "mengapprove")
+})
+
+// TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
+// (stok trans_lots/trans_barang) & kembalikan dokumen ke status Draft.
+// Lihat BarangKeluarModel::cancelApprove().
+btnCancelApprove.on("click", function (e) {
+    e.preventDefault()
+
+    Swal.fire({
+        title: 'Batalkan Approve dokumen ini?',
+        text: 'Semua efek approve (perubahan stok) akan dibalik, dan dokumen kembali ke status Draft.',
+        icon: 'warning',
+        confirmButtonText: 'Ya, batalkan approve',
+        confirmButtonColor: '#dc3545',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $(".preloader").css("opacity", "0.7").show();
+        $.ajax({
+            type: 'POST',
+            url: appUrl('trans/outgoing-goods/cancel-approve'),
+            data: {
+                id: inpIdHeader.val(),
+            },
+            dataType: "json",
+            success: function (response) {
+                $(".preloader").hide().css("opacity", "1");
+                if (response.status == true) {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            },
+            error: function (xhr) {
+                $(".preloader").hide().css("opacity", "1");
+                let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Gagal membatalkan approve.";
+                Swal.fire({
+                    text: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            }
+        });
+    })
 })
 
 
@@ -953,7 +1179,8 @@ function openModalDetail(row = null) {
         inpIdLot.val(data.lot_id)
         inpPackName.val(data.pack_name)
         inpPackId.val(data.pack_id)
-        inpQtyExist.val(data.qty_exist)
+        let remainVal = (data.qty_sisa !== undefined && data.qty_sisa !== null && data.qty_sisa !== '') ? data.qty_sisa : data.qty_exist;
+        inpQtyExist.val(remainVal)
         inpKodeBarang.val(data.kode_barang)
     } else {
         inpBarang.val("")
@@ -1019,6 +1246,19 @@ function openModalDetail(row = null) {
             });
         }
 
+        if (selectKategori.val() == 5 && row) {
+            let qtyInput = parseFloat(inpQtyItem.val()) || 0;
+            let sisaBaris = parseFloat(row.getData().qty_sisa) || 0;
+            if (sisaBaris > 0 && qtyInput > (sisaBaris + 0.01)) {
+                return Swal.fire({
+                    text: "Quantity (" + qtyInput.toFixed(2) + ") tidak boleh melebihi Qty Sisa baris ini (" + sisaBaris.toFixed(2) + ")",
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+        }
+
         if (row) {
             row.update({
                 id: inpIdDetail.val(),
@@ -1051,6 +1291,15 @@ function openModalDetail(row = null) {
                 pack_id: inpPackId.val(),
             });
         }
+
+        if (selectKategori.val() == 5) {
+            let rowsNow = dtListDetail.getData();
+            let totNow = rowsNow.reduce(function (sum, r) {
+                return sum + (parseFloat(r.qty) || 0);
+            }, 0);
+            inpTotalPemakaian.val(totNow.toFixed(2));
+        }
+
         modalDet.modal("hide")
 
     })
@@ -1061,7 +1310,7 @@ function openModalDetail(row = null) {
 function simpanData(status) {
     $.ajax({
         type: 'POST',
-        url: '/trans/outgoing-goods/save',
+        url: appUrl('trans/outgoing-goods/save'),
         data: {
             id: inpIdHeader.val(),
             id_gudang: selectGudang.val(),
@@ -1108,14 +1357,14 @@ function simpanData(status) {
             }
         },
         error: function (e) {
-            let msg = e.responseJSON.message;
+            let msg = (e.responseJSON && e.responseJSON.message) ? e.responseJSON.message : "Terjadi kesalahan pada server, data gagal disimpan.";
             Swal.close();
 
             Swal.fire({
                 text: msg,
                 icon: 'error',
                 showConfirmButton: false,
-                timer: 2000
+                timer: 3000
             });
         },
     });

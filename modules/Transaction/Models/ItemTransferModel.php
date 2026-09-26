@@ -39,7 +39,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
         $builder->select("uk.id,uk.tanggal,uk.tipe,uk.id_cmt,uk.tipe,id_proses, cbx.nama_operator,  abx.nama_gudang as gudang_asal, bbx.nama_gudang as gudang_tujuan,
                           uk.id_gudang_tujuan, uk.id_gudang_asal, uk.kode_transaksi, uk.status, uk.tanggal, uk.keterangan, uk.ref_produk,
-                          jp.seq as no_proses, jp.nama as proses");
+                          jp.seq as no_proses, jp.nama as proses, uk.id_perusahaan, abx.id_perusahaan as id_perusahaan_asal, bbx.id_perusahaan as id_perusahaan_tujuan");
 
         if (!empty($params['status'])) {
             $builder->where('uk.status = 1');
@@ -56,11 +56,66 @@ class ItemTransferModel extends \App\Models\PrModel
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+                $val = strtolower(trim($filters[0]['value']));
+                $value = "%{$val}%";
                 $builder->groupStart();
-                $builder->Where('LOWER(uk.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(abx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(bbx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->where('LOWER(uk.kode_transaksi) LIKE', $value);
+                $builder->orWhere('LOWER(abx.nama_gudang) LIKE', $value);
+                $builder->orWhere('LOWER(bbx.nama_gudang) LIKE', $value);
+                $builder->orWhere('LOWER(cbx.nama_operator) LIKE', $value);
+                $builder->orWhere('LOWER(jp.nama) LIKE', $value);
+                $builder->orWhere('LOWER(uk.keterangan) LIKE', $value);
                 $builder->groupEnd();
+            }
+
+            // Filter Perusahaan: selama gudang kirim (asal) ATAU gudang tujuannya
+            // ke salah satu gudang P1/P2, atau dokumen milik perusahaan tersebut, tetap dimunculkan.
+            if (!empty($params['id_perusahaan'])) {
+                $corpId = (int)$params['id_perusahaan'];
+                $builder->groupStart();
+                if ($corpId === 1) {
+                    // Sisi Gudang Asal P1 (id_perusahaan = 1 atau gudang lama NULL)
+                    $builder->where('abx.id_perusahaan', 1);
+                    $builder->orGroupStart()
+                        ->where('uk.id_gudang_asal IS NOT NULL', null, false)
+                        ->where('abx.id_perusahaan IS NULL', null, false)
+                    ->groupEnd();
+
+                    // Sisi Gudang Tujuan P1 (id_perusahaan = 1 atau gudang lama NULL)
+                    $builder->orWhere('bbx.id_perusahaan', 1);
+                    $builder->orGroupStart()
+                        ->where('uk.id_gudang_tujuan IS NOT NULL', null, false)
+                        ->where('bbx.id_perusahaan IS NULL', null, false)
+                    ->groupEnd();
+
+                    // Entitas dokumen P1 atau format kode transaksi TRF (bukan TRFC)
+                    $builder->orWhere('uk.id_perusahaan', 1);
+                    $builder->orWhere("uk.kode_transaksi NOT LIKE 'TRFC%'", null, false);
+                } elseif ($corpId === 2) {
+                    // Sisi Gudang Asal P2
+                    $builder->where('abx.id_perusahaan', 2);
+                    // Sisi Gudang Tujuan P2
+                    $builder->orWhere('bbx.id_perusahaan', 2);
+                    // Entitas dokumen P2 atau format kode transaksi TRFC
+                    $builder->orWhere('uk.id_perusahaan', 2);
+                    $builder->orWhere("uk.kode_transaksi LIKE 'TRFC%'", null, false);
+                } else {
+                    $builder->where('abx.id_perusahaan', $corpId);
+                    $builder->orWhere('bbx.id_perusahaan', $corpId);
+                    $builder->orWhere('uk.id_perusahaan', $corpId);
+                }
+                $builder->groupEnd();
+            }
+
+            if (!empty($params['id_gudang_ref'])) {
+                $builder->groupStart();
+                $builder->where('uk.id_gudang_tujuan', $params['id_gudang_ref']);
+                $builder->orWhere('uk.id_gudang_asal', $params['id_gudang_ref']);
+                $builder->groupEnd();
+            }
+
+            if (!empty($params['id_gudang_tujuan'])) {
+                $builder->where('uk.id_gudang_tujuan', $params['id_gudang_tujuan']);
             }
 
             if (!empty($order)) {
@@ -90,6 +145,8 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tblGudang . " abx", "uk.id_gudang_asal = abx.id", "left");
         $builder->join($this->tblGudang . " bbx", "uk.id_gudang_tujuan = bbx.id", "left");
+        $builder->join($this->tblOperator . " cbx", "uk.id_cmt = cbx.id", "left");
+        $builder->join('_jenis_proses_produksi jp', 'jp.id = uk.id_proses', 'left');
         $builder->select("count(1) as _cnt");
         $builder->where('uk.active = 1');
         if (!empty($params['status'])) {
@@ -106,11 +163,66 @@ class ItemTransferModel extends \App\Models\PrModel
 
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $val = strtolower(trim($filters[0]['value']));
+            $value = "%{$val}%";
             $builder->groupStart();
-            $builder->Where('LOWER(uk.kode_transaksi) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(abx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(bbx.nama_gudang) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->where('LOWER(uk.kode_transaksi) LIKE', $value);
+            $builder->orWhere('LOWER(abx.nama_gudang) LIKE', $value);
+            $builder->orWhere('LOWER(bbx.nama_gudang) LIKE', $value);
+            $builder->orWhere('LOWER(cbx.nama_operator) LIKE', $value);
+            $builder->orWhere('LOWER(jp.nama) LIKE', $value);
+            $builder->orWhere('LOWER(uk.keterangan) LIKE', $value);
             $builder->groupEnd();
+        }
+
+        // Sama seperti getData() - selama gudang kirim (asal) ATAU gudang tujuannya
+        // ke salah satu gudang P1/P2, atau dokumen milik perusahaan tersebut, tetap dimunculkan.
+        if (!empty($params['id_perusahaan'])) {
+            $corpId = (int)$params['id_perusahaan'];
+            $builder->groupStart();
+            if ($corpId === 1) {
+                // Sisi Gudang Asal P1 (id_perusahaan = 1 atau gudang lama NULL)
+                $builder->where('abx.id_perusahaan', 1);
+                $builder->orGroupStart()
+                    ->where('uk.id_gudang_asal IS NOT NULL', null, false)
+                    ->where('abx.id_perusahaan IS NULL', null, false)
+                ->groupEnd();
+
+                // Sisi Gudang Tujuan P1 (id_perusahaan = 1 atau gudang lama NULL)
+                $builder->orWhere('bbx.id_perusahaan', 1);
+                $builder->orGroupStart()
+                    ->where('uk.id_gudang_tujuan IS NOT NULL', null, false)
+                    ->where('bbx.id_perusahaan IS NULL', null, false)
+                ->groupEnd();
+
+                // Entitas dokumen P1 atau format kode transaksi TRF (bukan TRFC)
+                $builder->orWhere('uk.id_perusahaan', 1);
+                $builder->orWhere("uk.kode_transaksi NOT LIKE 'TRFC%'", null, false);
+            } elseif ($corpId === 2) {
+                // Sisi Gudang Asal P2
+                $builder->where('abx.id_perusahaan', 2);
+                // Sisi Gudang Tujuan P2
+                $builder->orWhere('bbx.id_perusahaan', 2);
+                // Entitas dokumen P2 atau format kode transaksi TRFC
+                $builder->orWhere('uk.id_perusahaan', 2);
+                $builder->orWhere("uk.kode_transaksi LIKE 'TRFC%'", null, false);
+            } else {
+                $builder->where('abx.id_perusahaan', $corpId);
+                $builder->orWhere('bbx.id_perusahaan', $corpId);
+                $builder->orWhere('uk.id_perusahaan', $corpId);
+            }
+            $builder->groupEnd();
+        }
+
+        if (!empty($params['id_gudang_ref'])) {
+            $builder->groupStart();
+            $builder->where('uk.id_gudang_tujuan', $params['id_gudang_ref']);
+            $builder->orWhere('uk.id_gudang_asal', $params['id_gudang_ref']);
+            $builder->groupEnd();
+        }
+
+        if (!empty($params['id_gudang_tujuan'])) {
+            $builder->where('uk.id_gudang_tujuan', $params['id_gudang_tujuan']);
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
@@ -211,16 +323,18 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where('tu.style', strtolower($params['style']));
             }
             if (!empty($params['all_color'])) {
-                $builder->where('tu.color',  $params['all_color']);
+                $builder->where('LOWER(TRIM(tu.color))', strtolower(trim($params['all_color'])));
             }
             if (!empty($params['color'])) {
                 $ascii = iconv("UTF-8", "ASCII//TRANSLIT", $params['color']);
                 $prm_color = strtoupper($ascii);
                 // Hilangkan spasi setelah value, misal "dan " jadi "dan"
                 $prm_color = rtrim($prm_color);
-                // $builder->where("lower(tu.color)  ~ '^" . $prm_color . "'");
-                $builder->where(" upper(trim(split_part(tu.color, '~', 1)))", $prm_color);
-                // $builder->where('lower(tu.color) LIKE', strtolower("%{$params['color']}%"));
+                if (strpos($prm_color, '~') !== false) {
+                    $builder->where('LOWER(TRIM(tu.color))', strtolower($prm_color));
+                } else {
+                    $builder->where(" upper(trim(split_part(tu.color, '~', 1)))", $prm_color);
+                }
             }
 
             if (!empty($params['color2'])) {
@@ -341,7 +455,7 @@ class ItemTransferModel extends \App\Models\PrModel
     function getDataProses()
     {
         $builder = $this->db->table("_jenis_proses_produksi abx");
-        $builder->select("abx.nama, abx.id");
+        $builder->select("abx.nama, abx.id, COALESCE(abx.is_rajut, 0) as is_rajut");
         $builder->where("active", "1");
         $builder->orderBy("abx.seq", "ASC");
         $this->_data = $builder->get()->getResult();
@@ -373,42 +487,54 @@ class ItemTransferModel extends \App\Models\PrModel
     {
         $builder = $this->db->table("trans_barang_trf_header abx");
         $builder->select("abx.id");
+        if (!empty($idProses)) {
+            $builder->where("abx.id_proses", $idProses);
+        }
         if ($idPerusahaan != 2) {
-            $builder->where("id_proses", $idProses);
-            $builder->where("id_cmt", $idOperator);
+            if (!empty($idOperator)) {
+                $builder->where("abx.id_cmt", $idOperator);
+            }
         }
 
         return array_column($builder->get()->getResultArray(), 'id');
     }
 
 
-    function generateKodePersediaan()
+    function generateKodePersediaan($id_perusahaan = null)
     {
         $kd = "TRF";
-        $builder = $this->db->table($this->table . ' a');
-        $builder->select("LEFT(kode_transaksi, 7) AS tgl, RIGHT( kode_transaksi, 4 ) AS kode ");
+        if (!empty($id_perusahaan) && (int)$id_perusahaan === 2) {
+            $kd = "TRFC";
+        }
+        $currentTgl = $kd . date('y') . date('m'); // TRF2608 atau TRFC2608
 
-        $builder->orderBy('a.id', "DESC");
+        $builder = $this->db->table($this->table . ' a');
+        $builder->select("a.kode_transaksi");
+        $builder->where("a.kode_transaksi LIKE '{$currentTgl}%'");
+        if ($kd === "TRF") {
+            $builder->notLike("a.kode_transaksi", "TRFC", "after");
+        }
+        $builder->orderBy('a.kode_transaksi', "DESC");
         $builder->limit(1);
         $query = $builder->get()->getRow();
 
-        if ($query != NULL) {
-            if ($query->tgl == $kd . date('y') . date('m')) {     //cek dulu apakah ada sudah ada tahun dan bulan di tabel.   
-                //jika tahun dan bulan ternyata sudah ada.      
-                // $data = $query->row();
-                $kode = intval($query->kode) + 1;
-            } else {
-                //jika tahun dan belum ada      
-                $kode = 1;
-            }
+        if ($query != NULL && !empty($query->kode_transaksi)) {
+            $lastSeq = substr($query->kode_transaksi, strlen($currentTgl));
+            $kode = intval($lastSeq) + 1;
         } else {
             $kode = 1;
         }
-        
-        $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT); // angka 3 menunjukkan jumlah digit angka 0
-        $kodejadi = $kd . date('y') . date('m') . $kodemax;
-        
-        // hasilnya SOD24100001 dst.
+
+        $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT);
+        $kodejadi = $currentTgl . $kodemax;
+
+        // Anti-collision verification
+        while ($this->db->table($this->table)->where('kode_transaksi', $kodejadi)->countAllResults() > 0) {
+            $kode++;
+            $kodemax = str_pad($kode, 5, "0", STR_PAD_LEFT);
+            $kodejadi = $currentTgl . $kodemax;
+        }
+
         return $kodejadi;
     }
 
@@ -450,7 +576,7 @@ class ItemTransferModel extends \App\Models\PrModel
     function getDetailItem($id = null)
     {
         $builder = $this->db->table("trans_barang_trf_so_det abx");
-        $builder->select("tbth.id_proses, tbth.id_cmt, tbth.status, abx.id, abx.id_header, abx.kode_sales_order, abx.qty, abx.id_konsumen, abx.kode_ukuran, abx.style, abx.color, abx.print_type");
+        $builder->select("tbth.id_proses, tbth.id_cmt, tbth.status, abx.id, abx.id_header, abx.kode_sales_order, abx.qty, abx.id_konsumen, abx.kode_ukuran, abx.style, abx.color, abx.print_type, COALESCE(abx.is_reject, 0) as is_reject");
         $builder->join("trans_barang_trf_header tbth", "tbth.id = abx.id_header", 'inner');
 
         $builder->where("abx.id", $id);
@@ -523,36 +649,45 @@ class ItemTransferModel extends \App\Models\PrModel
                 $data['kode_transaksi'] = $getCurrent->kode_transaksi;
                 if ($getCurrent->status == 1) {
                     $data['status'] = 1;
+                    // Dokumen yang sudah Approved tidak boleh lagi mengubah tanggal transaksi -
+                    // kalau tanggal ikut berubah, baris trans_barang akan dihapus & dibuat ulang
+                    // dengan tanggal baru (lihat $trxTanggal di bawah), sehingga histori Stock
+                    // Card/Laporan Persediaan jadi salah tanggal padahal nomor dokumennya tetap sama.
+                    $data['tanggal'] = $getCurrent->tanggal;
                 }
                 $arrParam =  [
                     "id" => $id,
                 ];
                 $this->updateRecords($this->table, $data, $arrParam);
             } else {
-                $data['kode_transaksi'] = $this->generateKodePersediaan();
+                $data['kode_transaksi'] = $this->generateKodePersediaan(!empty($data['id_perusahaan']) ? $data['id_perusahaan'] : 1);
                 $id = $this->insertRecordGetid($this->table,  $data);
             }
             
             if (!empty($dataSO)) {
                 $IncludedIDSO = [];
                 foreach ($dataSO as $rowData) {
+                    $isReject = (!empty($rowData['is_reject']) && ($rowData['is_reject'] == 1 || $rowData['is_reject'] === '1' || $rowData['is_reject'] === true));
 
-                    // if ($rowData['qty_ref'] < $rowData['qty'] && (!empty($rowData['print_type']) && $rowData['print_type'] == 1)) {
-                    //     throw new \Exception("QTY melebihi QTY REF! ({$rowData['kode_sales_order']})");
-                    //     break;
-                    // }
+                    if (!$isReject && isset($data['kode_transaksi']) && strpos($data['kode_transaksi'], 'TRFC') !== 0) {
+                        if (isset($rowData['qty_ref']) && floatval($rowData['qty']) > floatval($rowData['qty_ref'])) {
+                            throw new \Exception("QTY melebihi QTY REF! SO: {$rowData['kode_sales_order']} ({$rowData['color']})");
+                        }
+                    }
 
                     $dataDetail = [
                         // "id_so" => !empty($rowData['id']) ? decrypt($rowData['id']) : null,
                         "id_header" => $id,
                         "color" => $rowData['color'],
                         "tipe" => !empty($rowData['tipe']) ? $rowData['tipe'] : null,
-                        "print_type" => !empty($rowData['print_type']) ? $rowData['print_type'] : null,
+                        "print_type" => !empty($rowData['print_type']) ? (int)$rowData['print_type'] : 1,
+                        "is_reject" => $isReject ? 1 : 0,
                         "total_scanned" => !empty($rowData['total_scanned']) ? $rowData['total_scanned'] : null,
                         "ref_detail_id" => !empty($rowData['ref_detail_id']) ? $rowData['ref_detail_id'] : null,
                         "deskripsi" => $rowData['deskripsi'],
                         "style" => !empty($rowData['style']) ? $rowData['style'] : null,
                         "qty" => !empty($rowData['qty']) ? $rowData['qty'] : null,
+                        "berat" => !empty($rowData['berat']) ? (float)$rowData['berat'] : null,
                         // "amount" => !empty($rowData['amount']) ? $rowData['amount'] : null,
                         "id_konsumen" => $rowData['id_konsumen'],
                         "kode_sales_order" => $rowData['kode_sales_order'],
@@ -563,43 +698,46 @@ class ItemTransferModel extends \App\Models\PrModel
                     $idDet = !empty($rowData['id']) ? $rowData['id'] : null;
                     $getCurrentDet = $this->getDetailItem($idDet);
                     if (!empty($getCurrentDet)) {
-                        if ($oldStatus == 0 && $data['status'] == 1) {
-                            $updateQtyKirimBtm = $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                            $getCurrentDet->id_cmt, 'plus', $rowData['qty']);
-                        }
-                        else if ($getCurrentDet->status == 1){
-                            $getQtySumTfSo = $this->getTransferSOSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                            $getCurrentDet->id_cmt);
+                        // Hanya update tracking BTM jika BUKAN barang Reject (Opsi 1)
+                        if (!$isReject) {
+                            if ($oldStatus == 0 && $data['status'] == 1) {
+                                $updateQtyKirimBtm = $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt, 'plus', $rowData['qty']);
+                            }
+                            else if ($getCurrentDet->status == 1 && empty($getCurrentDet->is_reject)){
+                                $getQtySumTfSo = $this->getTransferSOSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt);
 
-                            $getQtySumBtm = $this->getBTMSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                            $getCurrentDet->id_cmt);
-                            // dd($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty']));
-                            if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
-                                $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                            $getCurrentDet->id_cmt, 'minus', $getCurrentDet->qty - $rowData['qty'], true);
-                            }
-                            else if ($rowData['qty'] > $getCurrentDet->qty) {
-                                $updatePlus = $rowData['qty'] - $getCurrentDet->qty;
-                                $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
-                                                            $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
-                                                            $getCurrentDet->id_cmt, 'plus', $updatePlus);
-                            }
-                            else if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm > $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
-                                $total_selisih = $getQtySumTfSo->total_qty_transfer - $getQtySumBtm->total_qty_btm;
-                                $total_selisih = $getCurrentDet->qty - $total_selisih;
-                                throw new \Exception("QTY tidak dapat diubah lebih kecil dari {$total_selisih} pada ({$rowData['kode_sales_order']})");
-                                break;
+                                $getQtySumBtm = $this->getBTMSUMQty($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt);
+                                // dd($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty']));
+                                if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm <= $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
+                                    $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt, 'minus', $getCurrentDet->qty - $rowData['qty'], true);
+                                }
+                                else if ($rowData['qty'] > $getCurrentDet->qty) {
+                                    $updatePlus = $rowData['qty'] - $getCurrentDet->qty;
+                                    $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
+                                                                $rowData['color'], $rowData['id_konsumen'], $getCurrentDet->id_proses, 
+                                                                $getCurrentDet->id_cmt, 'plus', $updatePlus);
+                                }
+                                else if ($rowData['qty'] < $getCurrentDet->qty && $getQtySumBtm->total_qty_btm > $getQtySumTfSo->total_qty_transfer - ($getCurrentDet->qty - $rowData['qty'])) {
+                                    $total_selisih = $getQtySumTfSo->total_qty_transfer - $getQtySumBtm->total_qty_btm;
+                                    $total_selisih = $getCurrentDet->qty - $total_selisih;
+                                    throw new \Exception("QTY tidak dapat diubah lebih kecil dari {$total_selisih} pada ({$rowData['kode_sales_order']})");
+                                    break;
+                                }
                             }
                         }
                         $IncludedIDSO[] = $getCurrentDet->id;
                         $this->updateRecord($this->tblDetailSO, $dataDetail, 'id', $getCurrentDet->id);
                     }
                     else {
-                        if ($data['status'] == 1) {
+                        if (!$isReject && $data['status'] == 1) {
                             $updateQtyKirimBtm = $this->updateDataBTMQtyKirim($rowData['kode_sales_order'], $rowData['kode_ukuran'], 
                                                             $rowData['color'], $rowData['id_konsumen'], $data['id_proses'], 
                                                             $data['id_cmt'], 'plus', $rowData['qty']);
@@ -612,7 +750,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         $getToDelete = $this->getRecordConditionDelete($IncludedIDSO, $id);
                         foreach ($getToDelete as $idSO) {
                             $getCurrentDet = $this->getDetailItem($idSO->id);
-                            if (!empty($getCurrentDet) && $getCurrentDet->status == 1 && $oldStatus != 0) {
+                            if (!empty($getCurrentDet) && empty($getCurrentDet->is_reject) && $getCurrentDet->status == 1 && $oldStatus != 0) {
                                 $getQtySumTfSo = $this->getTransferSOSUMQty($getCurrentDet->kode_sales_order, $getCurrentDet->kode_ukuran, 
                                                             $getCurrentDet->color, $getCurrentDet->id_konsumen, $getCurrentDet->id_proses, 
                                                             $getCurrentDet->id_cmt);
@@ -667,73 +805,116 @@ class ItemTransferModel extends \App\Models\PrModel
                     $this->insertRecordGetid($this->tblDet, $dataDetail);
                     $trxTanggal = !empty($data['tanggal']) ? (strlen($data['tanggal']) <= 10 ? $data['tanggal'] . " " . date("H:i:s") : $data['tanggal']) : date("Y-m-d H:i:s");
                     if ($data['status'] == 1 && $key === 0 && !empty($data['kode_transaksi'])) {
+                        // CATATAN (2026-08-08): sebelum baris trans_barang lama dihapus,
+                        // qty yang PERNAH ditambah/dikurangi ke trans_lots akibat dokumen
+                        // ini (kalau dokumen ini sudah pernah disimpan/di-approve sebelumnya
+                        // lalu diedit ulang) harus dibalik dulu - baris trans_barang lama
+                        // adalah catatan persis berapa & dari lot mana. jenis_transaksi=1
+                        // ("masuk", ke lot tujuan) dibalik dgn DIKURANGI lagi; jenis_transaksi=2
+                        // ("keluar", dari lot asal) dibalik dgn DITAMBAH lagi. Tanpa ini,
+                        // trans_lots akan terus bertambah/berkurang dobel setiap kali
+                        // dokumen Item Transfer yang sama diedit/disimpan ulang - pola bug
+                        // sama seperti yang sudah diperbaiki di trans_barang (Barang Masuk),
+                        // dan trans_lots (Delivery Order).
+                        $oldTransBarangTrf = $this->db->table($this->tblTrxBarang)
+                            ->select('lot_id, jenis_transaksi, SUM(jumlah) as jumlah')
+                            ->where('kode_transaksi', $data['kode_transaksi'])
+                            ->groupBy('lot_id, jenis_transaksi')
+                            ->get()->getResult();
+
+                        foreach ($oldTransBarangTrf as $otb) {
+                            if (empty($otb->lot_id)) continue;
+                            $op = $otb->jenis_transaksi == 1 ? '-' : '+';
+                            $this->db->table($this->tblTrxLots)
+                                ->where('id', $otb->lot_id)
+                                ->set('qty', 'qty ' . $op . ' ' . (float) $otb->jumlah, false)
+                                ->update();
+                        }
+
                         $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $data['kode_transaksi'])->delete();
                     }
                     if ($data['status'] == 1) {
                         $mBarangMasuk = new IncomingGoodsModel();
-                        $arrParam =  [
-                            "id_barang" => $idBarang,
-                            "id_gudang_tujuan" => $data['id_gudang_tujuan'],
-                        ];
-                        $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang_tujuan']);
-                        $dataLots = [
-                            "id_barang" => $idBarang,
-                            "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                            "tanggal" => $trxTanggal,
-                            "lot_no" => $rowData['lot_no'],
-                            "qty" => $rowData['qty'],
-                            "active" => 1,
-                            "created_at" =>  date("Y-m-d H:i:s"),
-                        ];
-    
-    
-                        if (!empty($resLotNo)) {
-                            $idLotsMasuk = $resLotNo->id;
-                            $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData['qty']), array("id" => $idLotsMasuk));
-                        } else {
-                            $idLotsMasuk = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
+
+                        // Cek apakah transfer ini Antar-Perusahaan (Beda Perusahaan Asal & Tujuan)
+                        // ataukah Internal (Perusahaan Sama).
+                        $gudangAsalObj = !empty($data['id_gudang_asal']) ? $this->db->table($this->tblGudang)->where('id', $data['id_gudang_asal'])->get()->getRow() : null;
+                        $gudangTujuanObj = !empty($data['id_gudang_tujuan']) ? $this->db->table($this->tblGudang)->where('id', $data['id_gudang_tujuan'])->get()->getRow() : null;
+                        $isCrossCompany = ($gudangAsalObj && $gudangTujuanObj && (int)$gudangAsalObj->id_perusahaan !== (int)$gudangTujuanObj->id_perusahaan);
+
+                        // 1. STOK MASUK KE GUDANG TUJUAN:
+                        // Hanya dieksekusi jika transfer INTERNAL (1 perusahaan).
+                        // Jika Beda Perusahaan (2 tahap), stok masuk akan dicatat saat pihak penerima membuat & approve BTM.
+                        if (!$isCrossCompany) {
+                            $arrParam =  [
+                                "id_barang" => $idBarang,
+                                "id_gudang_tujuan" => $data['id_gudang_tujuan'],
+                            ];
+                            // FIX (2026-08-08): sebelumnya id_gudang_tujuan masuk ke parameter
+                            // ke-3 getLotNo() (idLotNo - filter berdasarkan ID baris trans_lots
+                            // spesifik), bukan parameter ke-4 (idGudang) yang seharusnya. Salah
+                            // slot argumen ini bisa membuat lot yang diambil salah/tidak ketemu.
+                            $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $data['id_gudang_tujuan']);
+                            $dataLots = [
+                                "id_barang" => $idBarang,
+                                "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                                "tanggal" => $trxTanggal,
+                                "lot_no" => $rowData['lot_no'],
+                                "qty" => $rowData['qty'],
+                                "active" => 1,
+                                "created_at" =>  date("Y-m-d H:i:s"),
+                            ];
+        
+                            if (!empty($resLotNo)) {
+                                $idLotsMasuk = $resLotNo->id;
+                                $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty + $rowData['qty']), array("id" => $idLotsMasuk));
+                            } else {
+                                $idLotsMasuk = $this->insertRecordGetid($this->tblTrxLots, $dataLots);
+                            }
+        
+                            $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
+        
+                            // $stokAwal = !empty($resData) ? $resData->stok : 0;
+                            $dataBarang = [
+                                "id_barang" => $idBarang,
+                                "jenis_transaksi" => 1,
+                                "jumlah" =>  $rowData['qty'],
+                                "tanggal" => $trxTanggal,
+                                "id_gudang_tujuan" =>  !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                                "id_kategori" => 4,
+                                "keterangan" => "Barang Masuk Dari Transfer",
+                                "active" => 1,
+                                "tipe" => 1,
+                                "created_at" =>  date("Y-m-d H:i:s"),
+                                "lot_id" => $idLotsMasuk,
+                                "lot_no" => $rowData['lot_no'],
+                                "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
+                                "price" => !empty($rowData['price']) ? (int) preg_replace('/[^0-9]/', '', $rowData['price']) : 0,
+                                "kode_transaksi" => $data['kode_transaksi'],
+                            ];
+                            $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+                            $arrStockBalances = [
+                                "id_barang" => $idBarang,
+                                "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
+                                "tanggal" => $trxTanggal,
+                                "lot_id" => $idLotsMasuk,
+                                "lot_no" => $rowData['lot_no'],
+                                "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
+                                "saldo_awal" => 0,
+                                "saldo_akhir" => $rowData['qty'],
+                                "active" => 1,
+                                "created_at" =>  date("Y-m-d H:i:s"),
+                            ];
+        
+                            if (!empty($resData)) {
+                                $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $rowData['qty']), array("id" => $resData->id));
+                            } else {
+                                $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                            }
                         }
-    
-                        $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_tujuan'], $idLotsMasuk, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
-    
-                        // $stokAwal = !empty($resData) ? $resData->stok : 0;
-                        $dataBarang = [
-                            "id_barang" => $idBarang,
-                            "jenis_transaksi" => 1,
-                            "jumlah" =>  $rowData['qty'],
-                            "tanggal" => $trxTanggal,
-                            "id_gudang_tujuan" =>  !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                            "id_kategori" => 4,
-                            "keterangan" => "Barang Masuk Dari Transfer",
-                            "active" => 1,
-                            "tipe" => 1,
-                            "created_at" =>  date("Y-m-d H:i:s"),
-                            "lot_id" => $idLotsMasuk,
-                            "lot_no" => $rowData['lot_no'],
-                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
-                            "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
-                            "kode_transaksi" => $data['kode_transaksi'],
-                        ];
-                        $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
-                        $arrStockBalances = [
-                            "id_barang" => $idBarang,
-                            "id_gudang" => !empty($data['id_gudang_tujuan']) ? $data['id_gudang_tujuan'] : null,
-                            "tanggal" => $trxTanggal,
-                            "lot_id" => $idLotsMasuk,
-                            "lot_no" => $rowData['lot_no'],
-                            "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
-                            "saldo_awal" => 0,
-                            "saldo_akhir" => $rowData['qty'],
-                            "active" => 1,
-                            "created_at" =>  date("Y-m-d H:i:s"),
-                        ];
-    
-                        if (!empty($resData)) {
-                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $resLotNo->qty + $rowData['qty']), array("id" => $resData->id));
-                        } else {
-                            $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
-                        }
-    
+
+                        // 2. STOK KELUAR DARI GUDANG ASAL:
+                        // Selalu dieksekusi baik transfer Internal maupun Antar-Perusahaan.
                         $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
     
                         if (!empty($resLotNo)) {
@@ -758,7 +939,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             "lot_id" => $idLots,
                             "lot_no" => $rowData['lot_no'],
                             "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
-                            "price" => !empty($rowData['price']) ? $rowData['price'] : 0,
+                            "price" => !empty($rowData['price']) ? (int) preg_replace('/[^0-9]/', '', $rowData['price']) : 0,
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
@@ -811,7 +992,7 @@ class ItemTransferModel extends \App\Models\PrModel
             $this->db->transComplete();
 
             if ($this->db->transStatus() === TRUE) {
-                return true;
+                return $id;
             } else {
 
                 throw new \Exception("Transaction failed");
@@ -822,7 +1003,114 @@ class ItemTransferModel extends \App\Models\PrModel
         }
     }
 
-    function get_export($from_date = null, $to_date = null)
+    /**
+     * TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik SEMUA efek yang
+     * terjadi saat dokumen ini di-approve (lihat blok status==1 di
+     * trxInsertUpdateRecord() di atas), lalu kembalikan status ke Draft (0).
+     * Baris detail barang & SO TIDAK dihapus, supaya dokumen bisa diedit &
+     * di-approve ulang.
+     *
+     * Yang dibalik:
+     * 1) trans_lots - qty di lot tujuan dikurangi lagi, qty di lot asal
+     *    ditambah lagi (kebalikan persis dari saat approve).
+     * 2) trans_barang_balances - baris snapshot HARI INI (kalau ada) utk
+     *    lot terkait disamakan lagi ke qty trans_lots yg sudah dibalik,
+     *    supaya tidak nyangkut di angka lama.
+     * 3) trans_barang - baris masuk & keluar milik dokumen ini dihapus.
+     * 4) qty_kirim di trans_barang_masuk_produksi (tracking produksi per
+     *    SO/Sample + ukuran + warna + proses + CMT) dikurangi lagi sebesar
+     *    qty yang tadi ditambahkan dokumen ini saat approve.
+     */
+    function cancelApprove($id, $updatedBy = null)
+    {
+        $this->db->transStart();
+        try {
+            $header = $this->getData($id);
+            if (empty($header)) {
+                throw new \Exception("Data transfer tidak ditemukan.");
+            }
+            if ((int) $header->status !== 1) {
+                throw new \Exception("Dokumen ini belum di-Approve, tidak bisa dibatalkan.");
+            }
+
+            // 1) & 2) Balikkan trans_lots + samakan snapshot trans_barang_balances
+            // hari ini, berdasarkan baris trans_barang yang tercatat utk
+            // kode_transaksi ini.
+            $trxRows = $this->db->table($this->tblTrxBarang)
+                ->select('id_barang, lot_id, pack_id, jenis_transaksi, id_gudang_asal, id_gudang_tujuan, SUM(jumlah) as jumlah')
+                ->where('kode_transaksi', $header->kode_transaksi)
+                ->groupBy('id_barang, lot_id, pack_id, jenis_transaksi, id_gudang_asal, id_gudang_tujuan')
+                ->get()->getResult();
+
+            foreach ($trxRows as $row) {
+                if (empty($row->lot_id)) continue;
+
+                $op = $row->jenis_transaksi == 1 ? '-' : '+';
+                $this->db->table($this->tblTrxLots)
+                    ->where('id', $row->lot_id)
+                    ->set('qty', 'qty ' . $op . ' ' . (float) $row->jumlah, false)
+                    ->update();
+
+                $idGudangTerkait = $row->jenis_transaksi == 1 ? $row->id_gudang_tujuan : $row->id_gudang_asal;
+                $lotBaru = $this->db->table($this->tblTrxLots)->where('id', $row->lot_id)->get()->getRow();
+                if (!empty($lotBaru)) {
+                    $this->db->table($this->tblTrxBalances)
+                        ->where('id_barang', $row->id_barang)
+                        ->where('id_gudang', $idGudangTerkait)
+                        ->where('lot_id', $row->lot_id)
+                        ->where('pack_id', $row->pack_id)
+                        ->where('tanggal', date('Y-m-d'))
+                        ->set('saldo_akhir', $lotBaru->qty)
+                        ->update();
+                }
+            }
+
+            // 3) Hapus baris trans_barang (masuk & keluar) milik dokumen ini.
+            $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $header->kode_transaksi)->delete();
+
+            // 4) Balikkan qty_kirim BTM/tracking produksi per baris SO/Sample (hanya untuk non-reject).
+            $soRows = $this->db->table($this->tblDetailSO)
+                ->select('kode_sales_order, kode_ukuran, color, id_konsumen, qty, COALESCE(is_reject, 0) as is_reject')
+                ->where('id_header', $id)
+                ->get()->getResult();
+
+            foreach ($soRows as $s) {
+                if (!empty($s->is_reject) && $s->is_reject == 1) {
+                    continue; // Barang Reject tidak pernah menambah qty_kirim saat approve
+                }
+                $this->updateDataBTMQtyKirim(
+                    $s->kode_sales_order,
+                    $s->kode_ukuran,
+                    $s->color,
+                    $s->id_konsumen,
+                    $header->id_proses,
+                    $header->id_cmt,
+                    'minus',
+                    $s->qty
+                );
+            }
+
+            // 5) Kembalikan status dokumen ke Draft.
+            $updateHeader = ['status' => 0, 'updated_at' => date('Y-m-d H:i:s')];
+            if (!empty($updatedBy)) {
+                $updateHeader['updated_by'] = $updatedBy;
+            }
+            $this->updateRecords($this->table, $updateHeader, ['id' => $id]);
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === TRUE) {
+                return true;
+            } else {
+                throw new \Exception("Transaction failed");
+            }
+        } catch (\Exception $e) {
+            $this->db->transRollback();
+            throw $e;
+        }
+    }
+
+    function get_export($from_date = null, $to_date = null, $id_perusahaan = null)
     {
         $db = $this->db;
         
@@ -837,10 +1125,13 @@ class ItemTransferModel extends \App\Models\PrModel
             'tbth.kode_transaksi',
             'rk.nama AS buyer',
             'tbtsd.style',
+            "COALESCE(rp.nama_perusahaan, CASE WHEN tbth.id_perusahaan = 2 THEN 'Citra Knitt' ELSE 'PT Citra Jaya Kniting' END) AS perusahaan",
+            'COALESCE(tbth.id_perusahaan, 1) AS id_perusahaan',
             'jp.nama AS proses',
             'ro.nama_operator',
             'tbtsd.color',
             'tbtsd.kode_ukuran',
+            'COALESCE(tbtsd.print_type, 1) AS print_type',
             'tbtsd.qty',
             'COALESCE(tso.kode_sales_order, ts.kode_sample) AS kode',
             'COALESCE(tso.tgl_transaksi, ts.tgl_transaksi) AS tgl_transaksi',
@@ -856,10 +1147,17 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
                 AND tbh.active = 1
+                AND (
+                    CASE 
+                        WHEN COALESCE(tbth.id_perusahaan, 1) = 2 
+                        THEN (tbh.id_perusahaan = 2 OR LEFT(tbh.kode_transaksi, 4) = 'BTMC') 
+                        ELSE (tbh.id_perusahaan = 1 OR tbh.id_perusahaan IS NULL) 
+                    END
+                )
             ), 0) AS qty_terima,
              COALESCE(
                 ( 
-                    SELECT tsu.qty
+                    SELECT SUM(tsu.qty)
                     FROM trans_sample_ukuran tsu 
                     INNER JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
                     INNER JOIN trans_sample_det tsd ON tsd.id = tsu.id_sample_det
@@ -898,7 +1196,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     ) = tbtsd.color
                 ), 
                 ( 
-                    SELECT tsou.qty
+                    SELECT SUM(tsou.qty)
                     FROM trans_sales_order_ukuran tsou 
                     INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
                     INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det
@@ -945,6 +1243,7 @@ class ItemTransferModel extends \App\Models\PrModel
         $subBuilder->join('trans_sales_order tso', 'tso.kode_sales_order = tbtsd.kode_sales_order', 'left');
         $subBuilder->join('trans_sample ts', 'ts.kode_sample = tbtsd.kode_sales_order', 'left');
         $subBuilder->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'inner');
+        $subBuilder->join('ref_perusahaan rp', 'rp.id = tbth.id_perusahaan', 'left');
 
         // 🔴 FILTER TANGGAL DINAMIS
         if ($from_date && $to_date) {
@@ -958,6 +1257,10 @@ class ItemTransferModel extends \App\Models\PrModel
             ->groupEnd();
         }
 
+        if (!empty($id_perusahaan)) {
+            $subBuilder->where('tbth.id_perusahaan', $id_perusahaan);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | QUERY LUAR – GROUPING FINAL
@@ -968,10 +1271,13 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->select([
             'buyer',
             'style',
+            'perusahaan',
+            'id_perusahaan',
             'proses',
             'nama_operator',
             'color',
             'kode_ukuran',
+            'print_type',
             'SUM(qty) AS qty',
             'qty_terima',
             'kode',
@@ -982,10 +1288,13 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->groupBy([
             'buyer',
             'style',
+            'perusahaan',
+            'id_perusahaan',
             'proses',
             'nama_operator',
             'color',
             'kode_ukuran',
+            'print_type',
             'qty_terima',
             'kode',
             'tgl_transaksi',
@@ -1022,6 +1331,7 @@ class ItemTransferModel extends \App\Models\PrModel
             'tbtsd.kode_ukuran',
             'ru.key_ukuran',
             'tbtsd.qty',
+            'COALESCE(tbtsd.is_reject, 0) AS is_reject',
             'COALESCE(tso.kode_sales_order, ts.kode_sample) AS kode',
             'COALESCE(tso.tgl_transaksi, ts.tgl_transaksi) AS tgl_transaksi',
             // Subquery Qty Terima
@@ -1055,7 +1365,7 @@ class ItemTransferModel extends \App\Models\PrModel
             // Subquery Qty Ref (Logic COALESCE Sample vs SO)
             "COALESCE(
                 ( 
-                    SELECT tsu.qty FROM trans_sample_ukuran tsu 
+                    SELECT SUM(tsu.qty) FROM trans_sample_ukuran tsu 
                     INNER JOIN ref_ukuran ru ON ru.id = tsu.id_ukuran
                     INNER JOIN trans_sample_det tsd ON tsd.id = tsu.id_sample_det 
                     LEFT JOIN ref_warna rw1 ON rw1.id = tsd.id_warna_1 
@@ -1070,7 +1380,7 @@ class ItemTransferModel extends \App\Models\PrModel
                     AND CONCAT_WS('~', NULLIF(rw1.kode_warna,''), NULLIF(rw2.kode_warna,''), NULLIF(rw3.kode_warna,''), NULLIF(rw4.kode_warna,''), NULLIF(rw5.kode_warna,''), NULLIF(rw6.kode_warna,''), NULLIF(rw7.kode_warna,''), NULLIF(rw8.kode_warna,'')) = tbtsd.color
                 ), 
                 ( 
-                    SELECT tsou.qty FROM trans_sales_order_ukuran tsou 
+                    SELECT SUM(tsou.qty) FROM trans_sales_order_ukuran tsou 
                     INNER JOIN ref_ukuran ru ON ru.id = tsou.id_ukuran
                     INNER JOIN trans_sales_order_det tsod ON tsod.id = tsou.id_sales_order_det 
                     LEFT JOIN ref_warna rw1 ON rw1.id = tsod.id_warna_1 
@@ -1140,6 +1450,7 @@ class ItemTransferModel extends \App\Models\PrModel
             'SUM(qty_kirim) AS qty_kirim',
             'kode',
             'tgl_transaksi',
+            'MAX(is_reject) AS is_reject',
             'MAX(qty_ref) AS qty_ref',     // Mengambil nilai tertinggi/unik
             'MAX(harga) AS harga'          // Mengambil nilai tertinggi/unik
         ]);
@@ -1185,75 +1496,271 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataRajut($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null)
+    function isProcessRajut($id_proses = null)
     {
-        $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
-        $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
-        
-        $builder->select("sum(tbmp.qty) as total_proses");
+        if (empty($id_proses)) return false;
+        $row = $this->db->table('_jenis_proses_produksi')
+            ->select('is_rajut')
+            ->where('id', $id_proses)
+            ->where('active', 1)
+            ->get()->getRow();
+        if (!empty($row) && $row->is_rajut == 1) {
+            return true;
+        }
+        return ($id_proses == 1);
+    }
 
-        $builder->where('tbh.id_proses', 1);
-        $builder->where('tbh.status', 1);
-        $builder->where('tbh.id_perusahaan', 1);
-        $builder->where('tbmp.id_konsumen', $id_konsumen);
-        $builder->where('tbmp.kode_ukuran', $kode_ukuran);
-        $builder->where('tbmp.kode_sales_order', $kode_so);
-        $builder->where('tbmp.color', $color);
-        // if (!empty($id)) {
-        //     $builder->where('tbmp.id <>', $id);
-        // }
+    function getDataRajut($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null, $style = null)
+    {
+        $getBaseBuilder = function() use ($id_konsumen, $kode_ukuran, $kode_so, $color, $style) {
+            $b = $this->db->table('trans_barang_masuk_produksi tbmp');
+            $b->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
+            $b->join("_jenis_proses_produksi jpp", "jpp.id = tbh.id_proses", "left");
+            $b->select("sum(tbmp.qty) as total_proses");
+            $b->where('tbh.status', 1);
+            $b->where('tbh.active', 1);
+            $b->groupStart();
+                $b->where('tbh.id_perusahaan', 1);
+                $b->orWhere('tbh.id_perusahaan IS NULL');
+            $b->groupEnd();
 
-        $this->_data = $builder->get()->getRow()->total_proses;
+            if (!empty($id_konsumen)) $b->where('tbmp.id_konsumen', $id_konsumen);
+            if (!empty($kode_ukuran)) $b->where('tbmp.kode_ukuran', $kode_ukuran);
+            if (!empty($kode_so)) $b->where('tbmp.kode_sales_order', $kode_so);
+            if (!empty($color)) $b->where('tbmp.color', $color);
+            if (!empty($style)) $b->where('tbmp.style', $style);
+
+            return $b;
+        };
+
+        // 1. Cek apakah ada proses 'RAJUT DBT' (id 31 / Depan Belakang Tangan - Badan Lengkap)
+        $builderDBT = $getBaseBuilder();
+        $builderDBT->groupStart();
+            $builderDBT->where('jpp.id', 31);
+            $builderDBT->orWhere("UPPER(jpp.nama) LIKE '%RAJUT DBT%'");
+            $builderDBT->orWhere("UPPER(jpp.nama) LIKE '%RAJUT%DBT%'");
+        $builderDBT->groupEnd();
+        $resDBT = $builderDBT->get()->getRow();
+        $totalDBT = !empty($resDBT->total_proses) ? (float)$resDBT->total_proses : 0;
+        if ($totalDBT > 0) {
+            return $totalDBT;
+        }
+
+        // 2. Cek apakah ada proses 'RAJUT DEPAN' / 'RAJUT BD' (id 29 / Badan Depan)
+        $builderBD = $getBaseBuilder();
+        $builderBD->groupStart();
+            $builderBD->where('jpp.id', 29);
+            $builderBD->orWhere("UPPER(jpp.nama) LIKE '%RAJUT DEPAN%'");
+            $builderBD->orWhere("UPPER(jpp.nama) LIKE '%RAJUT BD%'");
+            $builderBD->orWhere("UPPER(jpp.nama) LIKE '%RAJUT%BD%'");
+        $builderBD->groupEnd();
+        $resBD = $builderBD->get()->getRow();
+        $totalBD = !empty($resBD->total_proses) ? (float)$resBD->total_proses : 0;
+        if ($totalBD > 0) {
+            return $totalBD;
+        }
+
+        // 3. Cek apakah ada proses 'RAJUT DB' (id 1 / Depan Belakang)
+        $builderDB = $getBaseBuilder();
+        $builderDB->groupStart();
+            $builderDB->where('jpp.id', 1);
+            $builderDB->orWhere("UPPER(jpp.nama) LIKE '%RAJUT DB%'");
+            $builderDB->orWhere("UPPER(jpp.nama) LIKE '%RAJUT%DB%'");
+        $builderDB->groupEnd();
+        $resDB = $builderDB->get()->getRow();
+        $totalDB = !empty($resDB->total_proses) ? (float)$resDB->total_proses : 0;
+        if ($totalDB > 0) {
+            return $totalDB;
+        }
+
+        // 4. Cek proses rajut badan lain (kecuali KRAH dan BT yang merupakan bagian terpisah/aksesoris)
+        $builderOther = $getBaseBuilder();
+        $builderOther->groupStart();
+            $builderOther->where('jpp.is_rajut', 1);
+            $builderOther->orWhere('tbh.id_proses', 1);
+        $builderOther->groupEnd();
+        $builderOther->whereNotIn('jpp.id', [30, 32]);
+        $builderOther->where("UPPER(jpp.nama) NOT LIKE '%KRAH%'");
+        $builderOther->where("UPPER(jpp.nama) NOT LIKE '%KERAH%'");
+        $builderOther->where("UPPER(jpp.nama) NOT LIKE '%BT%'");
+        $resOther = $builderOther->get()->getRow();
+        $totalOther = !empty($resOther->total_proses) ? (float)$resOther->total_proses : 0;
+        if ($totalOther > 0) {
+            return $totalOther;
+        }
+
+        // 5. Fallback: jika hanya ada 1 proses rajut tunggal apa pun
+        $builderFallback = $getBaseBuilder();
+        $builderFallback->groupStart();
+            $builderFallback->where('jpp.is_rajut', 1);
+            $builderFallback->orWhere('tbh.id_proses', 1);
+        $builderFallback->groupEnd();
+        $resFallback = $builderFallback->get()->getRow();
+        $this->_data = !empty($resFallback->total_proses) ? (float)$resFallback->total_proses : 0;
 
         return $this->_data;
     }
 
-    function getDataPengurang($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null)
+    function getDataPengurang($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null, $style = null)
     {
         $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
         $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
         
         $builder->select("sum(tbtsd.qty) as total_proses");
 
+        $builder->where("LEFT(tbth.kode_transaksi, 4) !=", "TRFC");
+        $builder->where("tbth.id_perusahaan !=", 2);
+        $builder->whereNotIn("tbth.id_gudang_asal", [51, 56, 59, 60, 63, 70, 74]);
         $builder->where('tbth.id_proses', $id_proses);
         $builder->where('tbth.status', 1);
+        $builder->where('tbth.active', 1);
+        if (!empty($id)) {
+            $builder->where('tbth.id !=', $id);
+        }
         $builder->where('tbtsd.id_konsumen', $id_konsumen);
         $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
         $builder->where('tbtsd.kode_sales_order', $kode_so);
         $builder->where('tbtsd.color', $color);
-        // if (!empty($id)) {
-        //     $builder->where('tbtsd.id <>', $id);
-        // }
+        if (!empty($style)) {
+            $builder->where('tbtsd.style', $style);
+        }
 
         $this->_data = $builder->get()->getRow()->total_proses;
 
-        return $this->_data;
+        return (float)$this->_data;
     }
 
-    function get_export_bahan_jadi($from_date = null, $to_date = null){
+    function getDataBtmP2($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $style = null)
+    {
+        $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
+        $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
+        $builder->join("_jenis_proses_produksi jpp", "jpp.id = tbh.id_proses", "left");
+        
+        $builder->select("sum(tbmp.qty) as total_proses");
+
+        $builder->where('tbh.status', 1);
+        $builder->where('tbh.active', 1);
+        $builder->groupStart();
+            $builder->where('tbh.id_perusahaan', 2);
+            $builder->orWhere("LEFT(tbh.kode_transaksi, 4)", "BTMC");
+        $builder->groupEnd();
+
+        if (!empty($id_proses)) {
+            $builder->where('tbh.id_proses', $id_proses);
+        }
+
+        $builder->where('tbmp.id_konsumen', $id_konsumen);
+        $builder->where('tbmp.kode_ukuran', $kode_ukuran);
+        $builder->where('tbmp.kode_sales_order', $kode_so);
+        if (!empty($color)) {
+            $builder->where('tbmp.color', $color);
+        }
+        if (!empty($style)) {
+            $builder->where('tbmp.style', $style);
+        }
+
+        $this->_data = $builder->get()->getRow()->total_proses;
+
+        $totalBtm = !empty($this->_data) ? (float)$this->_data : 0;
+        
+        // Fallback: Jika P2 belum sempat input BTMC, gunakan TRF Masuk dari P1 agar operasional tidak terhambat
+        if ($totalBtm <= 0) {
+            return $this->getDataTrfMasukP2($id_proses, $id_konsumen, $kode_ukuran, $kode_so, $color, $style);
+        }
+
+        return $totalBtm;
+    }
+
+    function getDataTrfMasukP2($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $style = null)
+    {
+        $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
+        
+        $builder->select("sum(tbtsd.qty) as total_proses");
+
+        $builder->where("LEFT(tbth.kode_transaksi, 4) !=", "TRFC");
+        $builder->where("tbth.id_perusahaan !=", 2);
+        $builder->whereNotIn("tbth.id_gudang_asal", [51, 56, 59, 60, 63, 70, 74]);
+        $builder->where('tbth.id_proses', $id_proses);
+        $builder->where('tbth.status', 1);
+        $builder->where('tbth.active', 1);
+        $builder->where('tbtsd.id_konsumen', $id_konsumen);
+        $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
+        $builder->where('tbtsd.kode_sales_order', $kode_so);
+        if (!empty($color)) {
+            $builder->where('tbtsd.color', $color);
+        }
+        if (!empty($style)) {
+            $builder->where('tbtsd.style', $style);
+        }
+
+        $this->_data = $builder->get()->getRow()->total_proses;
+
+        return (float)$this->_data;
+    }
+
+    function getDataPengurangP2($id_proses = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $id = null, $style = null)
+    {
+        $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
+        
+        $builder->select("sum(tbtsd.qty) as total_proses");
+
+        $builder->groupStart();
+            $builder->where("LEFT(tbth.kode_transaksi, 4)", "TRFC");
+            $builder->orWhere("tbth.id_perusahaan", 2);
+            $builder->orWhereIn("tbth.id_gudang_asal", [51, 56, 59, 60, 63, 70, 74]);
+        $builder->groupEnd();
+        $builder->where('tbth.id_proses', $id_proses);
+        $builder->where('tbth.status', 1);
+        $builder->where('tbth.active', 1);
+        if (!empty($id)) {
+            $builder->where('tbth.id !=', $id);
+        }
+        $builder->where('tbtsd.id_konsumen', $id_konsumen);
+        $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
+        $builder->where('tbtsd.kode_sales_order', $kode_so);
+        if (!empty($color)) {
+            $builder->where('tbtsd.color', $color);
+        }
+        if (!empty($style)) {
+            $builder->where('tbtsd.style', $style);
+        }
+
+        $this->_data = $builder->get()->getRow()->total_proses;
+
+        return (float)$this->_data;
+    }
+
+    function get_export_bahan_jadi($from_date = null, $to_date = null, $id_perusahaan = null){
         $builder = $this->db->table("trans_barang_trf_so_det tbtd");
         $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtd.id_header", "inner");
+        $builder->join("ref_perusahaan rp", "rp.id = tbth.id_perusahaan", "left");
         $builder->join("_jenis_proses_produksi jpp", "jpp.id = tbth.id_proses", "left");
         $builder->join("ref_operator ro", "ro.id = tbth.id_cmt", "left");
         $builder->join("ref_gudang rg", "rg.id = tbth.id_gudang_asal", "left");
         $builder->join("ref_gudang rg2", "rg2.id = tbth.id_gudang_tujuan", "left");
 
-        $builder->select("tbth.kode_transaksi, tbth.tanggal, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
+        $builder->select("tbth.kode_transaksi, tbth.tanggal, COALESCE(rp.nama_perusahaan, CASE WHEN tbth.id_perusahaan = 2 THEN 'Citra Knitt' ELSE 'PT Citra Jaya Kniting' END) as perusahaan, COALESCE(tbth.id_perusahaan, 1) as id_perusahaan, COALESCE(tbtd.print_type, 1) as print_type, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
                         jpp.nama as proses, ro.nama_operator, tbtd.kode_sales_order, tbtd.style, tbtd.color, tbtd.kode_ukuran, 
-                        tbtd.qty, tbtd.keterangan");
+                        tbtd.qty, tbtd.keterangan, COALESCE(tbtd.is_reject, 0) as is_reject");
 
         $builder->where('tbth.active', 1);
 
-        $builder->where("tbth.tanggal BETWEEN'$from_date' AND '$to_date'");
+        $builder->where("tbth.tanggal BETWEEN '$from_date' AND '$to_date'");
+        if (!empty($id_perusahaan)) {
+            $builder->where('tbth.id_perusahaan', $id_perusahaan);
+        }
         $builder->orderBy("tbth.tanggal", "asc");
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
 
-    function get_export_bahan_baku($from_date = null, $to_date = null){
+    function get_export_bahan_baku($from_date = null, $to_date = null, $id_perusahaan = null){
         $builder = $this->db->table("trans_barang_trf_detail tbtd");
         $builder->join("trans_barang_trf_header tbth", "tbth.id = CAST(tbtd.id_header AS INTEGER)", "inner");
+        $builder->join("ref_perusahaan rp", "rp.id = tbth.id_perusahaan", "left");
         $builder->join("_jenis_proses_produksi jpp", "jpp.id = tbth.id_proses", "left");
         $builder->join("ref_operator ro", "ro.id = tbth.id_cmt", "left");
         $builder->join("ref_gudang rg", "rg.id = tbth.id_gudang_asal", "left");
@@ -1261,16 +1768,254 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->join("ref_barang rb", "rb.id = tbtd.id_barang", "inner");
         $builder->join("ref_satuan rs", "rs.id = rb.id_satuan", "inner");
 
-        $builder->select("tbth.kode_transaksi, tbth.tanggal, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
+        $builder->select("tbth.kode_transaksi, tbth.tanggal, COALESCE(rp.nama_perusahaan, CASE WHEN tbth.id_perusahaan = 2 THEN 'Citra Knitt' ELSE 'PT Citra Jaya Kniting' END) as perusahaan, COALESCE(tbth.id_perusahaan, 1) as id_perusahaan, rg.nama_gudang as gudang_asal, rg2.nama_gudang as gudang_tujuan, 
                         jpp.nama as proses, ro.nama_operator, rb.kode_barang, rb.nama_barang, tbtd.qty, rs.nama_satuan, tbtd.lot_no, tbtd.keterangan");
 
         $builder->where('tbth.active', 1);
 
-        $builder->where("tbth.tanggal BETWEEN'$from_date' AND '$to_date'");
+        $builder->where("tbth.tanggal BETWEEN '$from_date' AND '$to_date'");
+        if (!empty($id_perusahaan)) {
+            $builder->where('tbth.id_perusahaan', $id_perusahaan);
+        }
         $builder->orderBy("tbth.tanggal", "asc");
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;
+    }
+
+    function getDataTransferMasukP2($id_proses = null, $id_cmt = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $style = null)
+    {
+        $builder = $this->db->table('trans_barang_trf_so_det tbtsd');
+        $builder->join("trans_barang_trf_header tbth", "tbth.id = tbtsd.id_header", "inner");
+        $builder->join("ref_gudang g_asal", "g_asal.id = tbth.id_gudang_asal", "inner");
+        $builder->join("ref_gudang g_tujuan", "g_tujuan.id = tbth.id_gudang_tujuan", "inner");
+        $builder->select("sum(tbtsd.qty) as total_transfer");
+
+        $builder->where('tbth.status', 1);
+        $builder->where('tbth.active', 1);
+        $builder->groupStart();
+            $builder->where('g_asal.id_perusahaan', 1);
+            $builder->orWhere('g_asal.id_perusahaan IS NULL');
+        $builder->groupEnd();
+        $builder->where('g_tujuan.id_perusahaan', 2);
+
+        if (!empty($id_proses)) {
+            $builder->where('tbth.id_proses', $id_proses);
+        }
+        if (!empty($id_cmt)) {
+            $builder->where('tbth.id_cmt', $id_cmt);
+        }
+        if (!empty($id_konsumen)) {
+            $builder->where('tbtsd.id_konsumen', $id_konsumen);
+        }
+        if (!empty($kode_ukuran)) {
+            $builder->where('tbtsd.kode_ukuran', $kode_ukuran);
+        }
+        if (!empty($kode_so)) {
+            $builder->where('tbtsd.kode_sales_order', $kode_so);
+        }
+        if (!empty($color)) {
+            $builder->where('tbtsd.color', $color);
+        }
+
+        $res = $builder->get()->getRow();
+        return !empty($res->total_transfer) ? (float)$res->total_transfer : 0;
+    }
+
+    function getDataBtmP1($id_proses = null, $id_cmt = null, $id_konsumen = null, $kode_ukuran = null, $kode_so = null, $color = null, $style = null)
+    {
+        $builder = $this->db->table('trans_barang_masuk_produksi tbmp');
+        $builder->join("trans_barang_header tbh", "tbh.id = tbmp.id_header", "inner");
+        $builder->select("sum(tbmp.qty) as total_btm");
+
+        $builder->where('tbh.status', 1);
+        $builder->where('tbh.active', 1);
+        $builder->groupStart();
+            $builder->where('tbh.id_perusahaan', 1);
+            $builder->orWhere('tbh.id_perusahaan IS NULL');
+        $builder->groupEnd();
+        $builder->where("LEFT(tbh.kode_transaksi, 3) =", "BTM");
+
+        if (!empty($id_proses)) {
+            $builder->where('tbh.id_proses', $id_proses);
+        }
+        if (!empty($id_cmt)) {
+            $builder->where('tbh.id_cmt', $id_cmt);
+        }
+        if (!empty($id_konsumen)) {
+            $builder->where('tbmp.id_konsumen', $id_konsumen);
+        }
+        if (!empty($kode_ukuran)) {
+            $builder->where('tbmp.kode_ukuran', $kode_ukuran);
+        }
+        if (!empty($kode_so)) {
+            $builder->where('tbmp.kode_sales_order', $kode_so);
+        }
+        if (!empty($color)) {
+            $builder->where('tbmp.color', $color);
+        }
+
+        $res = $builder->get()->getRow();
+        return !empty($res->total_btm) ? (float)$res->total_btm : 0;
+    }
+
+    /**
+     * Mengambil daftar acuan item Sales Order langsung dari trans_sales_order & trans_sample
+     * Khusus untuk P2 (Citra Knitt) yang TIDAK mengikat dokumen transfer dan TIDAK mengikat WO.
+     */
+    public function getDataSOFromSalesOrder($id_proses = null, $kode_so = null, $days = 120)
+    {
+        $soWhere = "so.active = 1";
+        $splWhere = "so.active = 1";
+
+        if (!empty($kode_so)) {
+            $soWhere .= " AND so.kode_sales_order = " . $this->db->escape($kode_so);
+            $splWhere .= " AND so.kode_sample = " . $this->db->escape($kode_so);
+        } elseif (!empty($days)) {
+            $soWhere .= " AND so.tgl_transaksi >= (CURRENT_DATE - INTERVAL '{$days} days')";
+            $splWhere .= " AND so.tgl_transaksi >= (CURRENT_DATE - INTERVAL '{$days} days')";
+        }
+
+        $idProsesInt = !empty($id_proses) ? (int)$id_proses : 0;
+
+        $sql = "
+            (
+                SELECT 
+                    sod.id as id,
+                    1 as print_type,
+                    0 as is_reject,
+                    NULL::integer as id_header,
+                    sou.qty,
+                    NULL::numeric as berat,
+                    2 as tipe,
+                    sod.id as ref_detail_id,
+                    sou.qty as qty_kirim,
+                    so.kode_sales_order,
+                    so.id_konsumen,
+                    so.style,
+                    CONCAT_WS('~', 
+                        NULLIF(COALESCE(rw1.kode_warna, rbw1.kode_warna, rb1.nama_barang),''), 
+                        NULLIF(COALESCE(rw2.kode_warna, rbw2.kode_warna, rb2.nama_barang),''), 
+                        NULLIF(COALESCE(rw3.kode_warna, rbw3.kode_warna, rb3.nama_barang),''), 
+                        NULLIF(COALESCE(rw4.kode_warna, rbw4.kode_warna, rb4.nama_barang),''), 
+                        NULLIF(COALESCE(rw5.kode_warna, rbw5.kode_warna, rb5.nama_barang),''), 
+                        NULLIF(COALESCE(rw6.kode_warna, rbw6.kode_warna, rb6.nama_barang),''), 
+                        NULLIF(COALESCE(rw7.kode_warna, rbw7.kode_warna, rb7.nama_barang),''), 
+                        NULLIF(COALESCE(rw8.kode_warna, rbw8.kode_warna, rb8.nama_barang),'')
+                    ) as color,
+                    NULL::numeric as amount,
+                    rk.nama as buyer,
+                    ru.kode_ukuran,
+                    NULL::text as keterangan,
+                    COALESCE(ru.key_ukuran, LOWER(REGEXP_REPLACE(ru.kode_ukuran, '[^a-zA-Z0-9]', '', 'g'))) as key_ukuran,
+                    {$idProsesInt} as id_proses,
+                    so.deskripsi,
+                    0 as qty_terima,
+                    sou.qty as qty_sisa,
+                    0 as harga,
+                    so.tgl_transaksi
+                FROM trans_sales_order so
+                INNER JOIN ref_konsumen rk ON rk.id = so.id_konsumen
+                INNER JOIN trans_sales_order_det sod ON sod.id_sales_order = so.id
+                INNER JOIN trans_sales_order_ukuran sou ON sou.id_sales_order_det = sod.id
+                INNER JOIN ref_ukuran ru ON ru.id = sou.id_ukuran
+                LEFT JOIN ref_barang rb1 ON rb1.id = sod.id_barang_1
+                LEFT JOIN ref_warna rw1 ON rw1.id = sod.id_warna_1
+                LEFT JOIN ref_warna rbw1 ON rbw1.id = rb1.id_warna
+                LEFT JOIN ref_barang rb2 ON rb2.id = sod.id_barang_2
+                LEFT JOIN ref_warna rw2 ON rw2.id = sod.id_warna_2
+                LEFT JOIN ref_warna rbw2 ON rbw2.id = rb2.id_warna
+                LEFT JOIN ref_barang rb3 ON rb3.id = sod.id_barang_3
+                LEFT JOIN ref_warna rw3 ON rw3.id = sod.id_warna_3
+                LEFT JOIN ref_warna rbw3 ON rbw3.id = rb3.id_warna
+                LEFT JOIN ref_barang rb4 ON rb4.id = sod.id_barang_4
+                LEFT JOIN ref_warna rw4 ON rw4.id = sod.id_warna_4
+                LEFT JOIN ref_warna rbw4 ON rbw4.id = rb4.id_warna
+                LEFT JOIN ref_barang rb5 ON rb5.id = sod.id_barang_5
+                LEFT JOIN ref_warna rw5 ON rw5.id = sod.id_warna_5
+                LEFT JOIN ref_warna rbw5 ON rbw5.id = rb5.id_warna
+                LEFT JOIN ref_barang rb6 ON rb6.id = sod.id_barang_6
+                LEFT JOIN ref_warna rw6 ON rw6.id = sod.id_warna_6
+                LEFT JOIN ref_warna rbw6 ON rbw6.id = rb6.id_warna
+                LEFT JOIN ref_barang rb7 ON rb7.id = sod.id_barang_7
+                LEFT JOIN ref_warna rw7 ON rw7.id = sod.id_warna_7
+                LEFT JOIN ref_warna rbw7 ON rbw7.id = rb7.id_warna
+                LEFT JOIN ref_barang rb8 ON rb8.id = sod.id_barang_8
+                LEFT JOIN ref_warna rw8 ON rw8.id = sod.id_warna_8
+                LEFT JOIN ref_warna rbw8 ON rbw8.id = rb8.id_warna
+                WHERE {$soWhere} AND sou.qty IS NOT NULL AND sou.qty > 0
+            )
+            UNION ALL
+            (
+                SELECT 
+                    sod.id as id,
+                    1 as print_type,
+                    0 as is_reject,
+                    NULL::integer as id_header,
+                    sou.qty,
+                    NULL::numeric as berat,
+                    1 as tipe,
+                    sod.id as ref_detail_id,
+                    sou.qty as qty_kirim,
+                    so.kode_sample as kode_sales_order,
+                    so.id_konsumen,
+                    so.style,
+                    CONCAT_WS('~', 
+                        NULLIF(COALESCE(rw1.kode_warna, rbw1.kode_warna, rb1.nama_barang),''), 
+                        NULLIF(COALESCE(rw2.kode_warna, rbw2.kode_warna, rb2.nama_barang),''), 
+                        NULLIF(COALESCE(rw3.kode_warna, rbw3.kode_warna, rb3.nama_barang),''), 
+                        NULLIF(COALESCE(rw4.kode_warna, rbw4.kode_warna, rb4.nama_barang),''), 
+                        NULLIF(COALESCE(rw5.kode_warna, rbw5.kode_warna, rb5.nama_barang),''), 
+                        NULLIF(COALESCE(rw6.kode_warna, rbw6.kode_warna, rb6.nama_barang),''), 
+                        NULLIF(COALESCE(rw7.kode_warna, rbw7.kode_warna, rb7.nama_barang),''), 
+                        NULLIF(COALESCE(rw8.kode_warna, rbw8.kode_warna, rb8.nama_barang),'')
+                    ) as color,
+                    NULL::numeric as amount,
+                    rk.nama as buyer,
+                    ru.kode_ukuran,
+                    NULL::text as keterangan,
+                    COALESCE(ru.key_ukuran, LOWER(REGEXP_REPLACE(ru.kode_ukuran, '[^a-zA-Z0-9]', '', 'g'))) as key_ukuran,
+                    {$idProsesInt} as id_proses,
+                    so.deskripsi,
+                    0 as qty_terima,
+                    sou.qty as qty_sisa,
+                    0 as harga,
+                    so.tgl_transaksi
+                FROM trans_sample so
+                INNER JOIN ref_konsumen rk ON rk.id = so.id_konsumen
+                INNER JOIN trans_sample_det sod ON sod.id_sample = so.id
+                INNER JOIN trans_sample_ukuran sou ON sou.id_sample_det = sod.id
+                INNER JOIN ref_ukuran ru ON ru.id = sou.id_ukuran
+                LEFT JOIN ref_barang rb1 ON rb1.id = sod.id_barang_1
+                LEFT JOIN ref_warna rw1 ON rw1.id = sod.id_warna_1
+                LEFT JOIN ref_warna rbw1 ON rbw1.id = rb1.id_warna
+                LEFT JOIN ref_barang rb2 ON rb2.id = sod.id_barang_2
+                LEFT JOIN ref_warna rw2 ON rw2.id = sod.id_warna_2
+                LEFT JOIN ref_warna rbw2 ON rbw2.id = rb2.id_warna
+                LEFT JOIN ref_barang rb3 ON rb3.id = sod.id_barang_3
+                LEFT JOIN ref_warna rw3 ON rw3.id = sod.id_warna_3
+                LEFT JOIN ref_warna rbw3 ON rbw3.id = rb3.id_warna
+                LEFT JOIN ref_barang rb4 ON rb4.id = sod.id_barang_4
+                LEFT JOIN ref_warna rw4 ON rw4.id = sod.id_warna_4
+                LEFT JOIN ref_warna rbw4 ON rbw4.id = rb4.id_warna
+                LEFT JOIN ref_barang rb5 ON rb5.id = sod.id_barang_5
+                LEFT JOIN ref_warna rw5 ON rw5.id = sod.id_warna_5
+                LEFT JOIN ref_warna rbw5 ON rbw5.id = rb5.id_warna
+                LEFT JOIN ref_barang rb6 ON rb6.id = sod.id_barang_6
+                LEFT JOIN ref_warna rw6 ON rw6.id = sod.id_warna_6
+                LEFT JOIN ref_warna rbw6 ON rbw6.id = rb6.id_warna
+                LEFT JOIN ref_barang rb7 ON rb7.id = sod.id_barang_7
+                LEFT JOIN ref_warna rw7 ON rw7.id = sod.id_warna_7
+                LEFT JOIN ref_warna rbw7 ON rbw7.id = rb7.id_warna
+                LEFT JOIN ref_barang rb8 ON rb8.id = sod.id_barang_8
+                LEFT JOIN ref_warna rw8 ON rw8.id = sod.id_warna_8
+                LEFT JOIN ref_warna rbw8 ON rbw8.id = rb8.id_warna
+                WHERE {$splWhere} AND sou.qty IS NOT NULL AND sou.qty > 0
+            )
+            ORDER BY tgl_transaksi DESC, kode_sales_order DESC
+        ";
+
+        return $this->db->query($sql)->getResult();
     }
     
 }

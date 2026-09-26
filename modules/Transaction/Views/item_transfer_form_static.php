@@ -53,7 +53,8 @@
         <div class="form-group row  d-none">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="">
+            <!-- TAMBAHAN (2026-08-08): dikunci readonly, sama seperti item_transfer_form.php -->
+            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="" readonly>
           </div>
         </div>
         <div class="form-group row">
@@ -171,7 +172,10 @@
     </div>
     <div class="col-md-7 align-self-center text-right">
       <div class="d-flex justify-content-end align-items-center">
-        <ol class="breadcrumb">
+        <a href="<?= base_url('trans/item-transfer/panduan') ?>" target="_blank" class="btn btn-sm btn-info text-white shadow-sm me-3">
+          <i class="fa fa-book me-1"></i> Panduan Penggunaan
+        </a>
+        <ol class="breadcrumb mb-0">
           <li class="breadcrumb-item"><?= $name_app ?></li>
           <li class="breadcrumb-item">Transaksi</li>
           <li class="breadcrumb-item active"><?= $titlehead ?></li>
@@ -197,6 +201,7 @@
                       <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
                       <input type="hidden" id="id_header" name="id_header" value="<?= !empty($id) ? $id : null ?>" class="form-control" required>
                       <input type="hidden" id="id_cmt" name="id_cmt" value="<?= !empty($resData->id_cmt) ? $resData->id_cmt : null ?>" class="form-control" required>
+                      <input type="hidden" id="id_perusahaan" name="id_perusahaan" value="<?= !empty($resData->id_perusahaan) ? $resData->id_perusahaan : (!empty($selected_perusahaan) ? $selected_perusahaan : (session()->get('id_perusahaan') ?: 1)) ?>">
                       <input type="text" id="trans_no" name="trans_no" class="form-control" placeholder="Diisi otomatis oleh sistem" value="<?= !empty($resData->kode_transaksi) ? $resData->kode_transaksi : null ?>" readonly>
                     </div>
                   </div>
@@ -213,14 +218,34 @@
               <div class="row">
                 <div class="col-sm-6">
                   <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_warehouse">Transfer From</label>
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_perusahaan">Perusahaan<span class="text-danger">*</span></label>
                     <div class="col-md-8">
-                      <select id="gudang_asal" name="gudang_asal" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
+                      <select id="select_perusahaan" name="select_perusahaan" class="form-select select2" data-placeholder="-- Pilih Perusahaan --">
+                        <?php if (!empty($perusahaan)) : ?>
+                          <?php foreach ($perusahaan as $item) : ?>
+                            <option <?= (!empty($selected_perusahaan) && $selected_perusahaan == $item->id) ? 'selected' : '' ?> value="<?= $item->id ?>"><?= $item->nama_perusahaan ?></option>
+                          <?php endforeach; ?>
+                        <?php endif; ?>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group row">
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_warehouse">Transfer From<span class="text-danger">*</span></label>
+                    <div class="col-md-8">
+                      <select id="gudang_asal" name="gudang_asal" class="form-select select2" data-placeholder="-- Pilih Warehouse --" required>
+                        <option value=""></option>
+                        <?php 
+                          $selectedGudangAsal = !empty($resData->id_gudang_asal) ? $resData->id_gudang_asal : (!empty($default_gudang_asal) ? $default_gudang_asal : null);
+                        ?>
                         <?php foreach ($gudang as $item) : ?>
-                          <?php if (!empty($resData->id_gudang_asal) && $resData->id_gudang_asal == $item->id) { ?>
-                            <option selected value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                          <?php if (!empty($selectedGudangAsal) && $selectedGudangAsal == $item->id) { ?>
+                            <option selected value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?></option>
                           <?php } else { ?>
-                            <option value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                            <option value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?></option>
                           <?php } ?>
 
                         <?php endforeach; ?>
@@ -230,14 +255,14 @@
                 </div>
                 <div class="col-sm-6">
                   <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="gudang_tujuan">Transfer To</label>
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="gudang_tujuan">Transfer To<span class="text-danger">*</span></label>
                     <div class="col-md-8">
-                      <select id="gudang_tujuan" name="gudang_tujuan" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
+                      <select id="gudang_tujuan" name="gudang_tujuan" class="form-select select2" data-placeholder="-- Pilih Warehouse --" required>
                         <?php foreach ($gudang as $item) : ?>
                           <?php if (!empty($resData->id_gudang_tujuan) && $resData->id_gudang_tujuan == $item->id) { ?>
-                            <option selected value="<?= $item->id ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?></option>
+                            <option selected value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?><?= !empty($item->nama_perusahaan) ? " ({$item->nama_perusahaan})" : "" ?></option>
                           <?php } else { ?>
-                            <option value="<?= $item->id ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?></option>
+                            <option value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?> - <?= $item->tipe == 1 ? "NON CMT" : "CMT" ?><?= !empty($item->nama_perusahaan) ? " ({$item->nama_perusahaan})" : "" ?></option>
                           <?php } ?>
 
                         <?php endforeach; ?>
@@ -249,14 +274,14 @@
               <div class="row">
                 <div class="col-sm-6">
                   <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_proses">Proses</label>
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_proses">Proses<span class="text-danger">*</span></label>
                     <div class="col-md-8">
-                      <select id="select_proses" name="select_proses" class="form-select select2" data-placeholder="-- Pilih Proses --">
+                      <select id="select_proses" name="select_proses" class="form-select select2" data-placeholder="-- Pilih Proses --" required>
                         <?php foreach ($proses as $item) : ?>
                           <?php if (!empty($resData->id_proses) && $resData->id_proses == $item->id) { ?>
-                            <option selected value="<?= $item->id ?>"><?= $item->nama ?></option>
+                            <option selected value="<?= $item->id ?>" data-is-rajut="<?= !empty($item->is_rajut) ? $item->is_rajut : 0 ?>"><?= $item->nama ?></option>
                           <?php } else { ?>
-                            <option value="<?= $item->id ?>"><?= $item->nama ?></option>
+                            <option value="<?= $item->id ?>" data-is-rajut="<?= !empty($item->is_rajut) ? $item->is_rajut : 0 ?>"><?= $item->nama ?></option>
                           <?php } ?>
 
                         <?php endforeach; ?>
@@ -265,11 +290,11 @@
                   </div>
                 </div>
 
-                <div class="col-sm-6 d-none" id="div-cmt">
+                <div class="col-sm-6" id="div-cmt">
                   <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">CMT</label>
+                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="select_cmt">CMT<span class="text-danger">*</span></label>
                     <div class="col-md-8">
-                      <select id="select_cmt" name="select_cmt" class="form-control custom-select select2" data-placeholder="-- Pilih CMT --">
+                      <select id="select_cmt" name="select_cmt" class="form-control custom-select select2" data-placeholder="-- Pilih CMT --" required>
                         <?php foreach ($operator as $rowData) : ?>
                           <?php if (!empty($resData->id_cmt) && $resData->id_cmt == $rowData->id) { ?>
                             <option selected value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
@@ -306,12 +331,15 @@
 
           <hr>
           <div class="col-sm-12 mb-2">
-            <!-- <button type="button" class="btn btn-sm btn-primary" id="btn-view"> <i class="fa fa-plus"></i></button> -->
              <div class="input-group my-2">
                 <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
                 <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
+                <button type="button" class="btn btn-primary" id="btn-read-scale-prod" title="Ambil Berat dari Timbangan Serial (COM Port)">
+                  <i class="fa fa-balance-scale"></i> ⚖️ Timbangan
+                </button>
                 <button  <?=  !empty($role_id) && ($role_id == 1 || $role_id == 2) ? null : 'hidden' ?> type="button" class="btn btn-info text-white" id="btn-view"><i class="fa fa-plus"></i></button> 
               </div>
+              <small class="text-muted d-block ms-1" id="scale-status-text-prod">Ambil nilai Kg dari Timbangan Yaohua YH-T3 untuk kolom Berat (Kg) baris yang dipilih / terakhir</small>
           </div>
           <div class="row">
             <div class="col-sm-12">
@@ -341,7 +369,11 @@
                   <button class='btn btn-success' id="btn-simpan">
                     <span class="fa fa-save"></span> Simpan
                   </button>
+                  <button type="button" class='btn btn-warning text-white m-s-5' id="btn-simpan-cetak">
+                    <i class="fa fa-print"></i> Simpan & Cetak
+                  </button>
                   <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
+                  <button <?= !empty($role_id) && ($role_id == 1 || $role_id == 2 || $role_id == 4) ? null : 'hidden' ?> type="button" class="m-s-5 btn btn-danger" id="btn-cancel-approve"> <i class="fa fa-undo"></i> Batalkan Approve</button>
                 </div>
               </div>
             </div>
@@ -359,7 +391,7 @@
 <?= $this->endSection('content'); ?>
 
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/transfer/form.js"></script>
+<script src="<?= base_url('script/app/transaction/transfer/form.js?v=' . time()); ?>"></script>
 <script>
   let dataGudang = <?php echo json_encode($gudang); ?>;
   // let dataSO = <?php echo !empty($dataSO) ? json_encode($dataSO) : null; ?>;

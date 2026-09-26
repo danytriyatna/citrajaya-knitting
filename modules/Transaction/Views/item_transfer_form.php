@@ -43,7 +43,12 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="">
+            <!-- TAMBAHAN (2026-08-08): dikunci readonly - harga otomatis mengikuti Lot
+                 yang dipilih (harga beli asli), staff tidak boleh mengetik manual. Ini
+                 sumber bug harga "ketuker" antar barang yang dilaporkan user (mis. harga
+                 Benang Polyester/Hydrosoft kebawa ke transaksi barang lain). Disamakan
+                 dgn perlakuan field price di Barang Keluar. -->
+            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="" readonly>
           </div>
         </div>
         <div class="form-group row">
@@ -266,5 +271,5 @@
 
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/transfer/formv1.js"></script>
+<script src="<?= base_url('script/app/transaction/transfer/form.js?v=' . time()); ?>"></script>
 <?= $this->endSection('script'); ?>

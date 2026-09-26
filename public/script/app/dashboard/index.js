@@ -1,4 +1,21 @@
 $(document).ready(function () {
+    // Base URL aplikasi (mengikuti folder deploy, misal /citraknitt/public/).
+    // Dipakai untuk semua endpoint AJAX di Dashboard supaya tidak nyasar ke root
+    // domain kalau app tidak di-hosting persis di root (lihat <base href> di template.php).
+    const DASH_BASE = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/');
+
+    // Format angka konsisten dengan konvensi Indonesia (titik ribuan, koma desimal)
+    // dipakai untuk semua kolom "money" Tabulator di seluruh Dashboard.
+    const idMoneyParams = { thousand: ".", decimal: ",", precision: 2, symbol: "" };
+
+    // Formatter untuk kolom QTY (angka biasa, bukan uang) - tetap pakai pemisah ribuan
+    // tapi tanpa paksa 2 angka desimal kalau nilainya bulat.
+    function cellQty(cell) {
+        let val = parseFloat(cell.getValue());
+        if (isNaN(val)) val = 0;
+        return val.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
     const bulanSekarang = new Date().getMonth() + 1;
     const tahunSekarang = new Date().getFullYear();
 
@@ -41,8 +58,8 @@ $(document).ready(function () {
 
             {
 				title: 'QTY', field: 'qty', headerSort:false, sorter: 'string',
-				width: 100, formatter : "html", hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 100, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
 
             {
                 title: "NO. PRODUKSI", field: "btnProd", headerSort: false, formatter: "html",
@@ -51,18 +68,18 @@ $(document).ready(function () {
 
             {
 				title: 'PROSES<br>PRODUKSI', field: 'qty_prod', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 100, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
 
             {
 				title: 'HASIL<br>PRODUKSI', field: 'qty_hasil', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 100, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
 
             {
 				title: 'SISA<br>PRODUKSI', field: 'qty_sisa', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 100, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
 
             {
                 title: "NO. PENGIRIMAN", field: "btnDev", headerSort: false, formatter: "html",
@@ -71,88 +88,53 @@ $(document).ready(function () {
 
             {
 				title: 'QTY<br>PENGIRIMAN', field: 'qty_kirim', headerSort:false, sorter: 'string',
-				width: 110, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 110, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
 
             {
 				title: 'QTY BELUM<br>DIKIRIM ', field: 'qty_sisa_kirim', headerSort:false, sorter: 'string',
-				width: 100, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum',
-			}, 
+				width: 100, formatter: cellQty, hozAlign: 'right', cssClass: 'text-end', bottomCalc: 'sum', bottomCalcFormatter: cellQty,
+			},
             {
                 title: "NO. TRANSAKSI", field: "btnOrder", headerSort: false, formatter: "html",
                 width: 130, hozAlign: 'center', cssClass: 'text-center'
             },
             {
-				title: 'NILAI SO', field: 'harga_total', headerSort:false, sorter: 'string',
-				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
+				title: 'NILAI SO', field: 'harga_total', headerSort:false, sorter: 'number',
+				width: 160, formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end',
+                bottomCalc: 'sum', bottomCalcFormatter: "money", bottomCalcFormatterParams: idMoneyParams,
+                bottomCalcParams: { allRows: true }
+			},
             {
-				title: 'NILAI INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
-				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
+				title: 'NILAI INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'number',
+				width: 160, formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end',
+                bottomCalc: 'sum', bottomCalcFormatter: "money", bottomCalcFormatterParams: idMoneyParams,
+                bottomCalcParams: { allRows: true }
+			},
             {
-				title: 'NILAI PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
-				width: 160, formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
-
-            // {
-            //     title: "TIPE", field: "tipe", headerSort: false, formatter: "html",
-            //     width: 120, 
-            // },
-
-            
+				title: 'NILAI PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'number',
+				width: 160, formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end',
+                bottomCalc: 'sum', bottomCalcFormatter: "money", bottomCalcFormatterParams: idMoneyParams,
+                bottomCalcParams: { allRows: true }
+			},
         ],
         layout: 'fitColumns',
-        ajaxURL: "/dashboard/list_order",
+        ajaxURL: DASH_BASE + "dashboard/list_order",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
         ajaxSorting: true,
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 300,
+        height: 800,
         ajaxRequesting: function (url, params) {
-            params.start = params.size * (params.page - 1);
-            params.length = params.size;
+            params.start = 0;
+            params.length = 99999;
             params.tracking_id = $("#filter_tracking").val();
         },
         ajaxResponse: function (url, params, response) {
-            let pageSize = dtListTracking.getPageSize();
-            let pageNo = dtListTracking.getPage();
-            let startRow = (pageSize * (pageNo - 1)) + 1;
-            let endRow = response.data.length + startRow - 1;
-            if (response.data.length === 0) {
-                startRow = 0; endRow = 0;
-            }
-            let recordsFiltered = parseInt(response.recordsFiltered);
-            let recordsTotal = parseInt(response.recordsTotal);
-
-            $('#total_qty').text(response.total_qty); 
-            $('#total_qty_prod').text(response.total_qty_prod); 
-            $('#total_qty_hasil').text(response.total_qty_hasil); 
-            $('#total_qty_sisa_prod').text(response.total_qty_sisa_prod); 
-            $('#total_qty_kirim').text(response.total_qty_kirim); 
-            $('#total_qty_sisa_kirim').text(response.total_qty_sisa_kirim); 
-
-            $("#table-footer .tabulator-startrow").text(startRow);
-            $("#table-footer .tabulator-endrow").text(endRow);
-            $("#table-footer .tabulator-totalrow").text(recordsFiltered);
-
-            let elTotalFilteredRow = $("#table-footer .tabulator-totalfilteredrow");
-            elTotalFilteredRow.text("");
-            if (recordsTotal > recordsFiltered) {
-                elTotalFilteredRow.text(" (disaring dari " + recordsTotal
-                    + " entri keseluruhan)");
-            }
-            return response;
+            return response.data || [];
         },
-        footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
-            + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
-            + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: 20,
-        paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
         },
@@ -164,7 +146,7 @@ $(document).ready(function () {
         console.log("Filter tracking berubah ke:", val);
 
         // Reset ke halaman pertama biar data sesuai
-        dtListTracking.setData("/dashboard/list_order");
+        dtListTracking.setData(DASH_BASE + "dashboard/list_order");
     });
 
     let searchThread = null;
@@ -209,76 +191,50 @@ $(document).ready(function () {
 
             {
 				title: 'NILAI SO', field: 'nilai_so', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "17%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
             {
 				title: 'NILAI<br>INVOICE', field: 'nilai_invoice', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "17%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
             {
 				title: 'SISA <br>TAGIHAN', field: 'sisa_tagihan', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "17%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
             {
 				title: 'PEMBAYARAN', field: 'pembayaran', headerSort:false, sorter: 'string',
-				width: "16%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "16%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
             {
 				title: 'SISA <br> PEMBAYARAN', field: 'sisa_pembayaran', headerSort:false, sorter: 'string',
-				width: "17%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "17%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', vertAlign: 'middle', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
 
             
         ],
         layout: 'fitColumns',
-        ajaxURL: "/dashboard/list_invoice",
+        ajaxURL: DASH_BASE + "dashboard/list_invoice",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
         ajaxSorting: true,
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 700,
+        height: 700,
         ajaxRequesting: function (url, params) {
-            params.start = params.size * (params.page - 1);
-            params.length = params.size;
+            // Ambil SEMUA baris - tabel scroll ke bawah kalau datanya banyak,
+            // supaya tidak ada data yang "hilang" saat scroll padahal cuma belum ke-fetch.
+            params.start = 0;
+            params.length = 99999;
         },
         ajaxResponse: function (url, params, response) {
-            let pageSize = dtListInvoice.getPageSize();
-            let pageNo = dtListInvoice.getPage();
-            let startRow = (pageSize * (pageNo - 1)) + 1;
-            let endRow = response.data.length + startRow - 1;
-            console.log(response.data.length, startRow, endRow);
-            if (response.data.length === 0) {
-                startRow = 0; endRow = 0;
-            }
-            let recordsFiltered = parseInt(response.recordsFiltered);
-            let recordsTotal = parseInt(response.recordsTotal);
-
-            $("#table-footer-inv .tabulator-startrow").text(startRow);
-            $("#table-footer-inv .tabulator-endrow").text(endRow);
-            $("#table-footer-inv .tabulator-totalrow").text(recordsFiltered);
-
-            let elTotalFilteredRow = $("#table-footer-inv .tabulator-totalfilteredrow");
-            elTotalFilteredRow.text("");
-            if (recordsTotal > recordsFiltered) {
-                elTotalFilteredRow.text(" (disaring dari " + recordsTotal
-                    + " entri keseluruhan)");
-            }
-            return response;
+            return response.data || [];
         },
-        footerElement: '<div id="table-footer-inv" class="pull-left tabulator-info">'
-            + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
-            + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: 15,
-        paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
         },
@@ -333,64 +289,39 @@ $(document).ready(function () {
 
             {
 				title: 'NILAI PO', field: 'total_bayar', headerSort:false, sorter: 'string',
-				width: "20%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
+				width: "20%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end'
+			},
 
             {
 				title: 'PEMBAYARAN', field: 'dibayar', headerSort:false, sorter: 'string',
-				width: "20%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
+				width: "20%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end'
+			},
 
             {
 				title: 'SISA', field: 'sisa_bayar', headerSort:false, sorter: 'string',
-				width: "20%", formatter : "money", hozAlign: 'right', cssClass: 'text-end'
-			}, 
+				width: "20%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end'
+			},
 
             
         ],
         layout: 'fitColumns',
-        ajaxURL: "/dashboard/list_po",
+        ajaxURL: DASH_BASE + "dashboard/list_po",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
         ajaxSorting: true,
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 200,
+        height: 260, // +2 baris data dibanding sebelumnya (200px/5 baris)
         ajaxRequesting: function (url, params) {
-            params.start = params.size * (params.page - 1);
-            params.length = params.size;
+            // Ambil SEMUA baris - tabel scroll ke bawah kalau datanya banyak,
+            // supaya tidak ada data yang "hilang" saat scroll padahal cuma belum ke-fetch.
+            params.start = 0;
+            params.length = 99999;
         },
         ajaxResponse: function (url, params, response) {
-            let pageSize = dtListPo.getPageSize();
-            let pageNo = dtListPo.getPage();
-            let startRow = (pageSize * (pageNo - 1)) + 1;
-            let endRow = response.data.length + startRow - 1;
-            if (response.data.length === 0) {
-                startRow = 0; endRow = 0;
-            }
-            let recordsFiltered = parseInt(response.recordsFiltered);
-            let recordsTotal = parseInt(response.recordsTotal);
-
-            $("#table-footer-po .tabulator-startrow").text(startRow);
-            $("#table-footer-po .tabulator-endrow").text(endRow);
-            $("#table-footer-po .tabulator-totalrow").text(recordsFiltered);
-
-            let elTotalFilteredRow = $("#table-footer-po .tabulator-totalfilteredrow");
-            elTotalFilteredRow.text("");
-            if (recordsTotal > recordsFiltered) {
-                elTotalFilteredRow.text(" (disaring dari " + recordsTotal
-                    + " entri keseluruhan)");
-            }
-            return response;
+            return response.data || [];
         },
-        footerElement: '<div id="table-footer-po" class="pull-left tabulator-info">'
-            + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
-            + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: 5,
-        paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
         },
@@ -412,59 +343,49 @@ $(document).ready(function () {
 
             {
 				title: 'SALDO', field: 'saldo', headerSort:false, sorter: 'string',
-				width: "50%", formatter : "money", hozAlign: 'right', cssClass: 'text-end', bottomCalcFormatter: 'money', bottomCalc: 'sum',
+				width: "50%", formatter : "money", formatterParams: idMoneyParams, hozAlign: 'right', cssClass: 'text-end', bottomCalcFormatter: 'money', bottomCalcFormatterParams: idMoneyParams, bottomCalc: 'sum',
                 bottomCalcParams: { allRows: true }
-			}, 
+			},
 
             
         ],
         layout: 'fitColumns',
-        ajaxURL: "/dashboard/list_saldo",
+        ajaxURL: DASH_BASE + "dashboard/list_saldo",
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
         ajaxSorting: true,
         ajaxFiltering: false,
         sortMode: "remote",
         filterMode: "remote",
-        minHeight: 200,
+        height: 300, // +3 baris data dibanding sebelumnya (200px/5 baris)
         ajaxRequesting: function (url, params) {
-            params.start = params.size * (params.page - 1);
-            params.length = params.size;
+            // Ambil SEMUA baris yang sesuai (bukan dibatasi angka tertentu) - tabel
+            // scroll ke bawah kalau datanya banyak, supaya tidak ada data yang
+            // "hilang" saat scroll padahal sebenarnya cuma belum ke-fetch.
+            params.start = 0;
+            params.length = 99999;
             params.month = $("#filter_saldo_bulan").val();
             params.year = $("#filter_saldo_tahun").val();
         },
         ajaxResponse: function (url, params, response) {
-            let pageSize = dtListPo.getPageSize();
-            let pageNo = dtListPo.getPage();
-            let startRow = (pageSize * (pageNo - 1)) + 1;
-            let endRow = response.data.length + startRow - 1;
-            if (response.data.length === 0) {
-                startRow = 0; endRow = 0;
+            // TAMBAHAN (2026-08-08): m_mutasi_history (sumber saldo ini) cuma
+            // terisi kalau tombol "Update" pernah diklik utk bulan/tahun yang
+            // dipilih - kalau belum pernah, grid-nya kosong tapi itu BUKAN
+            // berarti datanya memang kosong. Bedakan pesannya supaya tidak
+            // disangka bug/data hilang.
+            // FIX (2026-08-08): versi Tabulator yang dipakai di proyek ini (5.6.1)
+            // tidak punya method setPlaceholder() - itu menyebabkan TypeError
+            // "dtListSaldo.setPlaceholder is not a function" setiap kali grid ini
+            // di-load. Placeholder yang benar diubah lewat properti
+            // options.placeholder, yang dibaca ulang oleh Tabulator setiap kali
+            // mau menampilkan placeholder (lihat RowManager.js initializePlaceholder()).
+            if (response && response.sudah_diupdate === false) {
+                dtListSaldo.options.placeholder = 'Data belum diperbarui untuk periode ini - klik tombol "Update" di atas untuk menghitungnya.';
+            } else {
+                dtListSaldo.options.placeholder = "Tidak ada data";
             }
-            let recordsFiltered = parseInt(response.recordsFiltered);
-            let recordsTotal = parseInt(response.recordsTotal);
-            $('#total_saldo').text(response.total_saldo); 
-            console.log(response.total_saldo);
-
-            $("#table-footer-saldo .tabulator-startrow").text(startRow);
-            $("#table-footer-saldo .tabulator-endrow").text(endRow);
-            $("#table-footer-saldo .tabulator-totalrow").text(recordsFiltered);
-
-            let elTotalFilteredRow = $("#table-footer-saldo .tabulator-totalfilteredrow");
-            elTotalFilteredRow.text("");
-            if (recordsTotal > recordsFiltered) {
-                elTotalFilteredRow.text(" (disaring dari " + recordsTotal
-                    + " entri keseluruhan)");
-            }
-            return response;
+            return response.data || [];
         },
-        footerElement: '<div id="table-footer-saldo" class="pull-left tabulator-info">'
-            + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
-            + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: 5,
-        paginationButtonCount: 10,
         dataSendParams: {
             sorters: "order"
         },
@@ -474,13 +395,13 @@ $(document).ready(function () {
     $("#filter_saldo_bulan").on("change", function () {
         let val = $(this).val();
         // Reset ke halaman pertama biar data sesuai
-        dtListSaldo.setData("/dashboard/list_saldo");
+        dtListSaldo.setData(DASH_BASE + "dashboard/list_saldo");
     });
     
     $("#filter_saldo_tahun").on("change", function () {
         let val = $(this).val();
         // Reset ke halaman pertama biar data sesuai
-        dtListSaldo.setData("/dashboard/list_saldo");
+        dtListSaldo.setData(DASH_BASE + "dashboard/list_saldo");
     });
 
     $("#btn_update").click(function () {
@@ -513,7 +434,7 @@ $(document).ready(function () {
             // setTimeout(() => {
             //     dtListSaldo.redraw(true)
             // }, 500);
-            dtListSaldo.setData("/dashboard/list_saldo");
+            dtListSaldo.setData(DASH_BASE + "dashboard/list_saldo");
             $(".preloader").hide().css("opacity", "1");
         },
         error: function(xhr, status, error) {
@@ -583,7 +504,7 @@ $(document).ready(function () {
         if (val1 && val2) {
             
           $.ajax({
-            url: '/dashboard/list_laba',
+            url: DASH_BASE + 'dashboard/list_laba',
             method: 'GET',
             data: {
               month: val1,
@@ -615,7 +536,7 @@ $(document).ready(function () {
                     const rowHtml = `
                         <tr class="biaya-operasional-row">
                         <td class="p-s-24">- ${nama_biaya[i]}</td>
-                        <td>${harga_per_biaya[i]}</td>
+                        <td class="text-end">${harga_per_biaya[i]}</td>
                         <td></td>
                         </tr>
                     `;
@@ -646,7 +567,7 @@ $(document).ready(function () {
             if (val2) {
                 
             $.ajax({
-                url: '/dashboard/list_grafik',
+                url: DASH_BASE + 'dashboard/list_grafik',
                 method: 'GET',
                 data: {
                 year: val2

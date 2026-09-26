@@ -86,6 +86,21 @@ class Mborongan extends \App\Models\PrModel
                 }
             }
 
+            // Validasi Perusahaan: Transaksi BTM/BTMC hanya diambil yang sesuai dengan perusahaan karyawan (P1 atau P2)
+            $builder->where("(
+                SELECT COALESCE(tbh.id_perusahaan, 1) 
+                FROM trans_barang_header tbh 
+                WHERE tbh.kode_transaksi = pd.kode_transaksi 
+                LIMIT 1
+            ) = (
+                SELECT COALESCE(rk.id_perusahaan, 1) 
+                FROM ref_karyawan rk 
+                WHERE rk.id_operator = pd.id_operator 
+                  AND rk.active = 1 
+                ORDER BY rk.id DESC 
+                LIMIT 1
+            )");
+
             // $builder->where('(pd.active = 1 and tp.active = 1)');
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
@@ -132,7 +147,7 @@ class Mborongan extends \App\Models\PrModel
         }
 
         if(!empty($params['tgl_awal']) && !empty($params['tgl_akhir'])){
-            $builder->where("pd.tgl_transaksi BETWEEN '".$params['tgl_akhir']."' AND '".$params['tgl_akhir']."'", null, false);
+            $builder->where("pd.tgl_transaksi BETWEEN '".$params['tgl_awal']."' AND '".$params['tgl_akhir']."'", null, false);
         }
 
         if(!empty($params['id_operator'])){
@@ -164,6 +179,21 @@ class Mborongan extends \App\Models\PrModel
             }
         }
 
+        // Validasi Perusahaan: Transaksi BTM/BTMC hanya diambil yang sesuai dengan perusahaan karyawan (P1 atau P2)
+        $builder->where("(
+            SELECT COALESCE(tbh.id_perusahaan, 1) 
+            FROM trans_barang_header tbh 
+            WHERE tbh.kode_transaksi = pd.kode_transaksi 
+            LIMIT 1
+        ) = (
+            SELECT COALESCE(rk.id_perusahaan, 1) 
+            FROM ref_karyawan rk 
+            WHERE rk.id_operator = pd.id_operator 
+              AND rk.active = 1 
+            ORDER BY rk.id DESC 
+            LIMIT 1
+        )");
+
         $this->_data = $builder->get()->getRow()->_cnt;
 
         return $this->_data;
@@ -177,15 +207,15 @@ class Mborongan extends \App\Models\PrModel
                           rk.full_name,
                           rk.posisi,
                           rk.id as id_karyawan,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2) AS izin,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) AS hadir,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin,
                           COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5,6)) AS alpha,
                           rk.upah_harian,
-                          (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) as gaji_harian,
+                          (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) * rk.upah_harian) as gaji_harian,
                           -- Perbaikan SUM() dengan FILTER
-                          COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja,
-                          ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam,
+                          COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60 AS jam_kerja,
+                          ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60) * rk.upah_jam AS gaji_jam,
                           rk.upah_lembur,
                           rk.upah_lembur_we,
                           rk.upah_jam,

@@ -19,7 +19,9 @@ class GudangModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " uk");
         $builder->join($this->tableCMT . " abx", "uk.id_cmt = abx.id", "left");
-        $builder->select("uk.id, uk.nama_gudang, uk.keterangan, uk.tipe, abx.nama_operator, abx.id as id_cmt");
+        $builder->join("ref_perusahaan pbx", "uk.id_perusahaan = pbx.id", "left");
+        $builder->select("uk.id, uk.nama_gudang, uk.keterangan, uk.tipe, abx.nama_operator, abx.id as id_cmt,
+                          uk.id_perusahaan, pbx.nama_perusahaan");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
@@ -29,6 +31,10 @@ class GudangModel extends \App\Models\PrModel
                 $builder->orWhere('LOWER(uk.keterangan) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->orWhere('LOWER(abx.nama_operator) LIKE', strtolower("%{$filters[0]['value']}%"));
                 $builder->groupEnd();
+            }
+
+            if (!empty($params['id_perusahaan'])) {
+                $builder->where('uk.id_perusahaan', $params['id_perusahaan']);
             }
 
             if (!empty($order)) {
@@ -68,6 +74,23 @@ class GudangModel extends \App\Models\PrModel
         }
 
         $this->_data = $builder->get()->getRow()->_cnt;
+
+        return $this->_data;
+    }
+
+    // Dipakai Receive Item untuk default Warehouse ("Gudang Utama") saat
+    // baris detail otomatis terisi dari PO - user tetap bisa mengubahnya.
+    // Dicari berdasarkan nama (bukan id hardcode) supaya tidak rapuh kalau
+    // datanya beda antar environment.
+    function getGudangUtama()
+    {
+        $builder = $this->db->table($this->table);
+        $builder->select("id, nama_gudang");
+        $builder->where('active', 1);
+        $builder->where('LOWER(nama_gudang) LIKE', 'gudang utama');
+        $builder->orderBy('id');
+        $builder->limit(1);
+        $this->_data = $builder->get()->getRow();
 
         return $this->_data;
     }

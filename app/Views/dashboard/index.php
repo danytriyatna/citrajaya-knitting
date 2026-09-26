@@ -48,69 +48,107 @@
             <div class="table-responsive">
               <div class="table-striped" id="tbl-tracking"></div>
             </div>
-            <br>
-            <div class="row">
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY PROSES PRODUKSI</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty_prod">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY HASIL PRODUKSI</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty_hasil">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY SISA PRODUKSI</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty_sisa_prod">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY PENGIRIMAN</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty_kirim">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-lg-4">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <th class="bg-warning"><b>TOTAL QTY BELUM KIRIM</b></th>
-                        <th class="bg-warning text-end"><b id="total_qty_sisa_kirim">0,00</b></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0 f-w-600">RINGKASAN PERSEDIAAN</h6>
+          </div>
+          <div class="card-body">
+
+            <div class="row mb-2 align-items-end filter-persediaan-bar">
+              <div class="col-sm-3 mb-2">
+                <label class="control-label" for="filter_persediaan_gudang">Gudang</label>
+                <select id="filter_persediaan_gudang" name="filter_persediaan_gudang" class="form-select">
+                  <?php foreach ($gudangPersediaan as $g) : ?>
+                    <option value="<?= $g->id ?>" <?= (strtolower($g->nama_gudang) == 'gudang utama') ? 'selected' : '' ?>><?= $g->nama_gudang ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-sm-3 mb-2">
+                <label class="control-label" for="filter_persediaan_jenis">Jenis Barang</label>
+                <select id="filter_persediaan_jenis" name="filter_persediaan_jenis" class="form-select">
+                  <?php foreach ($jenisBarangPersediaan as $j) : ?>
+                    <option value="<?= $j->id ?>" <?= (strtolower($j->nama_jenis_barang) == 'benang rajut') ? 'selected' : '' ?>><?= $j->nama_jenis_barang ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-sm-2 mb-2">
+                <label class="control-label" for="filter_persediaan_bulan">Bulan</label>
+                <select id="filter_persediaan_bulan" name="filter_persediaan_bulan" class="form-select">
+                  <?php
+                  $namaBulan = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+                  foreach ($namaBulan as $numBulan => $labelBulan) : ?>
+                    <option value="<?= $numBulan ?>" <?= ($numBulan == $bulanPersediaanSaatIni) ? 'selected' : '' ?>><?= $labelBulan ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-sm-2 mb-2">
+                <label class="control-label" for="filter_persediaan_tahun">Tahun</label>
+                <select id="filter_persediaan_tahun" name="filter_persediaan_tahun" class="form-select">
+                  <?php for ($y = $tahunPersediaanSaatIni + 1; $y >= $tahunPersediaanSaatIni - 5; $y--) : ?>
+                    <option value="<?= $y ?>" <?= ($y == $tahunPersediaanSaatIni) ? 'selected' : '' ?>><?= $y ?></option>
+                  <?php endfor; ?>
+                </select>
+              </div>
+              <div class="col-sm-2 mb-2">
+                <button type="button" id="btn_update_persediaan" class="btn btn-info w-100">
+                  <i class="fa fa-refresh"></i> Update Data
+                </button>
+              </div>
             </div>
+
+            <div class="row mb-3">
+              <div class="col-sm-12">
+                <div class="input-group">
+                  <span class="input-group-text bg-white" id="basic-addon-persediaan"><i class="ti-search"></i></span>
+                  <input type="text" id="inp-persediaan-search" class="form-control" placeholder="Cari kode warna / nama barang..." aria-label="Pencarian" aria-describedby="basic-addon-persediaan">
+                </div>
+              </div>
+            </div>
+
+            <div class="table-striped" id="tbl-persediaan-ringkasan"></div>
+
+            <div id="panel-persediaan-detail" class="mt-3" style="display:none; border:2px dashed #e0a800; border-radius:8px; padding:14px 16px; background:#fffdf5;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <h6 class="mb-0 f-w-600" id="txt-persediaan-detail-title">Detail Stock Card</h6>
+                  <small class="text-muted" id="txt-persediaan-detail-sub">-</small>
+                </div>
+                <button type="button" class="btn-close" id="btn-close-persediaan-detail" aria-label="Tutup"></button>
+              </div>
+              <div class="row mb-2">
+                <div class="col-sm-3">
+                  <table class="table mb-0">
+                    <tbody>
+                      <tr>
+                        <th>Total Awal</th>
+                        <th class="text-end" id="txt-persediaan-total-awal">0,00</th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-sm-3">
+                  <table class="table mb-0">
+                    <tbody>
+                      <tr>
+                        <th>Total Akhir</th>
+                        <th class="text-end" id="txt-persediaan-total-akhir">0,00</th>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <div class="table-striped" id="tbl-persediaan-detail"></div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -193,7 +231,7 @@
         </div>
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">SALDO</h6>
+            <h6 class="mb-0 f-w-600">SALDO KAS BON</h6>
           </div>
           <div class="card-body">
             <div class="row">
@@ -262,18 +300,6 @@
                 <tbody>
                 </tbody>
               </table> -->
-            </div>
-            <br>
-            <div class="table-responsive">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <th class="bg-warning"><b>TOTAL SALDO</b></th>
-                    <th class="bg-warning"></th>
-                    <th class="bg-warning text-end"><b id="total_saldo">0,00</b></th>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -450,13 +476,13 @@
                   </tr>
                   <tr>
                     <td class="p-s-24">- Penjualan</td>
-                    <td id="penjualan">20.000.000,00</td>
+                    <td id="penjualan" class="text-end">20.000.000,00</td>
                     <td></td>
                   </tr>
                   <tr>
                     <th><b>Total Penjualan</b></th>
                     <th></th>
-                    <th><b id="total_penjualan">20.000.000,00</b></th>
+                    <th class="text-end"><b id="total_penjualan">20.000.000,00</b></th>
                   </tr>
                   <tr>
                     <td></td>
@@ -474,19 +500,19 @@
                     <td></td>
                   </tr> -->
                   <tr>
-                    <td class="p-s-24">- Beban Pembelian</td>
-                    <td id="pemakaian">7.500.000,00</td>
+                    <td class="p-s-24" id="label-pemakaian-row">- Pemakaian Barang dan Bahan</td>
+                    <td id="pemakaian" class="text-end">7.500.000,00</td>
                     <td></td>
                   </tr>
                   <tr>
                     <th><b>Total Biaya Produksi</b></th>
                     <th></th>
-                    <th><b id="total_pemakaian">12.500.000,00</b></th>
+                    <th class="text-end"><b id="total_pemakaian">12.500.000,00</b></th>
                   </tr>
                   <tr>
                     <th class="bg-info"><b>Laba Kotor</b></th>
                     <th class="bg-info"></th>
-                    <th class="bg-info"><b id="laba_kotor">7.500.000,00</b></th>
+                    <th class="bg-info text-end"><b id="laba_kotor">7.500.000,00</b></th>
                   </tr>
                   <tr>
                     <td></td>
@@ -498,16 +524,16 @@
                     <th></th>
                     <th></th>
                   </tr>
-                  
+
                   <tr>
                     <th><b>Total Biaya Operasional</b></th>
                     <th></th>
-                    <th><b id="total_operasional">5.250.000.00</b></th>
+                    <th class="text-end"><b id="total_operasional">5.250.000.00</b></th>
                   </tr>
                   <tr>
                     <th class="bg-info"><b>Laba Bersih</b></th>
                     <th class="bg-info"></th>
-                    <th class="bg-info"><b id="laba_bersih">2.250.000,00</b></th>
+                    <th class="bg-info text-end"><b id="laba_bersih">2.250.000,00</b></th>
                   </tr>
                 </tbody>
               </table>
@@ -521,5 +547,6 @@
 <?= $this->endSection('content'); ?>
 
 <?= $this->section('script') ?>
-<script src="script/app/dashboard/index.js"></script>
+<script src="script/app/dashboard/index.js?v=<?= time(); ?>"></script>
+<script src="script/app/dashboard/persediaan.js?v=<?= time(); ?>"></script>
 <?= $this->endSection('script') ?>

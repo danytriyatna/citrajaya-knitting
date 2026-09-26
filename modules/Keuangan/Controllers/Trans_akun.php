@@ -51,6 +51,7 @@ class Trans_akun extends BaseController
             'name' => 'tahun_trans',
             'id' => 'tahun_trans',
             'options' => $ltahun,
+            'selected' => (int)date('Y'),
             'class' => 'form-control'
         );
 
@@ -64,10 +65,11 @@ class Trans_akun extends BaseController
             'name' => 'slc_bulan',
             'id' => 'slc_bulan',
             'options' => $list_bulan,
+            'selected' => (int)date('m'),
             'class' => 'form-control'
         );
 
-		$this->data['titlehead'] = "Beban Biaya";
+		$this->data['titlehead'] = "Kas / Bank Keluar";
 		return view($this->url_v.'\vakun_trans_list', $this->data);
 	}
 
@@ -76,17 +78,26 @@ class Trans_akun extends BaseController
         $start      = $this->request->getPost('start');
         $limit      = $this->request->getPost('length');
         $filters    = $this->request->getPost('filters');
+        if (empty($filters)) { $filters = $this->request->getPost('filter'); }
         $order      = $this->request->getPost('order');
 
         $tahun      = $this->request->getPost('tahun');
         $bulan      = $this->request->getPost('bulan');
         
+        if (empty($tahun)) {
+            $tahun = date('Y');
+        }
+        if (empty($bulan)) {
+            $bulan = (int)date('m');
+        }
+
         $params['tahun'] = $tahun;
         $params['bulan'] = $bulan;
+        $params['tipe_transaksi'] = 1;
 
         $results = $this->mtrans_akun->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mtrans_akun->getDataCnt($filters, $params);
-        $totaldata = $this->mtrans_akun->getDataCnt(null, $params);
+        $totaldata = (!empty($filters) && !empty($filters[0]['value'])) ? $this->mtrans_akun->getDataCnt(null, $params) : $totalfiltered;
         $maxpage = ceil($totalfiltered / $limit);
         $build_array = array(
             "last_page" => $maxpage,
@@ -156,10 +167,10 @@ class Trans_akun extends BaseController
 
         $this->data['id'] = $id;
 
-        $this->data['titlehead'] = "Input Beban Biaya";
+        $this->data['titlehead'] = "Input Kas / Bank Keluar";
         if ($id != ""){
             $id = decrypt($id);
-            $this->data['titlehead'] = "Edit Beban Biaya";
+            $this->data['titlehead'] = "Edit Kas / Bank Keluar";
         }
 
 		$isDisable = false;
@@ -233,7 +244,8 @@ class Trans_akun extends BaseController
                     
                     $inUp = $this->update($id, $dataIn, $dtDet);
                 }else{
-                    $dataIn['trans_akun_kode'] = $this->mtrans_akun->generateAutoNo();
+                    $dataIn['trans_akun_kode'] = $this->mtrans_akun->generateAutoNo("KK.");
+                    $dataIn['tipe_transaksi'] = 1;
                     $dataIn['created_by'] = $this->get_userid();
                     $dataIn['created_date'] = date('Y-m-d H:i:s');
                     $dataIn['active'] = 1;
@@ -253,11 +265,21 @@ class Trans_akun extends BaseController
             }
         }
 
-        $dt_rek = $this->mrekening->getData(null, 0, 999);
+        $order_rek = [
+            ['field' => 'mc.kode', 'dir' => 'ASC']
+        ];
+        $dt_rek = $this->mrekening->getData(null, 0, 999, $order_rek);
         $dt_so_sp = $this->mtrans_akun->get_nomor_sample_dan_sales(null, 0, 999);
-        $list_rekening[''] = 'Pilih Rekening';
+        $list_rekening[''] = '- Pilih Kas/Bank -';
         foreach ($dt_rek as $r) {
-            $list_rekening[$r->id] = $r->rekening_no ." - ". $r->rekening_bank;
+            $kode = !empty($r->coa_kode) ? $r->coa_kode : (!empty($r->rekening_no) ? $r->rekening_no : '-');
+            $nama = !empty($r->coa_nama) ? $r->coa_nama : $r->rekening_bank;
+            if (!empty($r->rekening_no) && !empty($r->coa_kode) && $r->rekening_no != $r->coa_kode && $r->rekening_no != '-') {
+                $label = "{$kode} - {$nama} ({$r->rekening_no})";
+            } else {
+                $label = "{$kode} - {$nama}";
+            }
+            $list_rekening[$r->id] = $label;
         }
         $list_so_sp[''] = 'Pilih Referensi';
         foreach ($dt_so_sp as $r) {
@@ -277,7 +299,7 @@ class Trans_akun extends BaseController
             'type' => 'text',
             'readonly' => '',
             'class' => 'form-control',
-            'placeholder' => 'No. Transaksi',
+            'placeholder' => 'No. Transaksi (KK.YYYYMM.XXX)',
             'value' => set_value('trans_akun_kode', $stdData->trans_akun_kode)
         );
         
@@ -550,10 +572,11 @@ class Trans_akun extends BaseController
     // buat fungsi  export excel
     public function exp_mutasi($start_bulan, $start_tahun){
 
-        $fileName = "beban-biaya-".bulan($start_bulan)."-".time().".xlsx";
+        $fileName = "kas-keluar-".bulan($start_bulan)."-".time().".xlsx";
 
         $params['bulan'] = $start_bulan;
         $params['tahun'] = $start_tahun;
+        $params['tipe_transaksi'] = 1;
         $results = $this->mtrans_akun->getData(null, 0, 9999, null, null, $params);
 
         //start phpspreadsheet
@@ -565,7 +588,7 @@ class Trans_akun extends BaseController
           
 
         $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A2', 'Beban Biaya ')
+               ->setCellValue('A2', 'Kas / Bank Keluar ')
 
                ->setCellValue('A4', 'No. Transaksi')
                ->setCellValue('B4', 'Tgl Transaksi')

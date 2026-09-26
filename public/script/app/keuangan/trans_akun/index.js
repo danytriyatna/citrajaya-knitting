@@ -3,17 +3,8 @@ $(document).ready(function () {
     let tahun_transaksi = $("#tahun_trans");
     let bulan_transaksi = $("#slc_bulan");
 
-    bulan_transaksi.on("change", function(){
-        dtList.setData();
-    });
-
-    tahun_transaksi.on("change", function(){
-        dtList.setData();
-    });
-
     let dtList = new Tabulator("#dt-list", {
         columns: [
-
             {
                 title: " ", field: "aksi", headerSort: false, formatter: "html",
                 width: "8%"
@@ -27,7 +18,7 @@ $(document).ready(function () {
 				width: "10%"
 			},
 			{
-				title: 'Akun', field: 'ref_rekening', headerSort:false, sorter: 'string',
+				title: 'Kas/Bank Sumber', field: 'ref_rekening', headerSort:false, sorter: 'string',
 				width: "20%"
 			}, 
             {
@@ -42,8 +33,6 @@ $(document).ready(function () {
 				title: 'Status', field: 'status', headerSort:false, sorter: 'string', formatter: "html",
 				width: "10%", 
 			}, 
-			
-           
         ],
         layout: 'fitColumns',
         ajaxURL: "/keuangan/transaksi_akun/list",
@@ -51,9 +40,17 @@ $(document).ready(function () {
         ajaxConfig: "POST",
         ajaxSorting: true,
         ajaxFiltering: true,
+        ajaxParams: function () {
+            return {
+                bulan: bulan_transaksi.val(),
+                tahun: tahun_transaksi.val()
+            };
+        },
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
+            params.bulan = bulan_transaksi.val();
+            params.tahun = tahun_transaksi.val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();
@@ -83,12 +80,23 @@ $(document).ready(function () {
             + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
         pagination: true,
         paginationMode: "remote",
+        sortMode: "remote",
+        filterMode: "remote",
         paginationSize: 25,
         paginationButtonCount: 10,
         dataSendParams: {
-            sorters: "order"
+            sorters: "order",
+            filters: "filter"
         },
         selectableRows: false,
+    });
+
+    bulan_transaksi.on("change", function(){
+        dtList.setData("/keuangan/transaksi_akun/list");
+    });
+
+    tahun_transaksi.on("change", function(){
+        dtList.setData("/keuangan/transaksi_akun/list");
     });
 
     $("#excel_download").on("click", function(e){
@@ -103,14 +111,16 @@ $(document).ready(function () {
     let searchThread = null;
     let elSearch = $("#tb-search");
     if (elSearch != null) {
-        elSearch.keyup(function (e) {
-            if ($(this).val().length < 3 && e.keyCode > 13) {
-                return;
-            }
+        elSearch.on("keyup search", function (e) {
+            let val = $(this).val().trim();
             clearTimeout(searchThread);
             searchThread = setTimeout(function () {
-                dtList.setFilter("", "like", elSearch.val());
-            }, 600);
+                if (val === "") {
+                    dtList.clearFilter(true);
+                } else {
+                    dtList.setFilter("trans_akun_kode", "like", val);
+                }
+            }, 400);
         });
     }
 

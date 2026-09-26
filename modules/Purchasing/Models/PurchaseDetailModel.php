@@ -85,6 +85,24 @@ class PurchaseDetailModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    // Dipakai Receive Item untuk auto-isi baris detail saat PO dipilih:
+    // ambil semua baris PO ini yang qty-nya BELUM diterima penuh (sisa > 0).
+    // Baris yang sudah full diterima tidak perlu muncul lagi (permintaan user).
+    function getDataForReceive($idHeader)
+    {
+        $builder = $this->db->table($this->table . " uk");
+        $builder->join($this->tblBarang . " ebx", "uk.id_barang = ebx.id", "inner");
+        $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
+        $builder->select("uk.id, uk.id_barang, uk.qty, uk.qty_receive, uk.price, fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang");
+        $builder->where('uk.id_header', $idHeader);
+        $builder->where('uk.active', 1);
+        $builder->where('uk.qty > COALESCE(uk.qty_receive, 0)');
+        $builder->orderBy('uk.id');
+        $this->_data = $builder->get()->getResult();
+
+        return $this->_data;
+    }
+
     function getUnitPrice($vendor = null, $barang = null)
     {
         // dd(decrypt($vendor), decrypt($barang));

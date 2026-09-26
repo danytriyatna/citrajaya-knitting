@@ -24,10 +24,10 @@
       <li class="nav-item dropdown u-pro">
         <a class="nav-link dropdown-toggle waves-effect waves-dark profile-pic" href="javascript:void(0)" data-bs-toggle="dropdown"   aria-haspopup="true" aria-expanded="false"><img src="<?= $avatar != "" ? "uploads/users/$avatar" : "assets/images/no-image.webp" ?>" alt="user" class="" height="30px"> <span class="hidden-md-down"><?php echo $currentUser->full_name ?> &nbsp;<i class="fa fa-angle-down"></i></span> </a>
         <div class="dropdown-menu dropdown-menu-end animated flipInY">
-          <a href="profile" class="dropdown-item"><i class="ti-user"></i> My Profile</a>
-          <a href="ganti-password" class="dropdown-item"><i class="ti-settings"></i> Change Password</a>
+          <a href="<?= base_url('profile'); ?>" class="dropdown-item"><i class="ti-user"></i> My Profile</a>
+          <a href="<?= base_url('ganti-password'); ?>" class="dropdown-item"><i class="ti-settings"></i> Change Password</a>
           <div class="dropdown-divider"></div>
-          <a href="auth/logout" class="dropdown-item"><i class="fa fa-power-off"></i> Logout</a>
+          <a href="<?= base_url('auth/logout'); ?>" class="dropdown-item"><i class="fa fa-power-off"></i> Logout</a>
         </div>
       </li>
     </ul>

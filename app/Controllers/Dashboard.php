@@ -6,6 +6,9 @@ use App\Models\Mdashboard;
 use Modules\Keuangan\Models\Mcoa;
 use Modules\Transaction\Models\DeliveryModel;
 use Modules\Transaction\Models\ProductionModel;
+use Modules\Laporan\Models\LaporanPersediaanModel;
+use Modules\Referensi\Models\GudangModel;
+use Modules\Referensi\Models\JenisBarangModel;
 
 class Dashboard extends BaseController
 {
@@ -13,6 +16,9 @@ class Dashboard extends BaseController
     protected $mProduksi;
     protected $mdelivery;
     protected $mcoa;
+    protected $mLaporanPersediaan;
+    protected $mGudang;
+    protected $mJenisBarang;
 
     function __construct()
     {
@@ -21,6 +27,9 @@ class Dashboard extends BaseController
         $this->mProduksi = new ProductionModel();
         $this->mdelivery = new DeliveryModel();
         $this->mcoa = new Mcoa();
+        $this->mLaporanPersediaan = new LaporanPersediaanModel();
+        $this->mGudang = new GudangModel();
+        $this->mJenisBarang = new JenisBarangModel();
     }
 
     public function index()
@@ -30,8 +39,214 @@ class Dashboard extends BaseController
         } else {
             $this->data['titlehead'] = "Dashboard";
 
-            return view('dashboard/index', $this->data); 
+            // Data untuk card "Ringkasan Persediaan"
+            $sortGudang = [['field' => 'nama_gudang', 'dir' => 'ASC']];
+            $sortJenisBarang = [['field' => 'nama_jenis_barang', 'dir' => 'ASC']];
+            $this->data['gudangPersediaan'] = $this->mGudang->getData(null, 0, 99999, $sortGudang);
+            $this->data['jenisBarangPersediaan'] = $this->mJenisBarang->getData(null, 0, 99999, $sortJenisBarang);
+            $this->data['bulanPersediaanSaatIni'] = (int) date('n');
+            $this->data['tahunPersediaanSaatIni'] = (int) date('Y');
+
+            return view('dashboard/index', $this->data);
         }
+    }
+
+    /**
+     * Ringkasan Persediaan (card dashboard) - list per item/warna, diagregasi dari
+     * data snapshot bulanan (trans_barang_history) via LaporanPersediaanModel::getDataGudang().
+     * Baris hasil getDataGudang() itu per item+lot+pack; di sini kita jumlahkan per id_barang
+     * supaya tampil 1 baris per warna/item (KODE WARNA, NAMA BARANG, UNIT, QTY KELUAR, QTY AKHIR).
+     */
+    public function persediaan_ringkasan()
+    {
+        $idJenisBarang = $this->request->getGet('id_jenis_barang');
+        $idGudang      = $this->request->getGet('id_gudang');
+        $bulan         = $this->request->getGet('bulan');
+        $tahun         = $this->request->getGet('tahun');
+        $search        = trim((string) $this->request->getGet('search'));
+
+        return $this->response->setJSON(
+            $this->buildPersediaanRingkasan($idJenisBarang, $idGudang, $bulan, $tahun, $search)
+        );
+    }
+
+    /**
+     * Sama seperti tombol "Update Data" di Laporan Persediaan: recompute snapshot
+     * trans_barang_history (via updateDataHistory()) dulu, baru ambil ringkasannya.
+     * Dipakai oleh tombol "Update Data" di card dashboard - supaya angka yang tampil
+     * benar-benar terkini, bukan sekadar baca cache lama.
+     */
+    public function persediaan_update()
+    {
+        $idJenisBarang = $this->request->getGet('id_jenis_barang');
+        $idGudang      = $this->request->getGet('id_gudang');
+        $bulan         = $this->request->getGet('bulan');
+        $tahun         = $this->request->getGet('tahun');
+        $search        = trim((string) $this->request->getGet('search'));
+
+        $this->mLaporanPersediaan->updateDataHistory($idJenisBarang, $idGudang, $tahun, $bulan);
+
+        return $this->response->setJSON(
+            $this->buildPersediaanRingkasan($idJenisBarang, $idGudang, $bulan, $tahun, $search)
+        );
+    }
+
+    private function buildPersediaanRingkasan($idJenisBarang, $idGudang, $bulan, $tahun, $search = '')
+    {
+        $rows = $this->mLaporanPersediaan->getDataGudang($idJenisBarang, $idGudang, $tahun, $bulan);
+
+        $grouped = [];
+        $hargaTanggal = []; // tracker terpisah (bukan bagian output) - lot dgn tanggal transaksi terakhir yg dipakai sbg harga representatif per barang
+        foreach ($rows as $r) {
+            $key = $r->id_barang;
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'id_barang'   => $r->id_barang,
+                    'kode_warna'  => !empty($r->color_code) ? $r->color_code : '-',
+                    'nama_barang' => $r->barang,
+                    'unit'        => $r->nama_satuan,
+                    'qty_awal'    => 0,
+                    'qty_masuk'   => 0,
+                    'qty_keluar'  => 0,
+                    'qty_akhir'   => 0,
+                    'harga'       => 0,
+                ];
+                $hargaTanggal[$key] = null;
+            }
+            // TAMBAHAN (2026-08-08): QTY AWAL & QTY MASUK - aman dijumlahkan
+            // langsung sama seperti qty_keluar/qty_akhir, karena getDataGudang()
+            // sudah baca dari trans_barang_history (snapshot bulanan PER lot+pack,
+            // bukan per transaksi), jadi tiap baris di $rows sudah final utk
+            // lot+pack+bulan itu - bukan baris transaksi individual yang perlu
+            // dikelompokkan dulu (beda dengan persediaan_detail() yg baca dari
+            // getLaporanPersediaan() per-transaksi).
+            $grouped[$key]['qty_awal']   += (float) $r->saldo_awal;
+            $grouped[$key]['qty_masuk']  += (float) $r->masuk;
+            $grouped[$key]['qty_keluar'] += (float) $r->keluar;
+            $grouped[$key]['qty_akhir']  += (float) $r->saldo_akhir;
+
+            // Harga representatif per barang - satu barang bisa punya banyak Lot dgn
+            // harga beda-beda (beda batch beli), jadi dipilih harga dari Lot dgn
+            // tanggal transaksi PALING BARU (bukan dijumlahkan, harga bukan qty).
+            if (!empty($r->price) && (empty($hargaTanggal[$key]) || strtotime($r->tanggal) >= strtotime($hargaTanggal[$key]))) {
+                $hargaTanggal[$key] = $r->tanggal;
+                $grouped[$key]['harga'] = (float) $r->price;
+            }
+        }
+
+        foreach ($grouped as $key => $row) {
+            // Nilai = Qty Akhir x Harga representatif - dinolkan kalau Qty Akhir minus,
+            // sama seperti konvensi kolom Nilai di modal Detail Stock Card.
+            $grouped[$key]['nilai'] = ($row['qty_akhir'] > 0) ? ($row['qty_akhir'] * $row['harga']) : 0;
+        }
+
+        $data = array_values($grouped);
+
+        if (!empty($search)) {
+            $needle = strtolower($search);
+            $data = array_values(array_filter($data, function ($row) use ($needle) {
+                return strpos(strtolower($row['kode_warna']), $needle) !== false
+                    || strpos(strtolower($row['nama_barang']), $needle) !== false;
+            }));
+        }
+
+        usort($data, function ($a, $b) {
+            return $b['qty_keluar'] <=> $a['qty_keluar'];
+        });
+
+        return [
+            'status'       => true,
+            'data'         => $data,
+            'total_awal'   => array_sum(array_column($data, 'qty_awal')),
+            'total_masuk'  => array_sum(array_column($data, 'qty_masuk')),
+            'total_keluar' => array_sum(array_column($data, 'qty_keluar')),
+            'total_akhir'  => array_sum(array_column($data, 'qty_akhir')),
+            'total_nilai'  => array_sum(array_column($data, 'nilai')),
+        ];
+    }
+
+    /**
+     * Detail stock card untuk 1 item (dipanggil dari tombol Detail di card Ringkasan Persediaan).
+     * Ambil dari LaporanPersediaanModel::getLaporanPersediaan() (baris per transaksi utk seluruh
+     * gudang+jenis+bulan+tahun tsb), lalu difilter di sini utk id_barang yang dipilih saja.
+     */
+    public function persediaan_detail()
+    {
+        $idJenisBarang = $this->request->getGet('id_jenis_barang');
+        $idGudang      = $this->request->getGet('id_gudang');
+        $bulan         = $this->request->getGet('bulan');
+        $tahun         = $this->request->getGet('tahun');
+        $idBarang      = $this->request->getGet('id_barang');
+
+        $rows = $this->mLaporanPersediaan->getLaporanPersediaan($idJenisBarang, $idGudang, $tahun, $bulan);
+
+        $filtered = array_values(array_filter($rows, function ($r) use ($idBarang) {
+            return (string) $r->id_barang === (string) $idBarang;
+        }));
+
+        // Total Awal dihitung dari getDataGudang() (baca trans_barang_history) persis
+        // seperti yang dipakai buildPersediaanRingkasan() - supaya konsisten dgn QTY AWAL
+        // di card Ringkasan Persediaan (titik berangkatnya tetap sama).
+        $gudangRows = $this->mLaporanPersediaan->getDataGudang($idJenisBarang, $idGudang, $tahun, $bulan, ['id_barang' => $idBarang]);
+        $totalAwal = 0;
+        foreach ($gudangRows as $g) {
+            $totalAwal += (float) $g->saldo_awal;
+        }
+
+        // TAMBAHAN (2026-08-08): qty_awal/qty_akhir per baris TIDAK lagi dipakai dari
+        // r->saldo_awal/r->saldo_akhir bawaan getLaporanPersediaan() - kolom itu adalah
+        // saldo berjalan PER LOT+PACK (window function di-partition per lot), jadi baris
+        // pertama sebuah lot baru akan menunjukkan saldo lot itu sendiri (mis. 0), BUKAN
+        // Total Awal keseluruhan barang. Di sini kita hitung ulang jadi SATU saldo
+        // berjalan yang menyambung lintas semua lot (diurutkan tanggal, sama seperti
+        // urutan baris $filtered apa adanya), di-seed dari $totalAwal di atas - supaya
+        // baris pertama selalu = Total Awal, konsisten dgn Laporan Stock Card (menu
+        // Laporan) yang pakai logika yg sama.
+        // Total Akhir SENGAJA diambil dari titik akhir saldo berjalan ini (bukan dari
+        // getDataGudang()/cache trans_barang_history lagi) - supaya baris terakhir tabel
+        // detail selalu match dgn "Total Akhir" yang ditampilkan (konsisten secara
+        // internal), walau itu berarti bisa berbeda sementara dgn QTY AKHIR di card
+        // Ringkasan kalau cache-nya belum di-"Update Data".
+        $running = $totalAwal;
+        $detail = [];
+        foreach ($filtered as $r) {
+            $masuk = (float) $r->masuk;
+            $keluar = (float) $r->keluar;
+            $price = (float) $r->price;
+
+            $qtyAwal = $running;
+            $running += ($masuk - $keluar);
+            $qtyAkhir = $running;
+
+            $detail[] = [
+                'tanggal'      => !empty($r->tanggal) ? fdate_eng_to_ind($r->tanggal) : '-',
+                'transaksi'    => !empty($r->transaksi) ? $r->transaksi : '-',
+                'no_transaksi' => $r->kode_transaksi,
+                'unit'         => $r->nama_satuan,
+                'lot'          => !empty($r->lot_no) ? $r->lot_no : '-',
+                'pack'         => !empty($r->pack_name) ? $r->pack_name : '-',
+                'qty_awal'     => $qtyAwal,
+                'qty_masuk'    => $masuk,
+                'qty_keluar'   => $keluar,
+                'qty_akhir'    => $qtyAkhir,
+                'harga'        => $price,
+                // Nilai = Qty Akhir x Harga (bukan cuma harga satuan) - kalau Qty Akhir
+                // minus (barang belum sempat dicatat masuk tapi sudah keluar), Nilai
+                // ditampilkan 0, bukan negatif.
+                'nilai'        => ($qtyAkhir > 0) ? ($qtyAkhir * $price) : 0,
+                'jumlah'       => ($masuk > 0) ? ($masuk * $price) : null,
+            ];
+        }
+        $totalAkhir = $running;
+
+        $build_array = [
+            'status'      => true,
+            'total_awal'  => $totalAwal,
+            'total_akhir' => $totalAkhir,
+            'detail'      => $detail,
+        ];
+
+        return $this->response->setJSON($build_array);
     }
 
     public function lists()
@@ -191,11 +406,13 @@ class Dashboard extends BaseController
                 $qty_prod = 0;
             }
 
-            $qty_sisa = (int) $row->qty - (int) $qty_prod;
+            $qty_so = !empty($row->qty) ? (float)$row->qty : 0;
+            $qty_hasil_val = !empty($qty_hasil) ? (float)$qty_hasil : 0;
+            $qty_sisa = max(0, $qty_so - $qty_hasil_val);
 
-            $pembayaran = !empty($row->nilai_pembayaran) ? $row->nilai_pembayaran : 0;
-            $dp = !empty($row->uang_dp) ? $row->uang_dp : 0;
-            $dp += !empty($row->uang_dp_2) ? $row->uang_dp_2 : 0;
+            $pembayaran = !empty($row->nilai_pembayaran) ? (float)$row->nilai_pembayaran : 0;
+            $dp = !empty($row->uang_dp) ? (float)$row->uang_dp : 0;
+            $dp += !empty($row->uang_dp_2) ? (float)$row->uang_dp_2 : 0;
 
             // $total += ($row->uang_dp + $row->nilai_invoice);
             
@@ -210,20 +427,21 @@ class Dashboard extends BaseController
                 'tgl_transaksi' => $tgl_transaksi,
                 'tgl_deadline' => $tgl_deadline,
                 'tgl_deadline_dua' => $tgl_deadline_dua,
-                'qty' => $row->qty,
+                'qty' => !empty($row->qty) ? (float)$row->qty : 0,
                 // 'qty_prod' => $row->qty_prod,
-                'qty_prod' => $qty_prod,
-                'qty_kirim' => $row->qty_kirim,
+                'qty_prod' => (float)$qty_prod,
+                'qty_kirim' => !empty($row->qty_kirim) ? (float)$row->qty_kirim : 0,
                 'uang_dp' => $dp,
-                'pembayaran' => $pembayaran + $dp,
-                'harga_total' => $row->harga_total,
-                'nilai_invoice' => $row->nilai_invoice,
-                'qty_sisa' => $qty_sisa,
-                'qty_hasil' => $qty_hasil,
-                'qty_sisa_kirim' => $qty_sisa_kirim,
+                'pembayaran' => (float)($pembayaran + $dp),
+                'harga_total' => !empty($row->harga_total) ? (float)$row->harga_total : 0,
+                'nilai_invoice' => !empty($row->nilai_invoice) ? (float)$row->nilai_invoice : 0,
+                'qty_sisa' => !empty($qty_sisa) ? (float)$qty_sisa : 0,
+                'qty_hasil' => !empty($qty_hasil) ? (float)$qty_hasil : 0,
+                'qty_sisa_kirim' => !empty($qty_sisa_kirim) ? (float)$qty_sisa_kirim : 0,
             ));
 
         }
+        $build_array['total_qty_hasil'] = array_sum(array_column($build_array['data'], 'qty_hasil'));
         return $this->response->setJSON($build_array);
     }
 
@@ -475,11 +693,17 @@ class Dashboard extends BaseController
         $totalfiltered = $this->mdashboard->getDataSaldoCnt($filters, $params);
         $totaldata = $this->mdashboard->getDataSaldoCnt(null, $params);
         $maxpage = ceil($totalfiltered / $limit);
+        // TAMBAHAN (2026-08-08): beri tahu frontend apakah periode (bulan/tahun)
+        // yang sedang dipilih ini SUDAH PERNAH dihitung lewat tombol "Update"
+        // atau belum - supaya kalau grid kosong, user tahu itu karena belum
+        // pernah di-update (bukan dikira data memang kosong/bug).
+        $sudahDiupdate = $this->mdashboard->hasDataSaldo($month, $year);
         $build_array = array(
             "total_saldo" => !empty($totalSaldoGet) ?  number_format($totalSaldoGet, 2, ',', '.') : 0,
             "last_page" => $maxpage,
             "recordsTotal" => $totaldata,
             "recordsFiltered" => $totalfiltered,
+            "sudah_diupdate" => $sudahDiupdate,
             "data" => array()
         );
 
@@ -557,14 +781,22 @@ class Dashboard extends BaseController
             
                     $r = $results_all[$xx];
 
-                    if ($r->type == "Beban Biaya") {
-                        if ($r->coa_id == $value->coa_id) {
-                            $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
-                            $grand_total_sub_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+                    if ($r->type == "Beban Biaya" || $r->type == "Kas Masuk") {
+                        $isKasMasuk = ($r->type == "Kas Masuk" || (isset($r->tipe_transaksi) && $r->tipe_transaksi == 2) || substr($r->trans_akun_kode, 0, 3) == 'KM.');
+                        $jml = !empty($r->jumlah) ? (float)$r->jumlah : 0;
+
+                        if (!$isKasMasuk) {
+                            $isMasuk = ($r->coa_id == $value->coa_id);
+                        } else {
+                            $isMasuk = ($r->coa_id != $value->coa_id);
                         }
-                        else {
-                            $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
-                            $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
+
+                        if ($isMasuk) {
+                            $grand_total_masuk += $jml;
+                            $grand_total_sub_masuk += $jml;
+                        } else {
+                            $grand_total += $jml;
+                            $grand_total_sub += $jml;
                         }
                     }
 

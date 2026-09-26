@@ -17,7 +17,11 @@
             font-family: Arial, sans-serif;
             font-size: 12px;
             margin: 0;
-            padding: 20px;
+            /* Kiri/kanan dikecilkan (semula 20px, lalu 8px) - supaya ada ruang
+               lebih lebar utk tabel SIZE yang sekarang bisa sampai 10+ kolom
+               (7XL-10XL tidak lagi hilang), tanpa kolom TOTAL/HARGA/TOTAL(Rp)
+               di kanan ikut terpotong keluar halaman. */
+            padding: 20px 4px;
             color: #333;
             background-image: url('<?= $base64Watermark ?>');
             background-repeat: no-repeat;
@@ -69,7 +73,40 @@
             font-size: 11px;
             margin-bottom: 20px;
         }
-        
+
+        <?php
+            $numUkuran = max(1, count($ukuran));
+            if ($numUkuran <= 4) {
+                $fontSizeTable = '10.5px';
+                $paddingCell   = '5px 4px';
+            } elseif ($numUkuran <= 8) {
+                $fontSizeTable = '10px';
+                $paddingCell   = '4px 3px';
+            } else {
+                $fontSizeTable = '9px';
+                $paddingCell   = '3px 1.5px';
+            }
+        ?>
+
+        /* Tabel detail SIZE adaptif & otomatis menyesuaikan jumlah ukuran */
+        .detail-table {
+            font-size: <?= $fontSizeTable ?>;
+        }
+
+        .detail-table th, .detail-table td {
+            padding: <?= $paddingCell ?>;
+        }
+
+        /* Label "Harga Unit/Pcs (Rp)" dipecah 2 baris (lihat <br> di HTML) */
+        .detail-table th.col-nowrap {
+            font-size: <?= $fontSizeTable ?>;
+        }
+
+        /* Header NO & tiap ukuran (XS, S, ..., 10XL) pendek & tidak perlu wrap */
+        .detail-table th.col-nowrap, .detail-table td.col-nowrap {
+            white-space: nowrap;
+        }
+
         th, td {
             /* border: 1px solid #808080; */
             padding: 8px;
@@ -167,20 +204,50 @@
         </tbody>
     </table>
     
-    <table>
+    <?php
+        // Kalkulasi lebar kolom otomatis & dinamis berdasarkan jumlah varian ukuran
+        $numUkuran = max(1, count($ukuran));
+
+        if ($numUkuran == 1) {
+            $widthPerSize = 6.0;   // 1 ukuran (mis. ALL) -> 6%
+        } elseif ($numUkuran <= 3) {
+            $widthPerSize = 5.0;   // 2-3 ukuran -> 5% per kolom
+        } elseif ($numUkuran <= 6) {
+            $widthPerSize = 4.5;   // 4-6 ukuran -> 4.5% per kolom
+        } elseif ($numUkuran <= 9) {
+            $widthPerSize = 3.8;   // 7-9 ukuran -> 3.8% per kolom
+        } else {
+            $widthPerSize = 3.2;   // 10+ ukuran (XS..10XL) -> 3.2% per kolom
+        }
+
+        $totalSizeWidth = $numUkuran * $widthPerSize;
+
+        // Kolom angka tetap
+        $widthNo = 3.0;
+        $widthTotalQty = 5.5;
+        $widthHarga = 9.5;
+        $widthTotalRp = 12.0;
+
+        // Sisa lebar didistribusikan secara proporsional ke DESKRIPSI (53%) & WARNA (47%)
+        $sisaWidth = 100.0 - ($widthNo + $totalSizeWidth + $widthTotalQty + $widthHarga + $widthTotalRp);
+        $widthDeskripsi = round($sisaWidth * 0.53, 1);
+        $widthWarna = round($sisaWidth - $widthDeskripsi, 1);
+    ?>
+
+    <table class="detail-table">
         <thead>
             <tr>
-                <th rowspan="2" style="width: 2%; border: 1px solid #808080;">NO</th>
-                <th rowspan="2" style="width: 15%; border: 1px solid #808080;">DESKRIPSI</th>
-                <th rowspan="2" style="width: 18%; border: 1px solid #808080;">WARNA</th>
-                <th colspan="<?= count($ukuran) ?>" style="border: 1px solid #808080;">SIZE</th>
-                <th rowspan="2" style="width: 5%; border: 1px solid #808080;">TOTAL</th>
-                <th rowspan="2" style="width: 8%; border: 1px solid #808080;">HARGA UNI/PCS (Rp)</th>
-                <th rowspan="2" style="width: 16%; border: 1px solid #808080;">TOTAL (Rp)</th>
+                <th class="col-nowrap" rowspan="2" style="width: <?= $widthNo ?>%; border: 1px solid #808080;">NO</th>
+                <th rowspan="2" style="width: <?= $widthDeskripsi ?>%; border: 1px solid #808080;">DESKRIPSI</th>
+                <th rowspan="2" style="width: <?= $widthWarna ?>%; border: 1px solid #808080;">WARNA</th>
+                <th colspan="<?= $numUkuran ?>" style="width: <?= $totalSizeWidth ?>%; border: 1px solid #808080;">SIZE</th>
+                <th class="col-nowrap" rowspan="2" style="width: <?= $widthTotalQty ?>%; border: 1px solid #808080;">TOTAL</th>
+                <th class="col-nowrap" rowspan="2" style="width: <?= $widthHarga ?>%; border: 1px solid #808080;">Harga<br>Unit/Pcs<br>(Rp)</th>
+                <th class="col-nowrap" rowspan="2" style="width: <?= $widthTotalRp ?>%; border: 1px solid #808080;">TOTAL<br>(Rp)</th>
             </tr>
             <tr>
                 <?php foreach ($ukuran as $rows): ?>
-                    <th style="border: 1px solid #808080;"><?= $rows ?></th>
+                    <th class="col-nowrap" style="width: <?= $widthPerSize ?>%; border: 1px solid #808080;"><?= $rows ?></th>
                 <?php endforeach; ?>
             </tr>
         </thead>

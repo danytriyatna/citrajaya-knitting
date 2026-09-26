@@ -432,7 +432,7 @@ $(document).ready(function () {
                         <p class="m-y-0"><i class="fa fa-calendar-day f-s-11"></i>&nbsp; ${formatterDate(data.tgl_transaksi)}</p>
                         <p class="m-y-0"><i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em></p>
                         <p class="m-t-8 badge bg-secondary d-inline-block"><i class="fa fa-user f-s-11"></i>&nbsp; ${data.nama}</p>
-                        <a class="hover-zoom-rotate" href="${data.file_gambar}" target="_blank"><img class="m-t-0 d-block object-fit-cover rounded" src="${data.file_gambar}" alt="Foto Sample" width="160px" height="90px" /></a>
+                        ${data.file_gambar ? `<a class="hover-zoom-rotate" href="${data.file_gambar}" target="_blank"><img class="m-t-0 d-block object-fit-cover rounded" src="${data.file_gambar}" alt="Foto Sample" width="160px" height="90px" onerror="this.onerror=null;if(this.src.indexOf('.jfif')!==-1){this.src=this.src.replace('.jfif','.jpeg');}else if(this.src.indexOf('.jpeg')!==-1){this.src=this.src.replace('.jpeg','.jfif');}else{this.src='assets/images/sample-dummy.png';}" /></a>` : `<img class="m-t-0 d-block object-fit-cover rounded opacity-50" src="assets/images/sample-dummy.png" alt="Foto Sample" width="160px" height="90px" />`}
                       </div>
                       <div class="col-sm-9">
                            <div id="dt-list-detail-${data.id}" class="table-responsive table-striped"></div>
@@ -1432,9 +1432,16 @@ $(document).ready(function () {
         slots.forEach((slot, idx) => {
             let valWarna = slot.warna.val();
             let valBarang = slot.barang.val();
+            if (!valWarna && valBarang) {
+                let fallbackWarna = slot.barang.find("option:selected").data("warna") || slot.barang.find("option:selected").attr("data-warna");
+                if (fallbackWarna) {
+                    valWarna = fallbackWarna;
+                    slot.warna.val(fallbackWarna);
+                }
+            }
             let textWarna = slot.elWarna.find("option:selected").text();
 
-            if ((valWarna && valWarna.length > 0) || (valBarang && valBarang.length > 0)) {
+            if ((valWarna && valWarna.toString().trim().length > 0) || (valBarang && valBarang.toString().trim().length > 0)) {
                 let gramVal = getGramForSlot(idx);
                 let val_gram_nd = gramVal * calcQty;
                 let val_kg = val_gram_nd / 1000;
@@ -1443,9 +1450,9 @@ $(document).ready(function () {
 
                 gramData.push({
                     'id': '',
-                    'id_warna': valWarna,
-                    'id_barang': valBarang,
-                    'kode_warna': textWarna,
+                    'id_warna': valWarna ? valWarna : null,
+                    'id_barang': valBarang ? valBarang : null,
+                    'kode_warna': textWarna || '',
                     'qty': calcQty,
                     'loss': loss,
                     'persen': 0,

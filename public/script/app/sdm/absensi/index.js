@@ -142,7 +142,7 @@ $(document).ready(function () {
 
             {
 				title: 'Status Kehadiran', field: 'status_kehadiran', headerSort:false, sorter: 'string',
-				width: 180, align:'center', editor:"list", editorParams:{values:{"Hadir":"Hadir", "Izin":"Izin", "Sakit":"Sakit" , "Tanpa Keterangan":"Tanpa Keterangan", "Rolling Shift":"Rolling Shift", "Cuti":"Cuti"}}
+				width: 180, align:'center', editor:"list", editorParams:{values:{"Hadir":"Hadir", "Izin":"Izin", "Sakit":"Sakit" , "Dispen":"Dispen", "Cuti":"Cuti", "Tanpa Keterangan":"Tanpa Keterangan", "Rolling Shift":"Rolling Shift"}}
 			} ,
 
             {

@@ -60,6 +60,7 @@ $(document).ready(function () {
     let setColumn = [
         {
             title: "Colour", field: "colour_warna", sorter: "string", headerSort: false, align: "center", cssClass: "text-left",
+            bottomCalc: function () { return "TOTAL"; },
         },
     ]
 
@@ -149,9 +150,12 @@ $(document).ready(function () {
         paginationSize: 10,
         paginationButtonCount: 5,
         columns: [
-            { headerSort: false, title: "WARNA", field: "kode_warna", width: "27%" },
             {
-                headerSort: false, title: "KEBUTUHAN<br>(QTY/KG)", field: "total", hozAlign: "right", width: "17%", headerHozAlign: "right", bottomCalc: "sum",
+                headerSort: false, title: "WARNA", field: "kode_warna", width: "20%",
+                bottomCalc: function () { return "TOTAL"; },
+            },
+            {
+                headerSort: false, title: "KEBUTUHAN<br>(QTY/KG)", field: "total", hozAlign: "right", width: "16%", headerHozAlign: "right", bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
                 },
@@ -160,7 +164,17 @@ $(document).ready(function () {
                 }
             },
             {
-                headerSort: false, title: "Pengiriman<br>(QTY/KG)", field: "total_qty_trf", hozAlign: "right", width: "17%", headerHozAlign: "right",
+                headerSort: false, title: "Pengiriman<br>(QTY/KG)", field: "total_qty_trf", hozAlign: "right", width: "16%", headerHozAlign: "right",
+                bottomCalc: "sum",
+                formatter: function (cell) {
+                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+                },
+                bottomCalcFormatter: function (cell) {
+                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+                }
+            },
+            {
+                headerSort: false, title: "Pengembalian<br>(QTY/KG)", field: "total_qty_kembali", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
@@ -171,7 +185,7 @@ $(document).ready(function () {
             },
             { headerSort: false, title: "LOT", field: "lot_no", hozAlign: "left", width: "12%", visible: false },
             {
-                headerSort: false, title: "Pemakaian<br>(QTY/KG)", field: "total_qty_pakai", hozAlign: "right", width: "17%", headerHozAlign: "right",
+                headerSort: false, title: "Pemakaian<br>(QTY/KG)", field: "total_qty_pakai", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
                     return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
@@ -181,18 +195,24 @@ $(document).ready(function () {
                 }
             },
             {
-                headerSort: false, title: "Sisa (Kg)", field: "sisa", hozAlign: "right", width: "17%", headerHozAlign: "right",
+                headerSort: false, title: "Sisa (Kg)", field: "sisa", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+                    let val = parseFloat(cell.getValue() || 0);
+                    // Beri tanda merah & tebal kalau sisa negatif (bahan terpakai melebihi yang dikirim)
+                    cell.getElement().style.color = val < 0 ? "#dc3545" : "";
+                    cell.getElement().style.fontWeight = val < 0 ? "700" : "";
+                    return val.toFixed(2); // ✅ maksimal 2 desimal
                 },
                 bottomCalcFormatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+                    let val = parseFloat(cell.getValue() || 0);
+                    cell.getElement().style.color = val < 0 ? "#dc3545" : "";
+                    return val.toFixed(2); // ✅ total bawah juga 2 desimal
                 }
             },
         ],
         locale: 'id',
-        // layout: 'fitColumns',
+        layout: 'fitColumns',
         placeholder: "Tidak ada data",
     });
 
@@ -200,6 +220,18 @@ $(document).ready(function () {
         setTimeout(() => {
             try {
                 let isdata = JSON.parse(detail_data_barang);
+
+                // Sembunyikan baris yang semua kolom nilainya nol
+                // (Kebutuhan, Pengiriman, Pengembalian, Pemakaian, Sisa semuanya 0)
+                isdata = (isdata || []).filter(function (row) {
+                    let kebutuhan = parseFloat(row.total || 0);
+                    let pengiriman = parseFloat(row.total_qty_trf || 0);
+                    let pengembalian = parseFloat(row.total_qty_kembali || 0);
+                    let pemakaian = parseFloat(row.total_qty_pakai || 0);
+                    let sisa = parseFloat(row.sisa || 0);
+                    return kebutuhan !== 0 || pengiriman !== 0 || pengembalian !== 0 || pemakaian !== 0 || sisa !== 0;
+                });
+
                 // Set data ke Tabulator
                 dtListDetailBarang.setData(isdata);
             } catch (e) {
@@ -289,7 +321,18 @@ $(document).ready(function () {
                     thousand: ".",
                     symbol: "Rp",  // Simbol mata uang Rupiah
                     precision: 0,   // Tidak ada desimal
-                }, hozAlign: "right"
+                }, hozAlign: "right",
+                // Total keseluruhan (semua data, bukan cuma halaman yg lagi
+                // tampil) - bottomCalc Tabulator otomatis hitung dari semua
+                // baris yg lolos filter, terlepas dari pagination.
+                bottomCalc: "sum",
+                bottomCalcFormatter: "money",
+                bottomCalcFormatterParams: {
+                    decimal: ",",
+                    thousand: ".",
+                    symbol: "Rp",
+                    precision: 0,
+                },
             },
         ],
         groupBy: "date",
@@ -297,6 +340,32 @@ $(document).ready(function () {
         // layout: 'fitColumns',
         placeholder: "Tidak ada data",
     });
+
+    // Pencarian berdasarkan Kode Transaksi ATAU Operator (permintaan user).
+    // dtListProd tidak pakai ajaxURL (semua data sudah dimuat sekaligus ke
+    // browser), jadi filter cukup lewat Tabulator.setFilter client-side -
+    // pola OR (array bersarang) sesuai dokumentasi Tabulator, supaya
+    // pencarian benar-benar hanya menyasar 2 kolom ini, bukan semua kolom.
+    let searchThreadProd = null;
+    let elSearchProd = $("#tb-search-prod");
+    if (elSearchProd.length > 0) {
+        elSearchProd.on("keyup", function () {
+            clearTimeout(searchThreadProd);
+            searchThreadProd = setTimeout(function () {
+                let val = elSearchProd.val();
+                if (!val) {
+                    dtListProd.clearFilter();
+                    return;
+                }
+                dtListProd.setFilter([
+                    [
+                        { field: "kode_transaksi", type: "like", value: val },
+                        { field: "operator", type: "like", value: val },
+                    ]
+                ]);
+            }, 400);
+        });
+    }
 
     let dtListUkuran = new Tabulator("#dt-list-ukuran", {
         columns: [

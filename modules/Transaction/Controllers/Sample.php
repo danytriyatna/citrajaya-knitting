@@ -60,11 +60,12 @@ class Sample extends BaseController
       return redirect()->to('/auth/login');
     }
 
+    $cache = \Config\Services::cache();
     $this->data['titlehead'] = "Sample";
-    $this->data['buyer'] = $this->mkonsumen->where("active", 1)->findAll();
-    $this->data['ukuran'] = $this->mUkuran->where("active", 1)->findAll();
-    $this->data['warna'] = $this->mWarna->where("active", 1)->findAll();
-    $this->data['barang'] = $this->mBarang->select("id, kode_barang, nama_barang, id_warna")->where("active", 1)->orderBy("nama_barang", 'asc')->findAll();
+    $this->data['buyer'] = $cache->remember('ref_konsumen_active', 3600, fn() => $this->mkonsumen->where("active", 1)->findAll());
+    $this->data['ukuran'] = $cache->remember('ref_ukuran_active', 3600, fn() => $this->mUkuran->where("active", 1)->findAll());
+    $this->data['warna'] = $cache->remember('ref_warna_active', 3600, fn() => $this->mWarna->where("active", 1)->findAll());
+    $this->data['barang'] = $cache->remember('ref_barang_active', 3600, fn() => $this->mBarang->select("id, kode_barang, nama_barang, id_warna")->where("active", 1)->orderBy("nama_barang", 'asc')->findAll());
     return view($this->views . '\sample_list', $this->data);
   }
 
@@ -127,7 +128,7 @@ class Sample extends BaseController
           "deskripsi" => $row->deskripsi,
           "style" => $row->style,
           "status" => $row->status == 0 ? "Draft" : "Approval",
-          "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sample/"  . $row->file_name : "",
+          "file_gambar" => !empty($row->file_name) ? base_url() . (file_exists(WRITEPATH . "uploads/sample/" . $row->file_name) ? "uploads/sample/" : "uploads/sales_order/") . $row->file_name : "",
           "uang_dp" => !empty($row->uang_dp) ? \format_angka($row->uang_dp) : 0,
           // "detail" => $this->mSample->getDataDetailSample($row->id)
           "detail" => $detail,
@@ -189,7 +190,7 @@ class Sample extends BaseController
       "style" => $results->style,
       "status" => $results->status,
       "uang_dp" =>  !empty($results->uang_dp) ? $results->uang_dp : 0,
-      "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sample/" . $results->file_name : "",
+      "file_gambar" => !empty($results->file_name) ? base_url() . (file_exists(WRITEPATH . "uploads/sample/" . $results->file_name) ? "uploads/sample/" : "uploads/sales_order/") . $results->file_name : "",
       // "detail" => $this->mSample->getDataDetailSample($results->id),
       "detail" => $detail,
       "key_ukuran" => $dtUkuran,
@@ -259,7 +260,7 @@ class Sample extends BaseController
       "kode_sample" => $results->kode_sample,
       "tgl_deadline" => $results->tgl_deadline,
       "deskripsi" => $results->deskripsi,
-      "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sample/" . $results->file_name : "",
+      "file_gambar" => !empty($results->file_name) ? base_url() . (file_exists(WRITEPATH . "uploads/sample/" . $results->file_name) ? "uploads/sample/" : "uploads/sales_order/") . $results->file_name : "",
       "detail" => $this->mSample->getDataDetailSampleWarna($id, $idSampleDet),
       "detailUkuran" => $this->mSample->getDataDetailSampleUkuran($id, $idSampleDet),
       "detail_gram" => $dtGram,
@@ -292,16 +293,19 @@ class Sample extends BaseController
     ]);
 
 
-    if (!empty($this->request->getFile('fileSample'))) {
-      $fileSample       = $this->request->getFile('fileSample');
+    $fileSample = $this->request->getFile('fileSample');
+    if (!empty($fileSample) && $fileSample->isValid() && !$fileSample->hasMoved()) {
       $fileName       = $fileSample->getRandomName();
       $originName     = $fileSample->getName();
       $fileType       = $fileSample->getMimeType();
       $fileSize       = $fileSample->getSize();
 
+      if (preg_match('/\.jfif$/i', $fileName)) {
+        $fileName = preg_replace('/\.jfif$/i', '.jpeg', $fileName);
+      }
 
-      if (!in_array($fileType, ['image/png', 'image/jpeg', 'image/webp'])) {
-        $build_array['message'] = "<br>File <b>Sample</b> hanya menerima tipe file <b>*.webp</b> <b>*.jpg</b>, atau <b>*.png</b>";
+      if (!in_array($fileType, ['image/png', 'image/jpeg', 'image/pjpeg', 'image/webp', 'image/jfif'])) {
+        $build_array['message'] = "<br>File <b>Sample</b> hanya menerima tipe file <b>*.webp</b>, <b>*.jpg</b>, <b>*.jfif</b>, atau <b>*.png</b>";
         $build_array['status']  = false;
         return $this->response->setJSON($build_array);
       }
@@ -317,10 +321,17 @@ class Sample extends BaseController
       $fileIdSample = $this->files->insertID();
       $fileSample->move(WRITEPATH . 'uploads/sample/', $fileName);
 
-      if ($fileIdSampleOld != "") {
-        $nama_file =  $this->files->where('id', $fileIdSampleOld)->get()->getRow()->file_name;
-        unlink(WRITEPATH . 'uploads/sample/' . $nama_file);
-
+      if (!empty($fileIdSampleOld)) {
+        $oldFileRow = $this->files->where('id', $fileIdSampleOld)->get()->getRow();
+        if (!empty($oldFileRow) && !empty($oldFileRow->file_name)) {
+          $pathSample = WRITEPATH . 'uploads/sample/' . $oldFileRow->file_name;
+          $pathSO     = WRITEPATH . 'uploads/sales_order/' . $oldFileRow->file_name;
+          if (file_exists($pathSample)) {
+            @unlink($pathSample);
+          } elseif (file_exists($pathSO)) {
+            @unlink($pathSO);
+          }
+        }
         $this->files->delete(['id' => $fileIdSampleOld]);
       }
     } else {
@@ -725,14 +736,14 @@ class Sample extends BaseController
       "id_barang_7" => !empty($barang7) ? $barang7 : null,
       "id_barang_8" => !empty($barang8) ? $barang8 : null,
 
-      // "id_warna_1" => !empty($warna1) ? $warna1 : null,
-      // "id_warna_2" => !empty($warna2) ? $warna2 : null,
-      // "id_warna_3" => !empty($warna3) ? $warna3 : null,
-      // "id_warna_4" => !empty($warna4) ? $warna4 : null,
-      // "id_warna_5" => !empty($warna5) ? $warna5 : null,
-      // "id_warna_6" => !empty($warna6) ? $warna6 : null,
-      // "id_warna_7" => !empty($warna7) ? $warna7 : null,
-      // "id_warna_8" => !empty($warna8) ? $warna8 : null,
+      "id_warna_1" => !empty($warna1) ? $warna1 : null,
+      "id_warna_2" => !empty($warna2) ? $warna2 : null,
+      "id_warna_3" => !empty($warna3) ? $warna3 : null,
+      "id_warna_4" => !empty($warna4) ? $warna4 : null,
+      "id_warna_5" => !empty($warna5) ? $warna5 : null,
+      "id_warna_6" => !empty($warna6) ? $warna6 : null,
+      "id_warna_7" => !empty($warna7) ? $warna7 : null,
+      "id_warna_8" => !empty($warna8) ? $warna8 : null,
 
       "id_sample" => (int)decrypt($idSample),
       "id"        => !empty($idSampleDet) ? $idSampleDet : null,
@@ -786,8 +797,15 @@ class Sample extends BaseController
   }
   public function deleteDetailList()
   {
-    if (!$this->auth->loggedIn() or (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
-      throw new \Exception('You must be an administrator to view this page.');
+    // FIX (2026-08-08): tombol hapus baris Colour di form Sample sebelumnya
+    // hardcode Admin/Superadmin, padahal tombolnya tampil ke semua role
+    // (tidak ada pengecekan _delete di sisi client) - jadi role lain klik
+    // tombolnya tapi selalu gagal dgn error server. Sekarang pakai izin
+    // delete per-role ($this->_delete) yang sama dgn tombol Hapus di list.
+    if (!$this->auth->loggedIn() || !$this->_delete) {
+      $build_array['message'] = 'Anda tidak memiliki izin untuk menghapus data ini.';
+      $build_array['status']  = false;
+      return $this->response->setJSON($build_array);
     }
 
 
@@ -911,6 +929,11 @@ class Sample extends BaseController
     $config['size']         = '1024';
     $config['black']        = [255, 255, 255];
     $config['white']        = [255, 255, 255];
+    // Lazy-init: property ini terdeklarasi langsung di BaseController (bukan undefined),
+    // jadi magic __get() di BaseController tidak pernah terpanggil dan nilainya tetap null.
+    if ($this->ciqrcode === null) {
+      $this->ciqrcode = new \App\Libraries\CIQRCode();
+    }
     $this->ciqrcode->initialize($config);
 
     $data = [

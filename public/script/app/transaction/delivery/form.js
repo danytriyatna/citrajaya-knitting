@@ -534,6 +534,58 @@ $(document).ready(function () {
         }
     });
 
+    // ==== QR SCAN (konsep sama seperti fungsi scan QR di menu Barang Masuk) ====
+    // Kode QR yang dicetak dari Work Order berisi string gabungan dipisah ";":
+    //   [0] kode_walkorder/kode_sample, [1] key_ukuran, [2] warna_1, [3] qty,
+    //   [4] warna_2 (opsional), [5] warna_3 (opsional), [terakhir] tgl_scan(tipe_print)
+    // Beda dengan flow search/autocomplete di atas (yang bisa menambah baris baru via
+    // addItem()): scan HANYA boleh mengisi/menambah kolom QTY pada baris yang SUDAH ADA
+    // di tabel bawah (dt-list-detail). Kalau barang yang discan tidak cocok dengan
+    // satupun baris di tabel bawah, tampilkan notifikasi & jangan ubah apapun.
+    $("#text_barcode").on("keypress", function (e) {
+        let key = e.which;
+        if (key !== 13) return; // hanya proses saat Enter (akhir dari 1x scan)
+        e.preventDefault();
+
+        let kataKunci = $("#text_barcode").val();
+        if (!kataKunci || kataKunci.trim() === "") return;
+
+        let arrKunci = kataKunci.split(";");
+        let keyUkuranScan = (arrKunci[1] || "").trim().toLowerCase();
+        let qtyScan = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+        if (isNaN(qtyScan) || qtyScan <= 0) qtyScan = 1;
+
+        // Kumpulkan semua komponen warna hasil scan (index 2, 4, 5)
+        let warnaScan = [arrKunci[2], arrKunci[4], arrKunci[5]]
+            .filter(function (w) { return w != undefined && w.trim() !== ""; })
+            .map(function (w) { return w.trim().toLowerCase(); });
+
+        if (warnaScan.length === 0 || keyUkuranScan === "") {
+            Swal.fire({ text: "Scan tidak valid / kosong!", icon: 'warning', showConfirmButton: false, timer: 2000 });
+            $("#text_barcode").val("");
+            return;
+        }
+
+        let dataTable = dtListProduksi.getData();
+        let idxMatch = dataTable.findIndex(function (row) {
+            let rowUkuran = (row.key_ukuran || "").toString().trim().toLowerCase();
+            if (rowUkuran !== keyUkuranScan) return false;
+
+            let rowWarna = (row.kode_warna || "").toString().toLowerCase();
+            // semua komponen warna hasil scan harus ditemukan di dalam kode_warna baris ini
+            return warnaScan.every(function (w) { return rowWarna.indexOf(w) !== -1; });
+        });
+
+        if (idxMatch === -1) {
+            Swal.fire({ text: "Barang yang discan tidak ditemukan pada daftar!", icon: 'error', showConfirmButton: false, timer: 2000 });
+        } else {
+            dataTable[idxMatch].qty = parseFloat(dataTable[idxMatch].qty || 0) + qtyScan;
+            dtListProduksi.replaceData(dataTable);
+        }
+
+        $("#text_barcode").val("");
+    });
+
     function addItem(data) {
         let dataTable = dtListProduksi.getData();
 
@@ -707,103 +759,5 @@ $(document).ready(function () {
                 $("#fmain").submit();
             }
         })
-    });
-
-    $("#text_barcode").on("keypress", function (e) {
-        let key = e.which;
-        if (key == 13) {
-            // $.ajax({
-            // 	url: "trans/item-transfer/src_produk",
-            // 	dataType: "json",
-            // 	data: {
-            // 	  kata_kunci   : $( "#text_barcode" ).val(),
-            // 	},
-            // 	type : 'post',
-            // 	success: function( es ) {
-            //         // console.log(es)
-            // 	  if(es.status){
-            // 		// response(data.slc);
-            // 		if(es.data.length > 0){
-            // 			addItem(es.data[0]);
-            // 		}else{
-            // 			alert("Produk tidak ditemukan !");
-            // 		}
-            // 	  }else{
-            // 		  console.log(es.msg);
-            // 	  }
-            // 	}
-            //   });
-
-
-            const kataKunci = $("#text_barcode").val()
-            const arrKunvi = kataKunci.split(";");
-
-            if (refData.length > 0) {
-                const arrKunci = kataKunci.split(";");
-                let hasil = refData.map(item => ({ ...item }));
-                if (arrKunci[0] != undefined && arrKunci[0] != '') {
-                    hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
-                }
-                if (arrKunci[1] != undefined && arrKunci[1] != '') {
-                    hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
-                }
-                if (arrKunci[2] != undefined && arrKunci[2] != '') {
-                    const normalize = str => str.replace(/\s+/g, ' ').trim();
-                    const inputColor1 = normalize(arrKunci[2].toUpperCase());
-                    const inputColor2 = arrKunci[4] ? normalize(arrKunci[4].toUpperCase()) : null;
-                    const inputColor3 = arrKunci[5] ? normalize(arrKunci[5].toUpperCase()) : null;
-
-                    hasil = hasil.filter(item => {
-                        if (item.color) {
-                            const colorParts = item.color.toString().split('~');
-                            const warna1 = normalize(colorParts[0].toUpperCase());
-                            const warna2 = colorParts[1] ? normalize(colorParts[1].toUpperCase()) : null;
-                            const warna3 = colorParts[2] ? normalize(colorParts[2].toUpperCase()) : null;
-
-                            // 3 warna
-                            if (warna3 && inputColor3) {
-                                return warna1 == inputColor1 && warna2 == inputColor2 && warna3 == inputColor3;
-                            }
-                            // 2 warna
-                            else if (warna2 && inputColor2) {
-                                return warna1 == inputColor1 && warna2 == inputColor2;
-                            }
-                            // 1 warna
-                            else {
-                                return warna1 == inputColor1;
-                            }
-                        }
-                        return false;
-                    });
-                }
-
-
-
-
-                if (hasil.length > 0) {
-                    hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
-                    addItem(hasil[0]);
-
-                    setTimeout(() => {
-                        $("#text_barcode").val("");
-                        refData = xrefData;
-                    }, 500);
-                } else {
-                    Swal.fire({
-                        text: "Produk tidak ditemukan!",
-                        icon: 'error',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                }
-            } else {
-                Swal.fire({
-                    text: "Produk Tidak Ditemukan!",
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-        }
     });
 });

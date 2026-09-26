@@ -68,15 +68,24 @@ class Borongan extends BaseController
                 'dir' => 'ASC'
             ]
         ];
-    $this->data['superadmin'] = $this->auth->isSuperadmin();
-    if (!$this->auth->isSuperadmin()) {
+    $roleId = (int) session()->get('role_id');
+    $roleName = strtoupper(trim((string) session()->get('role_name')));
+    $isAllowedAllPerusahaan = $this->auth->isSuperadmin()
+        || $this->auth->isAdmin()
+        || in_array($roleId, [1, 2, 4, 7], true)
+        || in_array($roleName, ['SUPERADMIN', 'ADMIN APLIKASI', 'ADMIN KEUANGAN', 'ADMIN KEUANGAN_1'], true)
+        || $this->auth->inGroup(['superadmin', 'ADMIN APLIKASI', 'ADMIN KEUANGAN', 'ADMIN KEUANGAN_1', 1, 2, 4, 7]);
+
+    $this->data['superadmin'] = $isAllowedAllPerusahaan;
+    if (!$isAllowedAllPerusahaan) {
         if (empty($this->currentUser->id_perusahaan)) {
             $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => 1]);
+            $this->data['user_perusahaan'] = 1;
         }
         else {
             $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan, null, ['id' => $this->currentUser->id_perusahaan]);
+            $this->data['user_perusahaan'] = $this->currentUser->id_perusahaan;
         }
-        $this->data['user_perusahaan'] = !empty($this->currentUser->id_perusahaan) || $this->currentUser->id_perusahaan != 1 ? $this->currentUser->id_perusahaan : 1;
     }
     else {
         $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);

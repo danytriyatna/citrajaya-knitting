@@ -214,7 +214,7 @@ class Mcoa extends PrModel
 
     function get_mutasi_export_all($month = null, $year = null, $ref_masuk = null){
         $builder = $this->db->table("trans_akun_det tad");
-        $builder->select("'Beban Biaya' as type, ta.trans_akun_date as tgl_transaksi, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
+        $builder->select("ta.tipe_transaksi, rr.coa_id as rr_coa_id, ta.trans_akun_date as tgl_transaksi, tad.coa_id, ta.trans_akun_kode, mc.kode, mc.nama, tad.keterangan, tad.jumlah, ta.ref_rekening_id, CONCAT(rr.rekening_no , ' - ', rr.rekening_bank) AS tipe_bayar ");
         $builder->join("trans_akun ta", "ta.id = tad.trans_akun_id", "left");
         $builder->join("m_coa mc", "mc.id = tad.coa_id", "left");
         $builder->join("ref_rekening rr", "rr.id = ta.ref_rekening_id", "left");
@@ -231,6 +231,9 @@ class Mcoa extends PrModel
         $builder->orderBy("ta.trans_akun_date ASC");
         
         $this->_data = $builder->get()->getResult();
+        foreach ($this->_data as $row) {
+            $row->type = ($row->tipe_transaksi == 2 || substr($row->trans_akun_kode, 0, 3) == 'KM.') ? 'Kas Masuk' : 'Beban Biaya';
+        }
         return $this->_data;
     }
 
@@ -524,4 +527,41 @@ class Mcoa extends PrModel
         $this->_data = $builder->get()->getResult();
         return $this->_data;
     }
-}
+
+    function get_pemakaian_bahan_laba($month_from = null, $year_from = null, $month_to = null, $year_to = null)
+    {
+        $startDate = "$year_from-$month_from-01";
+        $lastDay = date("t", strtotime("$year_to-$month_to-01"));
+        $endDate = "$year_to-$month_to-$lastDay";
+
+        $sql = "
+            SELECT 
+                tbh.id as id_header,
+                tbh.kode_transaksi,
+                tbh.tanggal as tgl_transaksi,
+                tbh.no_ref_wo,
+                tbh.no_ref_trf,
+                COALESCE(rg.nama_gudang, 'Gudang') as tipe_bayar,
+                tbd.id_barang,
+                rb.kode_barang,
+                rb.nama_barang,
+                COALESCE(NULLIF(rb.keterangan, ''), rb.nama_barang) as ket_barang,
+                tbd.qty,
+                COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0) as price,
+                (tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) as subtotal,
+                tbd.lot_no
+            FROM trans_barang_detail tbd
+            JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+            LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+            LEFT JOIN ref_gudang rg ON rg.id = tbh.id_gudang
+            WHERE tbh.jenis_transaksi = 2
+            AND tbh.id_kategori = 5
+            AND tbh.status = 1
+            AND tbh.active = 1
+            AND tbh.tanggal >= '$startDate'
+            AND tbh.tanggal <= '$endDate'
+            ORDER BY tbh.tanggal ASC, tbd.id ASC
+        ";
+
+        return $this->db->query($sql)->getResult();
+    }}

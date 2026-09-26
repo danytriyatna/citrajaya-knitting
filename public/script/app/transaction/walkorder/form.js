@@ -1,4 +1,10 @@
 
+const appUrl = (path) => {
+    let base = (typeof baseUrl !== 'undefined' && baseUrl) ? baseUrl : ((typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : '/');
+    if (!base.endsWith('/')) base += '/';
+    return base + path.replace(/^\//, '');
+};
+
 $(document).ready(function () {
 
 
@@ -183,16 +189,41 @@ $(document).ready(function () {
                 width: 100,
                 cellClick: function(e, cell) {
                     let rowData = cell.getRow().getData();
+                    let curQty = parseFloat(rowData.qty) || 0;
                     textDetId.val(rowData.id);
                     textTitleWarna.html(rowData.wdasar);
-                    textQtyWarna.html(rowData.qty);
+                    textQtyWarna.html(curQty);
                     let curLoss = parseFloat(rowData.loss);
                     if (isNaN(curLoss) || curLoss <= 0) {
                         curLoss = 5;
                     }
                     inpDetailLoss.val(curLoss);
                     
-                    dtListDetailWarna.setData(rowData.details || []);
+                    let freshDetails = (rowData.details || []).map(function(item) {
+                        let g = parseFloat(item.gram || 0);
+                        let l = parseFloat(item.loss || curLoss);
+                        if (isNaN(l) || l <= 0) l = curLoss;
+                        let g_nd = g * curQty;
+                        let kg = g_nd / 1000;
+                        let kg_loss = (kg * l) / 100;
+                        let tot = kg + kg_loss;
+                        let kuota = parseFloat(item.kuota !== undefined ? item.kuota : (item.kuota_history || 0));
+                        if (isNaN(kuota)) kuota = 0;
+                        let kuota_tambah = kuota - tot;
+                        return Object.assign({}, item, {
+                            gram_nd: g_nd,
+                            kg: kg,
+                            loss: l,
+                            kg_loss: kg_loss,
+                            total: tot,
+                            kuota_history: kuota,
+                            kuota_tambah: kuota_tambah
+                        });
+                    });
+
+                    dtListDetailWarna.setData(freshDetails).then(function() {
+                        updateRowPercentage();
+                    });
                     mdDetail.modal("show");
                 }
             },
@@ -244,7 +275,7 @@ $(document).ready(function () {
 				
         ],
         layout: 'fitColumns',
-        ajaxURL: "/trans/work-order/list_warna",
+        ajaxURL: appUrl("trans/work-order/list_warna"),
         placeholder: "Tidak ada data",
         ajaxConfig: "POST",
         ajaxSorting: true,
@@ -304,27 +335,21 @@ $(document).ready(function () {
                     width:"15%"
                 },
                 {
-                    title: "%", field: "persen",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end",
-                    width:"11%"
+                    title: "%", field: "persen", sorter: "number", headerSort:false, align: "center", cssClass: "text-end",
+                    width:"11%",
+                    formatter: function(cell) {
+                        let val = parseFloat(cell.getValue() || 0);
+                        return val > 0 ? val.toFixed(2) + '%' : '0%';
+                    }
                 },
                 {
-                    title: "GRAM", field: "gram",  sorter: "string", headerSort:false, align: "center", cssClass: "text-end tabulator-editable",
+                    title: "GRAM", field: "gram", sorter: "string", headerSort:false, align: "center", cssClass: "text-end tabulator-editable",
                     width:"11%", editor: "number", bottomCalc:"sum", bottomCalcFormatter: cellMoney, formatter: cellMoney,
                     cellEdited: function (cell) {
 
-                        let qty = textQtyWarna.html()
-                        // Dapatkan baris data yang telah diedit
+                        let qty = textQtyWarna.html();
                         let rowData = cell.getRow().getData();
-                        let tableColumn = cell._cell.column.cells;
-                        let total_gram = 0;
-                        if(tableColumn.length > 0){
-                            let index_total = tableColumn.length - 1;
-                            total_gram = tableColumn[index_total].value
-                        }
-                        updateRow(rowData, total_gram)
-                        let val_gram = rowData.gram ? rowData.gram : 0;
-                        // let val_persen = total_gram > 0 ? (rowData.gram/total_gram) * 100 : 0;
-                        //     val_persen = val_persen > 0 ? val_persen.toFixed(2) : 0;
+                        let val_gram = parseFloat(rowData.gram || 0);
                         let val_gram_nd = val_gram * qty;
                         let val_kg = val_gram_nd / 1000;
                         let val_loss = parseFloat(inpDetailLoss.val());
@@ -333,12 +358,10 @@ $(document).ready(function () {
                             inpDetailLoss.val(5);
                         }
                         let val_kg_loss = (val_kg * val_loss) / 100;
-
                         let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
                         let val_kuota = 0;
                         let val_kuota_tambah = val_kuota - val_total;
-            
-                        // Set nilai total di baris yang sama
+
                         cell.getRow().update({ 
                             gram_nd: val_gram_nd,
                             kg: val_kg,
@@ -346,7 +369,9 @@ $(document).ready(function () {
                             total: val_total,
                             kuota: val_kuota,
                             kuota_tambah: val_kuota_tambah,
-                         });
+                        });
+
+                        updateRowPercentage();
                     },
                 },
                 {
@@ -391,12 +416,17 @@ $(document).ready(function () {
 	});
 
 
-    function updateRow(data, total){
+    function updateRowPercentage(){
         let rows = dtListDetailWarna.getRows();
+        let total_gram = 0;
+        rows.forEach(row => {
+            let g = parseFloat(row.getData().gram || 0);
+            total_gram += g;
+        });
         rows.forEach(row => {
             let rowData = row.getData();
-            let val_persen = total > 0 ? (rowData.gram/total) * 100 : 0;
-                             val_persen = val_persen > 0 ? val_persen.toFixed(2) : 0;
+            let val_gram = parseFloat(rowData.gram || 0);
+            let val_persen = total_gram > 0 ? ((val_gram / total_gram) * 100) : 0;
             row.update({ persen: val_persen });
         });
     }   
@@ -418,8 +448,8 @@ $(document).ready(function () {
             let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
             val_total = val_total > 0 ? val_total.toFixed(2) : 0
 
-            let val_kuota = 0;
-            val_kuota = val_kuota > 0 ? val_kuota.toFixed(2) : 0
+            let val_kuota = parseFloat(rowData.kuota !== undefined ? rowData.kuota : (rowData.kuota_history || 0));
+            if (isNaN(val_kuota)) val_kuota = 0;
 
             let val_kuota_tambah = val_kuota - val_total;
 
@@ -450,7 +480,7 @@ $(document).ready(function () {
         
         if (true) {
             $.ajax({
-                url: "/trans/work-order/save-warna", // point to server-side controller method
+                url: appUrl("trans/work-order/save-warna"), // point to server-side controller method
                 dataType: "json", // what to expect back from the server
                 data: form_data,
                 type: "post",
@@ -609,7 +639,7 @@ $(document).ready(function () {
             form_data.append('data_ukuran', JSON.stringify(ukuran_calc));
             
             $.ajax({
-                url: "/trans/work-order/save-data", // point to server-side controller method
+                url: appUrl("trans/work-order/save-data"), // point to server-side controller method
                 dataType: "json", // what to expect back from the server
                 data: form_data,
                 type: "post",
@@ -637,7 +667,7 @@ $(document).ready(function () {
                             timer: 2500
                         }).then((result) => {
                             // similar behavior as clicking on a link
-                            window.location.href = "/trans/work-order";
+                            window.location.href = appUrl("trans/work-order");
                         });
                     }else{
                         Swal.fire({

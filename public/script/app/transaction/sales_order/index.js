@@ -1,5 +1,11 @@
 
 
+const appUrl = (path) => {
+    let base = (typeof baseUrl !== 'undefined' && baseUrl) ? baseUrl : ((typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : '/');
+    if (!base.endsWith('/')) base += '/';
+    return base + path.replace(/^\//, '');
+};
+
 $(document).ready(function () {
 
     if (typeof flashError !== 'undefined' && flashError !== '') {
@@ -133,7 +139,7 @@ $(document).ready(function () {
         ],
         locale: 'id',
         layout: 'fitColumns',
-        ajaxURL: "/trans/sales-order/list",
+        ajaxURL: appUrl("trans/sales-order/list"),
         ajaxConfig: "POST",
         sortMode: "remote",
         filterMode: "remote",
@@ -142,6 +148,10 @@ $(document).ready(function () {
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
+            params.id_konsumen = $("#filter_buyer").val();
+            params.status = $("#filter_status").val();
+            params.from_date = $("#from_date").val();
+            params.to_date = $("#to_date").val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();
@@ -315,6 +325,18 @@ $(document).ready(function () {
         });
     }
 
+    $("#btn_filter").on("click", function () {
+        dtList.setData();
+    });
+
+    $("#filter_buyer, #filter_status").on("change", function () {
+        dtList.setData();
+    });
+
+    $("#from_date, #to_date").on("change", function () {
+        dtList.setData();
+    });
+
     // declarre untuk variable print qr
     const mdlPrint = $("#modal-print-barcode");
     const inpp_foto = $("#fotoPrint");
@@ -333,23 +355,27 @@ $(document).ready(function () {
         let status = '';
         let aksi = '';
         if (data.status == 'Draft') {
-            status = ` <i class="fa fa-dot-circle text-muted m-e-6"></i>
-                    <span class="f-w-700 text-muted">`+ data.status + `</span>`
+            status = `<i class="fa fa-dot-circle text-muted m-e-6"></i>
+                    <span class="f-w-700 text-muted">Draft</span>`;
 
             aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
                  <button type="button" ${deleteButton == true ? '' : 'hidden'} class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
-                 <button type="button" hidden  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+                 <button type="button" hidden class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
 
-        }
+        } else if (data.status == 'Closed') {
+            status = `<i class="fa fa-lock text-dark m-e-6"></i>
+                    <span class="f-w-700 text-dark">Closed</span>`;
 
-        else {
-            status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
-                    <span class="f-w-700 text-success">`+ data.status + `</span>`
-
+            aksi = `<button type="button" class="btn btn-sm btn-outline-success open-so" data-id="${data.id}" data-so="${data.kode_sales_order}" title="Buka kembali Sales Order"><i class="fa fa-unlock"></i> Buka SO</button>
+                <button type="button" ${printButton == true ? '' : 'hidden'} class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+        } else {
+            status = `<i class="fa fa-check-circle text-success m-e-6"></i>
+                    <span class="f-w-700 text-success">Approved</span>`;
 
             aksi = `<button type="button" ${editButton == true ? '' : 'hidden'} class="btn btn-sm btn-warning text-dark edit" data-id="${data.id}"> <i class="fa fa-edit"></i> Edit</button>
+                <button type="button" class="btn btn-sm btn-dark close-so" data-id="${data.id}" data-so="${data.kode_sales_order}" title="Tutup / Close Sales Order"><i class="fa fa-lock"></i> Close SO</button>
                 <button hidden type="button" class="btn btn-sm btn-danger delete" data-id="${data.id}"> <i class="fa fa-trash"></i> Hapus</button>
-                <button type="button" ${printButton == true ? '' : 'hidden'}  class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+                <button type="button" ${printButton == true ? '' : 'hidden'} class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
         }
 
         // HTML Card Layout
@@ -404,30 +430,125 @@ $(document).ready(function () {
 
         onRendered(() => {
 
-            document.querySelector(`.edit[data-id='${data.id}']`).addEventListener('click', () => {
-                fileSalesOrder.val('')
-                linkFileSalesOrder.attr('src', "")
-                getDetail(data.id)
-            });
-            document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', () => {
-                window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
-            });
-            document.querySelector(`.delete[data-id='${data.id}']`).addEventListener('click', () => {
-                Swal.fire({
-                    title: 'Hapus Data?',
-                    text: 'Data yang dihapus tidak dapat dikembalikan!',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.replace(baseUrl + "/trans/sales-order/delete/list/" + data.id);
-                    }
+            const editEl = document.querySelector(`.edit[data-id='${data.id}']`);
+            if (editEl) {
+                editEl.addEventListener('click', () => {
+                    fileSalesOrder.val('');
+                    linkFileSalesOrder.attr('src', "");
+                    getDetail(data.id);
                 });
-            });
+            }
+
+            const printEl = document.querySelector(`.print[data-id='${data.id}']`);
+            if (printEl) {
+                printEl.addEventListener('click', () => {
+                    window.open(`${baseUrl}/trans/sales-order/print/${data.id}`, "_blank");
+                });
+            }
+
+            const deleteEl = document.querySelector(`.delete[data-id='${data.id}']`);
+            if (deleteEl) {
+                deleteEl.addEventListener('click', () => {
+                    Swal.fire({
+                        title: 'Hapus Data?',
+                        text: 'Data yang dihapus tidak dapat dikembalikan!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.replace(baseUrl + "/trans/sales-order/delete/list/" + data.id);
+                        }
+                    });
+                });
+            }
+
+            const closeSoEl = document.querySelector(`.close-so[data-id='${data.id}']`);
+            if (closeSoEl) {
+                closeSoEl.addEventListener('click', () => {
+                    Swal.fire({
+                        title: `Tutup Sales Order?`,
+                        html: `Apakah Anda yakin ingin menutup <b>${data.kode_sales_order}</b>?<br><small class="text-muted">SO yang ditutup tidak akan dapat direferensikan lagi ke Work Order, Transfer, maupun Delivery Order.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#212529',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fa fa-lock"></i> Ya, Tutup SO!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `${baseUrl}/trans/sales-order/set-status`,
+                                type: 'POST',
+                                data: { id: data.id, status: 3 },
+                                dataType: 'json',
+                                success: function (res) {
+                                    if (res.status) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: res.message,
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        dtList.setData();
+                                    } else {
+                                        Swal.fire('Gagal', res.message, 'error');
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            const openSoEl = document.querySelector(`.open-so[data-id='${data.id}']`);
+            if (openSoEl) {
+                openSoEl.addEventListener('click', () => {
+                    Swal.fire({
+                        title: `Buka Kembali Sales Order?`,
+                        html: `Apakah Anda ingin membuka kembali <b>${data.kode_sales_order}</b>?<br><small class="text-muted">Status SO akan kembali menjadi Approved dan dapat digunakan kembali.</small>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fa fa-unlock"></i> Ya, Buka SO!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `${baseUrl}/trans/sales-order/set-status`,
+                                type: 'POST',
+                                data: { id: data.id, status: 2 },
+                                dataType: 'json',
+                                success: function (res) {
+                                    if (res.status) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: res.message,
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        dtList.setData();
+                                    } else {
+                                        Swal.fire('Gagal', res.message, 'error');
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+            }
 
             let isColumn = [
                 { headerSort: false, title: "No", field: "no", width: "5%" },
@@ -676,7 +797,7 @@ $(document).ready(function () {
 
     function getDetail(id) {
         $.ajax({
-            url: `/trans/sales-order/detail/${id}`,
+            url: appUrl(`trans/sales-order/detail/${id}`),
             type: 'GET',
             dataType: 'json',
             beforeSend: function () {
@@ -801,7 +922,7 @@ $(document).ready(function () {
 
     function getDetailQty(id, idDet) {
         $.ajax({
-            url: `/trans/sales-order/detail-qty/${id}/${idDet}`,
+            url: appUrl(`trans/sales-order/detail-qty/${id}/${idDet}`),
             type: 'GET',
             dataType: 'json',
             beforeSend: function () {
@@ -825,31 +946,44 @@ $(document).ready(function () {
                 tglDeadlineText.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em>`)
                 tglDeadlineTextDua.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline 2: ${data.tgl_deadline_dua ? formatterDate(data.tgl_deadline_dua) : '-'}</em>`)
                 if (data.detail) {
-                    idSalesOrderDet = data.detail.id
-                    inpPoWarna1.val(data.detail.id_warna_1).trigger('change');
-                    inpPoWarna2.val(data.detail.id_warna_2).trigger('change');
-                    inpPoWarna3.val(data.detail.id_warna_3).trigger('change');
-                    inpPoWarna4.val(data.detail.id_warna_4).trigger('change');
-                    inpPoWarna5.val(data.detail.id_warna_5).trigger('change');
-                    inpPoWarna6.val(data.detail.id_warna_6).trigger('change');
-                    inpPoWarna7.val(data.detail.id_warna_7).trigger('change');
-                    inpPoWarna8.val(data.detail.id_warna_8).trigger('change');
+                    idSalesOrderDet = data.detail.id;
+                    for (let i = 1; i <= 8; i++) {
+                        let wVal = data.detail['id_warna_' + i];
+                        let bVal = data.detail['id_barang_' + i];
+                        let $wEl = $('#po_warna' + i);
+                        let $bEl = $('#po_barang' + i);
 
-                    inpPoBarang1.val(data.detail.id_barang_1).trigger('change');
-                    inpPoBarang2.val(data.detail.id_barang_2).trigger('change');
-                    inpPoBarang3.val(data.detail.id_barang_3).trigger('change');
-                    inpPoBarang4.val(data.detail.id_barang_4).trigger('change');
-                    inpPoBarang5.val(data.detail.id_barang_5).trigger('change');
-                    inpPoBarang6.val(data.detail.id_barang_6).trigger('change');
-                    inpPoBarang7.val(data.detail.id_barang_7).trigger('change');
-                    inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
+                        if (wVal) {
+                            $wEl.val(String(wVal)).trigger('change');
+                        } else {
+                            $wEl.val('').trigger('change');
+                        }
+
+                        if (bVal) {
+                            $bEl.val(String(bVal)).trigger('change');
+                        } else {
+                            $bEl.val('').trigger('change');
+                        }
+                    }
                 }
 
-                dtListDetailQty.setData(data.detailUkuran)
+                dtListDetailQty.setData(data.detailUkuran);
                 isModalPO.modal("show");
                 setTimeout(() => {
-                    dtListDetailQty.redraw(true)
-                }, 500);
+                    if (data.detail) {
+                        for (let i = 1; i <= 8; i++) {
+                            let bVal = data.detail['id_barang_' + i];
+                            let wVal = data.detail['id_warna_' + i];
+                            if (bVal) {
+                                $('#po_barang' + i).val(String(bVal)).trigger('change');
+                            }
+                            if (wVal) {
+                                $('#po_warna' + i).val(String(wVal)).trigger('change');
+                            }
+                        }
+                    }
+                    dtListDetailQty.redraw(true);
+                }, 250);
             },
             error: function (xhr, status, error) {
                 Swal.close();
@@ -861,8 +995,8 @@ $(document).ready(function () {
 
     function deleteData(id) {
         $.ajax({
-            type: 'GET',
-            url: `/trans/sales-order/delete/detail/${id}`,
+            type: 'POST',
+            url: appUrl(`trans/sales-order/delete/detail/${id}`),
             dataType: 'json',
             beforeSend: function () {
                 Swal.fire({
@@ -949,7 +1083,7 @@ $(document).ready(function () {
 
             $.ajax({
                 type: 'POST',
-                url: '/trans/sales-order/save',
+                url: appUrl('trans/sales-order/save'),
                 data: formData,
                 processData: false,  // Jangan ubah data menjadi string
                 contentType: false,  // Agar jQuery tidak mengatur tipe konten
@@ -1027,7 +1161,7 @@ $(document).ready(function () {
 
         $.ajax({
             type: 'POST',
-            url: '/trans/sales-order/save-detail',
+            url: appUrl('trans/sales-order/save-detail'),
             data: {
                 barang1: inpPoBarang1.val(),
                 barang2: inpPoBarang2.val(),
@@ -1093,7 +1227,7 @@ $(document).ready(function () {
 
     function getSample() {
         $.ajax({
-            url: '/trans/sales-order/getSample', // point to server-side controller method
+            url: appUrl('trans/sales-order/getSample'), // point to server-side controller method
             dataType: "json", // what to expect back from the server
             type: "post",
             beforeSend: function () {
@@ -1177,16 +1311,12 @@ $(document).ready(function () {
 
             // Fetch sample colors with 0 QTY for new items or preserved QTY for edit items
             $.ajax({
-                url: `/trans/sales-order/view?kodeOrder=${isin[0].kode_sample}&soId=${currentSoId}`,
+                url: appUrl(`trans/sales-order/view?kodeOrder=${isin[0].kode_sample}&soId=${currentSoId}`),
                 type: 'GET',
                 dataType: 'json',
                 success: function (res) {
                     if (res.data && res.data.length > 0) {
                         rowDet.show();
-                        // res dari endpoint "view" berformat {data, ukuran},
-                        // sedangkan setColumDetailData() mengharapkan {detail, key_ukuran}
-                        // (format endpoint "detail"). Normalisasi dulu supaya tabel Colour
-                        // ikut terisi otomatis saat memilih Sample pada SO baru.
                         setColumDetailData({ detail: res.data, key_ukuran: res.ukuran });
                     }
                 }
@@ -1197,7 +1327,7 @@ $(document).ready(function () {
     function generateQRCode(data) {
         $.ajax({
             type: 'POST',
-            url: '/trans/sales-order/generate',
+            url: appUrl('trans/sales-order/generate'),
             data: { data: JSON.stringify(data) },
             dataType: "json",
             beforeSend: function () {
@@ -1287,7 +1417,7 @@ $(document).ready(function () {
 
         // Buat query string
         let queryString = $.param(params); // Convert objek ke query string
-        let fullUrl = `trans/work-order/generate?${queryString}`;
+        let fullUrl = appUrl(`trans/work-order/generate?${queryString}`);
         //   let fullUrl = `trans/sales-order/generate?${queryString}`;
 
         // Buka link di tab baru
@@ -1338,7 +1468,7 @@ let btnExcel = $("#btn_excel");
 btnExcel.on("click", function () {
     let from_date = $("#from_date").val();
     let to_date = $("#to_date").val();
-    let inpFilterBuyer = $('#filter_buyer').val();
+    let inpFilterBuyer = $('#filter_buyer');
 
 
     if (from_date == null || from_date == "" || from_date == undefined) {
@@ -1370,7 +1500,7 @@ btnExcel.on("click", function () {
     }
 
     else {
-        let url = "/trans/sales-order/print_excel_lists/" + from_date + "/" + to_date + "/" + inpFilterBuyer;
+        let url = appUrl("trans/sales-order/print_excel_lists/" + from_date + "/" + to_date + "/" + inpFilterBuyer.val());
         window.open(url, '_blank');
     }
 });

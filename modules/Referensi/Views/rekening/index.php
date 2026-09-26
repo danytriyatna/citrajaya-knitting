@@ -41,6 +41,17 @@
           </div>
         </div>
         <div class="form-group row">
+          <label class="control-label text-start text-md-end col-md-2 col-form-label" for="coa_id">Akun COA<span class="text-danger">*</span></label>
+          <div class="col-md-9">
+            <select id="coa_id" name="coa_id" class="form-control select2" style="width:100%" required>
+              <option value="">- Pilih Akun COA -</option>
+            </select>
+            <div class="invalid-feedback">
+              Akun COA wajib dipilih
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="keterangan">Keterangan</label>
           <div class="col-md-9">
             <textarea name="keterangan" id="keterangan" class="form-control" rows="5"></textarea>

@@ -18,7 +18,7 @@ class ProsesProduksiModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " uk");
 
-        $builder->select("uk.id, uk.seq, uk.nama, uk.keterangan");
+        $builder->select("uk.id, uk.seq, uk.nama, uk.keterangan, COALESCE(uk.is_rajut, 0) as is_rajut");
 
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');

@@ -370,6 +370,112 @@ class CustomerReceipt extends BaseController
             return FALSE;
         } else {
             $this->db->transCommit();
+            if (!empty($dataDet)) {
+                foreach ($dataDet as $r) {
+                    if (!empty($r["bayar"])) {
+                        $inv_id = decrypt($r["id_invoice"]);
+                        $soRows = $this->db->table('trans_invoice_detail')
+                            ->select('id_ref')
+                            ->where('id_invoice', (int)$inv_id)
+                            ->where('id_ref IS NOT NULL')
+                            ->get()->getResult();
+                        foreach ($soRows as $s) {
+                            $this->mSalesOrder->evaluateAndSyncClosedStatus($s->id_ref);
+                        }
+                    }
+                }
+            }
+            return TRUE;
+        }
+    }
+
+    /**
+     * FIX (2026-08-08): method ini sebelumnya tidak ada sama sekali, padahal
+     * form() memanggilnya ($this->update($id, $dataIn, $dtDet), baris 252)
+     * setiap kali dokumen dengan $id yang sudah ada disimpan ulang - jadi
+     * edit/approve/reject Customer Receipt yang sudah pernah disimpan selalu
+     * berakhir fatal error "Call to undefined method". Dibuat mengikuti pola
+     * insert() di atas, ditambah delete-before-insert utk trans_customer_
+     * receipt_detail (table2) supaya edit berulang tidak menumpuk baris
+     * duplikat.
+     *
+     * CATATAN: kalau saat edit ada invoice yang SEBELUMNYA ikut dibayar lalu
+     * dihapus dari daftar, payment_status invoice itu di trans_invoice_detail
+     * tidak otomatis dikembalikan ke 0 di sini (butuh logika reversal
+     * tersendiri) - di luar scope perbaikan "method tidak ada" ini, tapi
+     * dicatat sebagai keterbatasan yang diketahui.
+     */
+    private function update($id, $dataIn, $dataDet)
+    {
+        $now = date("Y-m-d H:i:s");
+        $user_id = $this->get_userid();
+
+        $this->db->transBegin();
+
+        $this->mCr->updateRecord($this->mCr->table, $dataIn, 'id', $id);
+
+        // Hapus dulu baris detail lama (delete-before-insert - pola yang sama
+        // dipakai di modul lain di aplikasi ini) sebelum insert ulang, supaya
+        // edit berulang pada Customer Receipt yang sama tidak menumpuk baris
+        // trans_customer_receipt_detail duplikat.
+        $this->mCr->deleteRecord($this->mCr->table2, 'id_cr', $id);
+
+        $bayar = 0;
+        $pph = 0;
+        if (!empty($dataDet)) {
+            foreach ($dataDet as $r) {
+                if ($r["bayar"]) {
+                    $inv_id = decrypt($r["id_invoice"]);
+                    $dtIn = [];
+                    $dtIn["id_invoice"] = $inv_id;
+                    $dtIn["id_cr"] = $id;
+                    $dtIn["total_item"] = $r["total_item"];
+                    $dtIn["remain_item"] = $r["remain_item"];
+                    $dtIn["total"] = $r["total"];
+                    $dtIn["pay_item"] = $r["pay_item"];
+
+                    $dtIn["active"] = 1;
+                    $dtIn["created_by"] = $user_id;
+                    $dtIn["created_at"] = $now;
+
+                    $bayar = $bayar + $r["pay_item"];
+                    $pph = $pph + $r["pph"];
+
+                    $arrInv = [
+                        "payment_status" => 1,
+                    ];
+                    $arrParam = [
+                        "id_invoice" => $inv_id,
+                    ];
+                    $this->mInvoice->updateRecords($this->mInvoice->table2, $arrInv, $arrParam);
+                    $this->mCr->insertRecordGetid($this->mCr->table2, $dtIn);
+                }
+            }
+            $upd['total_bayar'] = $bayar;
+            $upd['pph'] = $pph;
+            $this->mCr->updateRecord($this->mCr->table, $upd, 'id', $id);
+        }
+
+        if ($this->db->transStatus() === FALSE) {
+            $this->db->transRollback();
+            return FALSE;
+        } else {
+            $this->db->transCommit();
+            if (!empty($dataDet)) {
+                foreach ($dataDet as $r) {
+                    if (!empty($r["bayar"])) {
+                        $inv_id = decrypt($r["id_invoice"]);
+                        $soRows = $this->db->table('trans_invoice_detail')
+                            ->select('id_ref')
+                            ->where('id_invoice', (int)$inv_id)
+                            ->where('id_ref IS NOT NULL')
+                            ->get()->getResult();
+                        foreach ($soRows as $s) {
+                            $this->mSalesOrder->evaluateAndSyncClosedStatus($s->id_ref);
+                        }
+                    }
+                }
+            }
             return TRUE;
         }
     }
@@ -412,18 +518,25 @@ class CustomerReceipt extends BaseController
         $params_det['id_cr'] = $id;
         $is_detail = $this->mCr->getDataDet(null, 0, 9999, 0, 0, $params_det);
 
+        // FIX (2026-08-08): kode di sini sebelumnya menulis "pay_item" ke
+        // trans_invoice - kolom itu TIDAK ADA di tabel itu (pay_item cuma
+        // ada sebagai alias hasil SUM() di InvoiceModel::getData(), lihat
+        // baris 26 di file itu), jadi query selalu gagal (error kolom tidak
+        // ditemukan) dan pembatalan Customer Receipt tidak pernah berhasil.
+        // "pph" yang ditulis juga salah - itu kolom TARIF pajak invoice
+        // (nilai tetap, mis. 11 = 11%, lihat SalesInvoice.php:329), bukan
+        // akumulasi jumlah yang perlu dikurangi tiap ada pembayaran/pembatalan.
+        //
+        // pay_item invoice dihitung live dari SUM() trans_customer_receipt_
+        // detail (tidak disimpan sbg kolom), jadi begitu baris detail milik
+        // Customer Receipt ini ikut tidak terhitung lagi (lihat perbaikan di
+        // InvoiceModel::getData() - sekarang mengecualikan baris yg induknya
+        // sudah non-aktif), otomatis ter-update tanpa perlu ditulis manual
+        // di sini.
         $bayar = 0;
         foreach ($is_detail as $r) {
-            $inv_id = $r->id_invoice;
-            $dtInvs = $this->mInvoice->getData($inv_id);
             $pays = $r->pay_item;
             $pays23 = $r->pph;
-            $dtInv["pay_item"]   =  $dtInvs->pay_item - $pays;
-            $dtInv["pph"]        =  $dtInvs->pph - $pays23;
-            $dtInv['updated_by'] =  $user_id;
-            $dtInv['updated_at'] = $now;
-            $this->mInvoice->updateRecord($this->mInvoice->table, $dtInv, 'id', $inv_id);
-
             $bayar += (float) $pays + (float) $pays23;
         }
 

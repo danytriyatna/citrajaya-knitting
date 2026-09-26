@@ -88,12 +88,72 @@ class LaporanPersediaan extends BaseController
 
         // $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);
         $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan, $params);
+        $resData = $this->groupByLotPack($resData);
 
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];
         $build_array["status"] = true;
 
         return $this->response->setJSON($build_array);
+    }
+
+    /**
+     * getDataGudang() mengembalikan 1 baris per snapshot BULANAN (trans_barang_history) per
+     * kombinasi id_barang+lot_no+pack_id. Kalau filter Bulan/Gudang di-set ke "Semua", lot+pack
+     * yang sama bisa punya beberapa baris (satu per bulan yang ada histori) - tampil dobel di
+     * laporan. Di sini digabung jadi 1 baris ringkasan per lot+pack: Qty Awal dari baris paling
+     * awal (kronologis), Qty Akhir dari baris paling akhir, Qty Masuk & Qty Keluar dijumlahkan
+     * dari semua baris yang digabung. Baris lain (nama_barang, harga, dst) dipakai dari baris
+     * terakhir. Hanya dipakai untuk tampilan - TIDAK dipakai di updateDataHistory(), yang masih
+     * butuh baris mentah per bulan apa adanya.
+     */
+    private function groupByLotPack($resData)
+    {
+        if (empty($resData)) {
+            return $resData;
+        }
+
+        $grouped = [];
+        $order = [];
+        foreach ($resData as $row) {
+            $key = $row->id_barang . '|' . $row->lot_no . '|' . (!empty($row->pack_id) ? $row->pack_id : '');
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = clone $row;
+                $grouped[$key]->masuk = 0;
+                $grouped[$key]->keluar = 0;
+                $grouped[$key]->saldo_awal = (float) $row->saldo_awal;
+                $order[] = $key;
+            }
+            $grouped[$key]->masuk += (float) $row->masuk;
+            $grouped[$key]->keluar += (float) $row->keluar;
+            // Data referensi (tanggal, harga) ikut baris paling akhir (getDataGudang() sudah
+            // ORDER BY tanggal ASC) - tapi saldo_akhir TIDAK boleh diambil mentah dari baris
+            // terakhir, karena itu cuma akhir bulan itu sendiri, bukan hasil gabungan semua
+            // baris. Dihitung ulang di bawah: Awal + total Masuk - total Keluar.
+            $grouped[$key]->tanggal = $row->tanggal;
+            $grouped[$key]->price = $row->price;
+        }
+
+        $result = [];
+        foreach ($order as $key) {
+            $g = $grouped[$key];
+            $g->saldo_akhir = $g->saldo_awal + $g->masuk - $g->keluar;
+
+            // Baris yang Qty Awal, Masuk, Keluar, DAN Akhir-nya semua nol tidak
+            // ada pergerakan/saldo sama sekali - tidak perlu ditampilkan di
+            // Laporan Persediaan (permintaan user, supaya laporan tidak penuh
+            // baris kosong tanpa informasi).
+            $semuaNol = round((float) $g->saldo_awal, 2) === 0.0
+                && round((float) $g->masuk, 2) === 0.0
+                && round((float) $g->keluar, 2) === 0.0
+                && round((float) $g->saldo_akhir, 2) === 0.0;
+            if ($semuaNol) {
+                continue;
+            }
+
+            $result[] = $g;
+        }
+        return $result;
     }
 
     public function getUpdateDataLaporanPersediaan()
@@ -115,6 +175,7 @@ class LaporanPersediaan extends BaseController
 
         // $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);
         $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        $resData = $this->groupByLotPack($resData);
 
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];

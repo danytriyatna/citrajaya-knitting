@@ -78,7 +78,9 @@ class SalesOrder extends BaseController
     $this->data['edit_access'] = $this->_edit;
     $this->data['delete_access'] = $this->_delete;
     $this->data['print_access'] = $this->_print;
-    $this->data['approve_access'] = $this->_approve;
+    // FIX (2026-08-11): tombol Approval tampil utk Superadmin (role_id 1) & Admin Aplikasi (role_id 2).
+    $roleId = (int) session()->get('role_id');
+    $this->data['approve_access'] = in_array($roleId, [1, 2]) || $this->auth->isAdmin() || $this->auth->isSuperadmin();
     $this->data['barang'] = $cache->remember('ref_barang_active', 3600, fn() => $this->mBarang->where("active", 1)->orderBy("nama_barang", 'asc')->findAll());
     
     return view($this->views . '\sales_order_list', $this->data);
@@ -92,6 +94,23 @@ class SalesOrder extends BaseController
     $order      = $this->request->getPost('sort');
 
     $params = [];
+    $id_konsumen = $this->request->getPost('id_konsumen');
+    $statusFilter = $this->request->getPost('status');
+    $fromDate = $this->request->getPost('from_date');
+    $toDate = $this->request->getPost('to_date');
+
+    if (!empty($id_konsumen) && $id_konsumen !== 'all') {
+      $params['id_konsumen'] = $id_konsumen;
+    }
+    if (!empty($statusFilter) && $statusFilter !== 'all') {
+      $params['status'] = (int)$statusFilter;
+    }
+    if (!empty($fromDate)) {
+      $params['from_date'] = $fromDate;
+    }
+    if (!empty($toDate)) {
+      $params['to_date'] = $toDate;
+    }
 
     $results = $this->mSalesOrder->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mSalesOrder->getDataCnt($filters, $params);
@@ -112,7 +131,7 @@ class SalesOrder extends BaseController
     foreach ($results as $key => $row) {
       $pru = ['use' => 1, 'id_sales_order' => $row->id];
       $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-      $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id) : [];
+      $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($row->id, $dtUkuran) : [];
       if (!empty($detail)) {
         foreach ($detail as $drow) {
           if (!empty($drow->id)) {
@@ -132,7 +151,15 @@ class SalesOrder extends BaseController
     // Phase 3: Populate build_array
     foreach ($results as $key => $row) {
       $id = encrypt($row->id);
-      $status = $row->status == 1 ? "Draft" : "Approved";
+      $currentStatus = (int)$row->status;
+      if ($currentStatus === 2 || $currentStatus === 3) {
+        $evalStatus = $this->mSalesOrder->evaluateAndSyncClosedStatus($row->id);
+        if ($evalStatus !== null) {
+          $currentStatus = $evalStatus;
+        }
+      }
+
+      $status = $currentStatus === 1 ? "Draft" : ($currentStatus === 3 ? "Closed" : "Approved");
 
       $dtUkuran = $soDetailsMap[$row->id]['dtUkuran'];
       $detail = $soDetailsMap[$row->id]['detail'];
@@ -163,6 +190,7 @@ class SalesOrder extends BaseController
           "uang_dp_2" => !empty($row->uang_dp_2) ? \format_angka($row->uang_dp_2) : 0,
           "pengiriman" => !empty($row->pengiriman) ? \format_angka($row->pengiriman) : 0,
           "status"  => $status,
+          "status_raw" => $currentStatus,
           "file_gambar" => !empty($row->file_name) ? base_url() . "uploads/sales_order/"  . $row->file_name : "",
           "detail" => $detail,
           "key_ukuran" => $dtUkuran
@@ -179,33 +207,52 @@ class SalesOrder extends BaseController
     $dtUkuran = [];
     $idSample = $this->request->getGet('idSample');
     $kodeOrder = $this->request->getGet('kodeOrder');
+    if (!empty($kodeOrder) && strpos($kodeOrder, ':') !== false) {
+      $kodeOrder = trim(explode(':', $kodeOrder)[0]);
+    }
     $soId = $this->request->getGet('soId');
 
+    $sampleUkuran = [];
     if (!empty($idSample)) {
       $id = $idSample;
       $pru['use'] = 1;
       $pru['id_sample'] = $id;
-      $dtUkuran = $this->mSample->getUkuranTrans($pru);
-      $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
+      $sampleUkuran = $this->mSample->getUkuranTrans($pru);
+      $detail = (!empty($sampleUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
     } else if (!empty($kodeOrder)) {
-      $data = $this->mSalesOrder->getDataSO($kodeOrder);
-      if (!empty($data)) {
-        $id = !empty($data) ? $data->id : null;
-        $pru['use'] = 1; // ambil ukuran yang digunakan order 
+      $dataSO = $this->mSalesOrder->getDataSO($kodeOrder);
+      if (!empty($dataSO)) {
+        $id = $dataSO->id;
+        $pru['use'] = 1;
         $pru['id_sales_order'] = $id;
-        $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-        $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id) : [];
+        $sampleUkuran = $this->mSalesOrder->getUkuranTrans($pru);
+        $detail = (!empty($sampleUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($id, $sampleUkuran) : [];
       } else {
-        $data = $this->mSample->getDataSample($kodeOrder);
-        if (!empty($data)) {
-          $id = !empty($data) ? $data->id : null;
-          $pru['use'] = 1; // ambil ukuran yang digunakan order 
+        $dataSample = $this->mSample->getDataSample($kodeOrder);
+        if (!empty($dataSample)) {
+          $id = $dataSample->id;
+          $pru['use'] = 1;
           $pru['id_sample'] = $id;
-          $dtUkuran = $this->mSample->getUkuranTrans($pru);
-          $detail = (!empty($dtUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
+          $sampleUkuran = $this->mSample->getUkuranTrans($pru);
+          $detail = (!empty($sampleUkuran)) ? $this->mSample->getDataDetailSample_crostab($id) : [];
         }
       }
     }
+
+    $soUkuran = [];
+    if (!empty($soId)) {
+      $soUkuran = $this->mSalesOrder->getUkuranTrans(['use' => 1, 'id_sales_order' => decrypt($soId)]);
+    }
+
+    // Merge ukuran dari referensi Sample dan Sales Order
+    $mergedUkuranMap = [];
+    foreach ($sampleUkuran as $uk) {
+      $mergedUkuranMap[$uk->key_ukuran] = $uk;
+    }
+    foreach ($soUkuran as $uk) {
+      $mergedUkuranMap[$uk->key_ukuran] = $uk;
+    }
+    $dtUkuran = array_values($mergedUkuranMap);
 
     if (empty($soId)) {
       // ✅ SAAT TAMBAH BARU: Set seluruh QTY warna dari sampel ke 0
@@ -221,21 +268,24 @@ class SalesOrder extends BaseController
         }
       }
     } else {
-      // ✅ SAAT EDIT: Pertahankan warna & QTY yang sudah terinput di SO, set QTY 0 hanya untuk warna sampel yang belum terinput
-      $existingDetail = $this->mSalesOrder->getDataDetailSalesOrder_crostab(decrypt($soId));
-      $existingColorMap = [];
+      // ✅ SAAT EDIT:
+      // 1. Tampilkan SELURUH warna yang sudah tersimpan di SO ini (prioritas utama).
+      //    Walaupun sampelnya dirubah atau warna itu dihapus dari sampel, yang sudah tersimpan di SO tetap tampil.
+      $existingDetail = $this->mSalesOrder->getDataDetailSalesOrder_crostab(decrypt($soId), $dtUkuran);
+      $finalDetail = [];
+      $processedColorMap = [];
+
       if (!empty($existingDetail)) {
         foreach ($existingDetail as $ex) {
-          $existingColorMap[$ex->colour] = $ex;
+          $finalDetail[] = $ex;
+          $processedColorMap[$ex->colour] = true;
         }
       }
 
-      $finalDetail = [];
+      // 2. Jika ada warna baru dari Sampel yang belum ada di SO, tambahkan sebagai baris baru dengan QTY = 0.
       if (!empty($detail)) {
         foreach ($detail as $drow) {
-          if (isset($existingColorMap[$drow->colour])) {
-            $finalDetail[] = $existingColorMap[$drow->colour];
-          } else {
+          if (!isset($processedColorMap[$drow->colour])) {
             foreach ($dtUkuran as $uk) {
               $keyUk = ($uk->key_ukuran == 'all') ? 'all_' : $uk->key_ukuran;
               if (isset($drow->$keyUk)) {
@@ -244,6 +294,7 @@ class SalesOrder extends BaseController
             }
             $drow->total_harga = 0;
             $finalDetail[] = $drow;
+            $processedColorMap[$drow->colour] = true;
           }
         }
       }
@@ -259,10 +310,21 @@ class SalesOrder extends BaseController
     $results = $this->mSalesOrder->getData($id);
     $status = $results->status == 1 ? "Draft" : "Approved";
 
-    $pru['use'] = 1; // ambil ukuran yang digunnakan order 
-    $pru['id_sales_order'] = $id;
-    $dtUkuran = $this->mSalesOrder->getUkuranTrans($pru);
-    $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($results->id) : [];
+    $sampleUkuran = [];
+    if (!empty($results->id_sample)) {
+      $sampleUkuran = $this->mSample->getUkuranTrans(['use' => 1, 'id_sample' => $results->id_sample]);
+    }
+    $soUkuran = $this->mSalesOrder->getUkuranTrans(['use' => 1, 'id_sales_order' => $id]);
+    $mergedUkuranMap = [];
+    foreach ($sampleUkuran as $uk) {
+      $mergedUkuranMap[$uk->key_ukuran] = $uk;
+    }
+    foreach ($soUkuran as $uk) {
+      $mergedUkuranMap[$uk->key_ukuran] = $uk;
+    }
+    $dtUkuran = array_values($mergedUkuranMap);
+
+    $detail = (!empty($dtUkuran)) ? $this->mSalesOrder->getDataDetailSalesOrder_crostab($results->id, $dtUkuran) : [];
 
     $build_array =  array(
       "id"   => encrypt($results->id),
@@ -296,23 +358,127 @@ class SalesOrder extends BaseController
 
   function detailQtyUkuran($idSalesOrder, $idSalesOrderDet)
   {
-    $id = !empty($idSalesOrder) ? decrypt($idSalesOrder) : 0;
-    $idSalesOrderDet = !empty($idSalesOrderDet) ? $idSalesOrderDet : 0;
-    $results = $this->mSalesOrder->getData($id);
-    $build_array =  array(
-      "id"   => encrypt($results->id),
-      "keterangan" => $results->keterangan,
-      "nama" => $results->nama,
-      "tgl_transaksi" => $results->tgl_transaksi,
-      "kode_sales_order" => $results->kode_sales_order,
-      "tgl_deadline" => $results->tgl_deadline,
-      "tgl_deadline_dua" => $results->tgl_deadline_dua,
-      "deskripsi" => $results->deskripsi,
+    $id = 0;
+    if (!empty($idSalesOrder) && $idSalesOrder != 'null' && $idSalesOrder != 'undefined') {
+      if (is_numeric($idSalesOrder)) {
+        $id = (int)$idSalesOrder;
+      } else {
+        try {
+          $dec = decrypt($idSalesOrder);
+          $id = is_numeric($dec) ? (int)$dec : 0;
+        } catch (\Throwable $e) {
+          $id = 0;
+        }
+      }
+    }
+    $idSalesOrderDet = (int)$idSalesOrderDet;
+
+    if (!empty($id)) {
+      // ✅ Kasus SO yang sudah tersimpan (Edit SO)
+      $results = $this->mSalesOrder->getData($id);
+      $db = \Config\Database::connect();
+      
+      // Ambil single detail row dari trans_sales_order_det secara langsung
+      $detail = $db->table('trans_sales_order_det')->where('id', $idSalesOrderDet)->where('id_sales_order', $id)->get()->getRow();
+      $detailUkuran = [];
+
+      if (!empty($detail)) {
+        for ($k = 1; $k <= 8; $k++) {
+          $wKey = "id_warna_" . $k;
+          $bKey = "id_barang_" . $k;
+          if (!empty($detail->$bKey) && empty($detail->$wKey)) {
+            $detail->$wKey = $this->mSalesOrder->getWarnaIdByBarangId($detail->$bKey);
+          } else if (empty($detail->$bKey) && !empty($detail->$wKey)) {
+            $detail->$bKey = $this->mSalesOrder->getBarangIdByWarnaId($detail->$wKey);
+          }
+        }
+
+        $detailUkuran = $this->mSalesOrder->getDataDetailSampleUkuran($id, $idSalesOrderDet);
+      } else {
+        // Fallback: Jika $idSalesOrderDet adalah ID dari trans_sample_det (karena combo baru dari sampel)
+        $sampleDet = $db->table('trans_sample_det')->where('id', $idSalesOrderDet)->get()->getRow();
+        if (!empty($sampleDet)) {
+          $detail = new \stdClass();
+          $detail->id = $sampleDet->id;
+          for ($k = 1; $k <= 8; $k++) {
+            $bKey = "id_barang_" . $k;
+            $wKey = "id_warna_" . $k;
+            $detail->$bKey = $sampleDet->$bKey;
+            $detail->$wKey = $sampleDet->$wKey;
+            if (!empty($detail->$bKey) && empty($detail->$wKey)) {
+              $detail->$wKey = $this->mSalesOrder->getWarnaIdByBarangId($detail->$bKey);
+            } else if (empty($detail->$bKey) && !empty($detail->$wKey)) {
+              $detail->$bKey = $this->mSalesOrder->getBarangIdByWarnaId($detail->$wKey);
+            }
+          }
+          if (!empty($results->id_sample)) {
+            $detailUkuran = $this->mSample->getDataDetailSampleUkuran($results->id_sample, $sampleDet->id);
+          }
+          if (empty($detailUkuran)) {
+            $detailUkuran = $this->mSalesOrder->getDataDetailSampleUkuran($id, 0);
+          }
+        }
+      }
+    } else {
+      // ✅ Kasus SO Baru (Form Tambah SO Baru) - $idSalesOrderDet merujuk pada id trans_sample_det
+      $sdRow = $this->mSample->getDataDetailSampleWarna(null, $idSalesOrderDet);
+      $detail = new \stdClass();
+      $detailUkuran = [];
+      $results = new \stdClass();
+      $results->id = 0;
+      $results->keterangan = '';
+      $results->nama = '';
+      $results->tgl_transaksi = date('Y-m-d');
+      $results->kode_sales_order = '';
+      $results->tgl_deadline = date('Y-m-d');
+      $results->tgl_deadline_dua = '';
+      $results->deskripsi = '';
+      $results->file_name = '';
+
+      if (!empty($sdRow)) {
+        $detail->id = $sdRow->id;
+        $sampleHeader = $this->mSample->getData($sdRow->id_sample);
+        if (!empty($sampleHeader)) {
+          $results->kode_sales_order = $sampleHeader->kode_sample;
+          $results->deskripsi = $sampleHeader->deskripsi;
+          $results->tgl_transaksi = $sampleHeader->tgl_transaksi;
+          $results->tgl_deadline = $sampleHeader->tgl_deadline;
+          $results->nama = $sampleHeader->nama;
+          $results->file_name = $sampleHeader->file_name;
+        }
+
+        for ($k = 1; $k <= 8; $k++) {
+          $wKey = "id_warna_" . $k;
+          $bKey = "id_barang_" . $k;
+          $detail->$wKey = !empty($sdRow->$wKey) ? $sdRow->$wKey : null;
+          $detail->$bKey = !empty($sdRow->$bKey) ? $sdRow->$bKey : null;
+
+          if (!empty($detail->$bKey) && empty($detail->$wKey)) {
+            $detail->$wKey = $this->mSalesOrder->getWarnaIdByBarangId($detail->$bKey);
+          } else if (empty($detail->$bKey) && !empty($detail->$wKey)) {
+            $detail->$bKey = $this->mSalesOrder->getBarangIdByWarnaId($detail->$wKey);
+          }
+        }
+
+        $detailUkuran = $this->mSample->getDataDetailSampleUkuran($sdRow->id_sample, $idSalesOrderDet);
+      }
+    }
+
+    helper('my');
+    $build_array = array(
+      "id" => (!empty($results->id) && function_exists('encrypt')) ? encrypt($results->id) : (!empty($results->id) ? $results->id : ''),
+      "keterangan" => $results->keterangan ?? '',
+      "nama" => $results->nama ?? '',
+      "tgl_transaksi" => $results->tgl_transaksi ?? '',
+      "kode_sales_order" => $results->kode_sales_order ?? '',
+      "tgl_deadline" => $results->tgl_deadline ?? '',
+      "tgl_deadline_dua" => $results->tgl_deadline_dua ?? '',
+      "deskripsi" => $results->deskripsi ?? '',
       "file_gambar" => !empty($results->file_name) ? base_url() . "uploads/sales_order/" . $results->file_name : "",
-      "detail" => $this->mSalesOrder->getDataDetailSampleWarna($id, $idSalesOrderDet),
-      "detailUkuran" =>  $this->mSalesOrder->getDataDetailSampleUkuran($id, $idSalesOrderDet)
+      "detail" => $detail,
+      "detailUkuran" => $detailUkuran
     );
-    return $this->response->setJSON($build_array);
+    return response()->setJSON($build_array);
   }
 
 
@@ -339,8 +505,13 @@ class SalesOrder extends BaseController
     $noSalesOrder = $this->request->getPost('noSalesOrder');
     $sampleId = $this->request->getPost('samples');
     $submit_data = $this->request->getPost('submit_data');
-    if (!$this->_approve && $submit_data == 1) {
-      $build_array['message'] = 'Anda tidak memiliki akses untuk APPROVE data!';
+    // FIX (2026-08-08): approve Sales Order sekarang HANYA boleh oleh
+    // Superadmin & Admin Aplikasi, terlepas dari izin allow_approve yang
+    // mungkin diberikan ke role lain lewat menu Roles - permintaan eksplisit
+    // supaya role lain sama sekali tidak bisa approve.
+    $roleIdSession = (int) session()->get('role_id');
+    if ($submit_data == 1 && !in_array($roleIdSession, [1, 2]) && !$this->auth->isAdmin() && !$this->auth->isSuperadmin()) {
+      $build_array['message'] = 'Hanya Superadmin dan Admin Aplikasi yang dapat melakukan APPROVE!';
       $build_array['status']  = false;
       return $this->response->setJSON($build_array);
     }
@@ -460,17 +631,34 @@ class SalesOrder extends BaseController
           $head_qty = 0;
           $head_total = 0;
           foreach ($data_detail as $r) {
+            $b1 = !empty($r->id_barang_1) ? $r->id_barang_1 : (!empty($r->id_warna_1) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_1) : null);
+            $b2 = !empty($r->id_barang_2) ? $r->id_barang_2 : (!empty($r->id_warna_2) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_2) : null);
+            $b3 = !empty($r->id_barang_3) ? $r->id_barang_3 : (!empty($r->id_warna_3) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_3) : null);
+            $b4 = !empty($r->id_barang_4) ? $r->id_barang_4 : (!empty($r->id_warna_4) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_4) : null);
+            $b5 = !empty($r->id_barang_5) ? $r->id_barang_5 : (!empty($r->id_warna_5) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_5) : null);
+            $b6 = !empty($r->id_barang_6) ? $r->id_barang_6 : (!empty($r->id_warna_6) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_6) : null);
+            $b7 = !empty($r->id_barang_7) ? $r->id_barang_7 : (!empty($r->id_warna_7) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_7) : null);
+            $b8 = !empty($r->id_barang_8) ? $r->id_barang_8 : (!empty($r->id_warna_8) ? $this->mSalesOrder->getBarangIdByWarnaId($r->id_warna_8) : null);
+
             $arr_isid = [
               'id_sales_order' => $hid,
               'keterangan' => '',
-              'id_barang_1' => $r->id_barang_1,
-              'id_barang_2' => $r->id_barang_2,
-              'id_barang_3' => $r->id_barang_3,
-              'id_barang_4' => $r->id_barang_4,
-              'id_barang_5' => $r->id_barang_5,
-              'id_barang_6' => $r->id_barang_6,
-              'id_barang_7' => $r->id_barang_7,
-              'id_barang_8' => $r->id_barang_8,
+              'id_warna_1' => $r->id_warna_1,
+              'id_warna_2' => $r->id_warna_2,
+              'id_warna_3' => $r->id_warna_3,
+              'id_warna_4' => $r->id_warna_4,
+              'id_warna_5' => $r->id_warna_5,
+              'id_warna_6' => $r->id_warna_6,
+              'id_warna_7' => $r->id_warna_7,
+              'id_warna_8' => $r->id_warna_8,
+              'id_barang_1' => $b1,
+              'id_barang_2' => $b2,
+              'id_barang_3' => $b3,
+              'id_barang_4' => $b4,
+              'id_barang_5' => $b5,
+              'id_barang_6' => $b6,
+              'id_barang_7' => $b7,
+              'id_barang_8' => $b8,
               'total_harga' => $r->total_harga,
             ];
             $hidd = $this->mSalesOrder->insertRecordGetid('trans_sales_order_det', $arr_isid);
@@ -550,7 +738,17 @@ class SalesOrder extends BaseController
               if (!empty($data_warna)) {
                 foreach ($data_warna as $xrow) {
 
-                  // get detail wo 
+                  // Lewati colorway yang belum ada qty order-nya (opsi warna yang
+                  // terdaftar di Sales Order tapi belum benar-benar dikonfirmasi/dipesan).
+                  // Supaya tabel gramasi Work Order hanya menampilkan warna yang memang
+                  // di-order, sama seperti fix yang sudah diterapkan pada
+                  // SampleModel::syncWorkOrderFromSample().
+                  $qtyColorwaySO = $this->mSalesOrder->getTotal_qty($xrow->id, 2);
+                  if (empty($qtyColorwaySO) || $qtyColorwaySO <= 0) {
+                    continue;
+                  }
+
+                  // get detail wo
                   $prms_sample['id_barang_1'] = $xrow->id_barang_1;
                   // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
                   if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
@@ -621,13 +819,19 @@ class SalesOrder extends BaseController
 
                         $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
+                        $params_sample_warna = [
+                          'id_walkorder_detail' => $data_detail_wo->id,
+                        ];
+                        $all_sample_warna = $this->mworkOrder->getData_warna(null, 0, 8, null, null, $params_sample_warna);
+
                         for ($i = 0; $i < 8; $i++) {
                           $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
 
-                            $params_d['id_walkorder_detail'] = $data_detail_wo->id;
-                            $params_d['id_barang'] = $xrow->$field_name;
-                            $data_detail = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_d);
+                            // Ambil data warna Sample berdasarkan urutan posisi ($i),
+                            // bukan hanya filter id_barang, agar warna ke-1 dan warna ke-3
+                            // yang memakai id_barang sama tidak tertimpa/kembar.
+                            $data_detail_row = $all_sample_warna[$i] ?? null;
 
                             $xgram = 0;
                             $xgram_nd = 0;
@@ -638,23 +842,23 @@ class SalesOrder extends BaseController
                             $xkuota = 0;
                             $xkuota_tambah = 0;
 
-                            if(!empty($data_detail)) {
-                              if (!empty($data_detail[0]->gram)) {
-                                $xgram = $data_detail[0]->gram;
+                            if(!empty($data_detail_row)) {
+                              if (!empty($data_detail_row->gram)) {
+                                $xgram = $data_detail_row->gram;
                                 $xgram_nd = $xgram * $qty_wodet;
                                 $xkg = $xgram_nd / 1000;
-                                $xloss = $data_detail[0]->loss;
+                                $xloss = $data_detail_row->loss;
                                 $xkg_loss = ($xkg * $xloss) / 100;
                                 $xtotal = $xkg +  $xkg_loss;
       
-                                $xkuota = $data_detail[0]->kuota;
+                                $xkuota = $data_detail_row->kuota;
                                 $xkuota_tambah = $xkuota - $xtotal;
                               }
       
                               $isi_warna = [
                                 'id_walkorder_detail' => $wo_det_id,
                                 'id_barang' => $xrow->$field_name,
-                                'persen'       => $data_detail[0]->persen,
+                                'persen'       => $data_detail_row->persen ?? 0,
                                 'gram'         => $xgram,
                                 'gram_nd'      => $xgram_nd,
                                 'kg'           => $xkg,
@@ -696,24 +900,24 @@ class SalesOrder extends BaseController
                       if(!empty($data_detail_wo) > 0) {
                         $this->mworkOrder->updateRecord($this->mworkOrder->table2, $detail_wo, 'id', $data_detail_wo->id);
 
+                        $existing_warna_list = $this->mworkOrder->getData_warna(null, 0, 8, null, null, ['id_walkorder_detail' => $data_detail_wo->id]);
+
                         for ($i = 0; $i < 8; $i++) {
                           $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
-                            $params_warna = [
-                              'id_walkorder_detail' => $data_detail_wo->id,
-                              'id_barang' => $xrow->$field_name,
-                              'single' => true,
-                            ];
-                            $data_detail_warna = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_warna);
-                            if (!empty($data_detail_warna)) {
+                            $cur_warna = $existing_warna_list[$i] ?? null;
+                            if (!empty($cur_warna)) {
                               $isi_warna = [
                                 'id_walkorder_detail' => $data_detail_wo->id,
                                 'id_barang' => $xrow->$field_name,
                               ];
-                              $this->mworkOrder->updateRecord($this->mworkOrder->table5, $isi_warna, 'id', $data_detail_warna->id);
+                              $this->mworkOrder->updateRecord($this->mworkOrder->table5, $isi_warna, 'id', $cur_warna->id);
                             }
                           }
                         }
+
+                        // Sinkronkan otomatis gramasi dan total WO sesuai Qty SO terbaru
+                        $this->mSalesOrder->syncWoGramasiFromSoDet($xrow->id);
                       }
                       else {
                         $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
@@ -770,6 +974,13 @@ class SalesOrder extends BaseController
           else {
             if (!empty($data_warna)) {
               foreach ($data_warna as $xrow) {
+
+                // Lewati colorway yang belum ada qty order-nya (lihat catatan di atas).
+                $qtyColorwaySO = $this->mSalesOrder->getTotal_qty($xrow->id, 2);
+                if (empty($qtyColorwaySO) || $qtyColorwaySO <= 0) {
+                  continue;
+                }
+
                 $detail_wo = [
                   'id_walkorder' => $valueWO->id,
                   'ref_detail_id' => $xrow->id,
@@ -879,7 +1090,13 @@ class SalesOrder extends BaseController
             if (!empty($data_warna)) {
               foreach ($data_warna as $xrow) {
 
-                // get detail wo 
+                // Lewati colorway yang belum ada qty order-nya (lihat catatan di atas).
+                $qtyColorwaySO = $this->mSalesOrder->getTotal_qty($xrow->id, 2);
+                if (empty($qtyColorwaySO) || $qtyColorwaySO <= 0) {
+                  continue;
+                }
+
+                // get detail wo
                 $prms_sample['id_barang_1'] = $xrow->id_barang_1;
                 // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
                 if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
@@ -943,13 +1160,19 @@ class SalesOrder extends BaseController
 
                     $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
 
+                    $params_sample_warna = [
+                      'id_walkorder_detail' => $data_detail_wo[0]->id,
+                    ];
+                    $all_sample_warna = $this->mworkOrder->getData_warna(null, 0, 8, null, null, $params_sample_warna);
+
                     for ($i = 0; $i < 8; $i++) {
                       $field_name = 'id_barang_' . ($i + 1);
                       if (!empty($xrow->$field_name)) {
 
-                        $params_d['id_walkorder_detail'] = $data_detail_wo[0]->id;
-                        $params_d['id_barang'] = $xrow->$field_name;
-                        $data_detail_warna = $this->mworkOrder->getData_warna(null, 0, 1, null, null, $params_d);
+                        // Ambil data warna Sample berdasarkan urutan posisi ($i),
+                        // bukan hanya filter id_barang, agar warna ke-1 dan warna ke-3
+                        // yang memakai id_barang sama tidak tertimpa/kembar.
+                        $data_detail_row = $all_sample_warna[$i] ?? null;
                         
                         $xgram = 0;
                         $xgram_nd = 0;
@@ -960,23 +1183,23 @@ class SalesOrder extends BaseController
                         $xkuota = 0;
                         $xkuota_tambah = 0;
                         
-                        if(!empty($data_detail_warna)) {
-                          if (!empty($data_detail_warna[0]->gram)) {
-                            $xgram = $data_detail_warna[0]->gram;
+                        if(!empty($data_detail_row)) {
+                          if (!empty($data_detail_row->gram)) {
+                            $xgram = $data_detail_row->gram;
                             $xgram_nd = $xgram * $qty_wodet;
                             $xkg = $xgram_nd / 1000;
-                            $xloss = $data_detail_warna[0]->loss;
+                            $xloss = $data_detail_row->loss;
                             $xkg_loss = ($xkg * $xloss) / 100;
                             $xtotal = $xkg +  $xkg_loss;
   
-                            $xkuota = $data_detail_warna[0]->kuota;
+                            $xkuota = $data_detail_row->kuota;
                             $xkuota_tambah = $xkuota - $xtotal;
                           }
   
                           $isi_barang = [
                             'id_walkorder_detail' => $wo_det_id,
                             'id_barang' => $xrow->$field_name,
-                            'persen'       => $data_detail_warna[0]->persen,
+                            'persen'       => $data_detail_row->persen ?? 0,
                             'gram'         => $xgram,
                             'gram_nd'      => $xgram_nd,
                             'kg'           => $xkg,
@@ -1096,6 +1319,13 @@ class SalesOrder extends BaseController
         } else {
           if (!empty($data_warna)) {
             foreach ($data_warna as $xrow) {
+
+              // Lewati colorway yang belum ada qty order-nya (lihat catatan di atas).
+              $qtyColorwaySO = $this->mSalesOrder->getTotal_qty($xrow->id, 2);
+              if (empty($qtyColorwaySO) || $qtyColorwaySO <= 0) {
+                continue;
+              }
+
               $detail_wo = [
                 'id_walkorder' => $wo_id,
                 'ref_detail_id' => $xrow->id,
@@ -1157,6 +1387,18 @@ class SalesOrder extends BaseController
     $barang7 = $this->request->getPost('barang7');
     $barang8 = $this->request->getPost('barang8');
     $dataUkuran = $this->request->getPost('dataUkuran');
+    $targetSoId = (int)decrypt($idSalesOrder);
+    $detExists = false;
+    if (!empty($idSalesOrderDet)) {
+      $checkDet = \Config\Database::connect()->table('trans_sales_order_det')
+        ->where('id', (int)$idSalesOrderDet)
+        ->where('id_sales_order', $targetSoId)
+        ->get()->getRow();
+      if (!empty($checkDet)) {
+        $detExists = true;
+      }
+    }
+
     $dataWarna = [
       "id_barang_1" => !empty($barang1) ? $barang1 : null,
       "id_barang_2" => !empty($barang2) ? $barang2 : null,
@@ -1167,8 +1409,8 @@ class SalesOrder extends BaseController
       "id_barang_7" => !empty($barang7) ? $barang7 : null,
       "id_barang_8" => !empty($barang8) ? $barang8 : null,
 
-      "id_sales_order" => (int)decrypt($idSalesOrder),
-      "id" => !empty($idSalesOrderDet) ? $idSalesOrderDet :  null,
+      "id_sales_order" => $targetSoId,
+      "id" => $detExists ? (int)$idSalesOrderDet : null,
     ];
 
     $res = $this->mSalesOrder->trxInsertUpdateRecord($dataWarna, $dataUkuran);
@@ -1234,8 +1476,24 @@ class SalesOrder extends BaseController
     $status = false;
     $res = $this->mSalesOrder->deleteRecord("trans_sales_order_det", 'id', $id);
     $resDel = $this->mSalesOrder->deleteRecord("trans_sales_order_ukuran", 'id_sales_order_det', $id);
-    if ($resDel) {
-      $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "SalesOrder Dihapus");
+
+    // Hapus juga trans_walkorder_detail & trans_walkorder_warna terkait jika ada
+    $woDets = $this->mSalesOrder->db->table('trans_walkorder_detail')
+      ->where('ref_detail_id', $id)
+      ->where('tipe_id', 2)
+      ->get()->getResult();
+    foreach ($woDets as $wd) {
+      $this->mSalesOrder->db->table('trans_walkorder_warna')->where('id_walkorder_detail', $wd->id)->delete();
+      $this->mSalesOrder->db->table('trans_walkorder_detail')->where('id', $wd->id)->delete();
+      $totalWoQtyRow = $this->mSalesOrder->db->table('trans_walkorder_detail')->selectSum('qty')->where('id_walkorder', $wd->id_walkorder)->get()->getRow();
+      $this->mSalesOrder->db->table('trans_walkorder')->where('id', $wd->id_walkorder)->update([
+        'qty' => !empty($totalWoQtyRow->qty) ? (float)$totalWoQtyRow->qty : 0,
+        'updated_at' => date('Y-m-d H:i:s')
+      ]);
+    }
+
+    if ($res || $resDel) {
+      $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "SalesOrder Detail Dihapus");
       $status = true;
       $msg = "Data berhasil dihapus!";
     }
@@ -1367,6 +1625,11 @@ class SalesOrder extends BaseController
     $config['size']         = '1024';
     $config['black']        = [255, 255, 255];
     $config['white']        = [255, 255, 255];
+    // Lazy-init: property ini terdeklarasi langsung di BaseController (bukan undefined),
+    // jadi magic __get() di BaseController tidak pernah terpanggil dan nilainya tetap null.
+    if ($this->ciqrcode === null) {
+      $this->ciqrcode = new \App\Libraries\CIQRCode();
+    }
     $this->ciqrcode->initialize($config);
 
     $data = [
@@ -1890,5 +2153,36 @@ class SalesOrder extends BaseController
         ob_end_clean();
         $writer->save('php://output'); // download file 
         exit;
+    }
+
+    public function set_status()
+    {
+        if (!$this->auth->loggedIn()) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Unauthorized']);
+        }
+        $idEnc = $this->request->getPost('id');
+        $newStatus = (int)$this->request->getPost('status');
+        $id = decrypt($idEnc);
+        if (empty($id)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'ID Sales Order tidak valid']);
+        }
+
+        $so = $this->mSalesOrder->getData($id);
+        if (!$so) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Data Sales Order tidak ditemukan']);
+        }
+
+        if ((int)$so->status === 1 && $newStatus === 3) {
+            return $this->response->setJSON(['status' => false, 'message' => 'Sales Order Draft tidak dapat langsung di-Close. Mohon Approve terlebih dahulu.']);
+        }
+
+        $this->mSalesOrder->updateRecord($this->mSalesOrder->table, ['status' => $newStatus], 'id', $id);
+        $statusLabel = $newStatus === 3 ? 'Closed' : 'Approved (Open)';
+        $this->mcommon->setLog($this->auth->getUserId(), $this->MOD_ALIAS, $id, "Update Status SO ke {$statusLabel}");
+
+        return $this->response->setJSON([
+            'status' => true,
+            'message' => "Sales Order {$so->kode_sales_order} berhasil diubah status menjadi {$statusLabel}."
+        ]);
     }
 }

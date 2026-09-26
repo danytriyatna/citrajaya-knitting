@@ -10,7 +10,20 @@ function encrypt($any)
 
 function decrypt($any)
 {
-    $encrypter = \Config\Services::encrypter();
+    if (empty($any)) return $any;
+    if (is_numeric($any)) return $any;
 
-    return $encrypter->decrypt(hex2bin($any));
+    if (is_string($any) && ctype_xdigit($any) && (strlen($any) % 2 === 0) && strlen($any) >= 32) {
+        try {
+            $encrypter = \Config\Services::encrypter();
+            $bin = @hex2bin($any);
+            if ($bin !== false) {
+                return $encrypter->decrypt($bin);
+            }
+        } catch (\Throwable $e) {
+            return $any;
+        }
+    }
+
+    return $any;
 }

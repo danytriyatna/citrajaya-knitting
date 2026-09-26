@@ -47,3 +47,7 @@ $routes->post('utilitas/log-activity/lists', '\Modules\Utility\Controllers\Logak
 $routes->get('utilitas/setting-situs', '\Modules\Utility\Controllers\Situs::index', ['filter' => 'otorisasi:MOD_SITUSMANAGE']);
 $routes->post('utilitas/setting-situs/save', '\Modules\Utility\Controllers\Situs::save');
 $routes->post('utilitas/setting-situs/get-colors', '\Modules\Utility\Controllers\Situs::get_colors');
+
+// Pengaturan Asisten AI (Khusus Superadmin di Modul Utilitas)
+$routes->get('utilitas/asisten-ai', '\Modules\Assistant\Controllers\Kania::settings', ['filter' => 'otorisasi:MOD_ASISTEN_AI']);
+$routes->post('utilitas/asisten-ai/save', '\Modules\Assistant\Controllers\Kania::saveSettings', ['filter' => 'otorisasi:MOD_ASISTEN_AI']);

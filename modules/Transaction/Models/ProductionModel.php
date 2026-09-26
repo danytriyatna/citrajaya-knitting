@@ -43,19 +43,27 @@ class ProductionModel extends \App\Models\PrModel
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
-                $value = strtolower("%{$filters[0]['value']}%");
+                $val = strtolower(trim($filters[0]['value']));
+                $value = "%{$val}%";
                 $builder->groupStart();
-                $builder->where('LOWER(abx.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(abx.keterangan_style) LIKE', strtolower("%{$filters[0]['value']}%"));
-                $builder->orWhere('LOWER(bbx.nama) LIKE', strtolower("%{$filters[0]['value']}%"));
+                $builder->where('LOWER(abx.kode_prod) LIKE', $value);
+                $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', $value);
+                $builder->orWhere('LOWER(twx.ref_kode) LIKE', $value);
+                $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', $value);
+                $builder->orWhere('LOWER(abx.keterangan_style) LIKE', $value);
+                $builder->orWhere('LOWER(bbx.nama) LIKE', $value);
                 $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
                 $builder->groupEnd();
             }
 
+            $builder->where("(tso.status IS NULL OR tso.status <> 3)");
+
             if (!empty($params['id_konsumen'])) {
                 $builder->where('abx.id_konsumen', $params['id_konsumen']);
+            }
+
+            if (!empty($params['only_active_wo'])) {
+                $builder->where('twx.active', 1);
             }
 
             if (!empty($params['id_walkorder'])) {
@@ -92,18 +100,32 @@ class ProductionModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table . " abx");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
+        $builder->join("trans_walkorder twx", "abx.id_walkorder = twx.id", "inner");
+        $builder->join("trans_sales_order tso", "tso.id = twx.ref_id and twx.tipe_id = 2", "left");
         $builder->select("count(1) as _cnt");
         $builder->where('abx.active = 1');
+        $builder->where("(tso.status IS NULL OR tso.status <> 3)");
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
+            $val = strtolower(trim($filters[0]['value']));
+            $value = "%{$val}%";
             $builder->groupStart();
-            $builder->where('LOWER(abx.kode_prod) LIKE', strtolower("%{$filters[0]['value']}%"));
-            $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', strtolower("%{$filters[0]['value']}%"));
+            $builder->where('LOWER(abx.kode_prod) LIKE', $value);
+            $builder->orWhere('LOWER(abx.kode_walkorder) LIKE', $value);
+            $builder->orWhere('LOWER(twx.ref_kode) LIKE', $value);
+            $builder->orWhere('LOWER(tso.kode_sales_order) LIKE', $value);
+            $builder->orWhere('LOWER(abx.keterangan_style) LIKE', $value);
+            $builder->orWhere('LOWER(bbx.nama) LIKE', $value);
+            $builder->orWhere("LOWER(CONCAT(TRIM(abx.keterangan_style), ' - ', TRIM(bbx.nama))) LIKE", $value);
             $builder->groupEnd();
         }
 
         if (!empty($params['id_konsumen'])) {
             $builder->where('abx.id_konsumen', $params['id_konsumen']);
+        }
+
+        if (!empty($params['only_active_wo'])) {
+            $builder->where('twx.active', 1);
         }
 
         if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
@@ -155,17 +177,79 @@ class ProductionModel extends \App\Models\PrModel
             $builder->where('tp.id', $id);
         }
         
-        // $builder->where("tpo.kode_transaksi LIKE", "BTM%");
-        $builder->where("tpo.kode_transaksi NOT LIKE", "BTMC%");
+        $builder->groupStart();
+            $builder->where("tpo.kode_transaksi NOT LIKE", "BTMC%");
+            $builder->orWhere("tpo.kode_transaksi IS NULL");
+        $builder->groupEnd();
+        $builder->groupStart();
+            $builder->where("tpo.id_category", 12); // Penerimaan Hasil Produksi
+            $builder->orWhere("tpo.id_category IS NULL");
+        $builder->groupEnd();
 
         $builder->groupBy("jpp.nama, jpp.seq, jpp.id");
         if ($last_proses == true) {
-            $builder->orderBy("jpp.seq", "DESC");
-            $this->_data = $builder->get()->getRow();
+            $lastProsesId = null;
+            if (!empty($id)) {
+                $tpRow = $this->db->table("trans_produksi")->select("id_walkorder")->where("id", $id)->get()->getRow();
+                if (!empty($tpRow) && !empty($tpRow->id_walkorder)) {
+                    $woLast = $this->db->table("trans_walkorder_proses twp")
+                        ->select("twp.id_proses")
+                        ->join("_jenis_proses_produksi jpp", "jpp.id = twp.id_proses", "inner")
+                        ->where("twp.id_walkorder", $tpRow->id_walkorder)
+                        ->orderBy("jpp.seq", "DESC")
+                        ->orderBy("twp.id", "DESC")
+                        ->limit(1)
+                        ->get()
+                        ->getRow();
+                    if (!empty($woLast)) {
+                        $lastProsesId = $woLast->id_proses;
+                    }
+                }
+            }
+
+            if (!empty($lastProsesId)) {
+                $builder->where('tpo.id_proses', $lastProsesId);
+                $this->_data = $builder->get()->getRow();
+            } else {
+                $builder->orderBy("jpp.seq", "DESC");
+                $this->_data = $builder->get()->getRow();
+            }
         }
         else if (!empty($rajut)){
-            $builder->where('jpp.id', 1);
-            $this->_data = $builder->get()->getRow();
+            // 1. Prioritaskan proses 'RAJUT DBT' (sebagai patokan output rajut P1)
+            $builderDBT = $this->db->table("trans_produksi_operator tpo");
+            $builderDBT->select("jpp.nama, jpp.seq, jpp.id,
+                                SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod,
+                                SUM(CASE WHEN tpo.print_type = 2 THEN tpo.qty ELSE 0 END) AS qty_fix");
+            $builderDBT->join("trans_produksi tp", "tp.id = tpo.id_produksi", "inner");
+            $builderDBT->join("_jenis_proses_produksi jpp", "tpo.id_proses = jpp.id", "inner");
+            if(!empty($id)){
+                $builderDBT->where('tp.id', $id);
+            }
+            $builderDBT->groupStart();
+                $builderDBT->where("tpo.kode_transaksi NOT LIKE", "BTMC%");
+                $builderDBT->orWhere("tpo.kode_transaksi IS NULL");
+            $builderDBT->groupEnd();
+            $builderDBT->groupStart();
+                $builderDBT->where("tpo.id_category", 12); // Penerimaan Hasil Produksi
+                $builderDBT->orWhere("tpo.id_category IS NULL");
+            $builderDBT->groupEnd();
+            $builderDBT->groupStart();
+                $builderDBT->where('jpp.id', 31); // RAJUT DBT
+                $builderDBT->orWhere("UPPER(jpp.nama) LIKE '%RAJUT DBT%'");
+                $builderDBT->orWhere("UPPER(jpp.nama) LIKE '%DBT%'");
+            $builderDBT->groupEnd();
+            $builderDBT->groupBy("jpp.nama, jpp.seq, jpp.id");
+            $rowDBT = $builderDBT->get()->getRow();
+
+            if (!empty($rowDBT) && (float)$rowDBT->qty_prod > 0) {
+                $this->_data = $rowDBT;
+            } else {
+                // 2. Fallback: proses rajut lainnya (is_rajut = 1)
+                $builder->where('jpp.is_rajut', 1);
+                $builder->orderBy("jpp.seq", "ASC");
+                $this->_data = $builder->get()->getRow();
+            }
         }
         else {
             $builder->orderBy("jpp.seq", "ASC");
@@ -418,29 +502,32 @@ class ProductionModel extends \App\Models\PrModel
         else if ($kode_ukuran == 'lxl') {
             $kode_ukuran = 'L/XL';
         }
-        else if ($kode_ukuran == 'xxl') {
-            $kode_ukuran = '2XL';
+        // Ukuran "xxl", "xxxl", dst (n huruf x diikuti l) dihitung otomatis jadi
+        // nXL - sebelumnya di-hardcode satu-satu dan cuma sampai xxxxxxl (6XL),
+        // jadi ukuran besar spt 7XL-10XL (7-10 huruf x) tidak dikenali sama
+        // sekali dan jatuh ke strtoupper() mentah (mis. "XXXXXXXXL"), tidak
+        // pernah cocok dengan data BTM yang tersimpan rapi sbg "8XL" - makanya
+        // Berat (Kg) utk ukuran besar selalu tampil 0 walau transaksi BTM-nya
+        // ada (kasus SOD260700028 / LS-3, ukuran 8XL & 10XL).
+        // x{2,} (bukan x+) - ukuran "xl" (1 huruf x = XL) sengaja TIDAK masuk sini,
+        // karena XL sudah benar tanpa perlu dikonversi (strtoupper('xl') = 'XL').
+        // Kalau ikut ditangkap di sini, "xl" akan jadi "1xl"/"1XL" yang salah dan
+        // bikin ukuran XL malah hilang (baru ketauan dari kasus invoice SI260800007).
+        else if (preg_match('/^x{2,}l$/', (string) $kode_ukuran)) {
+            $jumlahX = strlen($kode_ukuran) - 1;
+            $kode_ukuran = $jumlahX . 'XL';
         }
-        else if ($kode_ukuran == 'xxxl') {
-            $kode_ukuran = '3XL';
-        }
-        else if ($kode_ukuran == 'xxxxl') {
-            $kode_ukuran = '4XL';
-        }
-        else if ($kode_ukuran == 'xxxxxl') {
-            $kode_ukuran = '5XL';
-        }
-        else if ($kode_ukuran == 'xxxxxxl') {
-            $kode_ukuran = '6XL';
-        }
-        $kode_ukuran = strtoupper($kode_ukuran);
+        $kode_ukuran = strtoupper(trim($kode_ukuran));
         $builder = $this->db->table("trans_barang_masuk_produksi abx");
         $builder->select("COALESCE(SUM(abx.berat), 0) as total_btm");
         $builder->join("trans_barang_header bbx", "abx.id_header = bbx.id", "inner");
         $builder->where('bbx.active', 1);
         $builder->where('abx.kode_sales_order', $kode_so);
-        $builder->where('abx.kode_ukuran', $kode_ukuran);
-        $builder->where('abx.color', $color);
+        $builder->where('UPPER(TRIM(abx.kode_ukuran))', $kode_ukuran);
+        // TRIM() krn data warna kadang tersimpan dgn spasi ekstra di akhir
+        // (mis. "ACR 32/2 NAVY~ACR 32/2 PUTIH " dgn 1 spasi tambahan setelah
+        // PUTIH), sehingga perbandingan persis (=) gagal walau isinya sama.
+        $builder->where('TRIM(abx.color)', trim((string) $color));
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
@@ -615,196 +702,137 @@ class ProductionModel extends \App\Models\PrModel
     }   
 
 
-    function getProduksilastV1($params){
-        $id_walkorder = $params['id_walkorder'];
-
-        $col11 = "";
-        $col12 = "";
-        $col21 = "";
-        $col22 = "";
-        $col3  = "";
-        $ord   = "";
-        $ordx  = "";
+    function getProduksilastV1($params)
+    {
+        $id_walkorder = (int)$params['id_walkorder'];
+        $wo = $this->db->table('trans_walkorder')->where('id', $id_walkorder)->get()->getRow();
+        if (empty($wo)) return [];
 
         $ukuranArr = array_unique(array_map('trim', explode(",", $params['ukuran'])));
-        foreach ($ukuranArr as $item) {
-            $item = trim($item); 
-            $preg = preg_match('/^[a-zA-Z_]+$/', $item) ? $item : "\"$item\"";
-            $hrg  = $item . '_hrg';
-            if (preg_match('/^[a-zA-Z_]+$/', $hrg)) {
-                $hrg = $hrg;
+
+        $builder = $this->db->table('trans_walkorder_detail wodet');
+        $builder->select('wodet.id as wo_det_id, wodet.ref_detail_id, wodet.id_walkorder');
+        $builder->where('wodet.id_walkorder', $id_walkorder);
+        $builder->where('wodet.active', 1);
+        $woDets = $builder->get()->getResult();
+
+        if (empty($woDets)) return [];
+
+        $results = [];
+        $db = $this->db;
+
+        foreach ($woDets as $row) {
+            $obj = new \stdClass();
+            $obj->ref_detail_id = $row->ref_detail_id;
+            $obj->id_walkorder  = $row->id_walkorder;
+            $obj->id_proses     = 0;
+            $obj->tipe_id       = $wo->tipe_id;
+
+            if ($wo->tipe_id == 1) {
+                $detRow = $db->table('trans_sample_det tsd')
+                    ->select("
+                        CASE WHEN tsd.id_barang_1 IS NOT NULL THEN 'via_barang' ELSE 'via_warna' END AS sumber_warna,
+                        TRIM(BOTH ' - ' FROM
+                            COALESCE(COALESCE(b1.nama_barang, rw1.kode_warna), '') ||
+                            CASE WHEN COALESCE(b2.nama_barang, rw2.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b2.nama_barang, rw2.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b3.nama_barang, rw3.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b3.nama_barang, rw3.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b4.nama_barang, rw4.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b4.nama_barang, rw4.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b5.nama_barang, rw5.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b5.nama_barang, rw5.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b6.nama_barang, rw6.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b6.nama_barang, rw6.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b7.nama_barang, rw7.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b7.nama_barang, rw7.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b8.nama_barang, rw8.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b8.nama_barang, rw8.kode_warna) ELSE '' END
+                        ) AS kode_warna
+                    ")
+                    ->join('ref_barang b1', 'b1.id = tsd.id_barang_1', 'left')
+                    ->join('ref_barang b2', 'b2.id = tsd.id_barang_2', 'left')
+                    ->join('ref_barang b3', 'b3.id = tsd.id_barang_3', 'left')
+                    ->join('ref_barang b4', 'b4.id = tsd.id_barang_4', 'left')
+                    ->join('ref_barang b5', 'b5.id = tsd.id_barang_5', 'left')
+                    ->join('ref_barang b6', 'b6.id = tsd.id_barang_6', 'left')
+                    ->join('ref_barang b7', 'b7.id = tsd.id_barang_7', 'left')
+                    ->join('ref_barang b8', 'b8.id = tsd.id_barang_8', 'left')
+                    ->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, tsd.id_warna_1)', 'left')
+                    ->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, tsd.id_warna_2)', 'left')
+                    ->join('ref_warna rw3', 'rw3.id = COALESCE(b3.id_warna, tsd.id_warna_3)', 'left')
+                    ->join('ref_warna rw4', 'rw4.id = COALESCE(b4.id_warna, tsd.id_warna_4)', 'left')
+                    ->join('ref_warna rw5', 'rw5.id = COALESCE(b5.id_warna, tsd.id_warna_5)', 'left')
+                    ->join('ref_warna rw6', 'rw6.id = COALESCE(b6.id_warna, tsd.id_warna_6)', 'left')
+                    ->join('ref_warna rw7', 'rw7.id = COALESCE(b7.id_warna, tsd.id_warna_7)', 'left')
+                    ->join('ref_warna rw8', 'rw8.id = COALESCE(b8.id_warna, tsd.id_warna_8)', 'left')
+                    ->where('tsd.id', $row->ref_detail_id)
+                    ->get()->getRow();
+
+                $ukRows = $db->table('trans_sample_ukuran tsu')
+                    ->select('ru.key_ukuran, tsu.qty, tsu.harga_satuan')
+                    ->join('ref_ukuran ru', 'ru.id = tsu.id_ukuran')
+                    ->where('tsu.id_sample_det', $row->ref_detail_id)
+                    ->get()->getResult();
             } else {
-                $hrg = "\"$hrg\"";
+                $detRow = $db->table('trans_sales_order_det tsod')
+                    ->select("
+                        CASE WHEN tsod.id_barang_1 IS NOT NULL THEN 'via_barang' ELSE 'via_warna' END AS sumber_warna,
+                        TRIM(BOTH ' - ' FROM
+                            COALESCE(COALESCE(b1.nama_barang, rw1.kode_warna), '') ||
+                            CASE WHEN COALESCE(b2.nama_barang, rw2.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b2.nama_barang, rw2.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b3.nama_barang, rw3.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b3.nama_barang, rw3.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b4.nama_barang, rw4.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b4.nama_barang, rw4.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b5.nama_barang, rw5.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b5.nama_barang, rw5.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b6.nama_barang, rw6.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b6.nama_barang, rw6.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b7.nama_barang, rw7.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b7.nama_barang, rw7.kode_warna) ELSE '' END ||
+                            CASE WHEN COALESCE(b8.nama_barang, rw8.kode_warna) IS NOT NULL THEN ' - ' || COALESCE(b8.nama_barang, rw8.kode_warna) ELSE '' END
+                        ) AS kode_warna
+                    ")
+                    ->join('ref_barang b1', 'b1.id = tsod.id_barang_1', 'left')
+                    ->join('ref_barang b2', 'b2.id = tsod.id_barang_2', 'left')
+                    ->join('ref_barang b3', 'b3.id = tsod.id_barang_3', 'left')
+                    ->join('ref_barang b4', 'b4.id = tsod.id_barang_4', 'left')
+                    ->join('ref_barang b5', 'b5.id = tsod.id_barang_5', 'left')
+                    ->join('ref_barang b6', 'b6.id = tsod.id_barang_6', 'left')
+                    ->join('ref_barang b7', 'b7.id = tsod.id_barang_7', 'left')
+                    ->join('ref_barang b8', 'b8.id = tsod.id_barang_8', 'left')
+                    ->join('ref_warna rw1', 'rw1.id = COALESCE(b1.id_warna, tsod.id_warna_1)', 'left')
+                    ->join('ref_warna rw2', 'rw2.id = COALESCE(b2.id_warna, tsod.id_warna_2)', 'left')
+                    ->join('ref_warna rw3', 'rw3.id = COALESCE(b3.id_warna, tsod.id_warna_3)', 'left')
+                    ->join('ref_warna rw4', 'rw4.id = COALESCE(b4.id_warna, tsod.id_warna_4)', 'left')
+                    ->join('ref_warna rw5', 'rw5.id = COALESCE(b5.id_warna, tsod.id_warna_5)', 'left')
+                    ->join('ref_warna rw6', 'rw6.id = COALESCE(b6.id_warna, tsod.id_warna_6)', 'left')
+                    ->join('ref_warna rw7', 'rw7.id = COALESCE(b7.id_warna, tsod.id_warna_7)', 'left')
+                    ->join('ref_warna rw8', 'rw8.id = COALESCE(b8.id_warna, tsod.id_warna_8)', 'left')
+                    ->where('tsod.id', $row->ref_detail_id)
+                    ->get()->getRow();
+
+                $ukRows = $db->table('trans_sales_order_ukuran tsou')
+                    ->select('ru.key_ukuran, tsou.qty, tsou.harga_satuan')
+                    ->join('ref_ukuran ru', 'ru.id = tsou.id_ukuran')
+                    ->where('tsou.id_sales_order_det', $row->ref_detail_id)
+                    ->get()->getResult();
             }
-            $col11 .= ($col11 == "") ? "coalesce(tbl.$preg,0) as $preg" : ",coalesce(tbl.$preg,0) as $preg";
-            $col12 .= ($col12 == "") ? "coalesce(tbl.$hrg,0) as $hrg"   : ",coalesce(tbl.$hrg,0) as $hrg";
-            $col21 .= ($col21 == "") ? "$preg Int"   : ",$preg Int";
-            $col22 .= ($col22 == "") ? "$hrg Float"  : ",$hrg Float";
-            $ord   .= $ord  == "" ? $preg : "," . $preg;
-            $ordx  .= $ordx == "" ? $hrg  : "," . $hrg;
+
+            $obj->sumber_warna = !empty($detRow->sumber_warna) ? $detRow->sumber_warna : 'via_warna';
+            $obj->kode_warna   = !empty($detRow->kode_warna) ? $detRow->kode_warna : '';
+
+            $ukMap = [];
+            $hrgMap = [];
+            if (!empty($ukRows)) {
+                foreach ($ukRows as $uk) {
+                    $k = $uk->key_ukuran == 'all' ? 'all_' : $uk->key_ukuran;
+                    $ukMap[$k] = (float)$uk->qty;
+                    $hrgMap[$k] = (float)$uk->harga_satuan;
+                }
+            }
+
+            foreach ($ukuranArr as $item) {
+                $item = trim($item);
+                $k = $item == 'all' ? 'all_' : $item;
+                $hrgKey = $k . '_hrg';
+                $obj->$k = isset($ukMap[$k]) ? $ukMap[$k] : 0;
+                $obj->$hrgKey = isset($hrgMap[$k]) ? $hrgMap[$k] : 0;
+            }
+
+            $results[] = $obj;
         }
-        $all_order = $ord . ',' . $ordx;
 
-        $sql = "
-            SELECT 
-                tbl.ref_detail_id,
-                tbl.id_walkorder,
-                tbl.id_proses,
-                tw.tipe_id,
-
-                -- Flag sumber warna
-                CASE
-                    WHEN tw.tipe_id = 1 AND tsd.id_barang_1 IS NOT NULL THEN 'via_barang'
-                    WHEN tw.tipe_id = 2 AND tsod.id_barang_1 IS NOT NULL THEN 'via_barang'
-                    ELSE 'via_warna'
-                END AS sumber_warna,
-
-                TRIM(BOTH ' - ' FROM
-                    COALESCE(rw1.kode_warna, '') ||
-                    CASE WHEN rw2.kode_warna IS NOT NULL THEN ' - ' || rw2.kode_warna ELSE '' END ||
-                    CASE WHEN rw3.kode_warna IS NOT NULL THEN ' - ' || rw3.kode_warna ELSE '' END ||
-                    CASE WHEN rw4.kode_warna IS NOT NULL THEN ' - ' || rw4.kode_warna ELSE '' END ||
-                    CASE WHEN rw5.kode_warna IS NOT NULL THEN ' - ' || rw5.kode_warna ELSE '' END ||
-                    CASE WHEN rw6.kode_warna IS NOT NULL THEN ' - ' || rw6.kode_warna ELSE '' END ||
-                    CASE WHEN rw7.kode_warna IS NOT NULL THEN ' - ' || rw7.kode_warna ELSE '' END ||
-                    CASE WHEN rw8.kode_warna IS NOT NULL THEN ' - ' || rw8.kode_warna ELSE '' END
-                ) AS kode_warna,
-                {$col11},
-                {$col12}
-            FROM 
-                CROSSTAB(
-                    $$ 
-                    SELECT 
-                        twpu.ref_detail_id,
-                        twp.id_walkorder,
-                        twp.id_proses,
-                        rk.key_ukuran || case when rk.key_ukuran = 'all' then '_' else '' end || CASE 
-                            WHEN subquery.is_qty THEN ''
-                            ELSE '_hrg'
-                        END AS column_name,
-                        CASE 
-                            WHEN subquery.is_qty THEN 
-                                CASE 
-                                    WHEN tw.tipe_id = 1 THEN
-                                        (SELECT xt.qty FROM trans_sample_ukuran xt 
-                                        WHERE xt.id_ukuran = twpu.id_ukuran 
-                                        AND xt.id_sample_det = twpu.ref_detail_id)
-                                    WHEN tw.tipe_id = 2 THEN
-                                        (SELECT xt.qty FROM trans_sales_order_ukuran xt 
-                                        WHERE xt.id_ukuran = twpu.id_ukuran 
-                                        AND xt.id_sales_order_det = twpu.ref_detail_id)
-                                    ELSE 0
-                                END
-                            ELSE 
-                                CASE 
-                                    WHEN tw.tipe_id = 1 THEN
-                                        (SELECT xt.harga_satuan FROM trans_sample_ukuran xt 
-                                        WHERE xt.id_ukuran = twpu.id_ukuran 
-                                        AND xt.id_sample_det = twpu.ref_detail_id)
-                                    WHEN tw.tipe_id = 2 THEN
-                                        (SELECT xt.harga_satuan FROM trans_sales_order_ukuran xt 
-                                        WHERE xt.id_ukuran = twpu.id_ukuran 
-                                        AND xt.id_sales_order_det = twpu.ref_detail_id)
-                                    ELSE 0
-                                END
-                        END AS value
-                    FROM trans_walkorder_proses_ukuran twpu
-                    INNER JOIN trans_walkorder_proses twp ON twp.id = twpu.id_walkorder_proses
-                    INNER JOIN trans_walkorder tw ON tw.id = twp.id_walkorder
-                    INNER JOIN ref_ukuran rk ON rk.id = twpu.id_ukuran
-                    CROSS JOIN (
-                        SELECT DISTINCT key_ukuran, TRUE AS is_qty 
-                        FROM ref_ukuran WHERE active = 1
-                        UNION ALL
-                        SELECT DISTINCT key_ukuran, FALSE AS is_qty 
-                        FROM ref_ukuran WHERE active = 1
-                    ) subquery
-                    WHERE twp.id_walkorder = {$id_walkorder}
-                    AND twp.id_proses = (
-                        SELECT (tx.id_proses) FROM trans_walkorder_proses tx 
-                        INNER JOIN _jenis_proses_produksi jp ON jp.id = tx.id_proses 
-                        WHERE tx.id_walkorder = {$id_walkorder} 
-                        ORDER BY jp.seq DESC LIMIT 1
-                    )
-                    ORDER BY twpu.ref_detail_id, twp.id_proses, column_name
-                    $$,
-                    $$ 
-                        SELECT unnest(string_to_array('$all_order', ',')) AS param_id
-                    $$
-                ) AS tbl (
-                    ref_detail_id INT,
-                    id_walkorder  INT,
-                    id_proses     INT,
-                    {$col21},
-                    {$col22}
-                )
-            INNER JOIN trans_walkorder tw ON tbl.id_walkorder = tw.id
-
-            -- JOIN trans_sample_det (tipe_id = 1)
-            LEFT JOIN trans_sample_det tsd ON tbl.ref_detail_id = tsd.id AND tw.tipe_id = 1
-
-            -- JOIN ref_barang untuk sample
-            LEFT JOIN ref_barang bs1 ON bs1.id = tsd.id_barang_1
-            LEFT JOIN ref_barang bs2 ON bs2.id = tsd.id_barang_2
-            LEFT JOIN ref_barang bs3 ON bs3.id = tsd.id_barang_3
-            LEFT JOIN ref_barang bs4 ON bs4.id = tsd.id_barang_4
-            LEFT JOIN ref_barang bs5 ON bs5.id = tsd.id_barang_5
-            LEFT JOIN ref_barang bs6 ON bs6.id = tsd.id_barang_6
-            LEFT JOIN ref_barang bs7 ON bs7.id = tsd.id_barang_7
-            LEFT JOIN ref_barang bs8 ON bs8.id = tsd.id_barang_8
-
-            -- JOIN trans_sales_order_det (tipe_id = 2)
-            LEFT JOIN trans_sales_order_det tsod ON tbl.ref_detail_id = tsod.id AND tw.tipe_id = 2
-
-            -- JOIN ref_barang untuk SO
-            LEFT JOIN ref_barang bso1 ON bso1.id = tsod.id_barang_1
-            LEFT JOIN ref_barang bso2 ON bso2.id = tsod.id_barang_2
-            LEFT JOIN ref_barang bso3 ON bso3.id = tsod.id_barang_3
-            LEFT JOIN ref_barang bso4 ON bso4.id = tsod.id_barang_4
-            LEFT JOIN ref_barang bso5 ON bso5.id = tsod.id_barang_5
-            LEFT JOIN ref_barang bso6 ON bso6.id = tsod.id_barang_6
-            LEFT JOIN ref_barang bso7 ON bso7.id = tsod.id_barang_7
-            LEFT JOIN ref_barang bso8 ON bso8.id = tsod.id_barang_8
-
-            -- JOIN ref_warna: COALESCE dari ref_barang masing-masing tipe, fallback ke id_warna di det
-            LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs1.id_warna  WHEN tw.tipe_id = 2 THEN bso1.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_1 WHEN tw.tipe_id = 2 THEN tsod.id_warna_1 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs2.id_warna  WHEN tw.tipe_id = 2 THEN bso2.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_2 WHEN tw.tipe_id = 2 THEN tsod.id_warna_2 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs3.id_warna  WHEN tw.tipe_id = 2 THEN bso3.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_3 WHEN tw.tipe_id = 2 THEN tsod.id_warna_3 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs4.id_warna  WHEN tw.tipe_id = 2 THEN bso4.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_4 WHEN tw.tipe_id = 2 THEN tsod.id_warna_4 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs5.id_warna  WHEN tw.tipe_id = 2 THEN bso5.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_5 WHEN tw.tipe_id = 2 THEN tsod.id_warna_5 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs6.id_warna  WHEN tw.tipe_id = 2 THEN bso6.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_6 WHEN tw.tipe_id = 2 THEN tsod.id_warna_6 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs7.id_warna  WHEN tw.tipe_id = 2 THEN bso7.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_7 WHEN tw.tipe_id = 2 THEN tsod.id_warna_7 ELSE NULL END
-            )
-            LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(
-                CASE WHEN tw.tipe_id = 1 THEN bs8.id_warna  WHEN tw.tipe_id = 2 THEN bso8.id_warna  ELSE NULL END,
-                CASE WHEN tw.tipe_id = 1 THEN tsd.id_warna_8 WHEN tw.tipe_id = 2 THEN tsod.id_warna_8 ELSE NULL END
-            );
-        ";
-
-        $query = $this->db->query($sql);
-        $this->_data = $query->getResult();
-
-        return $this->_data;
+        return $results;
     } 
 
 

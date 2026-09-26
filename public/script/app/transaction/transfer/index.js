@@ -39,6 +39,11 @@ $(document).ready(function () {
         sortMode: "remote",
         filterMode: "remote",
         minHeight: 300,
+        ajaxParams: function () {
+            return {
+                id_perusahaan: $("#filter_perusahaan").val() === "all" ? "" : $("#filter_perusahaan").val()
+            };
+        },
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
@@ -77,6 +82,10 @@ $(document).ready(function () {
             sorters: "order"
         },
         selectableRows: false,
+    });
+
+    $("#filter_perusahaan").on("change", function () {
+        dtList.setPage(1); // balik ke halaman 1, otomatis trigger ajax baru
     });
 
     let searchThread = null;
@@ -129,12 +138,15 @@ $(document).ready(function () {
         else {
             let url = "";
 
+            let filter_perusahaan = $("#filter_perusahaan").val();
+            let queryParams = (filter_perusahaan && filter_perusahaan !== "all") ? "?id_perusahaan=" + filter_perusahaan : "";
+
             if (export_type == "1") {
                 // Jika Monitoring
-                url = "/trans/item-transfer/print_excel_lists/" + from_date + "/" + to_date;
+                url = "/trans/item-transfer/print_excel_lists/" + from_date + "/" + to_date + queryParams;
             } else if (export_type == "2") {
                 // Jika Transaksi
-                url = "/trans/item-transfer/print_excel_trans/" + from_date + "/" + to_date;
+                url = "/trans/item-transfer/print_excel_trans/" + from_date + "/" + to_date + queryParams;
             } else {
                 // Jaga-jaga jika tipe belum dipilih
                 Swal.fire({

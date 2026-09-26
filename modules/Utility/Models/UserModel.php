@@ -118,7 +118,7 @@ class UserModel extends \App\Models\PrModel
 
         if ($this->session->role_name == "superadmin") {
             $builder->where("id >=", 1);
-        } elseif ($this->session->role_name == "admin") {
+        } elseif ($this->session->role_name == "admin" || $this->session->role_name == "ADMIN APLIKASI") {
             $builder->where("id >", 1);
         }
 

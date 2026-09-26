@@ -104,6 +104,7 @@ class Modules extends BaseController
         $activation = $this->modules->update($id, $data);
 
         if ($activation) {
+            $this->mcommon->clearMenuCache();
             $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Modul Diaktifkan");        
             $this->session->setFlashdata('message', "Modul berhasil di aktifkan...");
         } else {
@@ -128,6 +129,7 @@ class Modules extends BaseController
         $deactivate = $this->modules->update($id, $data);
 
         if ($deactivate) {
+            $this->mcommon->clearMenuCache();
             $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Modul Dinonaktifkan");        
             $this->session->setFlashdata('message', "Modul berhasil di non-aktifkan...");
         } else {
@@ -205,6 +207,7 @@ class Modules extends BaseController
                 if ($this->validation->withRequest($this->request)->run() === TRUE AND $this->modules->updateRecord($this->modules->table,$data, 'id',$id))
                 {       
                     $this->modules->insertRolePriv($id);
+                    $this->mcommon->clearMenuCache();
                     $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Update Modul");        
                     $this->session->setFlashdata('message', "Update modul berhasil.." );
 		            return redirect()->to('/utilitas/modules');
@@ -233,8 +236,9 @@ class Modules extends BaseController
                 {
                     $id = $this->modules->insertRecordGetid($this->modules->table,$data);
                     
-                    $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Tambah Modul");        
                     $this->modules->insertRolePriv($id);
+                    $this->mcommon->clearMenuCache();
+                    $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Tambah Modul");        
                     $this->session->setFlashdata('message', "Tambah modul berhasil..");
                     return redirect()->to("/utilitas/modules");
                 }else{
@@ -351,8 +355,9 @@ class Modules extends BaseController
         $res = $this->modules->delete($id);
         if ($res)
         {     
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Hapus Modul");        
             $this->modules->deleteRecord('sec_role_priv','module_id',$id);
+            $this->mcommon->clearMenuCache();
+            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Hapus Modul");        
             $this->session->setFlashdata('message', "Modul berhasil dihapus..."); 
         }
         else

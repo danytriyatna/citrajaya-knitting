@@ -14,8 +14,12 @@ class Mcommon extends Model
 
     function checkMenuAccess($role_id, $menu_alias)
     {
+        if (empty($menu_alias)) {
+            return false;
+        }
+
         $cache = \Config\Services::cache();
-        $cacheKey = 'chk_menu_' . $role_id . '_' . md5($menu_alias);
+        $cacheKey = 'chk_menu_' . $role_id . '_' . md5((string)$menu_alias);
         $cached = $cache->get($cacheKey);
         if ($cached !== null) {
             return $cached;
@@ -37,8 +41,12 @@ class Mcommon extends Model
 
     function getMenuAccessCRUD($role_id, $menu_alias)
     {
+        if (empty($menu_alias)) {
+            return null;
+        }
+
         $cache = \Config\Services::cache();
-        $cacheKey = 'crud_menu_' . $role_id . '_' . md5($menu_alias);
+        $cacheKey = 'crud_menu_' . $role_id . '_' . md5((string)$menu_alias);
         $cached = $cache->get($cacheKey);
         if ($cached !== null) {
             return $cached;
@@ -95,7 +103,19 @@ class Mcommon extends Model
         $this->db->transComplete();
     }
 
-    
-
-
+    function clearMenuCache($role_id = null)
+    {
+        $cache = \Config\Services::cache();
+        if ($role_id !== null) {
+            $cache->delete('role_menu_' . $role_id);
+            $cache->delete('user_menu_html_' . $role_id);
+        } else {
+            // Clear for all roles
+            $roles = $this->db->table('sec_role')->select('id')->get()->getResultArray();
+            foreach ($roles as $r) {
+                $cache->delete('role_menu_' . $r['id']);
+                $cache->delete('user_menu_html_' . $r['id']);
+            }
+        }
+    }
 }

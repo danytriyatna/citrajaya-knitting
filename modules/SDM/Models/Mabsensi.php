@@ -107,14 +107,14 @@ class Mabsensi extends \App\Models\PrModel
                 'rk.full_name',
                 'rk.posisi',
                 'rk.id AS id_karyawan',
-                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir',
+                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) AS hadir',
                 'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin',
                 'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit',
-                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5)) AS alpha',
+                'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5,6)) AS alpha',
                 'rk.upah_harian',
-                '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) AS gaji_harian',
-                'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja',
-                'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam',
+                '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) * rk.upah_harian) AS gaji_harian',
+                'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60 AS jam_kerja',
+                'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60) * rk.upah_jam AS gaji_jam',
                 'rk.upah_lembur',
                 'rk.upah_lembur_we',
                 'rk.upah_jam',
@@ -137,15 +137,15 @@ class Mabsensi extends \App\Models\PrModel
                           rk.full_name,
                           rk.posisi,
                           rk.id as id_karyawan,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) AS hadir,
                           COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin,
                           COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit,
-                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5)) AS alpha,
+                          COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5,6)) AS alpha,
                           rk.upah_harian,
-                          (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) as gaji_harian,
+                          (COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) * rk.upah_harian) as gaji_harian,
                           -- Perbaikan SUM() dengan FILTER
-                          COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja,
-                          ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam,
+                          COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60 AS jam_kerja,
+                          ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60) * rk.upah_jam AS gaji_jam,
                           rk.upah_lembur,
                           rk.upah_lembur_we,
                           rk.upah_jam,
@@ -196,44 +196,61 @@ class Mabsensi extends \App\Models\PrModel
         }
 
         if (!empty($params['type']) && $params['type'] == 2) {
+            $companyWhere = "";
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $companyWhere = " AND (tbh.id_perusahaan = 1 OR tbh.id_perusahaan IS NULL) ";
+                } else {
+                    $companyWhere = " AND tbh.id_perusahaan = " . (int)$params['id_perusahaan'] . " ";
+                }
+            }
+
             if (!empty($params['tgl_mulai']) && !empty($params['tgl_akhir'])) {
                 $startDate = $params['tgl_mulai'];
                 $endDate = $params['tgl_akhir'];
                 $builder->join(
-                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
-                      FROM trans_produksi_operator 
-                      WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
-                      AND (print_type = 1 OR print_type is null)
-                      GROUP BY id_operator) th",
+                    "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS harga_total 
+                      FROM trans_produksi_operator tpo
+                      JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                      WHERE tpo.tgl_transaksi BETWEEN '$startDate' AND '$endDate'
+                      AND (tpo.print_type = 1 OR tpo.print_type is null)
+                      $companyWhere
+                      GROUP BY tpo.id_operator) th",
                     'rk.id_operator = th.id_operator',
                     'left'
                 );
 
                 $builder->join(
-                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
-                    FROM trans_produksi_operator
-                    WHERE tgl_transaksi BETWEEN '$startDate' AND '$endDate'
-                      AND print_type = 2
-                      GROUP BY id_operator) tp1",
+                    "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS jml_sample
+                    FROM trans_produksi_operator tpo
+                    JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                    WHERE tpo.tgl_transaksi BETWEEN '$startDate' AND '$endDate'
+                      AND tpo.print_type = 2
+                      $companyWhere
+                      GROUP BY tpo.id_operator) tp1",
                     'rk.id_operator = tp1.id_operator',
                     'left'
                 );
             }
             else {
                 $builder->join(
-                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
-                      FROM trans_produksi_operator 
-                      WHERE (print_type = 1 OR print_type is null)
-                      GROUP BY id_operator) th",
+                    "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS harga_total 
+                      FROM trans_produksi_operator tpo
+                      JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                      WHERE (tpo.print_type = 1 OR tpo.print_type is null)
+                      $companyWhere
+                      GROUP BY tpo.id_operator) th",
                     'rk.id_operator = th.id_operator',
                     'left'
                 );
 
                 $builder->join(
-                    "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
-                    FROM trans_produksi_operator
-                      WHERE print_type = 2
-                      GROUP BY id_operator) tp1",
+                    "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS jml_sample
+                    FROM trans_produksi_operator tpo
+                    JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                      WHERE tpo.print_type = 2
+                      $companyWhere
+                      GROUP BY tpo.id_operator) tp1",
                     'rk.id_operator = tp1.id_operator',
                     'left'
                 );
@@ -267,14 +284,14 @@ class Mabsensi extends \App\Models\PrModel
             'rk.full_name',
             'rk.posisi',
             'rk.id AS id_karyawan',
-            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) AS hadir',
-            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2) AS izin',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) AS hadir',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 2 or sdm.status_kehadiran = 5) AS izin',
             'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 3) AS sakit',
-            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3)) AS alpha',
+            'COUNT(1) FILTER (WHERE sdm.status_kehadiran = 4 OR sdm.status_kehadiran NOT IN (1,2,3,5,6)) AS alpha',
             'rk.upah_harian',
-            '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1) * rk.upah_harian) AS gaji_harian',
-            'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60 AS jam_kerja',
-            'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1), 0) / 60) * rk.upah_jam AS gaji_jam',
+            '(COUNT(1) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6) * rk.upah_harian) AS gaji_harian',
+            'COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60 AS jam_kerja',
+            'ROUND(COALESCE(SUM(sdm.durasi_kerja) FILTER (WHERE sdm.status_kehadiran = 1 OR sdm.status_kehadiran = 6), 0) / 60) * rk.upah_jam AS gaji_jam',
             'rk.upah_lembur',
             'rk.upah_lembur_we',
             'rk.upah_jam',
@@ -339,22 +356,35 @@ class Mabsensi extends \App\Models\PrModel
 
         // Blok kondisional Join & Group By untuk tipe 2 vs non-tipe 2
         if (!empty($params['type']) && $params['type'] == 2) {
+            $companyWhere = "";
+            if (!empty($params['id_perusahaan'])) {
+                if ($params['id_perusahaan'] == 1) {
+                    $companyWhere = " AND (tbh.id_perusahaan = 1 OR tbh.id_perusahaan IS NULL) ";
+                } else {
+                    $companyWhere = " AND tbh.id_perusahaan = " . (int)$params['id_perusahaan'] . " ";
+                }
+            }
+
             $builder->join(
-                "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS harga_total 
-                FROM trans_produksi_operator 
-                WHERE tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
-                AND (print_type = 1 OR print_type IS NULL)
-                GROUP BY id_operator) th",
+                "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS harga_total 
+                FROM trans_produksi_operator tpo
+                JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                WHERE tpo.tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                AND (tpo.print_type = 1 OR tpo.print_type IS NULL)
+                $companyWhere
+                GROUP BY tpo.id_operator) th",
                 'rk.id_operator = th.id_operator',
                 'left'
             );
 
             $builder->join(
-                "(SELECT id_operator, COALESCE(SUM(harga_total), 0) AS jml_sample
-                FROM trans_produksi_operator
-                WHERE tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
-                AND print_type = 2
-                GROUP BY id_operator) tp1",
+                "(SELECT tpo.id_operator, COALESCE(SUM(tpo.harga_total), 0) AS jml_sample
+                FROM trans_produksi_operator tpo
+                JOIN trans_barang_header tbh ON tpo.kode_transaksi = tbh.kode_transaksi
+                WHERE tpo.tgl_transaksi BETWEEN '{$startDate}' AND '{$endDate}'
+                AND tpo.print_type = 2
+                $companyWhere
+                GROUP BY tpo.id_operator) tp1",
                 'rk.id_operator = tp1.id_operator',
                 'left'
             );
@@ -389,21 +419,73 @@ class Mabsensi extends \App\Models\PrModel
         $builder->select("
             rk.full_name,
             rk.nip,
+            rk.posisi,
+            COALESCE(rk.kategori_posisi, 2) AS kategori_posisi,
             SUM(CASE WHEN sa.status_kehadiran = 1 THEN 1 ELSE 0 END) AS total_hadir_tepat_waktu,
+            SUM(CASE WHEN sa.status_kehadiran = 6 THEN 1 ELSE 0 END) AS total_dispen,
             SUM(CASE 
                 WHEN sa.status_kehadiran = 1 
-                AND sa.jam_masuk::time > (ms.jam_masuk + INTERVAL '1 minute')::time 
+                AND (COALESCE(sa.terlambat, 0) > 0 OR sa.jam_masuk::time > ms.jam_masuk::time) 
                 THEN 1 ELSE 0 
             END) AS total_telat,
             SUM(CASE WHEN sa.status_kehadiran = 2 THEN 1 ELSE 0 END) AS total_izin,
             SUM(CASE WHEN sa.status_kehadiran = 3 THEN 1 ELSE 0 END) AS total_sakit,
             SUM(CASE WHEN sa.status_kehadiran = 4 THEN 1 ELSE 0 END) AS total_alpa,
             SUM(CASE WHEN sa.status_kehadiran = 5 THEN 1 ELSE 0 END) AS total_cuti,
-            COALESCE(SUM(sa.terlambat), 0) AS total_menit_terlambat
+            COALESCE(SUM(sa.terlambat), 0) AS total_menit_terlambat,
+            COALESCE(eb.total_early_bird, 0) AS total_early_bird,
+            (COALESCE(SUM(
+                COALESCE(
+                    sa.skor_harian,
+                    CASE 
+                        WHEN sa.status_kehadiran = 1 THEN
+                            CASE 
+                                WHEN COALESCE(sa.terlambat, 0) <= 0 THEN 10.0
+                                WHEN sa.terlambat <= 15 THEN 9.5
+                                WHEN sa.terlambat <= 30 THEN 9.0
+                                WHEN sa.terlambat <= 60 THEN 8.0
+                                ELSE 6.5
+                            END
+                        WHEN sa.status_kehadiran = 5 THEN 10.0
+                        WHEN sa.status_kehadiran = 6 THEN 8.5
+                        WHEN sa.status_kehadiran = 3 THEN 7.5
+                        WHEN sa.status_kehadiran = 2 THEN 6.0
+                        ELSE 0.0
+                    END
+                )
+            ), 0) + (COALESCE(eb.total_early_bird, 0) * 0.5)) AS skor_periode,
+            COUNT(sa.id) AS total_hari_tercatat
         ");
         
         $builder->join("ref_karyawan rk", "rk.id = sa.id_karyawan");
         $builder->join("m_shift ms", "ms.id = sa.id_shift"); // JOIN ke m_shift
+        
+        // Subquery karyawan yang datang paling awal di setiap tanggal kerja aktif non-Minggu
+        // Disatukan untuk seluruh karyawan berdasarkan selisih kedatangan paling awal
+        // terhadap jam masuk jadwal shift masing-masing (ms.jam_masuk - sa.jam_masuk)
+        $escapedFrom = $this->db->escape($from);
+        $escapedTo = $this->db->escape($to);
+        $subEarlyBird = "(
+            SELECT id_karyawan, COUNT(*) as total_early_bird
+            FROM (
+                SELECT DISTINCT ON (sa_eb.tgl_absen)
+                    sa_eb.id_karyawan, 
+                    sa_eb.tgl_absen
+                FROM sdm_absensi sa_eb
+                JOIN ref_karyawan rk_eb ON rk_eb.id = sa_eb.id_karyawan
+                JOIN m_shift ms_eb ON ms_eb.id = sa_eb.id_shift
+                WHERE sa_eb.status_kehadiran = 1
+                  AND sa_eb.jam_masuk IS NOT NULL
+                  AND EXTRACT(DOW FROM sa_eb.tgl_absen) != 0
+                  AND sa_eb.tgl_absen >= {$escapedFrom}
+                  AND sa_eb.tgl_absen <= {$escapedTo}
+                  AND rk_eb.active = 1 AND rk_eb.type = 1
+                  AND sa_eb.jam_masuk::time <= ms_eb.jam_masuk::time
+                ORDER BY sa_eb.tgl_absen, (ms_eb.jam_masuk::time - sa_eb.jam_masuk::time) DESC, sa_eb.jam_masuk ASC
+            ) daily_eb
+            GROUP BY id_karyawan
+        )";
+        $builder->join("{$subEarlyBird} eb", "eb.id_karyawan = rk.id", "left");
 
         if (empty($rekap_absensi)) {
             $builder->where('sa.id_karyawan', $id_karyawan);
@@ -411,10 +493,13 @@ class Mabsensi extends \App\Models\PrModel
         
         $builder->where('sa.tgl_absen >=', $from);
         $builder->where('sa.tgl_absen <=', $to);
+        $builder->where('EXTRACT(DOW FROM sa.tgl_absen) !=', 0);
         $builder->where('rk.active', 1);
         $builder->where('rk.type', 1);
         
-        $builder->groupBy("rk.full_name, rk.nip");
+        $builder->groupBy("rk.full_name, rk.nip, rk.posisi, rk.kategori_posisi, eb.total_early_bird");
+        $builder->orderBy('rk.kategori_posisi', 'ASC');
+        $builder->orderBy('skor_periode', 'DESC');
         $builder->orderBy('rk.nip', 'ASC');
         
         if (!empty($rekap_absensi)) {
@@ -436,12 +521,13 @@ class Mabsensi extends \App\Models\PrModel
             sa.terlambat,
             CASE 
                 WHEN sa.status_kehadiran = 1 
-                AND sa.jam_masuk::time > (ms.jam_masuk + INTERVAL '1 minute')::time THEN 'Telat'
+                AND (COALESCE(sa.terlambat, 0) > 0 OR sa.jam_masuk::time > ms.jam_masuk::time) THEN 'Telat'
                 WHEN sa.status_kehadiran = 1 THEN 'Hadir'
                 WHEN sa.status_kehadiran = 2 THEN 'Izin'
                 WHEN sa.status_kehadiran = 3 THEN 'Sakit'
                 WHEN sa.status_kehadiran = 4 THEN 'Tanpa Keterangan'
                 WHEN sa.status_kehadiran = 5 THEN 'Cuti'
+                WHEN sa.status_kehadiran = 6 THEN 'Dispen'
                 ELSE '-' 
             END AS status_text
         ");

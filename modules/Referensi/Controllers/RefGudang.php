@@ -6,11 +6,13 @@ use App\Controllers\BaseController;
 use App\Models\FileModel;
 use Modules\Referensi\Models\GudangModel;
 use Modules\Referensi\Models\OperatorModel;
+use Modules\Referensi\Models\PerusahaanModel;
 
 class RefGudang extends BaseController
 {
     protected $mGudang;
     protected $mOperator;
+    protected $mPerusahaan;
     protected $views = '\Modules\Referensi\Views';
     protected $urlv  = 'master-data/gudang';
 
@@ -19,6 +21,7 @@ class RefGudang extends BaseController
         $this->MOD_ALIAS = "MOD_REFERENSI_GUDANG";
         $this->mOperator = new OperatorModel();
         $this->mGudang = new GudangModel();
+        $this->mPerusahaan = new PerusahaanModel();
         $this->files  = new FileModel();
     }
 
@@ -33,9 +36,16 @@ class RefGudang extends BaseController
                 'dir' => 'ASC'
             ]
         ];
+        $sortPerusahaan = [
+            [
+                'field' => 'nama_perusahaan',
+                'dir' => 'ASC'
+            ]
+        ];
         $dataCMT = $this->mOperator->getData(null, 0, 99999, $sortCMT);
         $this->data['titlehead'] = "Master Data Gudang";
         $this->data['cmt'] = $dataCMT;
+        $this->data['perusahaan'] = $this->mPerusahaan->getData(null, 0, 99999, $sortPerusahaan);
 
         return view($this->views . '\gudang\index', $this->data);
     }
@@ -96,6 +106,8 @@ class RefGudang extends BaseController
                     "cmt" => $row->nama_operator,
                     "id_cmt" => $row->id_cmt,
                     "keterangan" => $row->keterangan,
+                    "id_perusahaan" => $row->id_perusahaan,
+                    "nama_perusahaan" => !empty($row->nama_perusahaan) ? $row->nama_perusahaan : '-',
                 )
             );
         }
@@ -109,6 +121,7 @@ class RefGudang extends BaseController
         $keterangan = $this->request->getPost('keterangan');
         $tipe = $this->request->getPost('tipe');
         $cmt = $this->request->getPost('cmt');
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
 
 
 
@@ -120,6 +133,7 @@ class RefGudang extends BaseController
             'keterangan' => $keterangan,
             'tipe' => $tipe,
             'id_cmt' => !empty($cmt) ? $cmt : null,
+            'id_perusahaan' => !empty($id_perusahaan) ? $id_perusahaan : null,
         ];
 
 

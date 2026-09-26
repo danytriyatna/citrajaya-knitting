@@ -17,12 +17,18 @@ let selectGudangAsal = $('#gudang_asal');
 let inpIdWO = $('#id_wo');
 let inpKodeWO = $('#kode_walkorder');
 let selectGudangTujuan = $('#gudang_tujuan');
+let selectPerusahaan = $('#select_perusahaan');
 let selectProses = $('#select_proses');
 let selectCMT = $('#select_cmt');
 let inpCMT = $('#cmt');
 let inpIdCMT = $('#id_cmt');
 let divCMT = $('#div-cmt');
 let selectTipe = $('#tipe');
+function isSelectedProsesRajut() {
+    let opt = selectProses.find(':selected');
+    let isRajut = opt.data('is-rajut');
+    return (isRajut == 1 || isRajut === true || isRajut === '1' || selectProses.val() == 1);
+}
 let inpLotNo = $('#lot_no');
 let inpPackId = $('#pack_id');
 let inpPackName = $('#pack_name');
@@ -31,46 +37,73 @@ let detailData = $("#data-details").val().replace(/&quot;/ig, '"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
 let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
+let btnSimpanCetak = $('#btn-simpan-cetak');
 let btnView = $('#btn-view');
 let btnApprove = $('#btn-approve');
+let btnCancelApprove = $('#btn-cancel-approve');
 let btnSimpanDetail = $('#btn-simpan-det');
 let modalDet = $('#modal-detail-item');
 let inpStatus = $('#status');
 let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
 let inpIdGudangAsal = $('#id_gudang_asal');
+let inpRole = $('#role_id');
 
 const inpRefProduksi = $("#ref_prduksi");
 const divDetail = $("#div_detail");
 
 if (inpIdHeader.val().length == 0) {
-    selectGudangAsal.val("").trigger("change")
-    selectGudangTujuan.val("").trigger("change")
-    selectCMT.val("").trigger("change")
-    selectProses.val("").trigger("change")
+    if (!selectGudangAsal.val()) {
+        const defAsal = (selectPerusahaan.val() == 2) ? "60" : "1";
+        selectGudangAsal.val(defAsal).trigger("change.select2");
+    }
+    selectGudangTujuan.val("").trigger("change.select2");
+    selectCMT.val("").trigger("change.select2");
+    selectProses.val("").trigger("change.select2");
 } else {
     setTimeout(() => {
         try {
-            checkCMT(selectGudangTujuan.val())
-            if (dataSO.length > 0) {
-                dtList.setData(dataSO)
+            divCMT.removeClass("d-none");
+            const savedCmt = $("#id_cmt").val();
+            if (savedCmt) {
+                selectCMT.val(savedCmt).trigger("change.select2");
+            }
+            if (dataSO && dataSO.length > 0) {
+                let parsedSO = typeof dataSO === 'string' ? JSON.parse(dataSO) : dataSO;
+                dtList.setData(parsedSO)
             }
         } catch (e) {
             console.error("Error parsing JSON:", e);
         }
-    }, 1000);
+    }, 500);
 }
 
 if (inpStatus.val() == 0) {
     btnAdd.show()
     btnView.show()
-    // btnSimpan.show()
+    btnSimpan.show()
+    btnSimpanCetak.show()
     btnApprove.show()
+    btnCancelApprove.hide()
 } else {
     btnAdd.hide()
-    // btnSimpan.hide()
+    btnSimpan.hide()
+    btnSimpanCetak.hide()
     btnApprove.hide()
     btnView.hide()
+    // TAMBAHAN (2026-08-09): tombol "Batalkan Approve" hanya muncul kalau
+    // dokumen sudah Approved (status == 1), sedang mengedit dokumen yg
+    // sudah tersimpan (ada id_header - bukan form transaksi baru), DAN role
+    // user termasuk Superadmin (1)/Admin Aplikasi (2)/Admin Keuangan (4) -
+    // dicek lagi di sini (bukan cuma atribut "hidden" dari PHP) supaya tidak
+    // ke-override oleh .show() di atas kalau role-nya tidak diizinkan.
+    const roleId = parseInt(inpRole.val());
+    const isAllowedCancelRole = [1, 2, 4].includes(roleId);
+    if (inpIdHeader.val().length > 0 && isAllowedCancelRole) {
+        btnCancelApprove.show()
+    } else {
+        btnCancelApprove.hide()
+    }
 }
 // const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 const regex = /^[0-9.,]+$/;
@@ -160,7 +193,8 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
         + '<span class="tabulator-totalrow"></span> entri<span class="tabulator-totalfilteredrow"></span></div>',
     pagination: true,
     paginationMode: "remote",
-    paginationSize: 25,
+    paginationSize: 100,
+    paginationSizeSelector: [25, 50, 100, 200],
     paginationButtonCount: 10,
     dataSendParams: {
         sorters: "order"
@@ -346,9 +380,16 @@ dtListBarang.on("rowClick", function (e, row) {
     const namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
     const lotNo = row._row.data.lot_no.replace(/<[^>]*>/g, '');
     const hargasatuan = row._row.data.harga_satuan;
-    if (dtListDetail.getData().some(x => x.id_barang == idBarang && x.lot_id == idLot)) {
+    const packId = row._row.data.pack_id;
+    // Sebelumnya cek pakai lot_id - ternyata lot_id di data ini hampir selalu
+    // kosong/null (baik dari query picker maupun saat reload dokumen), jadi
+    // dua lot yg BEDA (mis. lot 6414 vs 6431 A) sama-sama null == null dan
+    // dianggap sama begitu barang+pack cocok - lot beda pun ikut ditolak.
+    // lot_no (teks) selalu terisi benar di kedua sisi, jadi dipakai sbg
+    // kriteria pembanding, bukan lot_id.
+    if (dtListDetail.getData().some(x => x.id_barang == idBarang && x.lot_no == lotNo && x.pack_id == packId)) {
         return Swal.fire({
-            text: `Barang ${namaBarang} dengan lot ${lotNo} telah dipilih`,
+            text: `Barang ${namaBarang} dengan lot ${lotNo} dan pack yang sama telah dipilih`,
             icon: 'error',
             showConfirmButton: false,
             timer: 2000
@@ -414,95 +455,35 @@ let buttonRowSOAction = function (cell) {
 
     if (inpStatus.val() == 0) {
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
+        return fmBtnEdit + " " + fmBtnDelete;
+    } else {
+        let row = cell.getRow();
+        let index = row.getPosition(true);
+        return `<span class="fw-bold text-muted">${index}</span>`;
     }
-
-
-    return fmBtnEdit + " " + fmBtnDelete;
 };
 
 
-// let dtList = new Tabulator("#dt-list", {
-//     pagination: true, 
-//     paginationSize: 10,
-//     paginationButtonCount: 5,
-//     columns: [
-//         {title: "ID", field: "id", width: "10%",visible:false},
-//         {
-//             headerSort: false,  
-//             title: '#', 
-//             formatter: buttonRowSOAction,
-//             width: '10%', align: "center", cssClass: "text-center",
-//             cellClick: function(e, cell) {
-//                 let row = cell.getRow();
-//                 if (e.target.title === 'delete') {
-//                     Swal.fire({
-//                         title: "Apakah anda yakin ingin menghapus data?",
-//                         icon: 'question',
-//                         confirmButtonText: 'Hapus',
-//                         confirmButtonColor: '#dc3545',
-//                         showCancelButton: true,
-//                         cancelButtonText: 'Batal',
-//                         cancelButtonColor: '#6C757D'
-//                     }).then((result) => {
-//                         if (result.isConfirmed) {
-//                             row.delete(); 
-//                         }
-//                     })
-//                 } 
-
-//             }
-//         },
-//         {title: "Informasi", field: "kode_sales_order", width: "20%",
-//             formatter: function (cell) {
-//                 let rowData = cell.getRow().getData();
-//                 return `No SO: ${rowData.kode_sales_order} <br> Style: ${rowData.style ? rowData.style : rowData.deskripsi} <br> Buyer:${rowData.nama}`;
-//             },
-//         },
-//         {
-//             title: "Detail",
-//             field: "detail",
-//             width:"70%",
-//             formatter: function(cell, formatterParams) {
-//                 let data = cell.getValue();
-//                 let listUkuran = cell.getData().key_ukuran;
-
-//                 if (!data || data.length === 0) return "No Data";
-
-//                 let tableHtml = `<table style="width:100%; border-collapse:collapse;">
-//                     <thead>
-//                         <tr style="background:#f2f2f2;">
-//                             <th style="border:1px solid #ddd; padding:5px;">No.</th>
-//                             <th style="border:1px solid #ddd; padding:5px;">Colour</th>`
-//                             listUkuran.forEach( row => {
-//                                 tableHtml +=  `<th style="border:1px solid #ddd; padding:5px;">${row.kode_ukuran}</th>`
-//                             })
-//                             tableHtml += `<th style="border:1px solid #ddd; padding:5px;">Total Qty</th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>`;
-
-//                 data.forEach(row => {
-//                     tableHtml += `<tr>
-//                         <td style="border:1px solid #ddd; padding:5px;">${row.no}</td>
-//                         <td style="border:1px solid #ddd; padding:5px;">${row.colour}</td>`
-//                         listUkuran.forEach( x => {
-//                             let ukuran = x.key_ukuran = "all" ? "all_" : x.key_ukuran;
-//                             tableHtml +=  `<td style="border:1px solid #ddd; padding:5px;">${ukuran in row ? row[ukuran] : ""}</td>`
-//                         })
-//                       tableHtml +=  `<td style="border:1px solid #ddd;">${row.qty}</td>
-//                     </tr>`;
-//                 });
-
-//                 tableHtml += `</tbody></table>`;
-
-//                 return tableHtml;
-//             }
-//         }
-//     ],
-//     placeholder: "Tidak ada data",
-// });
+// Hitung lebar minimum kolom otomatis berdasarkan teks judul kolom (header title)
+// Memastikan teks judul + icon sort + padding tidak terpotong (truncated)
+function calcHeaderTitleMinWidth(titleText, hasSort = true, extraBuffer = 28) {
+    if (!titleText || titleText === '#') return 45;
+    const cleanText = titleText.replace(/<[^>]*>/g, ' ').trim();
+    let textWidth = 0;
+    try {
+        const canvas = calcHeaderTitleMinWidth.canvas || (calcHeaderTitleMinWidth.canvas = document.createElement("canvas"));
+        const ctx = canvas.getContext("2d");
+        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        textWidth = Math.ceil(ctx.measureText(cleanText).width);
+    } catch (e) {
+        textWidth = cleanText.length * 9;
+    }
+    const sortWidth = hasSort ? 26 : 0;
+    return Math.max(textWidth + sortWidth + extraBuffer, 80);
+}
 
 let dtList = new Tabulator("#dt-list", {
+    layout: "fitDataFill",
     pagination: true,
     paginationSize: 10,
     paginationButtonCount: 5,
@@ -511,10 +492,14 @@ let dtList = new Tabulator("#dt-list", {
             headerSort: false,
             title: '#',
             formatter: buttonRowSOAction,
-            width: '5%', align: "center", cssClass: "text-center",
+            width: 45,
+            resizable: false,
+            hozAlign: "center",
+            headerHozAlign: "center",
+            cssClass: "text-center",
             cellClick: function (e, cell) {
                 let row = cell.getRow();
-                if (e.target.title === 'delete') {
+                if (e.target.title === 'delete' || $(e.target).closest('button').attr('title') === 'delete') {
                     Swal.fire({
                         title: "Apakah anda yakin ingin menghapus data?",
                         icon: 'question',
@@ -527,54 +512,189 @@ let dtList = new Tabulator("#dt-list", {
                         if (result.isConfirmed) {
                             row.delete();
                         }
-                    })
+                    });
                 }
-
             }
         },
-        { title: "NID", field: "id", width: "10%", visible: false },
-        { title: "No.SO", field: "kode_sales_order", width: "10%" },
-        { title: "Ref Detail ID", field: "ref_detail_id", visible: false },
-        // {title: "Tipe", field: "tipe", visible:true},
-        { title: "Style", field: "style", width: "10%" },
-        { title: "Deskripsi", field: "deskripsi", width: "19%" },
-        // {title: "Buyer", field: "buyer", width: "20%"},
-        { title: "Colour", field: "color", width: "19%" },
-        { title: "Qty Ref Rajut", visible: (selectProses.val() == 1), field: "qty_ref", width: "8%", editor: "number", formatter: "money", bottomCalcFormatter: 'money', bottomCalc: 'sum' },
-        { title: "Qty Ref", visible: (selectProses.val() != 1), field: "qty_ref", width: "8%", editor: "number", formatter: "money", bottomCalcFormatter: 'money', bottomCalc: 'sum' },
         {
-            title: "Qty", field: "qty", width: "8%", editor: "number", formatter: "money", bottomCalcFormatter: 'money', bottomCalc: 'sum',
-            // cellEdited: function(cell) {
-            //     console.log(cell);
-            //     let data = cell.getData();
-            //     let val = parseFloat(cell.getValue());
-            //     let ref = parseFloat(data.qty_ref);
-
-            //     if (val > ref) {
-            //         Swal.fire({
-            //             position: 'top-end',
-            //             icon: 'warning',
-            //             title: 'Qty melebihi Qty Ref!',
-            //             showConfirmButton: false,
-            //             timer: 2000,
-            //         });
-
-            //         cell.setValue(ref);
-            //         }
-            //     },
+            title: "Tipe",
+            field: "print_type",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Tipe", true), 105),
+            hozAlign: "center",
+            headerHozAlign: "center",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                if (val == 2 || val == "2") {
+                    return `<span class="badge bg-warning text-dark font-weight-bold" style="font-size: 11px; padding: 4px 8px;">PERBAIKAN</span>`;
+                }
+                return `<span class="badge bg-success text-white font-weight-bold" style="font-size: 11px; padding: 4px 8px;">PRODUKSI</span>`;
+            },
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            editor: "list",
+            editorParams: {
+                values: {
+                    "1": "PRODUKSI",
+                    "2": "PERBAIKAN"
+                }
+            },
+            mutator: function (value) {
+                if (value == 2 || value == "2") return 2;
+                return 1;
+            }
         },
-        { title: "Ukuran", field: "kode_ukuran", width: "5%" },
-        { title: "Keterangan", field: "keterangan", width: "15%", editor: "input" },
-        { title: "Total Scanned", field: "total_scanned", width: "15%", visible: false },
-        { title: "Print Type", field: "print_type", width: "15%", visible: false },
-        // {title: "Amount", field: "amount", width: "20%",formatter: "money",    formatterParams: {
-        //     decimal: ",",
-        //     thousand: ".",
-        //     symbol: "Rp",  // Simbol mata uang Rupiah
-        //     precision: 0,   // Tidak ada desimal
-        // }},
+        { title: "NID", field: "id", visible: false },
+        { title: "No.SO", field: "kode_sales_order", minWidth: Math.max(calcHeaderTitleMinWidth("No.SO", true), 125), hozAlign: "left", headerHozAlign: "left" },
+        { title: "Ref Detail ID", field: "ref_detail_id", visible: false },
+        { 
+            title: "Style", 
+            field: "style", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Style", true), 100), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Deskripsi", 
+            field: "deskripsi", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Deskripsi", true), 130), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Colour", 
+            field: "color", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Colour", true), 180), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Qty Ref", 
+            field: "qty_ref", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Qty Ref", true, 30), 115), 
+            hozAlign: "right",
+            headerHozAlign: "right",
+            editor: "number", 
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            formatter: "money", 
+            formatterParams: { decimal: ",", thousand: ".", precision: 0 },
+            bottomCalcFormatter: 'money', 
+            bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 0 },
+            bottomCalc: 'sum' 
+        },
+        {
+            title: "Qty", 
+            field: "qty", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Qty", true, 30), 95), 
+            hozAlign: "right",
+            headerHozAlign: "right",
+            editor: "number", 
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            formatter: "money", 
+            formatterParams: { decimal: ",", thousand: ".", precision: 0 },
+            bottomCalcFormatter: 'money', 
+            bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 0 },
+            bottomCalc: 'sum'
+        },
+        {
+            title: "Berat (Kg)",
+            field: "berat",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Berat (Kg)", true, 30), 130), 
+            hozAlign: "right",
+            headerHozAlign: "right",
+            editor: "number",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            formatter: function (cell) {
+                let val = cell.getValue();
+                if (val !== null && val !== undefined && val !== "") {
+                    return parseFloat(val).toFixed(2);
+                }
+                return "";
+            },
+            bottomCalc: "sum",
+            bottomCalcFormatter: function (cell) {
+                let val = cell.getValue();
+                return val ? parseFloat(val).toFixed(2) : "0.00";
+            }
+        },
+        { 
+            title: "Ukuran", 
+            field: "kode_ukuran", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Ukuran", true, 30), 105), 
+            hozAlign: "center", 
+            headerHozAlign: "center" 
+        },
+        { 
+            title: "Keterangan", 
+            field: "keterangan", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Keterangan", true), 135), 
+            hozAlign: "left",
+            headerHozAlign: "left",
+            editor: "input",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            }
+        },
+        {
+            title: "Status Reject",
+            field: "is_reject",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Status Reject", false, 35), 135),
+            hozAlign: "center",
+            headerHozAlign: "center",
+            headerSort: false,
+            formatter: function (cell) {
+                let val = cell.getValue();
+                let checked = (val == 1 || val == "1" || val === true) ? "checked" : "";
+                let disabled = (inpStatus.val() == 1 || inpStatus.val() == "1") ? "disabled" : "";
+                return `<div class="form-check d-flex justify-content-center my-0" style="min-height: auto;">
+                    <input type="checkbox" class="form-check-input check-reject" ${checked} ${disabled} style="cursor: pointer; width: 18px; height: 18px;">
+                </div>`;
+            },
+            cellClick: function (e, cell) {
+                if (inpStatus.val() == 1 || inpStatus.val() == "1") return;
+                if ($(e.target).is('input[type="checkbox"]')) {
+                    let isChecked = $(e.target).is(':checked') ? 1 : 0;
+                    cell.getRow().update({ is_reject: isChecked });
+                }
+            }
+        },
+        { title: "Total Scanned", field: "total_scanned", visible: false },
     ],
     placeholder: "Tidak ada data",
+    tableBuilt: function () {
+        this.getColumns().forEach(function (col) {
+            let headerEl = col.getElement();
+            if (headerEl) {
+                let titleEl = headerEl.querySelector('.tabulator-col-title');
+                let sorterEl = headerEl.querySelector('.tabulator-col-sorter');
+                if (titleEl) {
+                    let requiredWidth = Math.ceil(titleEl.scrollWidth + (sorterEl ? (sorterEl.offsetWidth || 18) : 0) + 26);
+                    let currentWidth = col.getWidth();
+                    if (currentWidth < requiredWidth) {
+                        col.setWidth(requiredWidth);
+                    }
+                }
+            }
+        });
+    },
 });
 
 function cardFormatter(cell, formatterParams, onRendered) {
@@ -792,19 +912,12 @@ selectGudangTujuan.on("change", function (e) {
 })
 
 function checkCMT(nilai) {
-    if (dataGudang.length > 0) {
+    divCMT.removeClass("d-none");
+    if (inpIdHeader.val().length == 0 && dataGudang.length > 0) {
         let resGudang = dataGudang.find(x => x.id == nilai);
-
-        // if(resGudang.tipe == 1){
-        //     divCMT.addClass("d-none")
-        //     // inpCMT.val()
-        //     // inpIdCMT.val("")
-        // } else{
-        divCMT.removeClass("d-none")
-        // inpCMT.val(resGudang.nama_operator)
-        // inpIdCMT.val(resGudang.id_cmt)
-        selectCMT.val(resGudang.id_cmt).trigger("change");
-        // } 
+        if (resGudang && resGudang.id_cmt) {
+            selectCMT.val(resGudang.id_cmt).trigger("change");
+        }
     }
 }
 
@@ -877,7 +990,7 @@ spanWO.click(function () {
     Swal.showLoading();
     dtListWO.replaceData()
 
-    if (selectGudangAsal.val() == null) {
+    if (!selectGudangAsal.val() || selectGudangAsal.val() == "") {
         return Swal.fire({
             text: "Gudang Asal belum dipilih",
             icon: 'error',
@@ -886,7 +999,7 @@ spanWO.click(function () {
         });
     }
 
-    if (selectGudangTujuan.val() == null) {
+    if (!selectGudangTujuan.val() || selectGudangTujuan.val() == "") {
         return Swal.fire({
             text: "Gudang Tujuan belum dipilih",
             icon: 'error',
@@ -907,9 +1020,9 @@ spanWO.click(function () {
 });
 
 
-function submitData(status, message) {
+function submitData(status, message, isPrint = false) {
 
-    if (selectGudangAsal.val() == null) {
+    if (!selectGudangAsal.val() || selectGudangAsal.val() == "") {
         return Swal.fire({
             text: "Gudang Asal harus dipilih",
             icon: 'error',
@@ -918,7 +1031,7 @@ function submitData(status, message) {
         });
     }
 
-    if (selectGudangTujuan.val() == null) {
+    if (!selectGudangTujuan.val() || selectGudangTujuan.val() == "") {
         return Swal.fire({
             text: "Gudang Tujuan harus dipilih",
             icon: 'error',
@@ -957,7 +1070,16 @@ function submitData(status, message) {
         }
     }
 
-    if (selectCMT.val() == "") {
+    if (!selectProses.val() || selectProses.val() == "") {
+        return Swal.fire({
+            text: "Proses harus dipilih",
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    if (!selectCMT.val() || selectCMT.val() == "") {
         return Swal.fire({
             text: "CMT harus dipilih",
             icon: 'error',
@@ -968,7 +1090,7 @@ function submitData(status, message) {
 
 
     Swal.fire({
-        title: `Apakah anda ingin ${message} data Barang Keluar?`,
+        title: `Apakah anda ingin ${message} data Transfer?`,
         icon: 'question',
         confirmButtonText: 'Simpan',
         confirmButtonColor: '#198754',
@@ -977,7 +1099,7 @@ function submitData(status, message) {
         cancelButtonColor: '#6C757D'
     }).then((result) => {
         if (result.isConfirmed) {
-            simpanData(status)
+            simpanData(status, isPrint)
         }
     })
 }
@@ -985,12 +1107,78 @@ function submitData(status, message) {
 
 btnSimpan.on("click", function (e) {
     e.preventDefault()
-    submitData(0, "menyimpan draft")
+    submitData(0, "menyimpan draft", false)
+})
+
+btnSimpanCetak.on("click", function (e) {
+    e.preventDefault()
+    submitData(0, "menyimpan draft & mencetak", true)
 })
 
 btnApprove.on("click", function (e) {
     e.preventDefault()
-    submitData(1, "mengapprove")
+    submitData(1, "mengapprove", false)
+})
+
+// TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
+// (stok trans_lots/trans_barang, qty_kirim tracking produksi WO) &
+// kembalikan dokumen ke status Draft. Lihat ItemTransferModel::cancelApprove().
+btnCancelApprove.on("click", function (e) {
+    e.preventDefault()
+
+    Swal.fire({
+        title: 'Batalkan Approve dokumen ini?',
+        text: 'Semua efek approve (perubahan stok & qty kirim ke tracking produksi) akan dibalik, dan dokumen kembali ke status Draft.',
+        icon: 'warning',
+        confirmButtonText: 'Ya, batalkan approve',
+        confirmButtonColor: '#dc3545',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $(".preloader").css("opacity", "0.7").show();
+        $.ajax({
+            type: 'POST',
+            url: '/trans/item-transfer/cancel-approve',
+            data: {
+                id: inpIdHeader.val(),
+            },
+            dataType: "json",
+            success: function (response) {
+                $(".preloader").hide().css("opacity", "1");
+                if (response.status == true) {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            },
+            error: function (xhr) {
+                $(".preloader").hide().css("opacity", "1");
+                let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Gagal membatalkan approve.";
+                Swal.fire({
+                    text: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            }
+        });
+    })
 })
 
 
@@ -1141,7 +1329,7 @@ function openModalDetail(row = null) {
                 id_wo: inpIdWO.val(),
                 kode_walkorder: inpKodeWO.val(),
                 qty: inpQtyItem.val(),
-                price: inpPrice.val(),
+                price: price,
                 qty_exist: inpQtyExist.val(),
                 lot_no: inpLotNo.val(),
                 lot_id: inpIdLot.val(),
@@ -1159,7 +1347,7 @@ function openModalDetail(row = null) {
                 id_barang: inpIdBarang.val(),
                 id_wo: inpIdWO.val(),
                 kode_walkorder: inpKodeWO.val(),
-                price: inpPrice.val(),
+                price: price,
                 qty: inpQtyItem.val(),
                 qty_exist: inpQtyExist.val(),
                 lot_no: inpLotNo.val(),
@@ -1355,45 +1543,144 @@ let dtListSO = null;
 
 if (selectProses.val() != null) {
     let valp = selectProses.val();
+    let idCmt = selectCMT.val();
+    let idPerusahaan = $('#id_perusahaan').val();
     if (valp !== "") {
         if (dtListSO === null) {
             // Jika tabel belum ada, buat baru
-            initTabulator(valp);
+            initTabulator(valp, idCmt, selectGudangAsal.val(), idPerusahaan);
         } else {
             // Jika tabel sudah ada, ganti parameter dan refresh data
-            dtListSO.setData("/trans/item-transfer/list-so", { id_proses: val });
+            dtListSO.setData("/trans/item-transfer/list-so", { id_proses: valp, id_cmt: idCmt, id_gudang_asal: selectGudangAsal.val(), id_perusahaan: idPerusahaan });
         }
     }
 }
 
-$('#select_proses').on('change', function () {
-    let val = $(this).val();
+const allGudangAsalOptions = [];
+$('#gudang_asal option').each(function () {
+    allGudangAsalOptions.push({
+        id: $(this).val(),
+        text: $(this).text(),
+        id_perusahaan: $(this).attr('data-perusahaan') || ''
+    });
+});
 
-    if (val !== "") {
-        if (dtListSO === null) {
-            // Jika tabel belum ada, buat baru
-            initTabulator(val);
+function updateGudangAsalByPerusahaan(idPerusahaan, setDefault = false) {
+    if (!$('#gudang_asal').length || allGudangAsalOptions.length === 0) return;
+    const currentVal = $('#gudang_asal').val();
+    const isEdit = (inpIdHeader.val() && inpIdHeader.val().length > 0);
+
+    // Pada mode edit, jika gudang asal yang tersimpan memiliki asosiasi id_perusahaan,
+    // pastikan dropdown perusahaan dan hidden id_perusahaan selaras dengan dokumen
+    if (isEdit && currentVal) {
+        const savedOpt = allGudangAsalOptions.find(o => o.id == currentVal);
+        if (savedOpt && savedOpt.id_perusahaan && selectPerusahaan.length && selectPerusahaan.val() != savedOpt.id_perusahaan) {
+            selectPerusahaan.val(savedOpt.id_perusahaan);
+            $('#id_perusahaan').val(savedOpt.id_perusahaan);
+            idPerusahaan = savedOpt.id_perusahaan;
+        }
+    }
+
+    $('#gudang_asal').empty();
+    $('#gudang_asal').append('<option value="">-- Pilih Warehouse --</option>');
+
+    let defaultGudangId = (idPerusahaan == 2) ? "60" : "1";
+    let hasMatchCurrent = false;
+
+    allGudangAsalOptions.forEach(opt => {
+        if (!opt.id) return;
+        // Pada mode edit, gudang yang tersimpan di transaksi WAJIB selalu dimasukkan
+        const isMatch = (!idPerusahaan || opt.id_perusahaan === "" || opt.id_perusahaan == idPerusahaan || (isEdit && opt.id == currentVal));
+        if (isMatch) {
+            const isSel = (!setDefault && opt.id == currentVal);
+            if (isSel) hasMatchCurrent = true;
+            const newOpt = new Option(opt.text, opt.id, false, isSel);
+            $(newOpt).attr('data-perusahaan', opt.id_perusahaan);
+            $('#gudang_asal').append(newOpt);
+        }
+    });
+
+    if (setDefault || (!hasMatchCurrent && !isEdit)) {
+        if (defaultGudangId && $('#gudang_asal').find(`option[value="${defaultGudangId}"]`).length > 0) {
+            $('#gudang_asal').val(defaultGudangId).trigger('change');
         } else {
-            // Jika tabel sudah ada, ganti parameter dan refresh data
-            dtListSO.setData("/trans/item-transfer/list-so", { id_proses: val });
+            const firstValid = $('#gudang_asal').find('option:not([disabled]):not([value=""])').first().val();
+            if (firstValid) $('#gudang_asal').val(firstValid).trigger('change');
+        }
+    } else {
+        if (currentVal && hasMatchCurrent) {
+            $('#gudang_asal').val(currentVal);
+        }
+        $('#gudang_asal').trigger('change');
+    }
+}
+
+if (selectPerusahaan.length) {
+    if (inpIdHeader.val().length === 0) {
+        updateGudangAsalByPerusahaan(selectPerusahaan.val(), true);
+    } else {
+        updateGudangAsalByPerusahaan(selectPerusahaan.val(), false);
+    }
+
+    selectPerusahaan.on('change', function () {
+        const idPrsh = $(this).val();
+        $('#id_perusahaan').val(idPrsh);
+        updateGudangAsalByPerusahaan(idPrsh, inpIdHeader.val().length === 0);
+        if (dtListSO) {
+            dtListSO.setData("/trans/item-transfer/list-so", {
+                id_proses: $('#select_proses').val(),
+                id_cmt: selectCMT.val(),
+                id_gudang_asal: selectGudangAsal.val(),
+                id_perusahaan: idPrsh
+            });
+        }
+    });
+}
+
+$('#gudang_asal').on('change', function () {
+    let opt = $(this).find('option:selected');
+    let p = opt.attr('data-perusahaan');
+    if (p) {
+        $('#id_perusahaan').val(p);
+        if (selectPerusahaan.length && selectPerusahaan.val() != p) {
+            selectPerusahaan.val(p);
         }
     }
 });
 
-function initTabulator(idProses) {
+$('#select_proses, #select_cmt, #gudang_asal, #id_gudang_asal, #id_perusahaan').on('change', function () {
+    let val = $('#select_proses').val();
+    let idCmt = selectCMT.val();
+    let idGudangAsal = selectGudangAsal.val();
+    let idPerusahaan = $('#id_perusahaan').val();
+
+    if (val !== "") {
+        if (dtListSO === null) {
+            // Jika tabel belum ada, buat baru
+            initTabulator(val, idCmt, idGudangAsal, idPerusahaan);
+        } else {
+            // Jika tabel sudah ada, ganti parameter dan refresh data
+            dtListSO.setData("/trans/item-transfer/list-so", { id_proses: val, id_cmt: idCmt, id_gudang_asal: idGudangAsal, id_perusahaan: idPerusahaan });
+        }
+    }
+});
+
+function initTabulator(idProses, idCmt, idGudangAsal, idPerusahaan) {
     dtListSO = new Tabulator("#dt-list-sample", {
         ajaxURL: "/trans/item-transfer/list-so",
         ajaxConfig: "POST",
-        // Mengirimkan id_proses tambahan ke server
+        // Mengirimkan id_proses, id_cmt, id_gudang_asal, dan id_perusahaan ke server
         ajaxParams: {
-            id_proses: idProses
+            id_proses: idProses,
+            id_cmt: idCmt || selectCMT.val(),
+            id_gudang_asal: idGudangAsal || selectGudangAsal.val(),
+            id_perusahaan: idPerusahaan || $('#id_perusahaan').val()
         },
         columns: [
-            { title: "Style", field: "style", width: "13%" },
-            { title: "Deskripsi", field: "deskripsi", width: "20%" },
-            { title: "Colour", field: "color", width: "25%" },
+            { title: "Style", field: "style", width: "15%" },
+            { title: "Deskripsi", field: "deskripsi", width: "25%" },
+            { title: "Colour", field: "color", width: "30%" },
             { title: "Qty Ref", field: "qty_ref", width: "15%" },
-            { title: "Qty", field: "qty", width: "15%" },
             { title: "Ukuran", field: "kode_ukuran", width: "15%" },
         ],
         groupBy: ['kode_sales_order'],
@@ -1415,6 +1702,9 @@ function initTabulator(idProses) {
 
             // 2. Masukkan ke dalam parameter request
             params.id_proses = idProses;
+            params.id_cmt = $('#select_cmt').val();
+            params.id_gudang_asal = selectGudangAsal.val();
+            params.id_perusahaan = $('#id_perusahaan').val();
         },
 
         ajaxResponse: function (url, params, response) {
@@ -1459,21 +1749,9 @@ function initTabulator(idProses) {
             });
         }
 
-        if (selectProses.val() == 1) {
-            if (inpRefProduksi.is(':checked') && dtList.getData().length > 0) {
-                const list_data = dtList.getData().some(x => x.kode_sales_order !== row.getData().kode_sales_order);
-                if (list_data) {
-                    return Swal.fire({
-                        text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
-                        icon: 'warning',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                }
-            }
-        }
-
-        dtList.addRow(row.getData())
+        let rData = Object.assign({}, row.getData());
+        rData.is_reject = 0;
+        dtList.addRow(rData);
         $("#modal-so").modal("hide");
     })
 }
@@ -1616,7 +1894,42 @@ selectProses.on("change", function () {
 // }
 
 
-function simpanData(status) {
+function simpanData(status, isPrint = false) {
+    if (!selectGudangAsal.val() || selectGudangAsal.val() == "") {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Gudang Asal Wajib Diisi!',
+            text: 'Silakan pilih Gudang Asal (Transfer From) terlebih dahulu.'
+        });
+    }
+
+    if (!selectGudangTujuan.val() || selectGudangTujuan.val() == "") {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Gudang Tujuan Wajib Diisi!',
+            text: 'Silakan pilih Gudang Tujuan (Transfer To) terlebih dahulu.'
+        });
+    }
+
+    let dataSOCheck = dtList.getData();
+    // Validasi Qty > Qty Ref HANYA berlaku saat tombol Approve (status == 1) ditekan.
+    // Simpan Draft (status == 0) tetap diizinkan.
+    if (status == 1) {
+        for (let i = 0; i < dataSOCheck.length; i++) {
+            let row = dataSOCheck[i];
+            if (row.is_reject == 1 || row.is_reject == "1" || row.is_reject === true) continue; // Bypass validasi untuk barang Reject (Opsi 1)
+            let val = parseFloat(row.qty) || 0;
+            let ref = parseFloat(row.qty_ref) || 0;
+            if (val > ref) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Meng-approve!',
+                    text: `Terdapat item (${row.kode_sales_order || ''} ${row.color || ''}) dengan Qty (${val}) yang melebihi Qty Ref (${ref})! Dokumen tidak dapat di-approve, silakan simpan sebagai Draft.`,
+                });
+            }
+        }
+    }
+
     $(".preloader").css("opacity", "0.7").show();
     const valProduksi = inpRefProduksi.is(':checked') ? 1 : 0;
 
@@ -1657,10 +1970,17 @@ function simpanData(status) {
                     text: response.message,
                     icon: 'success',
                     showConfirmButton: false,
-                    timer: 2000
+                    timer: 1500
                 });
                 Swal.close();
-                window.location.href = 'trans/item-transfer'
+
+                if (isPrint && response.encrypted_id) {
+                    window.open('/trans/item-transfer/print/' + response.encrypted_id, '_blank');
+                }
+
+                setTimeout(() => {
+                    window.location.href = 'trans/item-transfer';
+                }, isPrint ? 800 : 500);
 
             } else {
                 Swal.fire({
@@ -1709,6 +2029,12 @@ $("#text_barcode").autocomplete({
             dataType: "json",
             data: {
                 kata_kunci: request.term,
+                id_proses: selectProses.val(),
+                id_gudang_asal: selectGudangAsal.val(),
+                id_gudang_tujuan: selectGudangTujuan.val(),
+                id_cmt: selectCMT.val(),
+                id_perusahaan: $("#id_perusahaan").val(),
+                id_header: inpIdHeader.val()
             },
             type: 'post',
             success: function (data) {
@@ -1739,32 +2065,15 @@ $("#text_barcode").autocomplete({
 
 
 function addItem(data, isScan = false) {
+    if (!data.print_type) {
+        data.print_type = 1;
+    }
 
     let index = -1;
     if (dtList.getData().some(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran)) {
-        // return Swal.fire({
-        //     text: `SO ${data.kode_sales_order} dengan warna ${data.color} dan ukuran ${data.kode_ukuran} telah dipilih`,
-        //     icon: 'error',
-        //     showConfirmButton: false,
-        //     timer: 2000
-        // });
-
         index = dtList.getData().findIndex(x => x.kode_sales_order == data.kode_sales_order && x.color == data.color && x.kode_ukuran == data.kode_ukuran);
     }
 
-    if (selectProses.val() == 1) {
-        if (inpRefProduksi.is(':checked') && dtList.getData().length > 0) {
-            const list_data = dtList.getData().some(x => x.kode_sales_order !== data.kode_sales_order);
-            if (list_data) {
-                return Swal.fire({
-                    text: `Kode Sales Order harus sama dengan yang sudah dipilih sebelumnya.`,
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-        }
-    }
 
     if (index > -1) {
         const row = dtList.getData();
@@ -1778,6 +2087,9 @@ function addItem(data, isScan = false) {
         if (isScan) {
             data.total_scanned = 1;
             data.keterangan = (data.total_scanned).toString() + ' Ikat';
+        }
+        if (data.is_reject === undefined || data.is_reject === null) {
+            data.is_reject = 0;
         }
         dtList.addRow(data)
     }
@@ -1805,6 +2117,11 @@ $("#text_barcode").on("keypress", function (e) {
             data: {
                 kata_kunci: $("#text_barcode").val(),
                 id_proses: selectProses.val(),
+                id_gudang_asal: selectGudangAsal.val(),
+                id_gudang_tujuan: selectGudangTujuan.val(),
+                id_cmt: selectCMT.val(),
+                id_perusahaan: $("#id_perusahaan").val(),
+                id_header: inpIdHeader.val()
             },
             type: 'post',
             success: function (es) {
@@ -1823,5 +2140,164 @@ $("#text_barcode").on("keypress", function (e) {
                 }
             }
         });
+    }
+});
+
+// ==========================================
+// INTEGRASI TIMBANGAN DIGITAL (YAOHUA YH-T3)
+// ==========================================
+let serialScalePort = null;
+let serialScaleReader = null;
+let isScaleAutoReading = false;
+let latestScaleWeight = 0;
+let activeTargetRow = null;
+
+function parseYaohuaYHT3(bufferStr) {
+    let matches = bufferStr.match(/(\d+\.\d+|\d+)\s*(?:kg|g)?/gi);
+    if (matches && matches.length > 0) {
+        let lastMatch = matches[matches.length - 1];
+        let numVal = parseFloat(lastMatch);
+        if (!isNaN(numVal) && numVal > 0) {
+            return numVal;
+        }
+    }
+    return 0;
+}
+
+async function startContinuousScaleStream() {
+    if (!("serial" in navigator)) {
+        let msgHtml = `Browser Anda tidak mendukung Web Serial API.<br>Gunakan browser <b>Google Chrome</b> atau <b>Microsoft Edge</b> versi terbaru.`;
+        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            msgHtml = `
+                <div class="text-start">
+                    <p class="text-danger fw-bold mb-2"><i class="fa fa-exclamation-triangle"></i> Fitur Serial Port Diblokir oleh Chrome (Insecure Origin HTTP)!</p>
+                    <p class="mb-2">Karena aplikasi dibuka via IP/HTTP (bukan HTTPS), Chrome membatasi akses Web Serial port timbangan.</p>
+                    <p class="fw-bold mb-1">Cara Aktifkan di Chrome (Cukup 1x saja):</p>
+                    <ol class="ps-3 mb-0 small">
+                        <li>Buka tab baru di Chrome, ketik: <br><code class="user-select-all text-dark bg-light px-1">chrome://flags/#unsafely-treat-insecure-origin-as-secure</code></li>
+                        <li>Ubah pilihan dari <i>Disabled/Default</i> menjadi <b>Enabled</b>.</li>
+                        <li>Ketik alamat web di kotaknya: <br><code class="user-select-all text-primary bg-light px-1">${window.location.origin}</code></li>
+                        <li>Klik tombol <b>Relaunch</b> di pojok kanan bawah Chrome.</li>
+                    </ol>
+                </div>
+            `;
+        }
+        Swal.fire({
+            icon: 'warning',
+            title: 'Izin Akses Timbangan',
+            html: msgHtml,
+            confirmButtonText: 'Mengerti'
+        });
+        return false;
+    }
+
+    try {
+        if (!serialScalePort) {
+            serialScalePort = await navigator.serial.requestPort();
+            await serialScalePort.open({
+                baudRate: 9600,
+                dataBits: 8,
+                stopBits: 1,
+                parity: "none"
+            });
+        }
+
+        isScaleAutoReading = true;
+        updateScaleButtonStatus(true);
+
+        const textDecoder = new TextDecoderStream();
+        const readableStreamClosed = serialScalePort.readable.pipeTo(textDecoder.writable);
+        serialScaleReader = textDecoder.readable.getReader();
+
+        let rawBuffer = "";
+
+        while (isScaleAutoReading) {
+            const { value, done } = await serialScaleReader.read();
+            if (done) break;
+            if (value) {
+                rawBuffer += value;
+                if (rawBuffer.length > 200) rawBuffer = rawBuffer.substring(rawBuffer.length - 100);
+
+                const weightVal = parseYaohuaYHT3(rawBuffer);
+                if (weightVal > 0 && weightVal !== latestScaleWeight) {
+                    latestScaleWeight = weightVal;
+                    applyAutoWeightToActiveTarget(weightVal);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Scale Stream Error:", err);
+        isScaleAutoReading = false;
+        serialScalePort = null;
+        updateScaleButtonStatus(false, err.message);
+    }
+}
+
+function updateScaleButtonStatus(isActive, errorMsg) {
+    const btnScale = $('#btn-read-scale-prod');
+    const statusText = $('#scale-status-text-prod');
+
+    if (isActive) {
+        btnScale.removeClass("btn-primary btn-warning").addClass("btn-success").html('<i class="fa fa-circle text-white"></i> 🟢 Timbangan OTOMATIS');
+        statusText.html('<span class="text-success fw-bold"><i class="fa fa-check-circle"></i> Mode Otomatis Aktif! Kursor / baris yang dipilih akan langsung terisi berat Kg dari Yaohua YH-T3.</span>');
+    } else {
+        btnScale.removeClass("btn-success btn-warning").addClass("btn-primary").html('<i class="fa fa-balance-scale"></i> ⚖️ Timbangan');
+        if (errorMsg) {
+            statusText.html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Gagal: ' + errorMsg + '</span>');
+        } else {
+            statusText.html('Ambil nilai Kg dari Timbangan Yaohua YH-T3 untuk kolom Berat (Kg) baris yang dipilih / terakhir');
+        }
+    }
+}
+
+function applyAutoWeightToActiveTarget(weightVal) {
+    if (!weightVal || weightVal <= 0) return;
+
+    if (typeof dtList !== 'undefined' && dtList) {
+        let selectedRows = dtList.getSelectedRows();
+        let targetRow = null;
+        if (selectedRows.length > 0) {
+            targetRow = selectedRows[0];
+        } else if (activeTargetRow) {
+            targetRow = activeTargetRow;
+        }
+
+        if (targetRow) {
+            targetRow.update({ berat: weightVal });
+        }
+    }
+}
+
+if (typeof dtList !== 'undefined' && dtList) {
+    dtList.on("rowClick", function (e, row) {
+        activeTargetRow = row;
+        if (latestScaleWeight > 0) {
+            row.update({ berat: latestScaleWeight });
+        }
+    });
+
+    dtList.on("cellClick", function (e, cell) {
+        let row = cell.getRow();
+        activeTargetRow = row;
+        if (cell.getField() === 'berat' && latestScaleWeight > 0) {
+            row.update({ berat: latestScaleWeight });
+        }
+    });
+}
+
+$(document).on('click', '#btn-read-scale-prod', function () {
+    if (!isScaleAutoReading) {
+        startContinuousScaleStream();
+    } else {
+        if (latestScaleWeight > 0) {
+            applyAutoWeightToActiveTarget(latestScaleWeight);
+            Swal.fire({
+                icon: 'success',
+                title: 'Berat Terisi!',
+                text: `Berat dari YH-T3: ${latestScaleWeight} Kg`,
+                timer: 1200,
+                showConfirmButton: false
+            });
+        }
     }
 });

@@ -37,7 +37,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                           uk.price, uk.keterangan, hbx.pack_name, uk.pack_id,wo.kode_walkorder,wo.id as id_wo");
 
         if (!empty($params['id_header'])) {
-            $builder->where('uk.id_header', $params['id_header']);
+            $builder->where('uk.id_header', (string)$params['id_header']);
         }
         // if (!empty($params['id_gudang'])) {
         //     $builder->where('gbx.id_gudang', $params['id_gudang']);
@@ -182,7 +182,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->tblDetailSO . " abx");
 
-        $builder->select("abx.id, abx.print_type, trfhead.id as id_header, abx.qty, abx.tipe, abx.ref_detail_id, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
+        $builder->select("abx.id, abx.print_type, COALESCE(abx.is_reject, 0) as is_reject, trfhead.id as id_header, abx.qty, abx.berat, abx.tipe, abx.ref_detail_id, abx.qty as qty_kirim, abx.kode_sales_order, abx.id_konsumen, abx.style, abx.kode_sales_order, abx.deskripsi, 
                           abx.color,abx.amount,cbx.nama as buyer, abx.kode_ukuran, abx.total_scanned, abx.keterangan, rk.key_ukuran, trfhead.id_proses,
                           (
                             CASE 
@@ -238,7 +238,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                     ) AS qty_sisa");
         $builder->join("ref_konsumen cbx", "abx.id_konsumen = cbx.id", "inner");
         $builder->join("ref_ukuran rk", "abx.kode_ukuran = rk.kode_ukuran", "left");
-        $builder->join("trans_barang_trf_header trfhead", "abx.id_header = trfhead.id", "left");
+        $builder->join("trans_barang_trf_header trfhead", "CAST(abx.id_header AS INTEGER) = trfhead.id", "left");
         $builder->join("trans_sample_det tsd", "tsd.id = abx.ref_detail_id and abx.tipe = 1", "left");
         $builder->join("ref_warna rwtsd1", "rwtsd1.id = tsd.id_warna_1 and abx.tipe = 1", "left");
         $builder->join("ref_warna rwtsd2", "rwtsd2.id = tsd.id_warna_2 and abx.tipe = 1", "left");
@@ -265,7 +265,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         $builder->select("($subQuery) AS harga");
 
-        $builder->where("abx.id_header", $idHeader);
+        $builder->where("abx.id_header", (string)$idHeader);
         // $builder->where("trfhead.status", 1);
         $this->_data = $builder->get()->getResult();
 
@@ -356,8 +356,10 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             SELECT 
                 abx.id,
                 abx.print_type,
+                COALESCE(abx.is_reject, 0) AS is_reject,
                 trfhead.id AS id_header,
                 abx.qty,
+                abx.berat,
                 abx.tipe,
                 abx.ref_detail_id,
                 abx.qty AS qty_kirim,
@@ -369,7 +371,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 cbx.nama AS buyer,
                 abx.kode_ukuran,
                 abx.keterangan,
-                rk.key_ukuran,
+                COALESCE(rk.key_ukuran, LOWER(REGEXP_REPLACE(abx.kode_ukuran, '[^a-zA-Z0-9]', '', 'g'))) AS key_ukuran,
                 trfhead.id_proses,
                 CASE 
                     WHEN abx.tipe = 1 THEN wtsd.deskripsi
@@ -427,6 +429,193 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
 
         return $this->_data;
+    }
+
+    /**
+     * Ambil detail barang transfer (trans_barang_trf_detail) langsung berdasarkan
+     * No. WO (kode_walkorder), tanpa terikat ke satu transaksi Transfer/No. Transfer
+     * tertentu. Merangkum dari SEMUA transaksi transfer yang detailnya mereferensikan
+     * No. WO tsb, digabung (grouped) per barang + lot + pack supaya tidak duplikat.
+     *
+     * - qty_terima (tampil sbg "Qty Kirim") = total qty transfer yang GUDANG ASAL/
+     *                             pengirim-nya = $idGudang (barang yang dikirim KELUAR
+     *                             dari gudang ini lewat WO tsb)
+     * - qty_retur               = total qty transfer yang GUDANG TUJUAN/penerima-nya =
+     *                             $idGudang (barang yang diterima gudang ini lewat WO tsb)
+     * - qty_pemakaian_sebelumnya = total qty yang sudah terpakai di transaksi Barang Keluar
+     *                             LAIN (draft maupun approved) untuk WO & gudang yang sama.
+     *                             $excludeHeaderId dipakai supaya transaksi yang sedang
+     *                             dibuka/diedit tidak ikut mengurangi saldo dirinya sendiri.
+     * - qty_sisa                = qty_terima - qty_retur - qty_pemakaian_sebelumnya
+     *                             (saldo bersih yang tersedia SEBELUM dialokasikan ke
+     *                             transaksi Barang Keluar yang sedang dibuat/diedit ini)
+     */
+    function getDataByWalkorder($noWO, $idGudang = null, $excludeHeaderId = null)
+    {
+        $idGudang = (int) $idGudang;
+
+        $builder = $this->db->table($this->table . " abx");
+
+        $builder->select("
+            abx.id_barang,
+            abx.lot_id,
+            abx.lot_no,
+            abx.pack_id,
+            abx.kode_walkorder,
+            cbx.kode_barang,
+            cbx.nama_barang,
+            sbx.nama_satuan as nama_unit,
+            hbx.pack_name,
+            -- Smart Price Resolution:
+            -- 1. Prioritaskan harga beli PO asli (trans_receive_detail) berdasarkan id_barang + lot_no
+            -- 2. Jika tidak ada, ambil harga dari riwayat stok (trans_barang_history)
+            -- 3. Jika tidak ada, ambil harga transfer terbaru (abx.price)
+            -- 4. Fallback terakhir ke harga master barang (cbx.harga_satuan)
+            COALESCE(
+                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND trd.lot_no = abx.lot_no AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
+                (SELECT tbh.price FROM trans_barang_history tbh WHERE tbh.id_barang = abx.id_barang AND tbh.lot_no = abx.lot_no AND tbh.price > 0 ORDER BY (tbh.year * 100 + tbh.month) DESC LIMIT 1),
+                (ARRAY_AGG(abx.price ORDER BY abx.id DESC) FILTER (WHERE abx.price > 0))[1],
+                cbx.harga_satuan,
+                0
+            ) as price,
+            SUM(CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN abx.qty ELSE 0 END) as qty_terima,
+            SUM(CASE WHEN trfhead.id_gudang_asal = {$idGudang} THEN abx.qty ELSE 0 END) as qty_retur
+        ", false);
+        $builder->join("ref_barang cbx", "abx.id_barang = cbx.id", "inner");
+        $builder->join("ref_satuan sbx", "cbx.id_satuan = sbx.id", "inner");
+        $builder->join("ref_pack hbx", "abx.pack_id = hbx.id", "left");
+        $builder->join(
+            "trans_barang_trf_header trfhead",
+            "CAST(abx.id_header AS INTEGER) = trfhead.id",
+            "left"
+        );
+        $builder->where("abx.kode_walkorder", $noWO);
+        $builder->where("abx.active", 1);
+        $builder->where("trfhead.status", 1);
+        $builder->where("trfhead.deleted_at IS NULL");
+        $builder->groupBy("abx.id_barang, abx.lot_id, abx.lot_no, abx.pack_id, abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, hbx.pack_name, cbx.harga_satuan");
+        $builder->orderBy("cbx.kode_barang", "ASC");
+
+        $results = $builder->get()->getResult();
+
+        if (empty($results)) {
+            return $results;
+        }
+
+        // Qty yang sudah terpakai di transaksi Barang Keluar LAIN (jenis_transaksi = 2)
+        // untuk No. WO & Warehouse yang sama, per barang + lot + pack.
+        $builderUsed = $this->db->table("trans_barang_detail tbd");
+        $builderUsed->select("tbd.id_barang, tbd.lot_id, tbd.pack_id, SUM(tbd.qty) as qty_pemakaian_sebelumnya");
+        $builderUsed->join(
+            "trans_barang_header tbh",
+            "CAST(tbd.id_header AS INTEGER) = tbh.id",
+            "inner"
+        );
+        $builderUsed->where("tbh.no_ref_wo", $noWO);
+        $builderUsed->where("tbh.jenis_transaksi", 2);
+        $builderUsed->where("tbh.active", 1);
+        $builderUsed->where("tbh.status", 1);
+        $builderUsed->where("tbh.id_gudang", $idGudang);
+        if (!empty($excludeHeaderId)) {
+            $builderUsed->where("tbh.id !=", (int) $excludeHeaderId);
+        }
+        $builderUsed->groupBy("tbd.id_barang, tbd.lot_id, tbd.pack_id");
+
+        $usedRows = $builderUsed->get()->getResult();
+
+        $usedMap = [];
+        foreach ($usedRows as $u) {
+            $key = $u->id_barang . '|' . $u->lot_id . '|' . $u->pack_id;
+            $usedMap[$key] = round((float) $u->qty_pemakaian_sebelumnya, 2);
+        }
+
+        foreach ($results as $row) {
+            $row->qty_terima = round((float) $row->qty_terima, 2);
+            $row->qty_retur = round((float) $row->qty_retur, 2);
+
+            $key = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
+            $row->qty_pemakaian_sebelumnya = $usedMap[$key] ?? 0;
+
+            $calcSisa = round($row->qty_terima - $row->qty_retur - $row->qty_pemakaian_sebelumnya, 2);
+            $row->qty_sisa = max(0, $calcSisa);
+            $row->qty = 0;
+            $row->qty_exist = $row->qty_sisa;
+        }
+
+        $this->_data = $results;
+
+        return $this->_data;
+    }
+
+    /**
+     * Sisa Berat BTM (Kg) untuk No. WO tsb:
+     * Total Berat (Kg) hasil kain di Barang Masuk (trans_barang_masuk_produksi)
+     * dikurangi total pemakaian barang (BTK) yang sudah pernah tercatat/approved sebelumnya,
+     * ditambah total retur pengembalian benang dari transfer untuk No. WO tsb.
+     * Rumus: (Total BTM Masuk - Total BTK Approved Sebelumnya + Total Retur)
+     */
+    function getTotalBeratByWalkorder($noWO, $idGudang = null, $excludeHeaderId = null)
+    {
+        if (empty($noWO)) {
+            return 0;
+        }
+
+        $sqlBtm = "
+            SELECT SUM(tbmp.berat) AS total_berat
+            FROM trans_barang_masuk_produksi tbmp
+            INNER JOIN trans_walkorder tw
+                ON tw.ref_id = tbmp.id_ref
+               AND tw.tipe_id = CASE WHEN LEFT(tbmp.kode_sales_order, 3) = 'SPL' THEN 1 ELSE 2 END
+            WHERE tw.kode_walkorder = :noWO:
+        ";
+
+        $rowBtm = $this->db->query($sqlBtm, ['noWO' => $noWO])->getRow();
+        $totalBtm = !empty($rowBtm) && !empty($rowBtm->total_berat) ? (float) $rowBtm->total_berat : 0;
+
+        // Total BTK sebelumnya untuk No. WO ini
+        $builderUsed = $this->db->table("trans_barang_detail tbd");
+        $builderUsed->select("SUM(tbd.qty) as total_btk");
+        $builderUsed->join(
+            "trans_barang_header tbh",
+            "CAST(tbd.id_header AS INTEGER) = tbh.id",
+            "inner"
+        );
+        $builderUsed->where("tbh.no_ref_wo", $noWO);
+        $builderUsed->where("tbh.jenis_transaksi", 2);
+        $builderUsed->where("tbh.active", 1);
+        $builderUsed->where("tbh.status", 1);
+        if (!empty($idGudang)) {
+            $builderUsed->where("tbh.id_gudang", (int) $idGudang);
+        }
+        if (!empty($excludeHeaderId)) {
+            $builderUsed->where("tbh.id !=", (int) $excludeHeaderId);
+        }
+
+        $rowUsed = $builderUsed->get()->getRow();
+        $totalUsed = !empty($rowUsed) && !empty($rowUsed->total_btk) ? (float) $rowUsed->total_btk : 0;
+
+        // Total Retur transfer untuk No. WO ini (gudang asal = gudang pengerjaan saat ini)
+        $totalRetur = 0;
+        if (!empty($idGudang)) {
+            $builderRetur = $this->db->table("trans_barang_trf_detail abx");
+            $builderRetur->select("SUM(abx.qty) as total_retur");
+            $builderRetur->join(
+                "trans_barang_trf_header trfhead",
+                "CAST(abx.id_header AS INTEGER) = trfhead.id",
+                "left"
+            );
+            $builderRetur->where("abx.kode_walkorder", $noWO);
+            $builderRetur->where("abx.active", 1);
+            $builderRetur->where("trfhead.status", 1);
+            $builderRetur->where("trfhead.deleted_at IS NULL");
+            $builderRetur->where("trfhead.id_gudang_asal", (int) $idGudang);
+            $rowRetur = $builderRetur->get()->getRow();
+            $totalRetur = !empty($rowRetur) && !empty($rowRetur->total_retur) ? (float) $rowRetur->total_retur : 0;
+        }
+
+        $sisaBtm = round($totalBtm - $totalUsed + $totalRetur, 2);
+
+        return max(0, $sisaBtm);
     }
 
     function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)

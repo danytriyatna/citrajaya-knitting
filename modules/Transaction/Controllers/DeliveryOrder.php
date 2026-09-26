@@ -445,6 +445,9 @@ class DeliveryOrder extends BaseController
       return FALSE;
     } else {
       $this->db->transCommit();
+      if (!empty($dtWalkorder) && $dtWalkorder->tipe_id == 2) {
+        $this->mSalesOrder->evaluateAndSyncClosedStatus($dtWalkorder->ref_id);
+      }
       return TRUE;
     }
   }
@@ -458,7 +461,24 @@ class DeliveryOrder extends BaseController
 
     $this->db->transBegin();
 
+    // Dokumen yang sudah berstatus "kirim" (status=2) tidak boleh lagi mengubah
+    // tgl_transaksi - kalau tidak dikunci, tgl_transaksi di header trans_delivery
+    // bisa menyimpang dari tanggal yang tercatat di trans_barang (lihat kasus
+    // TRF260600171 di modul Item Transfer, pola bug yang sama).
+    $getCurrentDelivery = $this->mDelivery->getData($id);
+    if (!empty($getCurrentDelivery) && $getCurrentDelivery->status == 2) {
+      $dataIn['tgl_transaksi'] = $getCurrentDelivery->tgl_transaksi;
+    }
+
     $this->mDelivery->updateRecord($this->mDelivery->table, $dataIn, 'id', $id);
+
+    // kode_transaksi utk baris trans_barang harus memakai delivery_kode yang
+    // sudah tetap sejak dokumen dibuat (bukan generateKodePersediaan() yang
+    // sebelumnya dipanggil di setiap item / setiap kali disimpan ulang - itu
+    // membuat kode baru yang berbeda tiap kali, sehingga baris trans_barang lama
+    // tidak pernah terhapus & terus menumpuk duplikat setiap dokumen diedit).
+    $kodeTransaksiDO = !empty($getCurrentDelivery) ? $getCurrentDelivery->delivery_kode : null;
+    $sudahHapusTransBarang = false;
 
     $qty = 0;
     $id_walkorder = $dataIn['id_walkorder'];
@@ -502,7 +522,40 @@ class DeliveryOrder extends BaseController
         $qty = $qty + $item['qty'];
 
         if ($dataIn['status'] == 2) {
-          // input output barang 
+          // input output barang
+
+          // Hapus dulu baris trans_barang lama utk dokumen DO ini (sekali saja per
+          // update(), bukan per item) sebelum insert ulang - supaya edit berulang
+          // pada DO yang sama tidak menumpuk baris ledger duplikat.
+          if (!$sudahHapusTransBarang && !empty($kodeTransaksiDO)) {
+            // CATATAN (2026-08-08): sebelum baris trans_barang lama dihapus,
+            // qty yang PERNAH dikurangi dari trans_lots utk dokumen DO ini
+            // (kalau dokumen ini sudah pernah di-"Kirim" sebelumnya lalu
+            // diedit/disimpan ulang) harus dikembalikan dulu - baris
+            // trans_barang lama adalah catatan persis berapa & dari lot mana
+            // yang sudah dikurangi. Tanpa ini, trans_lots.qty akan terus
+            // berkurang dobel setiap kali dokumen yang sama disimpan ulang
+            // (beda dari trans_barang yang aman krn dihapus-lalu-insert-ulang
+            // penuh, trans_lots cuma counter yang dikurangi terus tanpa
+            // pernah "dibatalkan" dulu).
+            $oldTransBarangDO = $this->db->table('trans_barang')
+              ->select('id_barang, lot_id, SUM(jumlah) as jumlah')
+              ->where('kode_transaksi', $kodeTransaksiDO)
+              ->groupBy('id_barang, lot_id')
+              ->get()->getResult();
+
+            foreach ($oldTransBarangDO as $otb) {
+              if (!empty($otb->lot_id)) {
+                $this->db->table('trans_lots')
+                  ->where('id', $otb->lot_id)
+                  ->set('qty', 'qty + ' . (float) $otb->jumlah, false)
+                  ->update();
+              }
+            }
+
+            $this->db->table('trans_barang')->where('kode_transaksi', $kodeTransaksiDO)->delete();
+            $sudahHapusTransBarang = true;
+          }
 
           $dtWo = $this->mWalkorder->getData($dataIn['id_walkorder']);
 
@@ -543,7 +596,7 @@ class DeliveryOrder extends BaseController
               "tipe" => 1,
               "created_at" =>  date("Y-m-d H:i:s"),
               "lot_id" => $idLots,
-              "kode_transaksi" => $this->mBarangKeluar->generateKodePersediaan(),
+              "kode_transaksi" => $kodeTransaksiDO,
             ];
             $this->mBarangKeluar->insertRecordGetid('trans_barang', $dataBarang);
             $arrStockBalances = [
@@ -557,7 +610,12 @@ class DeliveryOrder extends BaseController
               "created_at" =>  date("Y-m-d H:i:s"),
             ];
             if (!empty($resData)) {
-              $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData->qty : 0;
+              // FIX (2026-08-08): sebelumnya pakai variabel $rowData yang
+              // tidak pernah didefinisikan di sini (salah ketik, seharusnya
+              // $resData - hasil getLastStokBarangBalances() di atas), jadi
+              // $stock selalu terhitung 0 setiap kali dokumen DO yang sudah
+              // ada balance-nya diedit ulang.
+              $stock = !empty($resData->saldo_akhir) ? $resData->saldo_akhir - $item['qty'] : 0;
               $this->mBarangKeluar->updateRecords('trans_barang_balances', array("saldo_akhir" => $stock), array("id" => $resData->id));
             } else {
               $this->mBarangKeluar->insertRecordGetid('trans_barang_balances', $arrStockBalances);
@@ -623,6 +681,9 @@ class DeliveryOrder extends BaseController
       return FALSE;
     } else {
       $this->db->transCommit();
+      if (!empty($dtWalkorder) && $dtWalkorder->tipe_id == 2) {
+        $this->mSalesOrder->evaluateAndSyncClosedStatus($dtWalkorder->ref_id);
+      }
       return TRUE;
     }
   }
@@ -639,6 +700,7 @@ class DeliveryOrder extends BaseController
     
     $params = [];
     $params['id_konsumen'] = $id_konsumen;
+    $params['only_active_wo'] = 1;
 
     $results = $this->mProduksi->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mProduksi->getDataCnt($filters, $params);

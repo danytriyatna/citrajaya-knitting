@@ -25,6 +25,7 @@ let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
 let btnAdd = $('#btn-add');
 let btnSimpan = $('#btn-simpan');
 let btnApprove = $('#btn-approve');
+let btnCancelApprove = $('#btn-cancel-approve');
 let btnSimpanDetail = $('#btn-simpan-det');
 let btnView = $('#ic_ref_transfer');
 let inpNoRefTrf = $('#no_ref_transfer');
@@ -35,13 +36,76 @@ let inpIdHeader = $('#id_header');
 let inpIdDetail = $('#idDetail');
 const inpRole = $('#role_id');
 
-const divDetail = $(".div_detail");
+const divDetail = $(".div_detail, .div_details");
 const divRefProduk = $(".div_produksi");
 
+// Backup semua opsi gudang asli saat inisialisasi
+const allGudangOptions = [];
+selectGudang.find('option').each(function () {
+    const val = $(this).val();
+    if (val !== "" && val !== null && val !== undefined) {
+        allGudangOptions.push({
+            id: val,
+            text: $(this).text().trim(),
+            id_perusahaan: $(this).attr('data-perusahaan') || '',
+            selected: $(this).is(':selected')
+        });
+    }
+});
+
+function updateGudangByPerusahaan(idPerusahaan, setDefault = false) {
+    if (!selectGudang.length || allGudangOptions.length === 0) return;
+
+    const currentVal = selectGudang.val();
+    const isEdit = (inpIdHeader.val() && inpIdHeader.val().length > 0);
+
+    selectGudang.empty();
+    selectGudang.append('<option value="" disabled>-- Pilih Warehouse --</option>');
+
+    let defaultGudangId = null;
+    if (idPerusahaan == 2) {
+        // Citra Knitt -> default CITRA KNITT (ID 60)
+        defaultGudangId = "60";
+    } else if (idPerusahaan == 1) {
+        // PT CJK -> default Gudang Utama (ID 1)
+        defaultGudangId = "1";
+    }
+
+    let hasMatchCurrent = false;
+
+    allGudangOptions.forEach(opt => {
+        const isMatch = (!idPerusahaan || opt.id_perusahaan === "" || opt.id_perusahaan == idPerusahaan);
+        if (isMatch) {
+            const isSel = (!setDefault && opt.id == currentVal);
+            if (isSel) hasMatchCurrent = true;
+            selectGudang.append(new Option(opt.text, opt.id, false, isSel));
+        }
+    });
+
+    if (setDefault || (!hasMatchCurrent && !isEdit)) {
+        if (defaultGudangId && selectGudang.find(`option[value="${defaultGudangId}"]`).length > 0) {
+            selectGudang.val(defaultGudangId).trigger('change');
+        } else {
+            const firstValid = selectGudang.find('option:not([disabled])').first().val();
+            if (firstValid) {
+                selectGudang.val(firstValid).trigger('change');
+            }
+        }
+    } else {
+        selectGudang.trigger('change');
+    }
+}
+
 if (inpIdHeader.val().length == 0) {
-    selectGudang.val("").trigger("change")
-    selectKategori.val("").trigger("change")
-    selectPerusahaan.val("").trigger("change")
+    selectKategori.val("").trigger("change");
+    if (selectPerusahaan.val()) {
+        updateGudangByPerusahaan(selectPerusahaan.val(), true);
+    } else {
+        selectGudang.val("").trigger("change");
+        selectPerusahaan.val("").trigger("change");
+    }
+} else {
+    updateGudangByPerusahaan(selectPerusahaan.val(), false);
 }
 
 
@@ -49,21 +113,61 @@ if (inpIdHeader.val().length == 0) {
 setTimeout(() => {
     if (selectKategori.val() == 3) {
         divNamaKonsumen.removeClass("d-none")
-    } else if (selectKategori.val() == 12 || selectKategori.val() == 1) {
+    } else if (selectKategori.val() == 12 || selectKategori.val() == 1 || selectKategori.val() == 15) {
         dtList.hideColumn('amount');
-        divDetail.hide();
         divRefProduk.show();
+        try {
+            let parsedDet = (typeof detailData === 'string') ? JSON.parse(detailData || '[]') : (detailData || []);
+            if (Array.isArray(parsedDet) && parsedDet.length > 0) {
+                divDetail.show();
+            } else {
+                divDetail.hide();
+            }
+        } catch (e) {
+            divDetail.hide();
+        }
+        setTimeout(() => {
+            if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                dtListProduksi.redraw(true);
+            }
+        }, 300);
+    }
+    if (inpNoRefTrf.val() && inpNoRefTrf.val().length > 0) {
+        selectProses.prop('disabled', true);
+        selectOperator.prop('disabled', true);
     }
 }, 500);
 
-if (inpStatus.val() == 0) {
-    btnAdd.show()
-    btnSimpan.show()
-    btnApprove.show()
+inpNoRefTrf.on('input change', function () {
+    if (!$(this).val() || $(this).val().trim() === '') {
+        selectProses.prop('disabled', false);
+        selectOperator.prop('disabled', false);
+    } else {
+        selectProses.prop('disabled', true);
+        selectOperator.prop('disabled', true);
+    }
+});
+
+const statusVal = inpStatus.val();
+const isApproved = (statusVal == 1 || statusVal == "1");
+
+if (!isApproved) {
+    btnAdd.show();
+    btnSimpan.show();
+    btnApprove.show();
+    btnCancelApprove.hide();
 } else {
-    btnAdd.hide()
-    btnSimpan.hide()
-    btnApprove.hide()
+    btnAdd.hide();
+    btnSimpan.hide();
+    btnApprove.hide();
+    
+    const roleId = parseInt(inpRole.val());
+    const isAllowedCancelRole = [1, 2, 4, 5].includes(roleId);
+    if (inpIdHeader.val().length > 0 && isAllowedCancelRole) {
+        btnCancelApprove.show().removeClass("d-none").removeAttr("hidden");
+    } else {
+        btnCancelApprove.hide();
+    }
 }
 // const regex = /^[0-9]+(\.[0-9]+)?$/; // Hanya angka dan desimal
 const regex = /^[0-9.,]+$/;
@@ -336,6 +440,8 @@ let dtListSO = new Tabulator("#dt-list-sample", {
         params.length = params.size;
         params.isApprove = true;
         params.kategori = selectKategori.val();
+        params.id_perusahaan = selectPerusahaan.val();
+        params.id_gudang = selectGudang.val();
     },
     ajaxResponse: function (url, params, response) {
         let pageSize = dtListSO.getPageSize();
@@ -460,38 +566,54 @@ dtListSO.on("rowClick", function (e, row) {
 
     }
 
-    inpNoRefTrf.val(xdata.kode_transaksi)
-    inpIdRefTrf.val(xdata.id)
-    // inpProses.val(xdata.proses);
-    // inpIdproses.val(xdata.id_proses);
+    inpNoRefTrf.val(xdata.kode_transaksi);
+    inpIdRefTrf.val(xdata.id);
 
-    // inpOperator.val(xdata.nama_operator);
-    // inpIdCmt.val(xdata.id_cmt);
-    selectProses.val(xdata.id_proses).trigger('change');
-    selectOperator.val(xdata.id_cmt).trigger('change');
+    // Sinkronkan dan pilih Proses
+    if (xdata.id_proses) {
+        if (selectProses.find(`option[value="${xdata.id_proses}"]`).length === 0 && xdata.proses) {
+            selectProses.append(new Option(xdata.proses, xdata.id_proses, true, true));
+        }
+        selectProses.val(xdata.id_proses).trigger('change.select2');
+    }
 
-    setTimeout(() => {
-        loadDataSo();
-    }, 500);
+    // Sinkronkan dan pilih CMT
+    if (xdata.id_cmt) {
+        if (selectOperator.find(`option[value="${xdata.id_cmt}"]`).length === 0 && xdata.nama_operator) {
+            selectOperator.append(new Option(xdata.nama_operator, xdata.id_cmt, true, true));
+        }
+        selectOperator.val(xdata.id_cmt).trigger('change.select2');
+    }
 
+    // Lock Proses dan CMT agar tidak bisa dirubah saat menggunakan No. Transfer
+    selectProses.prop('disabled', true);
+    selectOperator.prop('disabled', true);
+
+    loadDataSo();
 
     $("#modal-so").modal("hide");
 })
 
 
 // load data som
-function loadDataSo() {
+function loadDataSo(callback = null) {
     const kode_transaksi = inpNoRefTrf.val();
     let url_dis = null;
     if (kode_transaksi != null && kode_transaksi != undefined && kode_transaksi != "") {
-        url_dis = `/trans/item-transfer/data-so?noSO=${kode_transaksi}`;
-
+        url_dis = `/trans/item-transfer/data-so?noSO=${encodeURIComponent(kode_transaksi)}`;
     }
     else if (selectProses.val() != null && selectOperator.val() != null) {
+        let idPrsh = selectPerusahaan.val();
+        const whPrsh = selectGudang.find('option:selected').attr('data-perusahaan');
+        if (whPrsh) {
+            idPrsh = whPrsh;
+        } else if (!idPrsh && isPerusahaanCitraKnitt()) {
+            idPrsh = 2;
+        }
         const params = new URLSearchParams({
             id_proses: selectProses.val(),
             id_cmt: selectOperator.val(),
-            id_perusahaan: selectPerusahaan.val(),
+            id_perusahaan: idPrsh || '',
         });
         url_dis = `/trans/item-transfer/data-so?${params.toString()}`;
     }
@@ -505,51 +627,199 @@ function loadDataSo() {
             success: function (data) {
 
                 if (data.status) {
-                    if (selectKategori.val() != 12 && selectKategori.val() != 1) {
+                    const isProduksi = (selectKategori.val() == 12 || selectKategori.val() == 1 || selectKategori.val() == 15);
+                    const hasSO = (data.dataSO && data.dataSO.length > 0);
+                    const hasSODet = (data.dataSODet && data.dataSODet.length > 0);
+                    const isTrfDoc = (inpNoRefTrf.val() && inpNoRefTrf.val().length > 0);
+
+                    if (isProduksi) {
+                        if (isTrfDoc) {
+                            // Skenario dokumen transfer dipilih:
+                            refData = data.dataSO || [];
+                            xrefData = data.dataSO || [];
+
+                            // 1. Jika membawa data SPK Produksi, tampilkan dan langsung isi tabel produksi
+                            if (hasSO) {
+                                divRefProduk.show();
+                                const now = new Date();
+                                const yyyy = now.getFullYear();
+                                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                                const dd = String(now.getDate()).padStart(2, '0');
+                                const defaultDate = `${yyyy}-${mm}-${dd}`;
+
+                                const idProses = selectProses.val();
+                                const idCmt = selectOperator.val();
+
+                                const soData = (data.dataSO || []).map(item => {
+                                    const q = (item.qty !== undefined && item.qty !== null && item.qty !== '') ? parseFloat(item.qty) : (parseFloat(item.qty_sisa) || 0);
+                                    const h = parseFloat(item.harga) || 0;
+                                    item.qty = q;
+                                    item.harga = h;
+                                    item.amount = (q > 0 && h > 0) ? (q * h) : (parseFloat(item.amount) || 0);
+                                    if (!item.tgl_transaksi || item.tgl_transaksi === '') {
+                                        item.tgl_transaksi = defaultDate;
+                                    }
+                                    return item;
+                                });
+                                dtListProduksi.setData(soData);
+                                setTimeout(() => {
+                                    if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                                        dtListProduksi.redraw(true);
+                                    }
+                                }, 200);
+
+                                if (isPerusahaanCitraKnitt() && idProses && idCmt) {
+                                    const pricePromises = soData.map(item => {
+                                        if ((!item.harga || parseFloat(item.harga) === 0) && item.style) {
+                                            return $.ajax({
+                                                url: baseUrl + '/trans/incoming-goods/last-price',
+                                                type: 'GET',
+                                                data: {
+                                                    id_proses: idProses,
+                                                    id_cmt: idCmt,
+                                                    style: item.style,
+                                                    id_perusahaan: selectPerusahaan.val()
+                                                }
+                                            }).then(res => {
+                                                if (res && res.status && parseFloat(res.harga) > 0) {
+                                                    item.harga = parseFloat(res.harga);
+                                                    item.amount = (parseFloat(item.qty) || 0) * item.harga;
+                                                }
+                                                return item;
+                                            }).catch(() => item);
+                                        }
+                                        return Promise.resolve(item);
+                                    });
+
+                                    Promise.all(pricePromises).then(updatedSoData => {
+                                        dtListProduksi.setData(updatedSoData);
+                                        setTimeout(() => {
+                                            if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                                                dtListProduksi.redraw(true);
+                                            }
+                                        }, 200);
+                                    });
+                                }
+                            } else {
+                                divRefProduk.hide();
+                                dtListProduksi.setData([]);
+                            }
+
+                            // 2. Jika membawa detail benang/bahan baku, tampilkan dan isi tabel benang
+                            if (hasSODet) {
+                                divDetail.show();
+                                btnAdd.show();
+                                if (typeof dtListDetail !== 'undefined' && dtListDetail) {
+                                    dtListDetail.setData(data.dataSODet);
+                                }
+                            } else {
+                                divDetail.hide();
+                                btnAdd.hide();
+                                if (typeof dtListDetail !== 'undefined' && dtListDetail) {
+                                    dtListDetail.setData([]);
+                                }
+                            }
+                        } else {
+                            // Skenario input manual Hasil Produksi (tanpa no transfer):
+                            divDetail.hide();
+                            divRefProduk.show();
+                            btnAdd.hide();
+                            refData = data.dataSO || [];
+                            xrefData = data.dataSO || [];
+                            if (typeof dtListDetail !== 'undefined' && dtListDetail) {
+                                dtListDetail.setData([]);
+                            }
+                        }
+                    } else {
+                        divDetail.show();
+                        divRefProduk.hide();
+                        btnAdd.show();
                         refData = [];
                         xrefData = [];
-                        dtList.setData(data.dataSO);
-                        dtListProduksi.setData(data.dataSO);
-                    } else {
-                        refData = data.dataSO
-                        xrefData = data.dataSO;
+                        dtList.setData(data.dataSO || []);
+                        dtListProduksi.setData(data.dataSO || []);
+
+                        // Jika transfer non-produksi membawa detail barang/benang (dataSODet), masukkan ke dtListDetail
+                        if (hasSODet && typeof dtListDetail !== 'undefined') {
+                            dtListDetail.setData(data.dataSODet);
+                        } else if (typeof dtListDetail !== 'undefined') {
+                            dtListDetail.setData([]);
+                        }
                     }
                 }
                 $(".preloader").hide().css("opacity", "1");
+                if (typeof callback === 'function') {
+                    callback();
+                }
             },
             error: function (xhr, status, error) {
                 $(".preloader").hide().css("opacity", "1");
                 console.error('Error fetching data:', error);
+                if (typeof callback === 'function') {
+                    callback();
+                }
             }
         });
+    } else {
+        if (typeof callback === 'function') {
+            callback();
+        }
     }
 }
 
 selectProses.on('change', function () {
-    if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
-        loadDataSo();
-    }
-    else {
-        refData = [];
+    if (!inpNoRefTrf.val()) {
+        if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
+            loadDataSo();
+        }
+        else {
+            refData = [];
+        }
     }
 });
 
 selectOperator.on('change', function () {
-    if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
-        loadDataSo();
+    if (!inpNoRefTrf.val()) {
+        if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
+            loadDataSo();
+        }
+        else {
+            refData = [];
+        }
     }
-    else {
-        refData = [];
+});
+
+selectPerusahaan.on('change', function () {
+    const idPrsh = $(this).val();
+    updateGudangByPerusahaan(idPrsh, inpIdHeader.val().length === 0);
+
+    if (typeof dtListSO !== 'undefined' && dtListSO) {
+        dtListSO.setData();
+    }
+
+    if (!inpNoRefTrf.val()) {
+        if ((selectOperator.val() != null && selectOperator.val() != undefined && selectOperator.val() != "") && (selectProses.val() != null && selectProses.val() != undefined && selectProses.val() != "")) {
+            loadDataSo();
+        }
+        else {
+            refData = [];
+        }
     }
 });
 
 setTimeout(() => {
-    if (selectKategori.val() == 12 || selectKategori.val() == 1) {
-        loadDataSo();
+    if (selectKategori.val() == 12 || selectKategori.val() == 1 || selectKategori.val() == 15) {
+        if (selectProses.val() && selectOperator.val()) {
+            loadDataSo();
+        } else if (!inpIdHeader.val() || inpIdHeader.val().length === 0) {
+            loadDataSo();
+        }
     }
     else {
-        selectProses.val(null).trigger('change');
-        selectOperator.val(null).trigger('change');
+        if (!inpIdHeader.val() || inpIdHeader.val().length === 0) {
+            selectProses.val(null).trigger('change');
+            selectOperator.val(null).trigger('change');
+        }
     }
 }, 500);
 
@@ -658,33 +928,46 @@ if (detailData.length > 0) {
 }
 
 
+// Hitung lebar minimum kolom otomatis berdasarkan teks judul kolom (header title)
+// Memastikan teks judul + icon sort + padding tidak terpotong (truncated)
+function calcHeaderTitleMinWidth(titleText, hasSort = true, extraBuffer = 26) {
+    if (!titleText || titleText === '#') return 45;
+    const cleanText = titleText.replace(/<[^>]*>/g, ' ').trim();
+    let textWidth = 0;
+    try {
+        const canvas = calcHeaderTitleMinWidth.canvas || (calcHeaderTitleMinWidth.canvas = document.createElement("canvas"));
+        const ctx = canvas.getContext("2d");
+        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        textWidth = Math.ceil(ctx.measureText(cleanText).width);
+    } catch (e) {
+        textWidth = cleanText.length * 8.5;
+    }
+    const sortWidth = hasSort ? 25 : 0;
+    return Math.max(textWidth + sortWidth + extraBuffer, 75);
+}
+
 let dtList = new Tabulator("#dt-list-so", {
+    layout: "fitDataFill",
     pagination: true,
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        { title: "ID", field: "id_konsumen", width: "20%", visible: false },
-        { title: "No.SO", field: "kode_sales_order", width: "20%" },
-        { title: "Style", field: "style", width: "20%" },
-        { title: "Deskripsi", field: "deskripsi", width: "20%" },
-        { title: "Buyer", field: "buyer", width: "20%" },
-        { title: "Colour", field: "color", width: "20%" },
-        { title: "Qty", field: "qty", width: "20%" },
-        { title: "Ukuran", field: "kode_ukuran", width: "20%" },
+        { title: "ID", field: "id_konsumen", visible: false },
+        { title: "No.SO", field: "kode_sales_order", minWidth: Math.max(calcHeaderTitleMinWidth("No.SO"), 125) },
+        { title: "Style", field: "style", minWidth: Math.max(calcHeaderTitleMinWidth("Style"), 100) },
+        { title: "Deskripsi", field: "deskripsi", minWidth: Math.max(calcHeaderTitleMinWidth("Deskripsi"), 130) },
+        { title: "Buyer", field: "buyer", minWidth: Math.max(calcHeaderTitleMinWidth("Buyer"), 110) },
+        { title: "Colour", field: "color", minWidth: Math.max(calcHeaderTitleMinWidth("Colour"), 180) },
+        { title: "Qty", field: "qty", minWidth: Math.max(calcHeaderTitleMinWidth("Qty"), 90) },
+        { title: "Ukuran", field: "kode_ukuran", minWidth: Math.max(calcHeaderTitleMinWidth("Ukuran"), 85) },
         {
-            title: "Amount", field: "amount", width: "20%", formatter: "money", formatterParams: {
+            title: "Amount", field: "amount", minWidth: Math.max(calcHeaderTitleMinWidth("Amount"), 120), formatter: "money", formatterParams: {
                 decimal: ",",
                 thousand: ".",
                 symbol: "Rp",  // Simbol mata uang Rupiah
                 precision: 0,   // Tidak ada desimal
             }
         },
-        // {title: "Amount", field: "amount_edit", width: "20%",formatter: "money",    formatterParams: {
-        //     decimal: ",",
-        //     thousand: ".",
-        //     symbol: "Rp",  // Simbol mata uang Rupiah
-        //     precision: 0,   // Tidak ada desimal
-        // }, editor: "number"},
     ],
     placeholder: "Tidak ada data",
 });
@@ -695,27 +978,34 @@ let buttonRowActionRef = function (cell) {
 
     if (inpStatus.val() == 0) {
         fmBtnDelete = `<button type="button" class="btn btn-sm btn-danger" title='delete'><i class="fa fa-trash" title='delete'></i></button>`;
+        return fmBtnEdit + " " + fmBtnDelete;
+    } else {
+        let row = cell.getRow();
+        let index = row.getPosition(true);
+        return `<span class="fw-bold text-muted">${index}</span>`;
     }
-
-
-    return fmBtnEdit + " " + fmBtnDelete;
 };
 
 let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
+    layout: "fitDataFill",
     pagination: true,
     paginationSize: 10,
     paginationButtonCount: 5,
     columns: [
-        { title: "ID", field: "id_konsumen", width: "20%", visible: false },
-        { title: "ID_MP", field: "id_mp", width: "10%", visible: false },
+        { title: "ID", field: "id_konsumen", visible: false },
+        { title: "ID_MP", field: "id_mp", visible: false },
         {
             headerSort: false,
             title: '#',
             formatter: buttonRowActionRef,
-            width: '5%', align: "center", cssClass: "text-center",
+            width: 45,
+            resizable: false,
+            hozAlign: "center",
+            headerHozAlign: "center",
+            cssClass: "text-center",
             cellClick: function (e, cell) {
                 let row = cell.getRow();
-                if (e.target.title === 'delete') {
+                if (e.target.title === 'delete' || $(e.target).closest('button').attr('title') === 'delete') {
                     Swal.fire({
                         title: "Apakah anda yakin ingin menghapus data?",
                         icon: 'question',
@@ -728,55 +1018,136 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                         if (result.isConfirmed) {
                             row.delete();
                         }
-                    })
+                    });
                 }
             }
         },
-        { title: "No.SO", field: "kode_sales_order", width: "10%" },
-        { title: "Style", field: "style", width: "12%" },
-        { title: "Deskripsi", field: "deskripsi", width: "18%" },
-        { title: "Buyer", field: "buyer", width: "15%" },
-        { title: "Colour", field: "color", width: "10%" },
         {
-            title: "Tgl<br>Transaksi", field: "tgl_transaksi", width: "10%", sorter: "date", sorterParams: {
+            title: "Tipe",
+            field: "print_type",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Tipe"), 105),
+            hozAlign: "center",
+            headerHozAlign: "center",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                if (val == 2 || val == "2") {
+                    return `<span class="badge bg-warning text-dark font-weight-bold" style="font-size: 11px; padding: 4px 8px;">PERBAIKAN</span>`;
+                }
+                return `<span class="badge bg-success text-white font-weight-bold" style="font-size: 11px; padding: 4px 8px;">PRODUKSI</span>`;
+            },
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            editor: "list",
+            editorParams: {
+                values: {
+                    "1": "PRODUKSI",
+                    "2": "PERBAIKAN"
+                }
+            },
+            mutator: function (value) {
+                if (value == 2 || value == "2") return 2;
+                return 1;
+            }
+        },
+        { title: "No.SO", field: "kode_sales_order", minWidth: Math.max(calcHeaderTitleMinWidth("No.SO"), 125), hozAlign: "left", headerHozAlign: "left" },
+        { 
+            title: "Style", 
+            field: "style", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Style"), 100), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Deskripsi", 
+            field: "deskripsi", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Deskripsi"), 130), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Buyer", 
+            field: "buyer", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Buyer"), 110), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        { 
+            title: "Colour", 
+            field: "color", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Colour"), 180), 
+            hozAlign: "left", 
+            headerHozAlign: "left",
+            formatter: function (cell) {
+                let val = cell.getValue();
+                return `<div style="white-space: normal; line-height: 1.3;">${val ? val : '-'}</div>`;
+            }
+        },
+        {
+            title: "Tgl Transaksi",
+            field: "tgl_transaksi",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Tgl Transaksi"), 135),
+            hozAlign: "center",
+            headerHozAlign: "center",
+            sorter: "date",
+            sorterParams: {
                 format: "dd-MM-yyyy",
                 alignEmptyValues: "top",
             },
-            editor: "date"
+            editor: "date",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            }
         },
-
-        // {title: "Nomor Mesin", field: "nomor_mesin", width: "15%", editor: "input"},
-        // {title: "Jam Mesin", field: "jam_mesin", width: "15%", editor: "number"},
-        // {title: "Nilai Mesin", field: "nilai_mesin", width: "15%", editor: "number",
-        //     formatterParams: {
-        //         decimal: ",",
-        //         thousand: ".",
-        //         symbol: "Rp",  // Simbol mata uang Rupiah
-        //         // Tidak ada desimal
-        //     }
-        // },
-        { title: "Qty", field: "qty_kirim", width: "8%" },
+        { 
+            title: "Qty Kirim", 
+            field: "qty_kirim", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Qty Kirim"), 110),
+            hozAlign: "right",
+            headerHozAlign: "right",
+            formatter: function (cell) {
+                let val = parseFloat(cell.getValue() || 0);
+                return val < 0 ? 0 : val.toFixed(0);
+            }
+        },
         {
-            title: "Qty<br>Terima",
+            title: "Qty BTM",
             field: "qty",
-            width: "8%",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Qty BTM"), 110),
+            hozAlign: "right",
+            headerHozAlign: "right",
             editor: "number",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
             bottomCalc: "sum",
+            validator: ["required", "numeric"],
             formatter: function (cell) {
                 return parseFloat(cell.getValue() || 0).toFixed(0);
             },
             bottomCalcFormatter: function (cell) {
                 return parseFloat(cell.getValue() || 0).toFixed(0);
             },
-            // 🌟 TAMBAHKAN INI: Update Amount & Refresh Kalkulasi saat Qty diubah
             cellEdited: function (cell) {
                 const row = cell.getRow();
                 const qty = parseFloat(cell.getValue()) || 0;
                 const harga = parseFloat(row.getCell("harga").getValue()) || 0;
 
-                // Pastikan nilai tersimpan sebagai angka murni di Tabulator
                 row.update({
                     qty: qty,
+                    qty_qc: qty,
                     amount: qty * harga
                 });
             }
@@ -784,13 +1155,20 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
         {
             title: "Berat (Kg)",
             field: "berat",
-            width: "8%",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Berat (Kg)"), 120),
             hozAlign: "right",
+            headerHozAlign: "right",
             editor: "input",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            bottomCalc: "sum",
             validator: ["numeric"],
-            formatterParams: {
-                decimal: ".",
-                thousand: ","
+            formatter: function (cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2);
+            },
+            bottomCalcFormatter: function (cell) {
+                return parseFloat(cell.getValue() || 0).toFixed(2);
             },
             editorParams: {
                 elementAttributes: {
@@ -798,13 +1176,24 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                     step: "0.01",
                     min: "0"
                 }
+            },
+            cellEdited: function (cell) {
+                const row = cell.getRow();
+                const berat = parseFloat(cell.getValue()) || 0;
+
+                row.update({
+                    berat: berat,
+                    berat_qc: berat
+                });
             }
         },
-        { title: "Ukuran", field: "kode_ukuran", width: "8%" },
+        { title: "Ukuran", field: "kode_ukuran", minWidth: Math.max(calcHeaderTitleMinWidth("Ukuran"), 90), hozAlign: "center", headerHozAlign: "center" },
         {
             title: "Harga",
             field: "harga",
-            width: "10%",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Harga"), 105),
+            hozAlign: "right",
+            headerHozAlign: "right",
             formatter: "money",
             formatterParams: {
                 decimal: ",",
@@ -813,12 +1202,14 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
                 precision: 0,
             },
             editor: "number",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
             cellEdited: function (cell) {
                 const row = cell.getRow();
                 const harga = parseFloat(cell.getValue()) || 0;
                 const qty = parseFloat(row.getCell("qty").getValue()) || 0;
 
-                // 🌟 Pastikan harga juga di-update sebagai angka murni
                 row.update({
                     harga: harga,
                     amount: qty * harga
@@ -826,21 +1217,41 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             }
         },
         {
-            title: "Amount", field: "amount", width: "10%", formatter: "money", formatterParams: {
+            title: "Amount",
+            field: "amount",
+            minWidth: Math.max(calcHeaderTitleMinWidth("Amount"), 125),
+            hozAlign: "right",
+            headerHozAlign: "right",
+            mutator: function (value, data) {
+                const qty = (typeof data.qty !== 'undefined' && data.qty !== '' && data.qty !== null) ? parseFloat(data.qty) : 0;
+                const harga = parseFloat(data.harga) || 0;
+                const amt = parseFloat(value) || 0;
+                if (amt === 0 && qty > 0 && harga > 0) {
+                    return qty * harga;
+                }
+                return amt;
+            },
+            formatter: "money",
+            formatterParams: {
                 decimal: ",",
                 thousand: ".",
-                symbol: "Rp",  // Simbol mata uang Rupiah
-                precision: 0,   // Tidak ada desimal
+                symbol: "Rp",
+                precision: 0,
             }
         },
-        { title: "Keterangan", field: "keterangan", width: "10%", editor: "input" },
-        { title: "Total Scanned", field: "total_scanned", width: "10%", visible: false },
-        {
-            title: "Tgl<br>Scan", field: "tgl_scan", width: "10%", visible: false
+        { 
+            title: "Keterangan", 
+            field: "keterangan", 
+            minWidth: Math.max(calcHeaderTitleMinWidth("Keterangan"), 120),
+            hozAlign: "left",
+            headerHozAlign: "left",
+            editor: "input",
+            editable: function (cell) {
+                return inpStatus.val() != 1 && inpStatus.val() != "1";
+            }
         },
-        {
-            title: "Print Type", field: "print_type", width: "10%", visible: false
-        },
+        { title: "Total Scanned", field: "total_scanned", visible: false },
+        { title: "Tgl<br>Scan", field: "tgl_scan", visible: false },
     ],
     placeholder: "Tidak ada data",
 });
@@ -870,15 +1281,10 @@ const dtListProduksiRef = new Tabulator("#dt-list-refpo", {
 btnRefPo.on("click", function (e) {
     e.preventDefault();
 
-    if (refData == null) {
-        return Swal.fire({
-            text: "Data TIdak Ditemukan!",
-            icon: 'warning',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
-    else if (refData.length == 0 && (selectProses.val() == null || selectOperator.val() == null)) {
+    const idProses = selectProses.val();
+    const idCmt = selectOperator.val();
+
+    if (!idProses || !idCmt) {
         return Swal.fire({
             text: "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
             icon: 'warning',
@@ -886,10 +1292,34 @@ btnRefPo.on("click", function (e) {
             timer: 2000
         });
     }
-    dtListProduksiRef.setData(refData);
 
+    if (!refData || refData.length === 0) {
+        $(".preloader").css("opacity", "0.7").show();
+        loadDataSo(function () {
+            $(".preloader").hide().css("opacity", "1");
+            if (!refData || refData.length === 0) {
+                return Swal.fire({
+                    text: "Data Tidak Ditemukan!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+            dtListProduksiRef.setData(refData);
+            modalRefpo.modal("show");
+        });
+        return;
+    }
+
+    dtListProduksiRef.setData(refData);
     modalRefpo.modal("show");
-})
+});
+
+modalRefpo.on('shown.bs.modal', function () {
+    if (typeof dtListProduksiRef !== 'undefined' && dtListProduksiRef) {
+        dtListProduksiRef.redraw(true);
+    }
+});
 
 let isRowClicked = false;
 dtListProduksiRef.on("rowClick", function (e, row) {
@@ -932,8 +1362,13 @@ if (dataSO.length > 0) {
     setTimeout(() => {
         try {
             let isdata = JSON.parse(dataSO);
-            dtList.setData(isdata)
-            dtListProduksi.setData(isdata)
+            dtList.setData(isdata);
+            dtListProduksi.setData(isdata);
+            setTimeout(() => {
+                if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                    dtListProduksi.redraw(true);
+                }
+            }, 300);
         } catch (e) {
             console.error("Error parsing JSON:", e);
         }
@@ -1046,21 +1481,30 @@ divRefProduk.hide();
 selectKategori.on("change", function (e) {
     const nilai = e.target.value;
 
-
-    divNamaKonsumen.addClass("d-none")
+    divNamaKonsumen.addClass("d-none");
     divDetail.show();
     divRefProduk.hide();
+    btnAdd.show();
     if (nilai == 3) {
-        divNamaKonsumen.removeClass("d-none")
+        divNamaKonsumen.removeClass("d-none");
     } else if (nilai == 9) {
-        divNamaKonsumen.addClass("d-none")
-    } else if (nilai == 12 || nilai == 1) {
+        divNamaKonsumen.addClass("d-none");
+    } else if (nilai == 12 || nilai == 1 || nilai == 15) {
         divDetail.hide();
         divRefProduk.show();
+        btnAdd.hide();
+        if (typeof dtListDetail !== 'undefined' && dtListDetail) {
+            dtListDetail.setData([]);
+        }
+        setTimeout(() => {
+            if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                dtListProduksi.redraw(true);
+            }
+        }, 200);
     }
 
     dtListSO.setData();
-})
+});
 
 
 function submitData(status, message) {
@@ -1108,17 +1552,58 @@ function submitData(status, message) {
         });
     }
 
+    const tglHeaderFormatted = formatLocaleDate(inpTglReceive.val());
+    const nowCheck = new Date();
+    const todayStr = `${nowCheck.getFullYear()}-${String(nowCheck.getMonth() + 1).padStart(2, '0')}-${String(nowCheck.getDate()).padStart(2, '0')}`;
+    if (tglHeaderFormatted && tglHeaderFormatted > todayStr) {
+        return Swal.fire({
+            text: "Tanggal transaksi tidak boleh melebihi hari ini!",
+            icon: 'warning',
+            confirmButtonColor: '#3085d6'
+        });
+    }
 
 
 
-    if (selectKategori.val() != 12 && selectKategori.val() != 1) {
-        if (dtListDetail.getData().length == 0) {
+
+    const hasDetail = (typeof dtListDetail !== 'undefined' && dtListDetail && dtListDetail.getData().length > 0);
+    const hasProduksi = (typeof dtListProduksi !== 'undefined' && dtListProduksi && dtListProduksi.getData().length > 0);
+
+    if (!hasDetail && !hasProduksi) {
+        if (selectKategori.val() == 12 || selectKategori.val() == 1 || selectKategori.val() == 15) {
+            return Swal.fire({
+                text: "Data barang / produksi tidak boleh kosong",
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        } else {
             return Swal.fire({
                 text: "Data detail tidak boleh kosong",
                 icon: 'error',
                 showConfirmButton: false,
                 timer: 2000
             });
+        }
+    }
+
+    // Validasi Qty Terima tidak boleh melebihi Sisa Qty Transfer saat Approve (status == 1) untuk produksi
+    if (hasProduksi && status === 1) {
+        let dataProd = dtListProduksi.getData();
+        let roleId = $('#role_id').val();
+        if (selectPerusahaan.val() != 2 && roleId != 5) {
+            for (let i = 0; i < dataProd.length; i++) {
+                let r = dataProd[i];
+                let valQty = parseFloat(r.qty) || 0;
+                let valKirim = parseFloat(r.qty_kirim) || 0;
+                if (valQty > valKirim) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Mengapprove!',
+                        text: `Terdapat item (${r.kode_sales_order || ''} - ${r.style || ''} - ${r.color || ''}) dengan Qty Terima (${valQty}) yang melebihi Sisa Qty Transfer (${valKirim})! Harap sesuaikan Qty atau simpan sebagai Draft.`,
+                    });
+                }
+            }
         }
     }
 
@@ -1148,6 +1633,69 @@ btnApprove.on("click", function (e) {
     submitData(1, "mengapprove")
 })
 
+// TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
+// (stok trans_lots/trans_barang, dan utk Tipe Penerimaan Hasil Produksi/
+// Sample-Perbaikan juga trans_barang_masuk_produksi/trans_produksi_operator/
+// qty_prod WO) & kembalikan dokumen ke status Draft. Lihat
+// BarangMasukModel::cancelApprove().
+btnCancelApprove.on("click", function (e) {
+    e.preventDefault()
+
+    Swal.fire({
+        title: 'Batalkan Approve dokumen ini?',
+        text: 'Semua efek approve (perubahan stok, dan kalau Tipe Penerimaan Hasil Produksi/Sample juga data produksi & qty_kirim terkait) akan dibalik, dan dokumen kembali ke status Draft.',
+        icon: 'warning',
+        confirmButtonText: 'Ya, batalkan approve',
+        confirmButtonColor: '#dc3545',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $(".preloader").css("opacity", "0.7").show();
+        $.ajax({
+            type: 'POST',
+            url: '/trans/incoming-goods/cancel-approve',
+            data: {
+                id: inpIdHeader.val(),
+            },
+            dataType: "json",
+            success: function (response) {
+                $(".preloader").hide().css("opacity", "1");
+                if (response.status == true) {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            },
+            error: function (xhr) {
+                $(".preloader").hide().css("opacity", "1");
+                let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Gagal membatalkan approve.";
+                Swal.fire({
+                    text: msg,
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            }
+        });
+    })
+})
+
 
 btnAdd.click(function () {
     openModalDetail()
@@ -1155,7 +1703,18 @@ btnAdd.click(function () {
 
 btnView.click(function () {
 
-    const dtProduksi = dtListProduksi.getData().length
+    const openTransferModal = () => {
+        if (typeof dtListSO !== 'undefined' && dtListSO) {
+            dtListSO.setData();
+        }
+        setTimeout(() => {
+            dtListSO.redraw(true);
+        }, 500);
+        $("#modal-so").modal("show");
+        dtListSO.deselectRow();
+    };
+
+    const dtProduksi = dtListProduksi.getData().length;
     if (dtProduksi > 0) {
         Swal.fire({
             title: "Apakah Anda yakin ingin mengubah Referensi transaksi Transfer?",
@@ -1170,27 +1729,15 @@ btnView.click(function () {
             if (result.isConfirmed) {
                 dtListProduksi.setData([]);
                 dtList.setData([]);
-
-                setTimeout(() => {
-                    dtListSO.redraw(true)
-                }, 500);
-                $("#modal-so").modal("show")
-                dtListSO.deselectRow();
+                openTransferModal();
             } else {
                 return false;
             }
         });
     } else {
-        setTimeout(() => {
-            dtListSO.redraw(true)
-        }, 500);
-        $("#modal-so").modal("show")
-        dtListSO.deselectRow();
+        openTransferModal();
     }
-
-
-
-})
+});
 
 function checkLotNo(value) {
     $.ajax({
@@ -1363,6 +1910,11 @@ function simpanData(status) {
         },
         dataType: "json",
         beforeSend: function () {
+            // Cegah submit ganda (klik dobel/network retry) selama request masih
+            // berjalan - salah satu sumber potensi data dobel di trans_produksi_operator
+            // selain bug delete-before-insert yang sudah diperbaiki di backend.
+            btnSimpan.prop("disabled", true);
+            btnApprove.prop("disabled", true);
             Swal.fire({
                 title: 'Loading...',
                 allowOutsideClick: false,
@@ -1392,6 +1944,8 @@ function simpanData(status) {
                     // timer: 2000
                 });
             }
+            btnSimpan.prop("disabled", false);
+            btnApprove.prop("disabled", false);
             $(".preloader").hide().css("opacity", "1");
         },
         error: function (e) {
@@ -1404,6 +1958,8 @@ function simpanData(status) {
                 showConfirmButton: false,
                 // timer: 2000
             });
+            btnSimpan.prop("disabled", false);
+            btnApprove.prop("disabled", false);
             $(".preloader").hide().css("opacity", "1");
         },
     });
@@ -1432,8 +1988,8 @@ $("#text_barcode").autocomplete({
             const lowerKataKunci = kataKunci.toLowerCase();
 
             data.forEach(item => {
-                // console.log(item)
-                const labelx = item.kode_sales_order + " - (" + item.color + ") " + item.kode_ukuran;
+                const colorStr = item.color ? item.color : '-';
+                const labelx = item.kode_sales_order + " - (" + colorStr + ") " + (item.kode_ukuran || '');
                 for (const key in item) {
                     if (
                         item.hasOwnProperty(key) &&
@@ -1441,8 +1997,8 @@ $("#text_barcode").autocomplete({
                         item[key].toString().toLowerCase().includes(lowerKataKunci)
                     ) {
                         results.push({
-                            label: labelx,//item[key].toString(),
-                            value: item[key].toString(),
+                            label: labelx,
+                            value: item.kode_sales_order + " - " + colorStr + " - " + (item.kode_ukuran || ''),
                             data: item
                         });
                         break; // stop after first match in this item
@@ -1450,8 +2006,8 @@ $("#text_barcode").autocomplete({
                 }
             });
 
-            // console.log("results barcode", results)
-            response(results);
+            // Batasi hasil autocomplete maksimal 30 entri agar tidak lagging dan mudah dipilih
+            response(results.slice(0, 30));
         }
         else {
             Swal.fire({
@@ -1478,7 +2034,6 @@ $("#text_barcode").autocomplete({
 
 $("#select_perusahaan").on("change", function () {
     let id_perusahaan = $(this).val();
-    selectOperator.val(null).trigger('change');
 
     if (id_perusahaan == 2) {
         dtListProduksi.hideColumn("qty_kirim");
@@ -1486,12 +2041,24 @@ $("#select_perusahaan").on("change", function () {
         dtListProduksi.showColumn("qty_kirim");
     }
 
-    // Reset select operator
-    $("#select_operator").val(null).trigger("change");
+    const isEdit = (inpIdHeader.val() && inpIdHeader.val().length > 0);
+    const hasTrf = (inpNoRefTrf.val() && inpNoRefTrf.val().length > 0);
+
+    // Jika form Baru tanpa No. Transfer, reset operator
+    if (!isEdit && !hasTrf) {
+        $("#select_operator").val(null).trigger("change");
+    }
+
+    // Jika memiliki No. Transfer terpilih, jangan timpa operator dari ajax perusahaan
+    if (hasTrf) {
+        $("#select_operator").prop("disabled", true);
+        return;
+    }
+
     $(".preloader").css("opacity", "0.7").show();
 
     $.ajax({
-        url: baseUrl + "/master-data/operator/get_operator", // sesuaikan url
+        url: baseUrl + "/master-data/operator/get_operator",
         type: "POST",
         data: {
             id_perusahaan: id_perusahaan
@@ -1500,17 +2067,22 @@ $("#select_perusahaan").on("change", function () {
             $("#select_operator").prop("disabled", true);
         },
         success: function (res) {
-            let selectedId = $("#select_operator").data("selected") ?? ""; // simpan nilai lama
+            let selectedId = $("#select_operator").data("selected") || $("#select_operator").val() || "";
             let options = '<option value="">-- Pilih CMT --</option>';
 
             if (res.status && res.data.length > 0) {
                 $.each(res.data, function (i, item) {
-                    let isSelected = item.id == selectedId ? "selected" : "";
+                    let isSelected = (item.id == selectedId) ? "selected" : "";
                     options += `<option value="${item.id}" ${isSelected}>${item.nama_operator}</option>`;
                 });
             }
 
-            $("#select_operator").html(options).trigger("change");
+            $("#select_operator").html(options);
+            if (selectedId) {
+                $("#select_operator").val(selectedId).trigger("change.select2");
+            } else {
+                $("#select_operator").trigger("change");
+            }
             $(".preloader").hide().css("opacity", "1");
         },
         error: function () {
@@ -1518,28 +2090,69 @@ $("#select_perusahaan").on("change", function () {
             $(".preloader").hide().css("opacity", "1");
         },
         complete: function () {
-            $("#select_operator").prop("disabled", false);
+            if (hasTrf) {
+                $("#select_operator").prop("disabled", true);
+            } else {
+                $("#select_operator").prop("disabled", false);
+            }
         }
     });
 });
 
 
-// Khusus perusahaan "Citra Knitt": nama perusahaan dicek dari teks dropdown
+// Khusus perusahaan "Citra Knitt": nama perusahaan dicek dari teks dropdown atau gudang
 // (bukan hardcode ID) supaya tidak tergantung urutan/ID ref_perusahaan di DB.
 // Untuk perusahaan lain (mis. PT Citra Jaya Knitting) validasi harga TIDAK berubah.
 function isPerusahaanCitraKnitt() {
     const text = selectPerusahaan.find('option:selected').text() || '';
-    return text.trim().toLowerCase() === 'citra knitt';
+    const val = selectPerusahaan.val();
+    const gudangText = selectGudang.find('option:selected').text() || '';
+    const gudangPrsh = selectGudang.find('option:selected').attr('data-perusahaan');
+    return text.trim().toLowerCase() === 'citra knitt' || val == 2 || gudangPrsh == 2 || gudangText.toUpperCase().includes('CITRA KNITT');
+}
+
+selectGudang.on('change', function () {
+    const whPrsh = $(this).find('option:selected').attr('data-perusahaan');
+    if (whPrsh && selectPerusahaan.length && selectPerusahaan.val() != whPrsh) {
+        selectPerusahaan.val(whPrsh);
+        if (typeof dtListSO !== 'undefined' && dtListSO) {
+            dtListSO.setData();
+        }
+        if (!inpNoRefTrf.val() && selectOperator.val() && selectProses.val()) {
+            loadDataSo();
+        }
+    }
+});
+
+function isCurrentProcessRajut() {
+    let opt = selectProses.find('option:selected');
+    let isRajutAttr = opt.attr('data-is-rajut');
+    if (isRajutAttr === '1' || isRajutAttr === 1) return true;
+    let txt = opt.text() || '';
+    return txt.toUpperCase().includes('RAJUT');
 }
 
 function finalizeAddItem(data, isScan) {
     if (isScan) {
         data.total_scanned = 1;
-        // data.keterangan = (parseFloat(data.total_scanned || 0)).toString() + ' Ikat';
     }
-    console.log("data yang ditambahkan", data)
+    if (!data.print_type) {
+        data.print_type = 1;
+    }
+    data.qty_qc = data.qty || 0;
+    data.berat_qc = data.berat || 0;
+    data.amount = (parseFloat(data.qty) || 0) * (parseFloat(data.harga) || 0);
 
-    dtListProduksi.addRow(data);
+    console.log("data yang ditambahkan", data);
+
+    dtListProduksi.addRow(data).then(function (row) {
+        if (typeof dtListProduksi !== 'undefined' && dtListProduksi.deselectRow) {
+            dtListProduksi.deselectRow();
+        }
+        row.select();
+        activeTargetRow = row;
+        // Tidak menyalin berat dari pembacaan lama - berat hanya terisi saat barang diletakkan di timbangan secara realtime
+    });
 }
 
 function addItem(data, typeAction = null, isScan = false) {
@@ -1558,8 +2171,13 @@ function addItem(data, typeAction = null, isScan = false) {
             produksi_data[index].total_scanned = parseFloat(produksi_data[index].total_scanned || 0) + 1;
             // produksi_data[index].keterangan = (parseFloat(produksi_data[index].total_scanned || 0)).toString() + ' Ikat';
         }
-        produksi_data[index].qty = parseFloat(produksi_data[index].qty || 0) + parseFloat(data.qty || 0);
-        produksi_data[index].amount = parseFloat(produksi_data[index].qty) * parseFloat(produksi_data[index].harga || 0); // hitung ulang amount
+        let oldQty = parseFloat(produksi_data[index].qty || 0);
+        let addedQty = parseFloat(data.qty || 0);
+        let newQty = oldQty + addedQty;
+
+        produksi_data[index].qty = newQty;
+        produksi_data[index].qty_qc = newQty;
+        produksi_data[index].amount = newQty * parseFloat(produksi_data[index].harga || 0);
         dtListProduksi.setData(produksi_data);
         $("#text_barcode").val("");
     } else {
@@ -1665,80 +2283,221 @@ $("#text_barcode").on("keypress", function (e) {
         //   });
 
 
-        const kataKunci = $("#text_barcode").val()
-        const arrKunci = kataKunci.split(";");
+        const kataKunci = $("#text_barcode").val();
+        if (!kataKunci || kataKunci.trim() === '') {
+            return;
+        }
 
-        if (refData.length > 0) {
-            let hasil = refData.map(item => ({ ...item }));
+        let isRetryingSoFetch = false;
 
-            if (arrKunci[0] != undefined && arrKunci[0] != '') {
-                hasil = hasil.filter(item => item.kode_sales_order && item.kode_sales_order.toString().toLowerCase() == arrKunci[0].toLowerCase());
-            }
-            if (arrKunci[1] != undefined && arrKunci[1] != '') {
-                hasil = hasil.filter(item => item.key_ukuran && item.key_ukuran.toString().toLowerCase() == arrKunci[1].toLowerCase());
-            }
-            if (arrKunci[2] != undefined && arrKunci[2] != '') {
-                const normalize = str => str.replace(/\s+/g, ' ').trim();
-                const inputColor1 = normalize(arrKunci[2].toUpperCase());
-                const inputColor2 = arrKunci[4] ? normalize(arrKunci[4].toUpperCase()) : null;
-                const inputColor3 = arrKunci[5] ? normalize(arrKunci[5].toUpperCase()) : null;
-
-                hasil = hasil.filter(item => {
-                    if (item.color) {
-                        const colorParts = item.color.toString().split('~');
-                        const warna1 = normalize(colorParts[0].toUpperCase());
-                        const warna2 = colorParts[1] ? normalize(colorParts[1].toUpperCase()) : null;
-                        const warna3 = colorParts[2] ? normalize(colorParts[2].toUpperCase()) : null;
-
-                        // 3 warna
-                        if (warna3 && inputColor3) {
-                            return warna1 == inputColor1 && warna2 == inputColor2 && warna3 == inputColor3;
-                        }
-                        // 2 warna
-                        else if (warna2 && inputColor2) {
-                            return warna1 == inputColor1 && warna2 == inputColor2;
-                        }
-                        // 1 warna
-                        else {
-                            return warna1 == inputColor1;
-                        }
-                    }
-                    return false;
-                });
-            } else {
-                return Swal.fire({
-                    text: "Scan Kosong!.",
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-
-            if (hasil.length > 0) {
-                // qty tetap di [3], tgl_scan ambil index terakhir
-                hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
-                hasil[0].tgl_scan = arrKunci[arrKunci.length - 1] ? arrKunci[arrKunci.length - 1] : null;
-                addItem(hasil[0], 'scan', true);
-                setTimeout(() => {
-                    $("#text_barcode").val("");
-                    refData = xrefData;
-                }, 500);
-            } else {
-                Swal.fire({
-                    text: "Produk tidak ditemukan!",
-                    icon: 'error',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            }
-        } else {
+        function showNotFoundError(arrKunci) {
+            const trfInfo = inpNoRefTrf.val() ? ` pada No. Transfer ${inpNoRefTrf.val()}` : '';
+            const soInfo = (arrKunci && arrKunci[0]) ? ` (${arrKunci[0]})` : '';
             Swal.fire({
-                text: "Produk tidak ditemukan!.",
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2000
+                title: "Produk Tidak Ditemukan!",
+                text: `Barang${soInfo} tidak terdaftar${trfInfo}. Mohon periksa kembali fisik barang atau surat transfernya.`,
+                icon: 'error',
+                confirmButtonText: 'Tutup'
             });
         }
+
+        function showEmptyRefError() {
+            const trfMsg = inpNoRefTrf.val()
+                ? `Tidak ada data barang pada No. Transfer ${inpNoRefTrf.val()} (Pastikan transfer sudah di-Approve).`
+                : "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.";
+            Swal.fire({
+                title: "Data Tidak Ditemukan",
+                text: trfMsg,
+                icon: 'warning',
+                confirmButtonText: 'Tutup'
+            });
+        }
+
+        function fetchSoCitraKnittOnDemand(kodeSO, cb) {
+            $(".preloader").css("opacity", "0.7").show();
+            const params = new URLSearchParams({
+                id_perusahaan: selectPerusahaan.val() || 2,
+                id_proses: selectProses.val() || '',
+                id_cmt: selectOperator.val() || '',
+                kode_so: kodeSO
+            });
+            $.ajax({
+                url: `/trans/item-transfer/data-so?${params.toString()}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    $(".preloader").hide().css("opacity", "1");
+                    if (res && res.status && res.dataSO && res.dataSO.length > 0) {
+                        if (!refData) refData = [];
+                        if (!xrefData) xrefData = [];
+                        res.dataSO.forEach(newItem => {
+                            if (!refData.some(x => x.kode_sales_order === newItem.kode_sales_order && x.kode_ukuran === newItem.kode_ukuran && x.color === newItem.color)) {
+                                refData.push(newItem);
+                                xrefData.push(newItem);
+                            }
+                        });
+                        if (typeof cb === 'function') cb(true);
+                    } else {
+                        if (typeof cb === 'function') cb(false);
+                    }
+                },
+                error: function () {
+                    $(".preloader").hide().css("opacity", "1");
+                    if (typeof cb === 'function') cb(false);
+                }
+            });
+        }
+
+        function executeBarcodeMatching() {
+            const arrKunci = kataKunci.split(";");
+
+            if (refData && refData.length > 0) {
+                let hasil = refData.map(item => ({ ...item }));
+
+                const normStr = str => str ? str.toString().trim().toLowerCase() : '';
+                const normSize = str => str ? str.toString().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                const isTimestampToken = str => {
+                    if (!str) return false;
+                    const s = str.toString().trim();
+                    return /\d{4}\s+\d{2}\s+\d{2}/.test(s) ||
+                           /\d{4}-\d{2}-\d{2}/.test(s) ||
+                           /\d{2}-\d{2}-\d{2}-\d+/.test(s) ||
+                           /\(\d+\)$/.test(s);
+                };
+                const cleanColor = c => (!c || c.trim() === '' || c.trim() === '-' || isTimestampToken(c)) ? null : c.replace(/\s+/g, ' ').trim().toUpperCase();
+
+                // 1. Filter No SO / Reference / Style
+                if (arrKunci[0] != undefined && arrKunci[0] !== '') {
+                    const targetSO = normStr(arrKunci[0]);
+                    hasil = hasil.filter(item => normStr(item.kode_sales_order) === targetSO || normStr(item.kode_transaksi) === targetSO || normStr(item.style) === targetSO);
+                }
+
+                // 2. Filter Ukuran (cocokkan key_ukuran ATAU kode_ukuran setelah dinormalisasi)
+                if (arrKunci[1] != undefined && arrKunci[1] !== '') {
+                    const targetUkuran = normSize(arrKunci[1]);
+                    hasil = hasil.filter(item => normSize(item.key_ukuran) === targetUkuran || normSize(item.kode_ukuran) === targetUkuran);
+                }
+
+                // 3. Filter Warna
+                if (arrKunci[2] != undefined && arrKunci[2] !== '') {
+                    let inputColor1, inputColor2, inputColor3;
+                    if (arrKunci[2].includes('~')) {
+                        const splitC = arrKunci[2].split('~').map(c => cleanColor(c)).filter(Boolean);
+                        inputColor1 = splitC[0] || null;
+                        inputColor2 = splitC[1] || null;
+                        inputColor3 = splitC[2] || null;
+                    } else {
+                        inputColor1 = cleanColor(arrKunci[2]);
+                        inputColor2 = (arrKunci[4] && !isTimestampToken(arrKunci[4])) ? cleanColor(arrKunci[4]) : null;
+                        inputColor3 = (arrKunci[5] && !isTimestampToken(arrKunci[5])) ? cleanColor(arrKunci[5]) : null;
+                    }
+
+                    hasil = hasil.filter(item => {
+                        if (item.color) {
+                            const colorParts = item.color.toString().split('~').map(c => cleanColor(c)).filter(Boolean);
+                            const warna1 = colorParts[0] || null;
+                            const warna2 = colorParts[1] || null;
+                            const warna3 = colorParts[2] || null;
+
+                            // 3 warna pada barcode
+                            if (inputColor3) {
+                                return warna1 === inputColor1 && warna2 === inputColor2 && warna3 === inputColor3;
+                            }
+                            // 2 warna pada barcode
+                            else if (inputColor2) {
+                                return warna1 === inputColor1 && warna2 === inputColor2;
+                            }
+                            // 1 warna pada barcode
+                            else {
+                                return warna1 === inputColor1;
+                            }
+                        }
+                        // Fallback: jika item di master/SO tidak memiliki warna, jangan tolak jika SO & Ukuran cocok
+                        return true;
+                    });
+                } else {
+                    return Swal.fire({
+                        text: "Scan Kosong!",
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+
+                if (hasil.length > 0) {
+                    // qty tetap di [3], tgl_scan ambil index terakhir atau token timestamp
+                    hasil[0].qty = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+                    let tglScanVal = null;
+                    for (let k = arrKunci.length - 1; k >= 0; k--) {
+                        if (isTimestampToken(arrKunci[k])) {
+                            tglScanVal = arrKunci[k].trim();
+                            break;
+                        }
+                    }
+                    if (!tglScanVal && arrKunci.length > 4) {
+                        tglScanVal = arrKunci[arrKunci.length - 1];
+                    }
+                    hasil[0].tgl_scan = tglScanVal;
+                    if (tglScanVal) {
+                        let matchKurung = tglScanVal.match(/\((\d+)\)\s*$/);
+                        if (matchKurung && matchKurung[1]) {
+                            hasil[0].print_type = parseInt(matchKurung[1]);
+                        } else {
+                            hasil[0].print_type = 1;
+                        }
+                    } else {
+                        hasil[0].print_type = 1;
+                    }
+                    addItem(hasil[0], 'scan', true);
+                    $("#text_barcode").val("");
+                    refData = xrefData;
+                } else {
+                    if (isPerusahaanCitraKnitt() && !inpNoRefTrf.val() && arrKunci[0] && !isRetryingSoFetch) {
+                        fetchSoCitraKnittOnDemand(arrKunci[0], function (found) {
+                            if (found) {
+                                isRetryingSoFetch = true;
+                                executeBarcodeMatching();
+                                isRetryingSoFetch = false;
+                            } else {
+                                showNotFoundError(arrKunci);
+                            }
+                        });
+                        return;
+                    }
+                    showNotFoundError(arrKunci);
+                }
+            } else {
+                if (isPerusahaanCitraKnitt() && !inpNoRefTrf.val() && arrKunci[0] && !isRetryingSoFetch) {
+                    fetchSoCitraKnittOnDemand(arrKunci[0], function (found) {
+                        if (found) {
+                            isRetryingSoFetch = true;
+                            executeBarcodeMatching();
+                            isRetryingSoFetch = false;
+                        } else {
+                            showEmptyRefError();
+                        }
+                    });
+                    return;
+                }
+                showEmptyRefError();
+            }
+        }
+
+        if (!refData || refData.length === 0) {
+            if (inpNoRefTrf.val() || (selectProses.val() && selectOperator.val())) {
+                loadDataSo(function () {
+                    executeBarcodeMatching();
+                });
+                return;
+            } else if (isPerusahaanCitraKnitt() && !inpNoRefTrf.val() && kataKunci.split(";")[0]) {
+                fetchSoCitraKnittOnDemand(kataKunci.split(";")[0], function () {
+                    executeBarcodeMatching();
+                });
+                return;
+            }
+        }
+
+        executeBarcodeMatching();
     }
 });
 
@@ -1746,5 +2505,216 @@ document.addEventListener("DOMContentLoaded", function () {
     const idPerusahaan = $(selectPerusahaan).val();
     if (idPerusahaan == 2) {
         dtListProduksi.hideColumn("qty_kirim");
+    }
+});
+
+// ==========================================
+// KONEKSI TIMBANGAN DIGITAL SERIAL (COM PORT) VIA WEB SERIAL API
+// MODE AUTOMATIC REAL-TIME (AUTO READ ON FOCUS / ROW CLICK)
+// ==========================================
+let serialScalePort = null;
+let serialScaleReader = null;
+let latestScaleWeight = 0;
+let isScaleAutoReading = false;
+let activeTargetRow = null;
+
+// Parser khusus Indikator Timbangan Yaohua YH-T3 / TM-G
+function parseYaohuaYHT3(rawBuffer) {
+    if (!rawBuffer) return 0;
+    const equalMatches = rawBuffer.match(/=[0-9\.\s\-+]+=/g);
+    if (equalMatches && equalMatches.length > 0) {
+        const lastMatch = equalMatches[equalMatches.length - 1].replace(/=/g, '').trim();
+        const reversedStr = lastMatch.split('').reverse().join('');
+        const numDirect = parseFloat(lastMatch);
+        const numReversed = parseFloat(reversedStr);
+
+        if (!isNaN(numDirect) && numDirect > 0 && numDirect < 2000) return numDirect;
+        if (!isNaN(numReversed) && numReversed > 0 && numReversed < 2000) return numReversed;
+    }
+    const matches = rawBuffer.match(/[-+]?\d*\.?\d+/g);
+    if (matches && matches.length > 0) {
+        for (let i = matches.length - 1; i >= 0; i--) {
+            let val = parseFloat(matches[i]);
+            if (!isNaN(val) && val > 0 && val < 5000) {
+                return val;
+            }
+        }
+    }
+    return 0;
+}
+
+async function startContinuousScaleStream() {
+    if (!("serial" in navigator)) {
+        let isHttp = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        let msgHtml = 'Fitur Timbangan Digital (Web Serial API) memerlukan browser berbasis Chromium (Google Chrome / Edge).';
+        if (isHttp) {
+            msgHtml = `
+                <div class="text-start">
+                    <p class="text-danger fw-bold mb-2">Akses Web HTTP Terdeteksi!</p>
+                    <p class="mb-2">Google Chrome & MS Edge mewajibkan koneksi <b>HTTPS</b> atau izin khusus untuk mengakses Timbangan Digital COM Port.</p>
+                    <hr class="my-2">
+                    <p class="fw-bold mb-1">Cara Aktifkan di Chrome (Cukup 1x saja):</p>
+                    <ol class="ps-3 mb-0 small">
+                        <li>Buka tab baru di Chrome, ketik: <br><code class="user-select-all text-dark bg-light px-1">chrome://flags/#unsafely-treat-insecure-origin-as-secure</code></li>
+                        <li>Ubah pilihan dari <i>Disabled/Default</i> menjadi <b>Enabled</b>.</li>
+                        <li>Ketik alamat web di kotaknya: <br><code class="user-select-all text-primary bg-light px-1">${window.location.origin}</code></li>
+                        <li>Klik tombol <b>Relaunch</b> di pojok kanan bawah Chrome.</li>
+                    </ol>
+                </div>
+            `;
+        }
+        Swal.fire({
+            icon: 'warning',
+            title: 'Izin Akses Timbangan',
+            html: msgHtml,
+            confirmButtonText: 'Mengerti'
+        });
+        return false;
+    }
+
+    try {
+        if (!serialScalePort) {
+            serialScalePort = await navigator.serial.requestPort();
+            await serialScalePort.open({
+                baudRate: 9600,
+                dataBits: 8,
+                stopBits: 1,
+                parity: "none"
+            });
+        }
+
+        isScaleAutoReading = true;
+        updateScaleButtonStatus(true);
+
+        const textDecoder = new TextDecoderStream();
+        const readableStreamClosed = serialScalePort.readable.pipeTo(textDecoder.writable);
+        serialScaleReader = textDecoder.readable.getReader();
+
+        let rawBuffer = "";
+
+        while (isScaleAutoReading) {
+            const { value, done } = await serialScaleReader.read();
+            if (done) break;
+            if (value) {
+                rawBuffer += value;
+                if (rawBuffer.length > 200) rawBuffer = rawBuffer.substring(rawBuffer.length - 100);
+
+                const weightVal = parseYaohuaYHT3(rawBuffer);
+                latestScaleWeight = weightVal;
+
+                // Realtime update: langsung isi target baris/input aktif saat ada beban live di timbangan
+                if (weightVal > 0) {
+                    applyAutoWeightToActiveTarget(weightVal);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Scale Stream Error:", err);
+        isScaleAutoReading = false;
+        serialScalePort = null;
+        updateScaleButtonStatus(false, err.message);
+    }
+}
+
+function updateScaleButtonStatus(isActive, errorMsg) {
+    const btnScale1 = $('#btn-read-scale');
+    const btnScale2 = $('#btn-read-scale-prod');
+    const statusText1 = $('#scale-status-text');
+    const statusText2 = $('#scale-status-text-prod');
+
+    if (isActive) {
+        btnScale1.removeClass("btn-primary btn-warning").addClass("btn-success").html('<i class="fa fa-circle text-white"></i> 🟢 Timbangan REALTIME');
+        btnScale2.removeClass("btn-primary btn-warning").addClass("btn-success").html('<i class="fa fa-circle text-white"></i> 🟢 Timbangan REALTIME');
+        statusText1.html('<span class="text-success fw-bold"><i class="fa fa-check-circle"></i> Mode Realtime Aktif! Saat barang diletakkan di timbangan, berat Kg langsung terisi realtime.</span>');
+        statusText2.html('<span class="text-success fw-bold"><i class="fa fa-check-circle"></i> Mode Realtime Aktif! Saat barang diletakkan di timbangan, berat Kg langsung terisi realtime.</span>');
+    } else {
+        btnScale1.removeClass("btn-success btn-warning").addClass("btn-primary").html('<i class="fa fa-balance-scale"></i> ⚖️ Timbangan');
+        btnScale2.removeClass("btn-success btn-warning").addClass("btn-primary").html('<i class="fa fa-balance-scale"></i> ⚖️ Timbangan');
+        if (errorMsg) {
+            statusText1.html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Gagal: ' + errorMsg + '</span>');
+            statusText2.html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Gagal: ' + errorMsg + '</span>');
+        } else {
+            statusText1.html('Mendukung Timbangan Yaohua YH-T3 / TM-G Serial COM Port (Chrome / Edge)');
+            statusText2.html('Mendukung Timbangan Yaohua YH-T3 / TM-G Serial COM Port (Chrome / Edge)');
+        }
+    }
+}
+
+function applyAutoWeightToActiveTarget(weightVal) {
+    if (!weightVal || weightVal <= 0) return;
+
+    // 1. Jika modal detail item terbuka dan input #qty_item difokuskan / aktif
+    if ($('#modal-detail-item').hasClass('show') || $('#qty_item').is(':focus')) {
+        $('#qty_item').val(weightVal).trigger('change');
+    }
+
+    // 2. Jika baris di Tabel 1 (dtListProduksi) sedang dipilih / aktif dan proses adalah Rajut
+    if (typeof dtListProduksi !== 'undefined' && dtListProduksi && isCurrentProcessRajut()) {
+        let selectedRows = dtListProduksi.getSelectedRows();
+        let targetRow = null;
+        if (selectedRows.length > 0) {
+            targetRow = selectedRows[0];
+        } else if (activeTargetRow) {
+            targetRow = activeTargetRow;
+        }
+
+        if (targetRow) {
+            targetRow.update({
+                berat: weightVal,
+                berat_qc: weightVal
+            });
+        }
+    }
+}
+
+// Handler klik baris/cell pada dtListProduksi untuk menangkap baris target aktif
+if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+    dtListProduksi.on("rowClick", function (e, row) {
+        activeTargetRow = row;
+        // Hanya set target aktif, tidak menimpa dengan angka lama dari memory
+    });
+
+    dtListProduksi.on("cellClick", function (e, cell) {
+        let row = cell.getRow();
+        activeTargetRow = row;
+        // Jika user klik cell berat saat mode timbangan aktif & timbangan sedang membaca beban realtime
+        let fieldName = cell.getField();
+        if (fieldName === 'berat' && isScaleAutoReading && isCurrentProcessRajut() && latestScaleWeight > 0) {
+            row.update({
+                berat: latestScaleWeight,
+                berat_qc: latestScaleWeight
+            });
+        }
+    });
+}
+
+$(document).on('focus', '#qty_item', function () {
+    if (isScaleAutoReading && latestScaleWeight > 0) {
+        $(this).val(latestScaleWeight).trigger('change');
+    }
+});
+
+$(document).on('click', '#btn-read-scale, #btn-read-scale-prod', function () {
+    if (!isScaleAutoReading) {
+        startContinuousScaleStream();
+    } else {
+        if (latestScaleWeight > 0) {
+            applyAutoWeightToActiveTarget(latestScaleWeight);
+            Swal.fire({
+                icon: 'success',
+                title: 'Berat Realtime Terisi!',
+                text: `Berat saat ini di timbangan: ${latestScaleWeight} Kg`,
+                timer: 1200,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'Timbangan Realtime Aktif',
+                text: 'Timbangan siap. Letakkan barang di atas timbangan untuk mengisi berat secara realtime.',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        }
     }
 });

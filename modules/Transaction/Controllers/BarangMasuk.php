@@ -240,30 +240,40 @@ class BarangMasuk extends BaseController
             foreach ($resDataDetail as &$rowData) {
                 $rowData->id_barang = encrypt($rowData->id_barang);
             }
+            $results = null;
             if (!empty($resData->no_ref_trf)) {
-                # code...
-                $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+                $results = $this->mTrf->getData(null, 0, 1, null, null, ['kode_transaksi' => $resData->no_ref_trf]);
+                if (is_array($results) && !empty($results)) {
+                    $results = $results[0];
+                }
             }
             else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
-                $results = $this->mTrf->getDataByProsesAndOperator($resData->id_proses, $resData->id_cmt);
+                $results = $this->mTrf->getData(null, 0, 1, null, null, ['id_proses' => $resData->id_proses, 'id_cmt' => $resData->id_cmt]);
+                if (is_array($results) && !empty($results)) {
+                    $results = $results[0];
+                }
             }
 
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
 
-            if($resData->id_kategori == 12 || $resData->id_kategori == 1){
-                if (!empty($resData->no_ref_trf)) {
-                # code...
-                    $resDataDetSO = !empty($results) ? $this->mRef->getDataDetSO($id) : null;
-                }
-                else if (empty($resData->no_ref_trf) && isset($resData->id_proses) && isset($resData->id_cmt)) {
-                    $resDataDetSO =  $this->mRef->getDataDetSO($id);
-                }
-                $this->data['dataSO'] = json_encode($resDataDetSO);
-            }else{
-                $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
-                $this->data['dataSO'] = json_encode($resDataDetSO);
+            $resDataDetSO = null;
+            if ($resData->id_kategori == 12 || $resData->id_kategori == 1 || $resData->id_kategori == 15) {
+                $resDataDetSO = $this->mRef->getDataDetSO($id);
+            } else if (!empty($results) && is_object($results) && !empty($results->id)) {
+                $resDataDetSO = $this->mTrfDet->getDataDetSO($results->id);
             }
+            if (!empty($resDataDetSO) && is_array($resDataDetSO)) {
+                foreach ($resDataDetSO as &$rSO) {
+                    $q = (float)($rSO->qty ?? 0);
+                    $h = (float)($rSO->harga ?? 0);
+                    $a = (float)($rSO->amount ?? 0);
+                    if ($a == 0 && $q > 0 && $h > 0) {
+                        $rSO->amount = $q * $h;
+                    }
+                }
+            }
+            $this->data['dataSO'] = json_encode($resDataDetSO);
         }
         $reDataKategori = $this->mBarangMasuk->getRefKategoriPersedian();
         $sortGudang = [
@@ -294,7 +304,7 @@ class BarangMasuk extends BaseController
             'dir' => 'ASC'
             ]
         ];
-        $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator, null, array("id_perusahaan" => $resData->id_perusahaan ?? null));
+        $resDataOperator = $this->mOperator->getData(null, 0, 99999, $sortOperator);
         $this->data['kategori']    = $reDataKategori;
         $this->data['gudang']    = $resDataGudang;
         $this->data['superadmin'] = $this->auth->isSuperadmin();
@@ -370,6 +380,13 @@ class BarangMasuk extends BaseController
             $id_buyer = decrypt($id_buyer);
         }
 
+        $today = date('Y-m-d');
+        if (!empty($tanggal) && $tanggal > $today) {
+            $build_array['message'] = "Tanggal transaksi tidak boleh melebihi hari ini ($today)!";
+            $build_array['status'] = false;
+            return $this->response->setJSON($build_array);
+        }
+
         $dataHeader = [
             // "id_buyer" => !empty($id_buyer) ? $id_buyer : null,
             "tanggal" => $tanggal,
@@ -392,7 +409,20 @@ class BarangMasuk extends BaseController
             $dataHeader['id_buyer'] = $id_buyer;
         }
 
-        if($id_kategori == 12 || $id_kategori == 1){
+        if($id_kategori == 12 || $id_kategori == 1 || $id_kategori == 15){
+            // Fallback pengaman: jika no_ref_trf diisi namun id_proses / id_cmt kosong dari frontend
+            if (!empty($no_ref_trf) && (empty($id_proses) || empty($id_cmt) || $id_cmt == -11)) {
+                $trfRef = $this->db->table('trans_barang_trf_header')->where('kode_transaksi', $no_ref_trf)->get()->getRow();
+                if (!empty($trfRef)) {
+                    if (empty($id_proses) && !empty($trfRef->id_proses)) {
+                        $id_proses = $trfRef->id_proses;
+                    }
+                    if ((empty($id_cmt) || $id_cmt == -11) && !empty($trfRef->id_cmt)) {
+                        $id_cmt = $trfRef->id_cmt;
+                    }
+                }
+            }
+
             $dataHeader['id_proses'] = $id_proses;
             $dataHeader['id_cmt'] = !empty($id_cmt) ? $id_cmt : -11 ;
             if (!empty($nomor_mesin)) {
@@ -420,6 +450,51 @@ class BarangMasuk extends BaseController
             $msg = "Data berhasil disimpan!";
         }else{
             $msg = $res['message'];
+        }
+
+        $build_array['message'] = $msg;
+        $build_array['status']  = $status;
+        return $this->response->setJSON($build_array);
+    }
+
+    // TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
+    // (stok trans_lots/trans_barang, dan utk Tipe Penerimaan Hasil Produksi/
+    // Sample-Perbaikan juga trans_barang_masuk_produksi/trans_produksi_operator/
+    // qty_prod WO) & kembalikan status dokumen ke Draft. Lihat
+    // BarangMasukModel::cancelApprove().
+    //
+    // TAMBAHAN (2026-08-09): dibatasi HANYA utk role Superadmin (1), Admin
+    // Aplikasi (2), dan Admin Keuangan (4) - permintaan eksplisit, terlepas
+    // dari izin allow_approve yang mungkin diberikan ke role lain lewat menu
+    // Roles. Dicek jg di sisi tombol (barang_masuk_form.php) supaya role
+    // lain tidak lihat tombolnya sama sekali, tapi pengecekan di sini yang
+    // jadi penentu utama krn tombol saja bisa di-bypass dari luar UI.
+    public function cancelApprove()
+    {
+        $msg    = "Approve gagal dibatalkan!";
+        $status = false;
+        $id = $this->request->getPost('id');
+
+        if (!in_array((int) session()->get('role_id'), [1, 2, 4, 5], true)) {
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => 'Hanya Superadmin, Admin Aplikasi, Admin Keuangan, dan Admin Citraknitt yang dapat membatalkan Approve!',
+            ]);
+        }
+
+        if (empty($id)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'ID tidak valid.']);
+        }
+
+        try {
+            $id = decrypt($id);
+            $res = $this->mRef->cancelApprove($id, $this->get_userid());
+            if ($res) {
+                $status = true;
+                $msg = "Approve berhasil dibatalkan, dokumen kembali ke Draft.";
+            }
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
         }
 
         $build_array['message'] = $msg;
@@ -645,29 +720,28 @@ class BarangMasuk extends BaseController
                ->setCellValue('A2', 'Barang Masuk (BTM) '. $title)
 
                ->setCellValue('A4', 'TANGGAL TRANSAKSI')
-               ->setCellValue('B4', 'KODE TRANSAKSI')
-               ->setCellValue('C4', 'JENIS TRANSAKSI')
-               ->setCellValue('D4', 'NO REF TRANSFER')
-               ->setCellValue('E4', 'KODE SALES ORDER')
-               ->setCellValue('F4', 'NAMA BUYER')
-               ->setCellValue('G4', 'STYLE')
-               ->setCellValue('H4', 'DESKRIPSI')
-               ->setCellValue('I4', 'GUDANG PENGIRIM')
-               ->setCellValue('J4', 'NAMA PROSES')
-               ->setCellValue('K4', 'NAMA CMT')
-               ->setCellValue('L4', 'COLOR')
-               ->setCellValue('M4', 'KODE UKURAN')
-               ->setCellValue('N4', 'KETERANGAN')
-               ->setCellValue('O4', 'NOMOR MESIN')
-               ->setCellValue('P4', 'JAM MESIN')
-               ->setCellValue('Q4', 'NILAI MESIN')
-            //    ->setCellValue('R4', 'QTY KIRIM')
-               ->setCellValue('R4', 'QTY')
-               ->setCellValue('S4', 'HARGA')
-               ->setCellValue('T4', 'AMOUNT')
-               ->setCellValue('U4', 'STATUS')
-               ->setCellValue('V4', 'TGL SCAN')
-               ->setCellValue('W4', 'TIPE TRANSAKSI');
+               ->setCellValue('B4', 'TIPE TRANSAKSI')
+               ->setCellValue('C4', 'KODE TRANSAKSI')
+               ->setCellValue('D4', 'JENIS TRANSAKSI')
+               ->setCellValue('E4', 'NO REF TRANSFER')
+               ->setCellValue('F4', 'KODE SALES ORDER')
+               ->setCellValue('G4', 'NAMA BUYER')
+               ->setCellValue('H4', 'STYLE')
+               ->setCellValue('I4', 'DESKRIPSI')
+               ->setCellValue('J4', 'GUDANG PENGIRIM')
+               ->setCellValue('K4', 'NAMA PROSES')
+               ->setCellValue('L4', 'NAMA CMT')
+               ->setCellValue('M4', 'COLOR')
+               ->setCellValue('N4', 'KODE UKURAN')
+               ->setCellValue('O4', 'KETERANGAN')
+               ->setCellValue('P4', 'NOMOR MESIN')
+               ->setCellValue('Q4', 'JAM MESIN')
+               ->setCellValue('R4', 'NILAI MESIN')
+               ->setCellValue('S4', 'QTY')
+               ->setCellValue('T4', 'HARGA')
+               ->setCellValue('U4', 'AMOUNT')
+               ->setCellValue('V4', 'STATUS')
+               ->setCellValue('W4', 'TGL SCAN');
 
             $styleArray = [
                 'borders' => [
@@ -787,15 +861,11 @@ class BarangMasuk extends BaseController
                 ],
             ];
             
-        $sheets->getActiveSheet()->freezePane('C5');
+        $sheets->getActiveSheet()->freezePane('D5');
         $gets->getStyle('A4:W4')->applyFromArray($styleArray_header);
-        // $gets->getStyle('A3:I3')->applyFromArray($styleArray_header);
         
         // set mergecell
-        // $sheets->getActiveSheet()->mergeCells('A2:I2');
         $sheets->getActiveSheet()->mergeCells('A2:W2');
-        // $sheets->getActiveSheet()->mergeCells('A4:I4');
-        // $sheets->getActiveSheet()->mergeCells('A5:C5');
 
         // set Center title
         $sheets->getActiveSheet()->getStyle('A2')
@@ -804,33 +874,30 @@ class BarangMasuk extends BaseController
         
         // set width
           $gets->getColumnDimension('A')->setWidth(20);
-          $gets->getColumnDimension('B')->setWidth(17);
-          $gets->getColumnDimension('C')->setWidth(35);
-          $gets->getColumnDimension('D')->setWidth(17);
+          $gets->getColumnDimension('B')->setWidth(15);
+          $gets->getColumnDimension('C')->setWidth(17);
+          $gets->getColumnDimension('D')->setWidth(35);
           $gets->getColumnDimension('E')->setWidth(17);
-          $gets->getColumnDimension('F')->setWidth(30);
+          $gets->getColumnDimension('F')->setWidth(17);
           $gets->getColumnDimension('G')->setWidth(25);
-          $gets->getColumnDimension('H')->setWidth(35);
-          $gets->getColumnDimension('I')->setWidth(25);
-          $gets->getColumnDimension('J')->setWidth(35);
+          $gets->getColumnDimension('H')->setWidth(25);
+          $gets->getColumnDimension('I')->setWidth(35);
+          $gets->getColumnDimension('J')->setWidth(25);
           $gets->getColumnDimension('K')->setWidth(35);
-          $gets->getColumnDimension('L')->setWidth(45);
-          $gets->getColumnDimension('M')->setWidth(10);
-          $gets->getColumnDimension('N')->setWidth(20);
-          $gets->getColumnDimension('O')->setWidth(10);
+          $gets->getColumnDimension('L')->setWidth(35);
+          $gets->getColumnDimension('M')->setWidth(45);
+          $gets->getColumnDimension('N')->setWidth(10);
+          $gets->getColumnDimension('O')->setWidth(20);
           $gets->getColumnDimension('P')->setWidth(10);
           $gets->getColumnDimension('Q')->setWidth(10);
-        //   $gets->getColumnDimension('R')->setWidth(15);
-          $gets->getColumnDimension('R')->setWidth(15);
-          $gets->getColumnDimension('S')->setWidth(30);
-          $gets->getColumnDimension('T')->setWidth(30);
-          $gets->getColumnDimension('U')->setWidth(10);
-          $gets->getColumnDimension('V')->setWidth(25);
-          $gets->getColumnDimension('W')->setWidth(15);
-        //   $gets->getColumnDimension('X')->setWidth(15);
+          $gets->getColumnDimension('R')->setWidth(10);
+          $gets->getColumnDimension('S')->setWidth(15);
+          $gets->getColumnDimension('T')->setWidth(15);
+          $gets->getColumnDimension('U')->setWidth(30);
+          $gets->getColumnDimension('V')->setWidth(10);
+          $gets->getColumnDimension('W')->setWidth(25);
 
         // end set width
-        //   $gets->getStyle('A3:I3')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
           $gets->getStyle('A4:W4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
           $gets->getStyle('A4:W4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
@@ -846,8 +913,6 @@ class BarangMasuk extends BaseController
                         ->getStartColor()->setARGB('C5D9F1');
                 $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getEndColor()->setARGB('C5D9F1');
-            
-            // $sheets->getActiveSheet()->mergeCells($indexs[$i].'2');
 
             $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
                     ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
@@ -859,26 +924,6 @@ class BarangMasuk extends BaseController
 
         $ix = 5;
         $is = 0;
-        // for ($i=1; $i <= 4 ; $i++) { 
-        //     // declaration image
-        //     $isR = $ix * $is;
-        //     if($is > 0){
-        //         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-        //         $drawing->setName('Paid');
-        //         $drawing->setDescription('Paid');
-        //         $drawing->setPath(ROOTPATH . 'public/assets/images/text-excel.png');
-        //         $drawing->setCoordinates('C'.$isR);
-        //         $drawing->setOffsetX(85);
-        //         $drawing->setRotation(-35);
-        //         // $drawing->getShadow()->setVisible(false);
-        //         // $drawing->getShadow()->setDirection(45);
-        //         $drawing->setHeight(65);
-        //         $drawing->setWorksheet($gets);
-        //     }
-
-        //     $is += $ix;
-        // }
-        
         
         $length = $ix;
 
@@ -892,7 +937,6 @@ class BarangMasuk extends BaseController
         for ($xx = 0; $xx < count($results) ; $xx++) { 
             
             $r = $results[$xx];
-            
 
             $qty += $r->qty;
             $amount += $r->amount;
@@ -911,40 +955,37 @@ class BarangMasuk extends BaseController
                 $print_type = "PERBAIKAN";
             }
 
+            $tglTransaksiFormatted = !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : (!empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-");
+
             $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('A'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-")
-                    ->setCellValue('B'.$ix, !empty($r->kode_transaksi) ? $r->kode_transaksi : "-")
-                    ->setCellValue('C'.$ix, !empty($r->jenis_transaksi) ? $r->jenis_transaksi : "-")
-                    ->setCellValue('D'.$ix, !empty($r->no_ref_trf) ? $r->no_ref_trf : '-')
-                    ->setCellValue('E'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : '-')
-                    ->setCellValue('F'.$ix, !empty($r->nama_buyer) ? $r->nama_buyer : '-')
-                    ->setCellValue('G'.$ix, !empty($r->style) ? $r->style : '-')
-                    ->setCellValue('H'.$ix, !empty($r->deskripsi) ? $r->deskripsi : '-')
-                    ->setCellValue('I'.$ix, !empty($r->gudang_pengirim) ? $r->gudang_pengirim : '-')
-                    ->setCellValue('J'.$ix, !empty($r->nama_proses) ? $r->nama_proses : '-')
-                    ->setCellValue('K'.$ix, !empty($r->nama_cmt) ? $r->nama_cmt : '-')
-                    ->setCellValue('L'.$ix, !empty($r->color) ? $r->color : '-')
-                    ->setCellValue('M'.$ix, !empty($r->kode_ukuran) ? $r->kode_ukuran : '-')
-                    ->setCellValue('N'.$ix, !empty($r->keterangan) ? $r->keterangan : '-')
-                    ->setCellValue('O'.$ix, !empty($r->nomor_mesin) ? $r->nomor_mesin : '-')
-                    ->setCellValue('P'.$ix, !empty($r->jam_mesin) ? $r->jam_mesin : '-')
-                    ->setCellValue('Q'.$ix, !empty($r->nilai_mesin) ? $r->nilai_mesin : '-')
-                    // ->setCellValue('R'.$ix, !empty($r->qty_kirim) ? $r->qty_kirim : 0)
-                    ->setCellValue('R'.$ix, !empty($r->qty) ? $r->qty : 0)
-                    ->setCellValue('S'.$ix, !empty($r->harga) ? $r->harga : 0)
-                    ->setCellValue('T'.$ix, !empty($r->amount) ? $r->amount : 0)
-                    ->setCellValue('U'.$ix, $status_data)
-                    ->setCellValue('V'.$ix, !empty($r->tgl_scan) ? $r->tgl_scan : '-')
-                    ->setCellValue('W'.$ix, $print_type);
-                    // ->setCellValue('O'.$ix, !empty($row->bln1) ? $row->bln1 : 0);
+                    ->setCellValue('A'.$ix, $tglTransaksiFormatted)
+                    ->setCellValue('B'.$ix, $print_type)
+                    ->setCellValue('C'.$ix, !empty($r->kode_transaksi) ? $r->kode_transaksi : "-")
+                    ->setCellValue('D'.$ix, !empty($r->jenis_transaksi) ? $r->jenis_transaksi : "-")
+                    ->setCellValue('E'.$ix, !empty($r->no_ref_trf) ? $r->no_ref_trf : '-')
+                    ->setCellValue('F'.$ix, !empty($r->kode_sales_order) ? $r->kode_sales_order : '-')
+                    ->setCellValue('G'.$ix, !empty($r->nama_buyer) ? $r->nama_buyer : '-')
+                    ->setCellValue('H'.$ix, !empty($r->style) ? $r->style : '-')
+                    ->setCellValue('I'.$ix, !empty($r->deskripsi) ? $r->deskripsi : '-')
+                    ->setCellValue('J'.$ix, !empty($r->gudang_pengirim) ? $r->gudang_pengirim : '-')
+                    ->setCellValue('K'.$ix, !empty($r->nama_proses) ? $r->nama_proses : '-')
+                    ->setCellValue('L'.$ix, !empty($r->nama_cmt) ? $r->nama_cmt : '-')
+                    ->setCellValue('M'.$ix, !empty($r->color) ? $r->color : '-')
+                    ->setCellValue('N'.$ix, !empty($r->kode_ukuran) ? $r->kode_ukuran : '-')
+                    ->setCellValue('O'.$ix, !empty($r->keterangan) ? $r->keterangan : '-')
+                    ->setCellValue('P'.$ix, !empty($r->nomor_mesin) ? $r->nomor_mesin : '-')
+                    ->setCellValue('Q'.$ix, !empty($r->jam_mesin) ? $r->jam_mesin : '-')
+                    ->setCellValue('R'.$ix, !empty($r->nilai_mesin) ? $r->nilai_mesin : '-')
+                    ->setCellValue('S'.$ix, !empty($r->qty) ? $r->qty : 0)
+                    ->setCellValue('T'.$ix, !empty($r->harga) ? $r->harga : 0)
+                    ->setCellValue('U'.$ix, !empty($r->amount) ? $r->amount : 0)
+                    ->setCellValue('V'.$ix, $status_data)
+                    ->setCellValue('W'.$ix, !empty($r->tgl_scan) ? $r->tgl_scan : '-');
 
-            // if($length > 0 && $ix === $length - 1){
-            //     $gets->getStyle('A'.$ix.':N'.$ix)->applyFromArray($style_bodyBottom);
-            // }else{
-                $gets->getStyle('A'.$ix.':W'.$ix)->applyFromArray($stylexArray);
-            // }
+            $gets->getStyle('A'.$ix.':W'.$ix)->applyFromArray($stylexArray);
+            $gets->getStyle('B'.$ix)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-            $sheets->getActiveSheet()->getStyle("T" . $ix .":V" . $ix )->getNumberFormat()
+            $sheets->getActiveSheet()->getStyle("T" . $ix .":U" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
             $ix++;
@@ -952,18 +993,18 @@ class BarangMasuk extends BaseController
         $sheets->setActiveSheetIndex(0)
                ->setCellValue('A'.$length, "Total");
 
-        $sheets->getActiveSheet()->mergeCells('A'. $length .':Q'. $length);
+        $sheets->getActiveSheet()->mergeCells('A'. $length .':R'. $length);
         
         $gets->getStyle('A'.$length.':W'.$length)->applyFromArray($stylexArrayFooter);
         
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('R'.$length, $qty);
+        $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('S'.$length, $qty);
 
-       $sheets->setActiveSheetIndex(0)
-                    ->setCellValue('T'.$length, $amount);
+        $sheets->setActiveSheetIndex(0)
+                    ->setCellValue('U'.$length, $amount);
 
-       $gets->getStyle("T" . $length)->getNumberFormat()
-               ->setFormatCode('#,##0.00');
+        $gets->getStyle("U" . $length)->getNumberFormat()
+                ->setFormatCode('#,##0.00');
        
         
         
@@ -978,5 +1019,17 @@ class BarangMasuk extends BaseController
         ob_end_clean();
         $writer->save('php://output'); // download file 
         exit;
+    }
+
+    public function panduan()
+    {
+        $this->data['guide_title']        = "Panduan Barang Masuk";
+        $this->data['guide_subtitle']     = "Modul Transaksi Penerimaan Barang Masuk (Incoming Goods)";
+        $this->data['guide_version']      = "1.0 (Resmi)";
+        $this->data['guide_release_date'] = "22 Agustus 2026";
+        $this->data['guide_module']       = "Persediaan & Produksi / Transaksi";
+        $this->data['back_url']           = base_url('trans/incoming-goods');
+
+        return view($this->views . '\vbarang_masuk_guide', $this->data);
     }
 }

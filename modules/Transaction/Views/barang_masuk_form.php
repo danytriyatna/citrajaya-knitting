@@ -48,8 +48,14 @@
         <div class="form-group row mb-3">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="qty_item">Qty Receive</label>
           <div class="col-md-9">
-            <input type="number" id="qty_item" name="qty_item" min="0"
-              class="form-control" placeholder="Ketikkan qty item">
+            <div class="input-group">
+              <input type="number" id="qty_item" name="qty_item" min="0" step="any"
+                class="form-control" placeholder="Ketikkan qty item atau klik Timbangan">
+              <button class="btn btn-primary" type="button" id="btn-read-scale" title="Ambil Berat dari Timbangan Serial (COM Port)">
+                <i class="fa fa-balance-scale"></i> ⚖️ Timbangan
+              </button>
+            </div>
+            <small class="text-muted d-block mt-1" id="scale-status-text">Mendukung Timbangan Digital Serial COM Port (Chrome / Edge)</small>
           </div>
         </div>
 
@@ -254,7 +260,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="kode_transaksi">Transaction No.</label>
                     <div class="col-md-9">
-                      <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
+                      <input type="hidden" id="status" name="status" value="<?= isset($resData->status) && $resData->status !== null ? $resData->status : 0 ?>" class="form-control" required>
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
                       <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
@@ -314,9 +320,9 @@
                       <select id="select_warehouse" name="select_warehouse" class="form-select select2" data-placeholder="-- Pilih Warehouse --">
                         <?php foreach ($gudang as $item) : ?>
                           <?php if (!empty($resData->id_gudang) && $resData->id_gudang == $item->id) { ?>
-                            <option selected value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                            <option selected value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?></option>
                           <?php } else { ?>
-                            <option value="<?= $item->id ?>"><?= $item->nama_gudang ?></option>
+                            <option value="<?= $item->id ?>" data-perusahaan="<?= $item->id_perusahaan ?? '' ?>"><?= $item->nama_gudang ?></option>
                           <?php } ?>
 
                         <?php endforeach; ?>
@@ -383,13 +389,14 @@
                         <div class="col-md-9">
                           <!-- <input type="text" id="proses" name="proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->proses : '' ?>" readonly> -->
                           <!-- <input type="hidden" id="id_proses" name="id_proses" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_proses : '' ?>" readonly> -->
-                          <select id="select_proses" name="id_proses" class="form-select select2" value="" data-placeholder="-- Pilih Proses --">
+                          <select id="select_proses" name="id_proses" class="form-select select2" data-selected="<?= !empty($resData->id_proses) ? $resData->id_proses : '' ?>" data-placeholder="-- Pilih Proses --" <?= !empty($resData->no_ref_trf) ? 'disabled' : '' ?>>
 
                             <?php foreach ($proses as $item) : ?>
+                              <?php $isRajut = !empty($item->is_rajut) ? 1 : 0; ?>
                               <?php if (!empty($resData->id_proses) && $resData->id_proses == $item->id) { ?>
-                                <option selected value="<?= $item->id ?>"><?= $item->nama ?></option>
+                                <option selected value="<?= $item->id ?>" data-is-rajut="<?= $isRajut ?>"><?= $item->nama ?></option>
                               <?php } else { ?>
-                                <option value="<?= $item->id ?>"><?= $item->nama ?></option>
+                                <option value="<?= $item->id ?>" data-is-rajut="<?= $isRajut ?>"><?= $item->nama ?></option>
                               <?php } ?>
                             <?php endforeach; ?>
                           </select>
@@ -402,7 +409,7 @@
                         <div class="col-md-9">
                           <!-- <input type="text" id="nama_operator" name="nama_operator" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->nama_operator : '' ?>" readonly> -->
                           <!-- <input type="hidden" id="id_cmt" name="id_cmt" class="form-control" placeholder="Terisi otomatis oleh sistem" value="<?= !empty($resData)? $resData->id_cmt : '' ?>" readonly> -->
-                          <select id="select_operator" name="id_cmt" class="form-select select2" value="" data-placeholder="-- Pilih CMT --">
+                          <select id="select_operator" name="id_cmt" class="form-select select2" data-selected="<?= !empty($resData->id_cmt) ? $resData->id_cmt : '' ?>" data-placeholder="-- Pilih CMT --" <?= !empty($resData->no_ref_trf) ? 'disabled' : '' ?>>
 
                             <?php foreach ($data_cmt as $item) : ?>
                               <?php if (!empty($resData->id_cmt) && $resData->id_cmt == $item->id) { ?>
@@ -475,7 +482,11 @@
                 <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
                 <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
                 <button <?=  !empty($role_id) && ($role_id == 1 || $role_id == 2) ? null : 'hidden' ?> type="button" class="btn btn-info text-white" id="btn-ref-po"><i class="fa fa-plus"></i></button> 
+                <button type="button" class="btn btn-primary" id="btn-read-scale-prod" title="Ambil Berat dari Timbangan Serial (COM Port)">
+                  <i class="fa fa-balance-scale"></i> ⚖️ Timbangan
+                </button>
               </div>
+              <small class="text-muted d-block ms-1" id="scale-status-text-prod">Ambil nilai Kg dari Timbangan Yaohua YH-T3 untuk kolom Berat (Kg) baris yang dipilih / terakhir</small>
             </div>
 
             <div class="row">
@@ -509,6 +520,7 @@
                   </button>
 
                   <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
+                  <button <?= !empty($role_id) && ($role_id == 1 || $role_id == 2 || $role_id == 4 || $role_id == 5) ? null : 'hidden' ?> type="button" class="m-s-5 btn btn-danger" id="btn-cancel-approve"> <i class="fa fa-undo"></i> Batalkan Approve</button>
                 </div>
               </div>
             </div>
@@ -519,7 +531,7 @@
   </div>
 </div>
 
-<?= $this->endSection('content'); ?>]
+<?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/barang_masuk/form.js"></script>
+<script src="<?= base_url('script/app/transaction/barang_masuk/form.js?v=' . time()); ?>"></script>
 <?= $this->endSection('script'); ?>

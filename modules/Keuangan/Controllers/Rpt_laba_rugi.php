@@ -71,6 +71,254 @@ class Rpt_laba_rugi extends BaseController
 		return view($this->url_v.'\vakun_rep_laba', $this->data);
 	}
 
+                    public function preview()
+    {
+        $bulanFrom = $this->request->getPost('bulan_from');
+        $tahunFrom = $this->request->getPost('tahun_from');
+        $bulanTo   = $this->request->getPost('bulan_to');
+        $tahunTo   = $this->request->getPost('tahun_to');
+
+        if (empty($bulanFrom)) $bulanFrom = date('m');
+        if (empty($tahunFrom)) $tahunFrom = date('Y');
+        if (empty($bulanTo))   $bulanTo   = date('m');
+        if (empty($tahunTo))   $tahunTo   = date('Y');
+
+        $bulanFrom = str_pad($bulanFrom, 2, "0", STR_PAD_LEFT);
+        $bulanTo   = str_pad($bulanTo, 2, "0", STR_PAD_LEFT);
+
+        $resultsSO    = $this->mcoa->get_mutasi_export_so_laba($bulanFrom, $tahunFrom, $bulanTo, $tahunTo);
+        $resultsCR    = $this->mcoa->get_mutasi_export_cr_laba($bulanFrom, $tahunFrom, $bulanTo, $tahunTo);
+        $resultsBiaya = $this->mcoa->get_mutasi_export_biaya_laba($bulanFrom, $tahunFrom, $bulanTo, $tahunTo);
+
+        // 1. Data Penjualan (SO + CR)
+        $listPenjualan = [];
+        $totalSO = 0;
+        $totalCR = 0;
+
+        foreach ($resultsSO as $r) {
+            $nom = !empty($r->nominal) ? (float)$r->nominal : 0;
+            $totalSO += $nom;
+            $listPenjualan[] = [
+                'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                'tgl_transaksi'   => !empty($r->tgl_transaksi) ? date('d-m-Y', strtotime($r->tgl_transaksi)) : "-",
+                'raw_tgl'         => !empty($r->tgl_transaksi) ? $r->tgl_transaksi : "",
+                'transaksi'       => "<span class='badge bg-info text-white'>Sales Order (DP)</span>",
+                'kode_transaksi'  => !empty($r->kode_sales_order) ? $r->kode_sales_order : "-",
+                'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                'nominal'         => $nom
+            ];
+        }
+
+        foreach ($resultsCR as $r) {
+            $nom = !empty($r->nominal) ? (float)$r->nominal : 0;
+            $totalCR += $nom;
+            $listPenjualan[] = [
+                'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                'tgl_transaksi'   => !empty($r->tgl_transaksi) ? date('d-m-Y', strtotime($r->tgl_transaksi)) : "-",
+                'raw_tgl'         => !empty($r->tgl_transaksi) ? $r->tgl_transaksi : "",
+                'transaksi'       => "<span class='badge bg-success'>Customer Receipt</span>",
+                'kode_transaksi'  => !empty($r->kode_cr) ? $r->kode_cr : "-",
+                'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                'nominal'         => $nom
+            ];
+        }
+
+        usort($listPenjualan, function ($a, $b) {
+            return strtotime($a['raw_tgl']) <=> strtotime($b['raw_tgl']);
+        });
+
+        $totalPenjualan = $totalSO + $totalCR;
+
+        // 2. Data Biaya Produksi Hybrid:
+        // - Sebelum 2026-08-01: Pembayaran Pembelian (PO)
+        // - Mulai 2026-08-01: Pemakaian Bahan Baku (BTK Approved)
+        $startDate = "$tahunFrom-$bulanFrom-01";
+        $lastDay = date("t", strtotime("$tahunTo-$bulanTo-01"));
+        $endDate = "$tahunTo-$bulanTo-$lastDay";
+
+        $cutoff = "2026-08-01";
+        $listBiayaProduksi = [];
+        $totalBiayaProduksi = 0;
+        $totalPemakaianQty = 0;
+
+        // A. Periode sebelum Agustus 2026 (PO)
+        if ($startDate < $cutoff) {
+            $poEnd = min($endDate, '2026-07-31');
+            $poBuilder = $this->db->table("trans_po_pembayaran tpp");
+            $poBuilder->select("
+                'Pembayaran' AS type, 
+                tpp.id_rek, 
+                CONCAT('Pembayaran Pembelian', ' - ', rv.nama) AS keterangan, 
+                CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+                tpp.pay_date AS tgl_transaksi, 
+                tpp.pay_no AS kode_transaksi, 
+                tpp.total_bayar AS nominal
+            ");
+            $poBuilder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
+            $poBuilder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
+            $poBuilder->where("tpp.active", 1);
+            $poBuilder->where("tpp.pay_date >=", $startDate);
+            $poBuilder->where("tpp.pay_date <=", $poEnd);
+            $poBuilder->orderBy("tpp.pay_date", "ASC");
+            $poRes = $poBuilder->get()->getResult();
+
+            foreach ($poRes as $r) {
+                $nom = (float)$r->nominal;
+                $totalBiayaProduksi += $nom;
+                $tglStr = !empty($r->tgl_transaksi) ? str_replace('/', '-', $r->tgl_transaksi) : "";
+                $listBiayaProduksi[] = [
+                    'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'   => !empty($tglStr) ? date('d-m-Y', strtotime($tglStr)) : "-",
+                    'raw_tgl'         => $tglStr,
+                    'kode_transaksi'  => !empty($r->kode_transaksi) ? $r->kode_transaksi : "-",
+                    'no_ref_wo'       => "-",
+                    'nama_barang'     => $r->keterangan,
+                    'lot_no'          => "-",
+                    'qty'             => 0,
+                    'harga'           => 0,
+                    'nominal'         => $nom
+                ];
+            }
+        }
+
+        // B. Periode mulai Agustus 2026 (BTK)
+        if ($endDate >= $cutoff) {
+            $btkStart = max($startDate, $cutoff);
+            $sqlBtk = "
+                SELECT 
+                    tbh.id as id_header,
+                    tbh.kode_transaksi,
+                    tbh.tanggal as tgl_transaksi,
+                    tbh.no_ref_wo,
+                    tbh.no_ref_trf,
+                    COALESCE(rg.nama_gudang, 'Gudang') as tipe_bayar,
+                    tbd.id_barang,
+                    rb.kode_barang,
+                    rb.nama_barang,
+                    COALESCE(NULLIF(rb.keterangan, ''), rb.nama_barang) as ket_barang,
+                    tbd.qty,
+                    COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0) as price,
+                    (tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) as subtotal,
+                    tbd.lot_no
+                FROM trans_barang_detail tbd
+                JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+                LEFT JOIN ref_gudang rg ON rg.id = tbh.id_gudang
+                WHERE tbh.jenis_transaksi = 2
+                AND tbh.id_kategori = 5
+                AND tbh.status = 1
+                AND tbh.active = 1
+                AND tbh.tanggal >= '$btkStart'
+                AND tbh.tanggal <= '$endDate'
+                ORDER BY tbh.tanggal ASC, tbd.id ASC
+            ";
+            $btkRes = $this->db->query($sqlBtk)->getResult();
+
+            foreach ($btkRes as $r) {
+                $nom = (float)$r->subtotal;
+                $qty = (float)$r->qty;
+                $price = (float)$r->price;
+
+                $totalBiayaProduksi += $nom;
+                $totalPemakaianQty += $qty;
+
+                $tglStr = !empty($r->tgl_transaksi) ? str_replace('/', '-', $r->tgl_transaksi) : "";
+                $ket = !empty($r->nama_barang) ? $r->nama_barang : "-";
+                if (!empty($r->ket_barang) && $r->ket_barang != $r->nama_barang) {
+                    $ket .= " (" . $r->ket_barang . ")";
+                }
+
+                $listBiayaProduksi[] = [
+                    'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'   => !empty($tglStr) ? date('d-m-Y', strtotime($tglStr)) : "-",
+                    'raw_tgl'         => $tglStr,
+                    'kode_transaksi'  => !empty($r->kode_transaksi) ? $r->kode_transaksi : "-",
+                    'no_ref_wo'       => !empty($r->no_ref_wo) ? $r->no_ref_wo : "-",
+                    'nama_barang'     => $ket,
+                    'lot_no'          => !empty($r->lot_no) ? $r->lot_no : "-",
+                    'qty'             => $qty,
+                    'harga'           => $price,
+                    'nominal'         => $nom
+                ];
+            }
+        }
+
+        usort($listBiayaProduksi, function ($a, $b) {
+            return strtotime($a['raw_tgl']) <=> strtotime($b['raw_tgl']);
+        });
+
+        // 3. Data Beban Operasional (Biaya)
+        $listOperasional = [];
+        $rekapBeban = [];
+        $totalOperasional = 0;
+
+        foreach ($resultsBiaya as $r) {
+            $nom = !empty($r->jumlah) ? (float)$r->jumlah : 0;
+            $totalOperasional += $nom;
+            $tglStr = !empty($r->trans_akun_date) ? str_replace('/', '-', $r->trans_akun_date) : "";
+
+            $listOperasional[] = [
+                'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                'tgl_transaksi'   => !empty($tglStr) ? date('d-m-Y', strtotime($tglStr)) : "-",
+                'raw_tgl'         => $tglStr,
+                'kode_transaksi'  => !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-",
+                'kode'            => !empty($r->kode) ? $r->kode : "-",
+                'nama'            => !empty($r->nama) ? $r->nama : "-",
+                'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                'nominal'         => $nom
+            ];
+
+            $k = !empty($r->kode) ? $r->kode : "OTHER";
+            if (!isset($rekapBeban[$k])) {
+                $rekapBeban[$k] = [
+                    'kode'  => !empty($r->kode) ? $r->kode : "-",
+                    'nama'  => !empty($r->nama) ? $r->nama : "Lainnya",
+                    'total' => 0,
+                    'count' => 0
+                ];
+            }
+            $rekapBeban[$k]['total'] += $nom;
+            $rekapBeban[$k]['count']++;
+        }
+
+        usort($listOperasional, function ($a, $b) {
+            return strtotime($a['raw_tgl']) <=> strtotime($b['raw_tgl']);
+        });
+
+        ksort($rekapBeban);
+        $rekapBebanList = array_values($rekapBeban);
+
+        $labaKotor = $totalPenjualan - $totalBiayaProduksi;
+        $labaBersih = $labaKotor - $totalOperasional;
+
+        // Dynamic Title / Labels based on period
+        $labelBiayaProduksi = "Beban Pokok Produksi";
+        if ($endDate < $cutoff) {
+            $labelBiayaProduksi = "Beban Pembelian (PO)";
+        } else if ($startDate >= $cutoff) {
+            $labelBiayaProduksi = "Pemakaian Bahan Baku (BTK)";
+        } else {
+            $labelBiayaProduksi = "Pembelian (PO) & Pemakaian Bahan (BTK)";
+        }
+
+        return $this->response->setJSON([
+            'status'               => true,
+            'total_so'             => $totalSO,
+            'total_cr'             => $totalCR,
+            'total_penjualan'      => $totalPenjualan,
+            'total_pembelian'      => $totalBiayaProduksi,
+            'label_biaya_produksi' => $labelBiayaProduksi,
+            'total_pemakaian_qty'  => $totalPemakaianQty,
+            'laba_kotor'           => $labaKotor,
+            'rekap_beban'          => $rekapBebanList,
+            'total_operasional'    => $totalOperasional,
+            'laba_bersih'          => $labaBersih,
+            'list_penjualan'       => $listPenjualan,
+            'list_pembelian'       => $listBiayaProduksi,
+            'list_operasional'     => $listOperasional
+        ]);
+    }
+
     public function lists()
     {
         $start      = $this->request->getPost('start');
@@ -130,6 +378,9 @@ class Rpt_laba_rugi extends BaseController
     public function exp_laba($bulan, $tahun, $bulanTo, $tahunTo){
         $ref_rekening = "all";
 
+        $bulan = str_pad($bulan, 2, "0", STR_PAD_LEFT);
+        $bulanTo = str_pad($bulanTo, 2, "0", STR_PAD_LEFT);
+
         $dateFrom = DateTime::createFromFormat('!m', $bulan);
         $nama_bulan_from = $dateFrom->format('F');
 
@@ -142,27 +393,116 @@ class Rpt_laba_rugi extends BaseController
             $periode_text = "$nama_bulan_from $tahun - $nama_bulan_to $tahunTo";
         }
 
-        $resultsSO = $this->mcoa->get_mutasi_export_so_laba($bulan, $tahun, $bulanTo, $tahunTo);
-        $resultsCR = $this->mcoa->get_mutasi_export_cr_laba($bulan, $tahun, $bulanTo, $tahunTo);
-        $resultsPB = $this->mcoa->get_mutasi_export_pb_laba($bulan, $tahun, $bulanTo, $tahunTo);
+        $resultsSO    = $this->mcoa->get_mutasi_export_so_laba($bulan, $tahun, $bulanTo, $tahunTo);
+        $resultsCR    = $this->mcoa->get_mutasi_export_cr_laba($bulan, $tahun, $bulanTo, $tahunTo);
         $resultsBiaya = $this->mcoa->get_mutasi_export_biaya_laba($bulan, $tahun, $bulanTo, $tahunTo);
 
-        $results_all = array_merge($resultsSO, $resultsCR);
+        // Hybrid Biaya Produksi (PO sebelum Agustus 2026, BTK mulai Agustus 2026)
+        $startDate = "$tahun-$bulan-01";
+        $lastDay = date("t", strtotime("$tahunTo-$bulanTo-01"));
+        $endDate = "$tahunTo-$bulanTo-$lastDay";
+        $cutoff = "2026-08-01";
 
+        $resultsBiayaProduksi = [];
+
+        // A. Periode sebelum Agustus 2026 (PO)
+        if ($startDate < $cutoff) {
+            $poEnd = min($endDate, '2026-07-31');
+            $poBuilder = $this->db->table("trans_po_pembayaran tpp");
+            $poBuilder->select("
+                'Pembayaran' AS type, 
+                tpp.id_rek, 
+                CONCAT('Pembayaran Pembelian', ' - ', rv.nama) AS keterangan, 
+                CONCAT(rr.rekening_no, ' - ', rr.rekening_bank) AS tipe_bayar, 
+                tpp.pay_date AS tgl_transaksi, 
+                tpp.pay_no AS kode_transaksi, 
+                tpp.total_bayar AS nominal
+            ");
+            $poBuilder->join("ref_rekening rr", "rr.id = tpp.id_rek", "left");
+            $poBuilder->join("ref_vendor rv", "rv.id = tpp.id_vendor", "left");
+            $poBuilder->where("tpp.active", 1);
+            $poBuilder->where("tpp.pay_date >=", $startDate);
+            $poBuilder->where("tpp.pay_date <=", $poEnd);
+            $poBuilder->orderBy("tpp.pay_date", "ASC");
+            $poRes = $poBuilder->get()->getResult();
+
+            foreach ($poRes as $r) {
+                $resultsBiayaProduksi[] = (object)[
+                    'tipe_bayar'     => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'  => $r->tgl_transaksi,
+                    'type'           => 'Pembayaran PO',
+                    'kode_transaksi' => !empty($r->kode_transaksi) ? $r->kode_transaksi : "-",
+                    'kode_akun'      => "-",
+                    'nama_akun'      => "-",
+                    'keterangan'     => !empty($r->keterangan) ? $r->keterangan : "-",
+                    'nominal'        => (float)$r->nominal
+                ];
+            }
+        }
+
+        // B. Periode mulai Agustus 2026 (BTK Approved)
+        if ($endDate >= $cutoff) {
+            $btkStart = max($startDate, $cutoff);
+            $sqlBtk = "
+                SELECT 
+                    tbh.id as id_header,
+                    tbh.kode_transaksi,
+                    tbh.tanggal as tgl_transaksi,
+                    tbh.no_ref_wo,
+                    COALESCE(rg.nama_gudang, 'Gudang') as tipe_bayar,
+                    tbd.id_barang,
+                    rb.kode_barang,
+                    rb.nama_barang,
+                    COALESCE(NULLIF(rb.keterangan, ''), rb.nama_barang) as ket_barang,
+                    tbd.qty,
+                    COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0) as price,
+                    (tbd.qty * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) as subtotal,
+                    tbd.lot_no
+                FROM trans_barang_detail tbd
+                JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+                LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
+                LEFT JOIN ref_gudang rg ON rg.id = tbh.id_gudang
+                WHERE tbh.jenis_transaksi = 2
+                AND tbh.id_kategori = 5
+                AND tbh.status = 1
+                AND tbh.active = 1
+                AND tbh.tanggal >= '$btkStart'
+                AND tbh.tanggal <= '$endDate'
+                ORDER BY tbh.tanggal ASC, tbd.id ASC
+            ";
+            $btkRes = $this->db->query($sqlBtk)->getResult();
+
+            foreach ($btkRes as $r) {
+                $ket = !empty($r->nama_barang) ? $r->nama_barang : "-";
+                if (!empty($r->ket_barang) && $r->ket_barang != $r->nama_barang) {
+                    $ket .= " (" . $r->ket_barang . ")";
+                }
+                if (!empty($r->no_ref_wo)) {
+                    $ket .= " [WO: " . $r->no_ref_wo . "]";
+                }
+                $resultsBiayaProduksi[] = (object)[
+                    'tipe_bayar'     => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'  => $r->tgl_transaksi,
+                    'type'           => 'Pemakaian Bahan',
+                    'kode_transaksi' => !empty($r->kode_transaksi) ? $r->kode_transaksi : "-",
+                    'kode_akun'      => !empty($r->kode_barang) ? $r->kode_barang : "-",
+                    'nama_akun'      => !empty($r->nama_barang) ? $r->nama_barang : "-",
+                    'keterangan'     => $ket,
+                    'nominal'        => (float)$r->subtotal
+                ];
+            }
+        }
+
+        usort($resultsBiayaProduksi, function ($a, $b) {
+            return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
+        });
+
+        $results_all = array_merge($resultsSO, $resultsCR);
         usort($results_all, function ($a, $b) {
             return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
         });
 
         $fileName = "Laporan Detail Laba Rugi $periode_text.xlsx";
-
-        $getBulan = $bulan;
-        $getTahun = $tahun;
-        if ($bulan == 1) {
-            $getBulan = 12;
-            $getTahun = $tahun - 1;
-        } else {
-            $getBulan = $bulan - 1;
-        }
 
         $sheets = new Spreadsheet;
         $gets = $sheets->getActiveSheet();
@@ -172,159 +512,81 @@ class Rpt_laba_rugi extends BaseController
 
         $sheets->setActiveSheetIndex(0)
             ->setCellValue('A2', 'Laporan Detail Laba Rugi Periode: ' . $periode_text)
-               ->setCellValue('A4', 'Tipe Bayar')
-               ->setCellValue('B4', 'Tanggal')
-               ->setCellValue('C4', 'Transaksi')
-               ->setCellValue('D4', 'Akun Kode')
-               ->setCellValue('E4', 'Kode')
-               ->setCellValue('F4', 'Nama Akun')
-               ->setCellValue('G4', 'Keterangan')
-               ->setCellValue('H4', 'Masuk')
-               ->setCellValue('I4', 'Keluar')
-               ->setCellValue('J4', 'Saldo');
+            ->setCellValue('A4', 'Tipe Bayar / Gudang')
+            ->setCellValue('B4', 'Tanggal')
+            ->setCellValue('C4', 'Transaksi')
+            ->setCellValue('D4', 'No. Ref / Transaksi')
+            ->setCellValue('E4', 'Kode')
+            ->setCellValue('F4', 'Nama Akun / Barang')
+            ->setCellValue('G4', 'Keterangan')
+            ->setCellValue('H4', 'Masuk')
+            ->setCellValue('I4', 'Keluar')
+            ->setCellValue('J4', 'Saldo');
 
-            $styleArray = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
+        $stylexArray = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => '1f1f1f'],
                 ],
-            ];
+            ],
+            'alignment' => [
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
 
-            $stylexArray = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
+        $stylexArrayFootertext = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => '1f1f1f'],
                 ],
-                'alignment' => [
-                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
+            ],
+            'font' => [
+                'bold' => true,
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => [
+                    'argb' => 'C5D9F1',
                 ],
-            ];
+            ],
+        ];
 
-            $stylexArrayFootertext = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
+        $stylexArrayFooter = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => '1f1f1f'],
                 ],
-                'font' => [
-                    'bold' => true, // ✅ bikin teks tebal
+            ],
+            'font' => [
+                'bold' => true,
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => [
+                    'argb' => 'C5D9F1',
                 ],
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, // teks rata kanan
-                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
-                ],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [
-                        'argb' => 'C5D9F1', // 💡 warna kuning muda, format argb = AARRGGBB
-                    ],
-                ],
-            ];
+            ],
+        ];
 
-            $stylexArrayFooter = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
+        $styleArray_header = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => '1f1f1f'],
                 ],
-                'font' => [
-                    'bold' => true, // ✅ bikin teks tebal
-                ],
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
-                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
-                ],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [
-                        'argb' => 'C5D9F1', // 💡 warna kuning muda, format argb = AARRGGBB
-                    ],
-                ],
-            ];
-
-            $stylexArraySubFooter = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-                'font' => [
-                    'bold' => true, // ✅ bikin teks tebal
-                ],
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT, // teks rata kanan
-                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
-                ],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [
-                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
-                    ],
-                ],
-            ];
-
-            $stylexArraySubFooter2 = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-                'font' => [
-                    'bold' => true, // ✅ bikin teks tebal
-                ],
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, // teks rata kanan
-                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, // opsional biar rapi di tengah secara vertikal
-                ],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => [
-                        'argb' => 'FFD3D3D3', // 💡 warna kuning muda, format argb = AARRGGBB
-                    ],
-                ],
-            ];
-
-            $styleArray_header = [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-            ];
-
-            $style_bodyRight = [
-                'borders' => [
-                    'right' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-            ];
-            $style_bodyTop = [
-                'borders' => [
-                    'top' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-            ];
-            $style_bodyBottom = [
-                'borders' => [
-                    'bottom' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => ['argb' => '1f1f1f'],
-                    ],
-                ],
-            ];
+            ],
+        ];
             
         $gets->getStyle('A4:J4')->applyFromArray($styleArray_header);
         $sheets->getActiveSheet()->mergeCells('A2:J2');
@@ -333,67 +595,35 @@ class Rpt_laba_rugi extends BaseController
                 ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
         
-          $gets->getColumnDimension('A')->setWidth(25);
-          $gets->getColumnDimension('B')->setWidth(18);
-          $gets->getColumnDimension('C')->setWidth(20);
-          $gets->getColumnDimension('D')->setWidth(20);
-          $gets->getColumnDimension('E')->setWidth(10);
-          $gets->getColumnDimension('F')->setWidth(40);
-          $gets->getColumnDimension('G')->setWidth(60);
-          $gets->getColumnDimension('H')->setWidth(25);
-          $gets->getColumnDimension('I')->setWidth(25);
-          $gets->getColumnDimension('J')->setWidth(25);
+        $gets->getColumnDimension('A')->setWidth(25);
+        $gets->getColumnDimension('B')->setWidth(18);
+        $gets->getColumnDimension('C')->setWidth(20);
+        $gets->getColumnDimension('D')->setWidth(20);
+        $gets->getColumnDimension('E')->setWidth(10);
+        $gets->getColumnDimension('F')->setWidth(40);
+        $gets->getColumnDimension('G')->setWidth(60);
+        $gets->getColumnDimension('H')->setWidth(25);
+        $gets->getColumnDimension('I')->setWidth(25);
+        $gets->getColumnDimension('J')->setWidth(25);
 
-          $gets->getStyle('A4:J4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-          $gets->getStyle('A4:J4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:J4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
 
-        
         $gets->setTitle('Detail');
-        $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H', 'I', 'J'
-        );
+        $indexs = array('A','B','C','D', 'E','F','G', 'H', 'I', 'J');
 
         for ($i=0; $i < 10 ; $i++) { 
-
-                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('C5D9F1');
-                $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getEndColor()->setARGB('C5D9F1');
-
+            $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('C5D9F1');
             $sheets->getActiveSheet()->getStyle($indexs[$i].'4')
                     ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
                     ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
-                    
             $gets->getStyle($indexs[$i].'4')->applyFromArray($styleArray_header);
-           
         }
 
         $ix = 5;
-        $is = 0;
-        
-        
-        $length = $ix;
-        $length_sub = $ix;
-
-        if(!empty($results_all)){
-            $length += count($results_all);
-        }
-
-        $bckColor = "F2F2F2";
-        $ig = $ix;
-        $ip = $ix;
-        
-        $g_id = null; 
-        $p_id = null; 
-
-        $grand_total = 0;
-        $grand_total_masuk = 0;
-        $grand_total_sub = 0;
-        $grand_total_sub_masuk = 0;
-        $ref_rekening_now = null;
-        $ref_bank = null;
-
         $startRow = $ix;
+        $length = $ix + count($results_all);
+
         foreach ($results_all as $r) { 
             $sheets->setActiveSheetIndex(0)
                 ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
@@ -406,87 +636,67 @@ class Rpt_laba_rugi extends BaseController
 
             $nominal = !empty($r->nominal) ? $r->nominal : 0;
             $sheets->getActiveSheet()->setCellValue('H'.$ix, $nominal);
-
             $sheets->getActiveSheet()->getStyle("H" . $ix)->getNumberFormat()->setFormatCode('#,##0.00');
             $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
-
-            $grand_total_masuk += $nominal;
-            $grand_total_sub_masuk += $nominal;
-
             $ix++; 
         }
 
-        $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Total Penjualan");
-
+        $sheets->setActiveSheetIndex(0)->setCellValue('A'.$length, "Total Penjualan");
         $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
-        
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
         
         $rowPenjualan = $length;
-        $sheets->setActiveSheetIndex(0)
-            ->setCellValue('J' . $length, '=SUM(H' . $startRow . ':H' . $length-1 . ')');
-
-        $gets->getStyle("J" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
+        $sheets->setActiveSheetIndex(0)->setCellValue('J' . $length, '=SUM(H' . $startRow . ':H' . ($length-1) . ')');
+        $gets->getStyle("J" . $length )->getNumberFormat()->setFormatCode('#,##0.00');
         
+        // Section 2: Biaya Produksi / Pembelian
         $ix = $length + 1;
         $startRow = $ix;
-        for ($xx=0; $xx < count($resultsPB); $xx++) {
-            $r = $resultsPB[$xx]; 
+        for ($xx=0; $xx < count($resultsBiayaProduksi); $xx++) {
+            $r = $resultsBiayaProduksi[$xx]; 
             $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                     ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                    ->setCellValue('C'.$ix, "Pembayaran")
-                    ->setCellValue('D'.$ix, !empty($r->pay_no) ? $r->pay_no : "-")
-                    ->setCellValue('E'.$ix, "-")
-                    ->setCellValue('F'.$ix, "-")
-                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                    ->setCellValue('I'.$ix, !empty($r->total_bayar) ? $r->total_bayar : 0);
-                $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
-            
+                    ->setCellValue('C'.$ix, $r->type)
+                    ->setCellValue('D'.$ix, !empty($r->kode_transaksi) ? $r->kode_transaksi : "-")
+                    ->setCellValue('E'.$ix, !empty($r->kode_akun) ? $r->kode_akun : "-")
+                    ->setCellValue('F'.$ix, !empty($r->nama_akun) ? $r->nama_akun : "-")
+                    ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : "-")
+                    ->setCellValue('I'.$ix, !empty($r->nominal) ? $r->nominal : 0);
+            $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()->setFormatCode('#,##0.00');
             $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
-
             $ix++;
         }
         $length = $ix;
 
-        $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Total Beban Pembelian");
+        $labelBiayaProdExcel = "Total Biaya Produksi / Pembelian";
+        if ($endDate < $cutoff) {
+            $labelBiayaProdExcel = "Total Beban Pembelian";
+        } else if ($startDate >= $cutoff) {
+            $labelBiayaProdExcel = "Total Pemakaian Bahan Baku";
+        }
 
+        $sheets->setActiveSheetIndex(0)->setCellValue('A'.$length, $labelBiayaProdExcel);
         $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
-
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
-
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
 
         $rowPembelian = $length;
-        $sheets->setActiveSheetIndex(0)
-            ->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
-
-        $gets->getStyle("J" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
+        $sheets->setActiveSheetIndex(0)->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . ($length-1) . ')');
+        $gets->getStyle("J" . $length )->getNumberFormat()->setFormatCode('#,##0.00');
 
         $length++;
-
-        $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Laba Kotor");
-
+        $sheets->setActiveSheetIndex(0)->setCellValue('A'.$length, "Laba Kotor");
         $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
-
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
-
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
 
         $rowLabaKotor = $length;
-        $sheets->setActiveSheetIndex(0)
-            ->setCellValue('J' . $length, '=J' . $rowPenjualan . '- J' . $rowPembelian);
+        $sheets->setActiveSheetIndex(0)->setCellValue('J' . $length, '=J' . $rowPenjualan . '- J' . $rowPembelian);
+        $gets->getStyle("J" . $length )->getNumberFormat()->setFormatCode('#,##0.00');
 
-        $gets->getStyle("J" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
-
+        // Section 3: Beban Operasional
         $ix = $length + 1;
         $startRow = $ix;
         for ($xx=0; $xx < count($resultsBiaya); $xx++) {
@@ -500,49 +710,30 @@ class Rpt_laba_rugi extends BaseController
                     ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : "-")
                     ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
                     ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
-                $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
-            
+            $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()->setFormatCode('#,##0.00');
             $gets->getStyle('A'.$ix.':J'.$ix)->applyFromArray($stylexArray);
-
             $ix++;
         }
         $length = $ix;
 
-        $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Total Beban Operasional");
-
+        $sheets->setActiveSheetIndex(0)->setCellValue('A'.$length, "Total Beban Operasional");
         $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
-
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
-
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
 
         $rowBiaya = $length;
-        $sheets->setActiveSheetIndex(0)
-            ->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . $length-1 . ')');
-
-        $gets->getStyle("J" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
+        $sheets->setActiveSheetIndex(0)->setCellValue('J' . $length, '=SUM(I' . $startRow . ':I' . ($length-1) . ')');
+        $gets->getStyle("J" . $length )->getNumberFormat()->setFormatCode('#,##0.00');
 
         $length++;
-
-        $sheets->setActiveSheetIndex(0)
-               ->setCellValue('A'.$length, "Laba Bersih");
-
+        $sheets->setActiveSheetIndex(0)->setCellValue('A'.$length, "Laba Bersih");
         $sheets->getActiveSheet()->mergeCells('A'. $length .':I'. $length);
-
         $gets->getStyle('A'.$length.':I'.$length)->applyFromArray($stylexArrayFootertext);
-
         $gets->getStyle('J'.$length)->applyFromArray($stylexArrayFooter);
 
-        $sheets->setActiveSheetIndex(0)
-            ->setCellValue('J' . $length, '=J' . $rowLabaKotor . '- J' . $rowBiaya);
+        $sheets->setActiveSheetIndex(0)->setCellValue('J' . $length, '=J' . $rowLabaKotor . '- J' . $rowBiaya);
+        $gets->getStyle("J" . $length )->getNumberFormat()->setFormatCode('#,##0.00');
 
-        $gets->getStyle("J" . $length )->getNumberFormat()
-               ->setFormatCode('#,##0.00');
-
-        
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);
         
@@ -550,7 +741,7 @@ class Rpt_laba_rugi extends BaseController
         header('Content-Disposition: attachment;filename="'.$fileName.'"'); 
         header('Cache-Control: max-age=0');
         ob_end_clean();
-        $writer->save('php://output'); // download file 
+        $writer->save('php://output');
         exit;
     }
 

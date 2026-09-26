@@ -101,6 +101,10 @@
             background-color: #FFCCCC !important;
             color: black;
         }
+        .status-dispen {
+            background-color: #C9C3FF !important;
+            color: black;
+        }
         .row-empty {
             background-color: #D9D9D9 !important;
         }
@@ -152,13 +156,30 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td>Hadir</td><td class="text-center"><?php echo !empty($rekap_absensi->total_hadir_tepat_waktu) ? $rekap_absensi->total_hadir_tepat_waktu : '0'; ?> Hari</td></tr>
+                <?php
+                    $hadirFisikInd = (int)($rekap_absensi->total_hadir_tepat_waktu ?? 0);
+                    $dispenInd = (int)($rekap_absensi->total_dispen ?? 0);
+                    $hadirTotalInd = $hadirFisikInd + $dispenInd;
+                ?>
+                <tr><td>Hadir</td><td class="text-center"><?php echo $hadirTotalInd; ?> Hari</td></tr>
+                <tr><td>Dispen</td><td class="text-center"><?php echo $dispenInd; ?> Hari</td></tr>
                 <tr><td>Telat</td><td class="text-center"><?php echo !empty($rekap_absensi->total_telat) ? $rekap_absensi->total_telat : '0'; ?> Hari</td></tr>
                 <tr><td>Total Menit Telat</td><td class="text-center"><?php echo !empty($rekap_absensi->total_menit_terlambat) ? (float)$rekap_absensi->total_menit_terlambat : '0'; ?> Menit</td></tr>
                 <tr><td>Izin</td><td class="text-center"><?php echo !empty($rekap_absensi->total_izin) ? $rekap_absensi->total_izin : '0'; ?> Hari</td></tr>
                 <tr><td>Sakit</td><td class="text-center"><?php echo !empty($rekap_absensi->total_sakit) ? $rekap_absensi->total_sakit : '0'; ?> Hari</td></tr>
                 <tr><td>Cuti</td><td class="text-center"><?php echo !empty($rekap_absensi->total_cuti) ? $rekap_absensi->total_cuti : '0'; ?> Hari</td></tr>
                 <tr><td>Tanpa Keterangan</td><td class="text-center"><?php echo !empty($rekap_absensi->total_alpa) ? $rekap_absensi->total_alpa : '0'; ?> Hari</td></tr>
+                <tr><td><strong>Total Skor (Akumulasi)</strong></td><td class="text-right"><strong><?php echo isset($rekap_absensi->skor_periode) && $rekap_absensi->skor_periode !== null ? $rekap_absensi->skor_periode : '0'; ?></strong></td></tr>
+                <?php
+                    // TAMBAHAN (2026-08-08): baris Skor Rata-rata = Total Skor
+                    // dibagi jumlah hari kalender dalam periode ini TIDAK
+                    // TERMASUK hari Minggu (dihitung di controller lewat
+                    // countHariKerjaNonMinggu()).
+                    $skorTotalKaryawan = isset($rekap_absensi->skor_periode) && $rekap_absensi->skor_periode !== null ? (float)$rekap_absensi->skor_periode : 0;
+                    $jumlahHariKaryawan = (int)($jumlah_hari_kerja ?? 0);
+                    $skorRataRataKaryawan = number_format($jumlahHariKaryawan > 0 ? ($skorTotalKaryawan / $jumlahHariKaryawan) : 0, 2, ',', '');
+                ?>
+                <tr><td><strong>Skor Rata-rata</strong></td><td class="text-right"><strong><?php echo $skorRataRataKaryawan; ?></strong></td></tr>
             </tbody>
         </table>
 
@@ -169,8 +190,9 @@
                     <th style="width: 20%;">Tanggal</th>
                     <th style="width: 20%;">Scan Masuk</th>
                     <th style="width: 20%;">Scan Pulang</th>
-                    <th style="width: 20%;">Terlambat (Menit)</th>
-                    <th style="width: 20%;">Status</th>
+                    <th style="width: 15%;">Terlambat (Menit)</th>
+                    <th style="width: 15%;">Status</th>
+                    <th style="width: 10%;">Skor</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,7 +202,7 @@
                     <td class="text-center"><?php echo !empty($absen->jam_masuk) ? date('H:i:s', strtotime($absen->jam_masuk)) : ''; ?></td>
                     <td class="text-center"><?php echo !empty($absen->jam_keluar) ? date('H:i:s', strtotime($absen->jam_keluar)) : ''; ?></td>
                     <td class="text-center"><?php echo !empty($absen->terlambat) ? $absen->terlambat : '0'; ?></td>
-                    <?php 
+                    <?php
                       $statusClass = '';
                       if ($absen->status_text == 'Hadir') {
                           $statusClass = 'status-hadir';
@@ -198,8 +220,12 @@
                       else if ($absen->status_text == 'Cuti') {
                           $statusClass = 'status-cuti';
                       }
+                      else if ($absen->status_text == 'Dispen') {
+                          $statusClass = 'status-dispen';
+                      }
                     ?>
                     <td class="text-center <?php echo $statusClass; ?>"><?php echo !empty($absen->status_text) ? $absen->status_text : '-'; ?></td>
+                    <td class="text-right"><?php echo isset($absen->skor_harian) && $absen->skor_harian !== null ? $absen->skor_harian : '-'; ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

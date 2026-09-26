@@ -263,7 +263,7 @@ class Users extends BaseController
     {
         if (!$this->auth->loggedIn()) {
             return redirect()->to('/auth/login');
-        } elseif(!$this->auth->isSuperAdmin() && !$this->auth->isAdmin()){
+        } elseif(!$this->auth->isSuperAdmin() && !$this->auth->isAdmin() && !$this->auth->inGroup(['ADMIN APLIKASI', 'superadmin', 1, 2])){
 			throw new \Exception('You must be an administrator to view this page.');
         }
 
@@ -379,7 +379,8 @@ class Users extends BaseController
                 if ($this->validation->withRequest($this->request)->run() === TRUE) {
 
                     $this->auth->update($id, $data);
-                    $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"Update User");        
+                    $actorId = $this->currentUser->user_id ?? ($this->currentUser->id ?? null);
+                    $this->mcommon->setLog($actorId, $this->MOD_ALIAS, $id, "Update User");        
                     $this->users->updateRole($id, array('role_id' => $role_id));
                    
                     $this->session->setFlashdata('message', "Update user berhasil..");
@@ -435,19 +436,28 @@ class Users extends BaseController
                 
                 $additional_data["nip"] = $nip;
                 $additional_data["full_name"] = $full_name;
+                $additional_data["id_perusahaan"] = !empty($id_perusahaan) ? $id_perusahaan : null;
                 //$additional_data["prefix"] = $prefix;
 
                 if($this->request->getFile('file_id_photo')->getName()){
                     $additional_data['file_id_photo'] = $file_id_photo;
                 }
                                
-                $groups[] = $role_id;
+                $groups = [$role_id];
                 
                 if ($this->validation->withRequest($this->request)->run() === TRUE) {
                     $regis = $this->auth->register($username, $password, $email, $additional_data, $groups);
-                    $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$regis['id'],"Tambah User");        
-                    $this->session->setFlashdata('message', "Tambah user berhasil..");
-                    return redirect()->to("/utilitas/users");
+                    if ($regis !== false) {
+                        $newUserId = is_array($regis) ? ($regis['id'] ?? null) : $regis;
+                        $actorId = $this->currentUser->user_id ?? ($this->currentUser->id ?? null);
+                        $this->mcommon->setLog($actorId, $this->MOD_ALIAS, $newUserId, "Tambah User");        
+                        $this->session->setFlashdata('message', "Tambah user berhasil..");
+                        return redirect()->to("/utilitas/users");
+                    } else {
+                        $authError = $this->auth->errors() ? strip_tags($this->auth->errors()) : "Gagal menambahkan user!";
+                        $this->session->setFlashdata('err', $authError);
+                        return redirect()->to('/utilitas/users/add');
+                    }
                 } else {
                     //set the flash data error message if there is one
                     $this->data['errmsg'] = $this->validation->listErrors();
@@ -577,7 +587,7 @@ class Users extends BaseController
 
     public function activate($id)
     {
-        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
+        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin() && !$this->auth->inGroup(['ADMIN APLIKASI', 'superadmin', 1, 2]))) {
 			throw new \Exception('You must be an administrator to view this page.');
         }
 
@@ -588,7 +598,8 @@ class Users extends BaseController
         $id = (int)$id;
         $activation = $this->mauth->activate($id);
         if ($activation) {
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"User Diaktifkan");        
+            $actorId = $this->currentUser->user_id ?? ($this->currentUser->id ?? null);
+            $this->mcommon->setLog($actorId, $this->MOD_ALIAS, $id, "User Diaktifkan");        
             $this->session->setFlashdata('message', "User berhasil di aktifkan");
         } else {
             $this->session->setFlashdata('err', "User gagal di aktifkan !");
@@ -599,7 +610,7 @@ class Users extends BaseController
 
     public function deactivate($id = NULL)
     {
-        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
+        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin() && !$this->auth->inGroup(['ADMIN APLIKASI', 'superadmin', 1, 2]))) {
 			throw new \Exception('You must be an administrator to view this page.');
         }
         
@@ -614,7 +625,8 @@ class Users extends BaseController
         
         $deactivate = $this->mauth->deactivate($id);
         if ($deactivate) {
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"User Dinonaktifkan");        
+            $actorId = $this->currentUser->user_id ?? ($this->currentUser->id ?? null);
+            $this->mcommon->setLog($actorId, $this->MOD_ALIAS, $id, "User Dinonaktifkan");        
             $this->session->setFlashdata('message', "User berhasil di Non-aktifkan ");
         } else {
             $this->session->setFlashdata('err', "User gagal di Non-aktifkan !");
@@ -624,7 +636,7 @@ class Users extends BaseController
 
     public function delete($id = NULL)
     {
-        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin())) {
+        if (!$this->auth->loggedIn() OR (!$this->auth->isAdmin() && !$this->auth->isSuperadmin() && !$this->auth->inGroup(['ADMIN APLIKASI', 'superadmin', 1, 2]))) {
 			throw new \Exception('You must be an administrator to view this page.');
         }
 
@@ -639,7 +651,8 @@ class Users extends BaseController
         
         $res = $this->auth->deleteUser($id);
         if ($res) {
-            $this->mcommon->setLog($this->currentUser->user_id,$this->MOD_ALIAS,$id,"User Dihapus");        
+            $actorId = $this->currentUser->user_id ?? ($this->currentUser->id ?? null);
+            $this->mcommon->setLog($actorId, $this->MOD_ALIAS, $id, "User Dihapus");        
             $this->session->setFlashdata('message', "User berhasil dihapus");
         } else {
             $this->session->setFlashdata('err', "User gagal dihapus");

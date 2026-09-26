@@ -83,8 +83,8 @@ class BarangKeluar extends BaseController
 
     public function lists()
     {
-        $start      = $this->request->getPost('start');
-        $limit      = $this->request->getPost('length');
+        $start      = !empty($this->request->getPost('start')) ? (int)$this->request->getPost('start') : 0;
+        $limit      = !empty($this->request->getPost('length')) ? (int)$this->request->getPost('length') : 10;
         $filters    = $this->request->getPost('filter');
         $order      = $this->request->getPost('sort');
 
@@ -93,7 +93,7 @@ class BarangKeluar extends BaseController
         $results = $this->mRef->getData(null, $start, $limit, $order, $filters, $params);
         $totalfiltered = $this->mRef->getDataCnt($filters, $params);
         $totaldata = $this->mRef->getDataCnt(null, $params);
-        $maxpage = ceil($totalfiltered / $limit);
+        $maxpage = ($limit > 0) ? ceil($totalfiltered / $limit) : 1;
 
         $build_array = array(
             "last_page" => $maxpage,
@@ -114,13 +114,11 @@ class BarangKeluar extends BaseController
                 $atr_edit['url'] = $this->urlv . '/edit/';
                 $atr_edit['class'] = '';
             }
-            if ($row->status != 0) {
-                $atr_other['title'] = 'Print';
-                $atr_other['target'] = "blank";
-                $atr_other['url'] = $this->urlv . '/print/';
-                $atr_other['class'] = '';
-                $atr_other['icon_class'] = 'fa-print';
-            }
+            $atr_other['title'] = 'Print';
+            $atr_other['target'] = "blank";
+            $atr_other['url'] = $this->urlv . '/print/';
+            $atr_other['class'] = '';
+            $atr_other['icon_class'] = 'fa-print';
             // if ($this->_delete) {
             //     $atr_del['title'] = 'Hapus';
             //     $atr_del['url'] = $this->urlv . '/delete/';
@@ -226,14 +224,63 @@ class BarangKeluar extends BaseController
             ];
 
             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
+            if (!empty($resDataDetail) && is_array($resDataDetail)) {
+                $woSisaMap = [];
+                if (!empty($resData->no_ref_wo)) {
+                    $woDataRows = $this->mRefDetSO->getDataByWalkorder($resData->no_ref_wo, $resData->id_gudang, $id);
+                    if (!empty($woDataRows)) {
+                        foreach ($woDataRows as $wRow) {
+                            $key = $wRow->id_barang . '|' . $wRow->lot_id . '|' . $wRow->pack_id;
+                            $woSisaMap[$key] = (float) $wRow->qty_sisa;
+                        }
+                    }
+                }
+
+                foreach ($resDataDetail as &$rowData) {
+                    if ($rowData->qty_sisa === null || $rowData->qty_sisa === '') {
+                        $key = $rowData->id_barang . '|' . $rowData->lot_id . '|' . $rowData->pack_id;
+                        if (isset($woSisaMap[$key])) {
+                            $rowData->qty_sisa = $woSisaMap[$key];
+                        } else {
+                            $rowData->qty_sisa = $rowData->qty;
+                        }
+                    }
+                }
+                unset($rowData);
+            }
             // foreach ($resDataDetail as &$rowData) {
             //     $rowData->id_barang = encrypt($rowData->id_barang);
             // }
-            $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
-            $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+            if (!empty($resData->no_ref_wo)) {
+                $db = \Config\Database::connect();
+                $resDataDetSO = $db->table('trans_walkorder wo')
+                    ->select("
+                        wo.id_konsumen,
+                        wo.ref_kode as kode_sales_order,
+                        (CASE WHEN wo.tipe_id = 1 THEN ts.style ELSE tso.style END) as style,
+                        (CASE WHEN wo.tipe_id = 1 THEN ts.deskripsi ELSE tso.deskripsi END) as deskripsi,
+                        c.nama as buyer,
+                        wo.keterangan_style as color,
+                        wo.qty,
+                        (CASE WHEN wo.tipe_id = 1 THEN ts.total_harga ELSE tso.total_harga END) as amount
+                    ")
+                    ->join("ref_konsumen c", "c.id = wo.id_konsumen", "left")
+                    ->join("trans_sample ts", "ts.id = wo.ref_id AND wo.tipe_id = 1", "left")
+                    ->join("trans_sales_order tso", "tso.id = wo.ref_id AND wo.tipe_id = 2", "left")
+                    ->where("wo.kode_walkorder", $resData->no_ref_wo)
+                    ->get()->getResult();
+            } else {
+                $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
+                $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
+            }
             $this->data['resData'] = $resData;
             $this->data['detail'] = json_encode($resDataDetail);
             $this->data['dataSO'] = json_encode($resDataDetSO);
+            // Info "BTM (Kg)" - Sisa Berat (Kg) yang belum dibukukan pemakaiannya di BTK
+            // untuk No. WO dokumen ini, supaya sudah terisi begitu form Edit dibuka.
+            // Rumus: Total BTM Masuk - Total BTK Approved Sebelumnya + Total Retur
+            $rawBtm = !empty($resData->no_ref_wo) ? $this->mRefDetSO->getTotalBeratByWalkorder($resData->no_ref_wo, $resData->id_gudang, $id) : 0;
+            $this->data['btmKg'] = $rawBtm > 0 ? number_format((float) $rawBtm, 2, ',', '.') : '0';
         }
         $reDataKategori = $this->mBarangKeluar->getRefKategoriPersedian();
         $sortGudang = [
@@ -245,6 +292,7 @@ class BarangKeluar extends BaseController
         $resDataGudang = $this->mGudang->getData(null, 0, 99999, $sortGudang);
         $this->data['kategori']    = $reDataKategori;
         $this->data['gudang']    = $resDataGudang;
+        $this->data['role_id'] = session()->get('role_id');
 
         $this->data['titlehead'] = "Form Barang Keluar";
 
@@ -273,6 +321,54 @@ class BarangKeluar extends BaseController
         if ($id_vendor != "") {
             $id_vendor = decrypt($id_vendor);
         }
+
+        // Validasi server-side: untuk kategori "Pemakaian Bahan Baku atau Barang" (id=5),
+        // No. WO wajib diisi sebelum data bisa di-approve (status=1). Validasi di JS bisa
+        // dilewati (mis. request langsung ke endpoint ini), jadi harus dipastikan juga di sini.
+        if ($id_kategori == 5 && $statusData == 1 && empty($no_ref_wo)) {
+            $build_array['message'] = "No. WO wajib diisi untuk kategori Pemakaian Bahan Baku atau Barang sebelum data di-approve!";
+            $build_array['status']  = false;
+            return $this->response->setJSON($build_array);
+        }
+
+        // Validasi server-side: untuk kategori "Pemakaian Bahan Baku atau Barang" (id=5),
+        // Total Pemakaian tidak boleh melebihi Total Qty Sisa (baik Tambah Baru maupun Edit).
+        if ($id_kategori == 5) {
+            $totalQtyPakai = 0;
+            $totalQtySisa = 0;
+            if (!empty($dataDetail) && is_array($dataDetail)) {
+                foreach ($dataDetail as $det) {
+                    $q = (float)($det['qty'] ?? 0);
+                    $s = (float)($det['qty_sisa'] ?? 0);
+                    $totalQtyPakai += $q;
+                    $totalQtySisa += $s;
+
+                    if ($s > 0 && $q > ($s + 0.01)) {
+                        $namaBarang = $det['nama_barang'] ?? 'Barang';
+                        $build_array['message'] = "Qty pemakaian untuk {$namaBarang} (" . number_format($q, 2) . ") tidak boleh melebihi Qty Sisa (" . number_format($s, 2) . ")!";
+                        $build_array['status']  = false;
+                        return $this->response->setJSON($build_array);
+                    }
+                }
+            }
+
+            if ($totalQtySisa > 0 && $totalQtyPakai > ($totalQtySisa + 0.01)) {
+                $build_array['message'] = "Total Pemakaian (" . number_format($totalQtyPakai, 2) . ") tidak boleh melebihi Total Qty Sisa (" . number_format($totalQtySisa, 2) . ")!";
+                $build_array['status']  = false;
+                return $this->response->setJSON($build_array);
+            }
+        }
+
+        if ($statusData == 1 && !empty($dataDetail) && is_array($dataDetail)) {
+            foreach ($dataDetail as $det) {
+                if (isset($det['price']) && (float)$det['price'] <= 0) {
+                    $build_array['message'] = "Harga barang tidak boleh 0 pada saat approve dokumen!";
+                    $build_array['status']  = false;
+                    return $this->response->setJSON($build_array);
+                }
+            }
+        }
+
         $dataHeader = [
             "id_vendor" => !empty($id_vendor) ? $id_vendor : null,
             "tanggal" => $tanggal,
@@ -293,10 +389,61 @@ class BarangKeluar extends BaseController
             $dataHeader['created_by'] = $this->get_userid();
         }
         // print_r($data);exit;
-        $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
-        if ($res) {
-            $status = true;
-            $msg = "Data berhasil disimpan!";
+        try {
+            $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
+            if ($res) {
+                $status = true;
+                $msg = "Data berhasil disimpan!";
+            }
+        } catch (\Throwable $e) {
+            // \Throwable supaya PHP fatal error/TypeError ikut tertangkap juga
+            // (\Exception saja tidak menangkap \Error), jadi respons ke browser
+            // selalu JSON valid, bukan halaman error 500.
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        $build_array['message'] = $msg;
+        $build_array['status']  = $status;
+        return $this->response->setJSON($build_array);
+    }
+
+    // TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
+    // (stok trans_lots/trans_barang) & kembalikan status dokumen ke Draft.
+    // Lihat BarangKeluarModel::cancelApprove().
+    //
+    // Dibatasi HANYA utk role Superadmin (1), Admin Aplikasi (2), dan Admin
+    // Keuangan (4) - permintaan eksplisit, terlepas dari izin allow_approve
+    // yang mungkin diberikan ke role lain lewat menu Roles. Dicek jg di sisi
+    // tombol (barang_keluar_form.php) supaya role lain tidak lihat tombolnya
+    // sama sekali, tapi pengecekan di sini yang jadi penentu utama krn
+    // tombol saja bisa di-bypass dari luar UI.
+    public function cancelApprove()
+    {
+        $msg    = "Approve gagal dibatalkan!";
+        $status = false;
+        $id = $this->request->getPost('id');
+
+        if (!in_array((int) session()->get('role_id'), [1, 2, 4], true)) {
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => 'Hanya Superadmin, Admin Aplikasi, dan Admin Keuangan yang dapat membatalkan Approve!',
+            ]);
+        }
+
+        if (empty($id)) {
+            return $this->response->setJSON(['status' => false, 'message' => 'ID tidak valid.']);
+        }
+
+        try {
+            $id = decrypt($id);
+            $res = $this->mRef->cancelApprove($id, $this->get_userid());
+            if ($res) {
+                $status = true;
+                $msg = "Approve berhasil dibatalkan, dokumen kembali ke Draft.";
+            }
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
         }
 
         $build_array['message'] = $msg;
@@ -420,14 +567,7 @@ class BarangKeluar extends BaseController
             $resDataDetail = $this->mRefDet->getDataPrint(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang, "kode_wo" => $resData->no_ref_wo));
             $results = $this->mTrf->getDataByNoTrf($resData->no_ref_trf);
             $resDataDetSO = !empty($results) ? $this->mTrfDet->getDataDetSO($results->id) : null;
-            if (count($resDataDetail) > 0) {
-                $maxPackCount = max(array_map(function($row) {
-                    return count(explode('|', $row->pack_data));
-                }, $resDataDetail));
-                if ($maxPackCount > 3) {
-                    $dompdf->setPaper('A4', 'landscape');
-                }
-            }
+
             $this->data['data'] = !empty($resData) ? $resData : [];
             $this->data['dataSO'] = !empty($resDataDetSO) ? $resDataDetSO : [];
             $this->data['detail'] = !empty($resDataDetail) ? $resDataDetail : [];
@@ -474,7 +614,8 @@ class BarangKeluar extends BaseController
                ->setCellValue('I4', 'LOT')
                ->setCellValue('J4', 'QTY')
                ->setCellValue('K4', 'UNIT')
-               ->setCellValue('L4', 'HPP');
+               ->setCellValue('L4', 'HPP')
+               ->setCellValue('M4', 'JUMLAH');
 
             $styleArray = [
                 'borders' => [
@@ -595,9 +736,9 @@ class BarangKeluar extends BaseController
             ];
             
         $sheets->getActiveSheet()->freezePane('C5');
-        $gets->getStyle('A4:L4')->applyFromArray($styleArray_header);
+        $gets->getStyle('A4:M4')->applyFromArray($styleArray_header);
 
-        $sheets->getActiveSheet()->mergeCells('A2:L2');
+        $sheets->getActiveSheet()->mergeCells('A2:M2');
         $sheets->getActiveSheet()->getStyle('A2')
                 ->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setWrapText(true);
@@ -614,17 +755,18 @@ class BarangKeluar extends BaseController
         $gets->getColumnDimension('J')->setWidth(15);
         $gets->getColumnDimension('K')->setWidth(17);
         $gets->getColumnDimension('L')->setWidth(17);
+        $gets->getColumnDimension('M')->setWidth(17);
 
-        $gets->getStyle('A4:L4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
-        $gets->getStyle('A4:L4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $gets->getStyle('A4:M4')->getFont()->setName('Arial Narrow')->setSize('12')->setBold(true);
+        $gets->getStyle('A4:M4')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
-        
+
         $gets->setTitle('Detail');
         $indexs = array(
-            'A','B','C','D', 'E','F','G', 'H','I','J','K','L'
+            'A','B','C','D', 'E','F','G', 'H','I','J','K','L','M'
         );
 
-        for ($i=0; $i < 12 ; $i++) { 
+        for ($i=0; $i < 13 ; $i++) {
 
             $sheets->getActiveSheet()->getStyle($indexs[$i] .'4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('C5D9F1');
@@ -652,6 +794,11 @@ class BarangKeluar extends BaseController
             
             $r = $results[$xx];
 
+            // Jumlah = Qty x HPP - dihitung dari angka aslinya (bukan dari
+            // teks yg sudah diformat "-"/0 di kolom J/L), supaya tidak salah
+            // kali kalau salah satu kosong.
+            $jumlah = (!empty($r->qty) ? (float) $r->qty : 0) * (!empty($r->price) ? (float) $r->price : 0);
+
             $sheets->setActiveSheetIndex(0)
                     ->setCellValue('A'.$ix, !empty($r->kode_transaksi) ? $r->kode_transaksi : "-")
                     ->setCellValue('B'.$ix, !empty($r->tanggal) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tanggal)))) : "-")
@@ -664,17 +811,20 @@ class BarangKeluar extends BaseController
                     ->setCellValue('I'.$ix, !empty($r->lot_no) ? $r->lot_no : '-')
                     ->setCellValue('J'.$ix, !empty($r->qty) ? $r->qty : '-')
                     ->setCellValue('K'.$ix, !empty($r->nama_satuan) ? $r->nama_satuan : '-')
-                    ->setCellValue('L'.$ix, !empty($r->price) ? $r->price : 0);
+                    ->setCellValue('L'.$ix, !empty($r->price) ? $r->price : 0)
+                    ->setCellValue('M'.$ix, $jumlah);
 
-            $gets->getStyle('A'.$ix.':L'.$ix)->applyFromArray($stylexArray);
+            $gets->getStyle('A'.$ix.':M'.$ix)->applyFromArray($stylexArray);
 
             $sheets->getActiveSheet()->getStyle("L" . $ix )->getNumberFormat()
+                    ->setFormatCode('#,##0.00');
+            $sheets->getActiveSheet()->getStyle("M" . $ix )->getNumberFormat()
                     ->setFormatCode('#,##0.00');
 
             $ix++;
         }
         
-        $gets->getStyle('A:L')->getAlignment()->setWrapText(true);
+        $gets->getStyle('A:M')->getAlignment()->setWrapText(true);
         $sheets->setActiveSheetIndex(0);
         $writer = new Xlsx($sheets);
         
@@ -723,4 +873,16 @@ class BarangKeluar extends BaseController
     // $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     // exit;
     // }
+
+    public function panduan()
+    {
+        $this->data['guide_title']        = "Panduan Barang Keluar";
+        $this->data['guide_subtitle']     = "Modul Transaksi Pengeluaran Barang Keluar (Outgoing Goods / BTK)";
+        $this->data['guide_version']      = "1.0 (Resmi)";
+        $this->data['guide_release_date'] = "22 Agustus 2026";
+        $this->data['guide_module']       = "Persediaan & Produksi / Transaksi";
+        $this->data['back_url']           = base_url('trans/outgoing-goods');
+
+        return view($this->views . '\vbarang_keluar_guide', $this->data);
+    }
 }

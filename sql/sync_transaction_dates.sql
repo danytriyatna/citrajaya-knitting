@@ -39,7 +39,7 @@ INNER JOIN trans_receive_header trh ON tb.kode_transaksi = trh.kode_receive
 WHERE tb.tanggal <> trh.tanggal;
 
 -- D. Work Order / SPK (trans_walkorder)
-SELECT 
+SELECT
     tb.id AS trans_barang_id,
     tb.kode_transaksi,
     tb.tanggal AS stock_card_date,
@@ -48,6 +48,19 @@ SELECT
 FROM trans_barang tb
 INNER JOIN trans_walkorder two ON tb.kode_transaksi = two.kode_walkorder
 WHERE tb.tanggal <> two.tanggal;
+
+-- E. Item Transfer (trans_barang_trf_header)
+-- Ditambahkan setelah ditemukan kasus TRF260600171: tanggal di Stock Card
+-- (trans_barang) tidak sama dengan tanggal di header transfernya.
+SELECT
+    tb.id AS trans_barang_id,
+    tb.kode_transaksi,
+    tb.tanggal AS stock_card_date,
+    tth.tanggal AS header_date,
+    'trans_barang_trf_header' AS source_table
+FROM trans_barang tb
+INNER JOIN trans_barang_trf_header tth ON tb.kode_transaksi = tth.kode_transaksi
+WHERE tb.tanggal <> tth.tanggal;
 
 
 -- ==============================================================================
@@ -76,8 +89,15 @@ WHERE trans_barang.kode_transaksi = trh.kode_receive
   AND trans_barang.tanggal <> trh.tanggal;
 
 -- Sync Work Order Header
-UPDATE trans_barang 
+UPDATE trans_barang
 SET tanggal = two.tanggal
 FROM trans_walkorder two
 WHERE trans_barang.kode_transaksi = two.kode_walkorder
   AND trans_barang.tanggal <> two.tanggal;
+
+-- Sync Item Transfer Header
+UPDATE trans_barang
+SET tanggal = tth.tanggal
+FROM trans_barang_trf_header tth
+WHERE trans_barang.kode_transaksi = tth.kode_transaksi
+  AND trans_barang.tanggal <> tth.tanggal;

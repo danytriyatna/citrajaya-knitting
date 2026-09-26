@@ -22,8 +22,13 @@ class InvoiceModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.tgl_transaksi,  abx.kode_invoice, abx.keterangan, abx.id_konsumen,
                             abx.status, abx.total, abx.diskon,  abx.pph, abx.pph_total, abx.grand_total,
-                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, 
-                            COALESCE(SUM(cbx.pay_item),0) as pay_item, 
+                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu,
+                            COALESCE((
+                                SELECT SUM(cbx.pay_item)
+                                FROM trans_customer_receipt_detail cbx
+                                INNER JOIN trans_customer_receipt crh ON crh.id = cbx.id_cr
+                                WHERE cbx.id_invoice = abx.id AND crh.active = 1
+                            ),0) as pay_item,
                             COALESCE((
                                 SELECT SUM(tid.down_payment)
                                 FROM trans_invoice_detail tid
@@ -37,7 +42,6 @@ class InvoiceModel extends \App\Models\PrModel
                             ),0) as pengiriman");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
-        $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");
 
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
@@ -363,7 +367,12 @@ class InvoiceModel extends \App\Models\PrModel
                     sum(coalesce(tsou.harga_total, 0)) as total_harga,
                     coalesce(tso.uang_dp, 0) as uang_dp, 
                     coalesce(tso.uang_dp_2, 0) as uang_dp_2, 
-                    coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 2 and tw.ref_id = tso.id and sd.invoice_status = false and sd.status = 2 ),0) as qty_dlv,
+                    coalesce((
+                        select sum(tdp.qty_do)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
+                    ), 0) as qty_dlv,
                     coalesce((
                         select sum(tdp.qty_do * tdp.harga_satuan)
                         from trans_delivery td
@@ -399,8 +408,12 @@ class InvoiceModel extends \App\Models\PrModel
                                         sum(coalesce(tsu.harga_total, 0)) as total_harga,
                                         coalesce(ts.uang_dp, 0) as uang_dp,
                                         coalesce(ts.uang_dp_2, 0) as uang_dp_2,
-                                        coalesce((select sum(sd.qty) from trans_delivery sd inner join trans_walkorder tw on tw.id = sd.id_walkorder where tw.tipe_id = 1 and tw.ref_id = ts.id 
-                                        and sd.invoice_status = false and sd.status = 2),0) as qty_dlv,
+                                        coalesce((
+                        select sum(tdp.qty_do)
+                        from trans_delivery td
+                        inner join trans_delivery_prod tdp on tdp.id_delivery = td.id
+                        where td.id_walkorder = tw.id and td.invoice_status = false and td.status = 2
+                    ), 0) as qty_dlv,
                                         coalesce((
                         select sum(tdp.qty_do * tdp.harga_satuan)
                         from trans_delivery td
@@ -429,11 +442,11 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.uang_dp, ts.uang_dp_2, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
-            where xtb.id_konsumen = {$params['id_konsumen']} 
+            where xtb.id_konsumen = ? 
             {$whereExist_deliv}
             order by xtb.tgl_transaksi desc
         ";
-        $query = $this->db->query($sql);
+        $query = $this->db->query($sql, [intval($params['id_konsumen'])]);
 
         $this->_data = $query->getResult();
 
@@ -525,11 +538,11 @@ class InvoiceModel extends \App\Models\PrModel
                     ts.uang_dp, ts.uang_dp_2, tw.id 
             ) xtb 
             inner join ref_konsumen rk on  xtb.id_konsumen = rk.id
-            where xtb.id_konsumen = {$params['id_konsumen']}
+            where xtb.id_konsumen = ?
             and EXISTS (
                             SELECT 1
                             FROM trans_invoice_detail tdx
-                            WHERE tdx.id_invoice = {$params['id_invoice']} AND tdx.id_ref = xtb.id AND tdx.tipe_id = xtb.tipe_id
+                            WHERE tdx.id_invoice = ? AND tdx.id_ref = xtb.id AND tdx.tipe_id = xtb.tipe_id
                         )
              and EXISTS (
                             SELECT 1
@@ -538,7 +551,7 @@ class InvoiceModel extends \App\Models\PrModel
                         )
             order by xtb.tgl_transaksi desc
         ";
-        $query = $this->db->query($sql);
+        $query = $this->db->query($sql, [intval($params['id_konsumen']), intval($params['id_invoice'])]);
 
         $this->_data = $query->getResult();
 
@@ -609,14 +622,20 @@ class InvoiceModel extends \App\Models\PrModel
 
         $builder->select("abx.id, abx.tgl_transaksi,  abx.kode_invoice,
                             abx.total, abx.grand_total,
-                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu, COALESCE(SUM(cbx.pay_item),0) as pay_item, COALESCE((
+                            bbx.nama as konsumen_nama, abx.tgl_jatuh_tempo, abx.rentang_waktu,
+                            COALESCE((
+                                SELECT SUM(cbx.pay_item)
+                                FROM trans_customer_receipt_detail cbx
+                                INNER JOIN trans_customer_receipt crh ON crh.id = cbx.id_cr
+                                WHERE cbx.id_invoice = abx.id AND crh.active = 1
+                            ),0) as pay_item,
+                            COALESCE((
                                 SELECT SUM(tid.down_payment)
                                 FROM trans_invoice_detail tid
                                 WHERE tid.id_invoice = abx.id
                             ),0) as total_down_payment");
 
         $builder->join("ref_konsumen bbx", "abx.id_konsumen = bbx.id", "inner");
-        $builder->join("trans_customer_receipt_detail cbx", "cbx.id_invoice = abx.id", "left");
 
         $builder->where("abx.tgl_transaksi BETWEEN '$from_date' AND '$to_date'");
 

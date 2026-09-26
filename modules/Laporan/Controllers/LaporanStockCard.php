@@ -71,12 +71,20 @@ class LaporanStockCard extends BaseController
         if ($idBarang != null) {
             $idBarang = decrypt($idBarang);
         }
+        $idBarang = !empty($idBarang) ? (int) $idBarang : null;
+
+        // Query model sekarang pakai parameter binding (bukan interpolasi string),
+        // tapi cast ke int di sini tetap dipertahankan sebagai lapisan pertahanan
+        // tambahan supaya nilai yang masuk ke query benar2 cuma angka.
         $filter_gudang = $this->request->getGet('filter_gudang_id');
+        $filter_gudang = !empty($filter_gudang) ? (int) $filter_gudang : null;
 
         $tahun = $this->request->getGet('tahun');
-        $bulan = $this->request->getGet('bulan');
+        $tahun = !empty($tahun) ? (int) $tahun : null;
 
-        // $resData = $this->mLaporan->getLaporanStockCard($idBarang, $filter_gudang, $tahun, $bulan);
+        $bulan = $this->request->getGet('bulan');
+        $bulan = !empty($bulan) ? (int) $bulan : null;
+
         $resData = $this->mLaporan->getLaporanPersediaan($idBarang, $filter_gudang, $tahun, $bulan);
         // dd($resData);
         $total = $this->mLaporan->getDataGudang($idBarang, $filter_gudang, $tahun, $bulan);
@@ -90,11 +98,19 @@ class LaporanStockCard extends BaseController
 
         if(!empty($resData)){
             foreach ($resData as $key => $value) {
-                if (isset($value->masuk) && isset($value->price)){
-                    $value->jumlah = $value->masuk * $value->price;
+                // Kolom "masuk" SELALU ada di setiap baris (hasil CASE...ELSE 0, bukan
+                // null), jadi isset() selalu true dan cabang "keluar" di bawahnya tidak
+                // akan pernah kejalan - akibatnya Jumlah untuk transaksi Keluar selalu 0.
+                // Perbaikan: cek nilai numeriknya, bukan keberadaan propertinya.
+                $qtyMasuk = isset($value->masuk) ? (float) $value->masuk : 0;
+                $qtyKeluar = isset($value->keluar) ? (float) $value->keluar : 0;
+                $price = isset($value->price) ? (float) $value->price : 0;
+
+                if ($qtyMasuk != 0) {
+                    $value->jumlah = $qtyMasuk * $price;
                 }
-                elseif (isset($value->keluar) && isset($value->price)) {
-                    $value->jumlah = $value->keluar * $value->price;
+                elseif ($qtyKeluar != 0) {
+                    $value->jumlah = $qtyKeluar * $price;
                 }
                 else {
                     $value->jumlah = 0;

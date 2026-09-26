@@ -4,15 +4,19 @@ let dtList = new Tabulator("#dt-list", {
     paginationButtonCount: 5,
     paginationCounter: "rows",
     columns: [
-        { title: "Tanggal", field: "tanggal", width: "7%" },
-        { title: "Transaksi", field: "transaksi", hozAlign: "left", width: "13%" },
-        { title: "No. Transaksi", field: "kode_transaksi", hozAlign: "left", width: "12%" },
-        { title: "Unit", field: "nama_satuan", hozAlign: "left", width: "10%" },
-        { title: "Lot", field: "lot_no", hozAlign: "left", width: "10%" },
-        { title: "Pack", field: "pack_name", hozAlign: "left", width: "10%" },
-        // {title:"Saldo Awal", field:"saldo_awal", hozAlign:"right",width:"10%", bottomCalc: 'sum'},
+        { title: "Tanggal", field: "tanggal" },
+        { title: "Transaksi", field: "transaksi", hozAlign: "left" },
+        { title: "No. Transaksi", field: "kode_transaksi", hozAlign: "left" },
+        { title: "Unit", field: "nama_satuan", hozAlign: "left" },
+        { title: "Lot", field: "lot_no", hozAlign: "left" },
+        { title: "Pack", field: "pack_name", hozAlign: "left" },
         {
-            title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "10%",
+            title: "Qty<br>Awal", field: "qty_awal", hozAlign: "right", headerHozAlign: "right",
+            formatter: "money",
+            formatterParams: { decimal: ",", thousand: ".", precision: 2 },
+        },
+        {
+            title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", headerHozAlign: "right",
             formatter: "money",
             formatterParams: { decimal: ",", thousand: ".", precision: 2 },
             bottomCalc: "sum",
@@ -24,7 +28,7 @@ let dtList = new Tabulator("#dt-list", {
             },
         },
         {
-            title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "10%",
+            title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", headerHozAlign: "right",
             formatter: "money",
             formatterParams: { decimal: ",", thousand: ".", precision: 2 },
             bottomCalc: "sum",
@@ -35,13 +39,16 @@ let dtList = new Tabulator("#dt-list", {
                 precision: 2,  // ✅ 2 angka di belakang koma
             },
         },
-        // {title:"Saldo Akhir", field:"saldo_akhir", hozAlign:"right",width:"10%", bottomCalc: 'sum'},
-        { title: "Nilai", field: "price", hozAlign: "right", width: "12%", formatter: "money", headerHozAlign: "center" },
-        { title: "Jumlah", field: "jumlah", hozAlign: "right", width: "15%", bottomCalc: 'sum', formatter: "money", bottomCalcFormatter: 'money', headerHozAlign: "center" },
-        // {title:"Saldo", field:"saldo_akhir", hozAlign:"right",width:"15%"},
+        {
+            title: "Qty<br>Akhir", field: "qty_akhir", hozAlign: "right", headerHozAlign: "right",
+            formatter: "money",
+            formatterParams: { decimal: ",", thousand: ".", precision: 2 },
+        },
+        { title: "Nilai", field: "price", hozAlign: "right", headerHozAlign: "right", formatter: "money" },
+        { title: "Jumlah", field: "jumlah", hozAlign: "right", headerHozAlign: "right", bottomCalc: 'sum', formatter: "money", bottomCalcFormatter: 'money' },
     ],
     locale: 'id',
-    // layout: 'fitColumns',
+    layout: 'fitDataFill',
     placeholder: "Tidak ada data",
 });
 
@@ -166,10 +173,13 @@ $("#filter_barang").click(function () {
 });
 
 $("#btn-tampilkan").click(function () {
-    if ($("#filter_barang_id").val() == "" || $("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+    // Barang wajib dipilih (Stock Card pada dasarnya laporan per-item).
+    // Gudang/Bulan/Tahun boleh dikosongkan (opsi "Semua ...") - backend sudah
+    // mendukung filter opsional untuk ketiganya.
+    if ($("#filter_barang_id").val() == "") {
         Swal.fire({
             title: 'Warning',
-            text: 'Tahun,Bulan,Barang & Gudang harus dipilih',
+            text: 'Barang harus dipilih',
             icon: 'warning',
         })
         return false
@@ -197,8 +207,10 @@ function getDataLaporan() {
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-            $("#total_awal").val(data.total_awal);
-            $("#total_akhir").val(data.total_akhir);
+            let totalAwal = parseFloat(data.total_awal) || 0;
+            let totalAkhir = parseFloat(data.total_akhir) || 0;
+            $("#total_awal").val(totalAwal.toFixed(2));
+            $("#total_akhir").val(totalAkhir.toFixed(2));
             dtList.setData(data.data)
 
             setTimeout(() => {
@@ -208,6 +220,27 @@ function getDataLaporan() {
         error: function (xhr, status, error) {
             console.error('Error fetching data:', error);
         }
+    });
+}
+
+// Pencarian detail tabel berdasarkan Nomor Transaksi dan Nomor Lot
+let searchDetailThread = null;
+let elSearchDetail = $("#tb-search-detail");
+if (elSearchDetail.length > 0) {
+    elSearchDetail.on("keyup", function () {
+        clearTimeout(searchDetailThread);
+        let val = $(this).val().trim().toLowerCase();
+        searchDetailThread = setTimeout(function () {
+            if (val === "") {
+                dtList.clearFilter();
+            } else {
+                dtList.setFilter(function (data) {
+                    let kodeTrx = (data.kode_transaksi || "").toString().toLowerCase();
+                    let lotNo = (data.lot_no || "").toString().toLowerCase();
+                    return kodeTrx.includes(val) || lotNo.includes(val);
+                });
+            }
+        }, 300);
     });
 }
 

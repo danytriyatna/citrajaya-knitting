@@ -39,16 +39,18 @@ class PrivilegeModel extends \App\Models\PrModel
 
         $this->db->table($this->table)->update(['allow_view' => 0,'allow_new' => 0,'allow_edit' => 0,'allow_delete' => 0,'allow_print' => 0,'allow_approve' => 0], ['role_id' => $role_id]);
 
-        foreach ($_POST["moduleid"] as $val) :
-            if ($val > 0) {
-		        $exists = $this->db->table($this->table)->select("count(module_id) as _cnt")->where("role_id", $role_id)->where("module_id", $val)->get()->getRow()->_cnt;
-                if ($exists > 0) {
-            		$this->db->table($this->table)->update(['allow_view' => 1], ['role_id' => $role_id, 'module_id' => $val]);
-                } else {
-            		$this->db->table($this->table)->insert(['role_id' => $role_id, 'module_id' => $val, 'allow_view' => 1 , 'allow_new' => 0, 'allow_edit' => 0, 'allow_delete' => 0, 'allow_print' => 0, 'allow_approve' => 0]);
+        if (isset($_POST["moduleid"]) && is_array($_POST["moduleid"])) {
+            foreach ($_POST["moduleid"] as $val) :
+                if ($val > 0) {
+                    $exists = $this->db->table($this->table)->select("count(module_id) as _cnt")->where("role_id", $role_id)->where("module_id", $val)->get()->getRow()->_cnt;
+                    if ($exists > 0) {
+                        $this->db->table($this->table)->update(['allow_view' => 1], ['role_id' => $role_id, 'module_id' => $val]);
+                    } else {
+                        $this->db->table($this->table)->insert(['role_id' => $role_id, 'module_id' => $val, 'allow_view' => 1 , 'allow_new' => 0, 'allow_edit' => 0, 'allow_delete' => 0, 'allow_print' => 0, 'allow_approve' => 0]);
+                    }
                 }
-            }
-        endforeach;
+            endforeach;
+        }
 
         if(isset($_POST["auth_new"])){
         foreach ($_POST["auth_new"] as $val) :

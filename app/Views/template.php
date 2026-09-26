@@ -12,7 +12,7 @@
   <meta name="author" property="og:author" content="Pejuang Rupiah">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/images/favicon.png">
   <title><?= (isset($titlehead) ? $titlehead : ""); ?> &mdash; <?= $judul ?></title>
-  <link href="assets/css/style.min.css" rel="stylesheet">
+  <link href="<?= auto_version('assets/css/style.min.css') ?>" rel="stylesheet">
   <!-- Tabulator - https://tabulator.info/docs/5.4 -->
   <link href="assets/node_modules/tabulator-tables/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
   <!-- DataTables - https://datatables.net/ -->
@@ -33,9 +33,11 @@
   <link href="assets/node_modules/jquery-ui-bundle/jquery-ui.min.css" rel="stylesheet">
   <link href="assets/node_modules/jquery-ui-bundle/jquery-ui.theme.min.css" rel="stylesheet">
 
-  <link href="assets/css/select2totree.css" rel="stylesheet">
+  <link href="<?= auto_version('assets/css/select2totree.css') ?>" rel="stylesheet">
 
-  <link href="assets/css/custom.min.css" rel="stylesheet">
+  <link href="<?= auto_version('assets/css/custom.min.css') ?>" rel="stylesheet">
+  <!-- Highlight kuning muda utk field pengisian/editable, semua menu (lihat komentar di file) -->
+  <link href="<?= auto_version('assets/css/editable-highlight.css') ?>" rel="stylesheet">
   <script>
     var baseUrl = '<?= base_url() ?>'
   </script>
@@ -112,7 +114,7 @@
   <script src="assets/js/waves.js"></script>
   <script src="assets/js/sidebarmenu.js"></script>
   <script src="assets/js/script.min.js"></script>
-  <script src="assets/js/custom.js"></script>
+  <script src="<?= auto_version('assets/js/custom.js') ?>"></script>
   <script src="assets/js/jquery.mask.min.js"></script>
   <script src="assets/node_modules/jquery-ui-bundle/jquery-ui.min.js"></script>
   <script src="assets/js/select2totree.js"></script>
@@ -167,7 +169,39 @@
     }
   </script>
 
-  <?= $this->renderSection('script') ?>
+  <?php
+  ob_start();
+  $this->renderSection('script');
+  $renderedScript = ob_get_clean();
+
+  // Otomatis tambahkan parameter versi (?v=filemtime) pada semua script lokal
+  // agar browser pengguna otomatis mengunduh file baru setiap ada update,
+  // tanpa perlu repot CTRL+F5 atau CTRL+Shift+R.
+  if (!empty($renderedScript)) {
+      $renderedScript = preg_replace_callback(
+          '/<script\s+([^>]*?)src=["\']([^"\']+)["\']([^>]*)>/i',
+          function ($matches) {
+              $preAttr  = $matches[1];
+              $src      = $matches[2];
+              $postAttr = $matches[3];
+
+              // Abaikan library CDN / external URL murni
+              if (preg_match('/^(https?:)?\/\//i', $src)) {
+                  $baseUrl = function_exists('base_url') ? base_url() : '';
+                  if (empty($baseUrl) || !str_contains($src, $baseUrl)) {
+                      return $matches[0];
+                  }
+              }
+
+              $newSrc = function_exists('auto_version') ? auto_version($src) : $src;
+              return "<script {$preAttr}src=\"{$newSrc}\"{$postAttr}>";
+          },
+          $renderedScript
+      );
+  }
+
+  echo $renderedScript;
+  ?>
 
 </body>
 

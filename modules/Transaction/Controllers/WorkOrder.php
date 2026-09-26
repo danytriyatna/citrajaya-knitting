@@ -34,7 +34,7 @@ class WorkOrder extends BaseController
 
   function __construct()
   {
-    $this->MOD_ALIAS = "MOD_TRANSAKSI_WALKORDER";
+    $this->MOD_ALIAS = "MOD_TRANSAKSI_WO";
 
     $this->mWalkorder = new WalkorderModel();
     $this->mkonsumen = new KonsumenModel();
@@ -67,11 +67,12 @@ class WorkOrder extends BaseController
 
   public function lists()
   {
-    $start      = $this->request->getPost('start');
-    $limit      = $this->request->getPost('length');
+    $start      = !empty($this->request->getPost('start')) ? (int) $this->request->getPost('start') : 0;
+    $limit      = !empty($this->request->getPost('length')) ? (int) $this->request->getPost('length') : (!empty($this->request->getPost('size')) ? (int) $this->request->getPost('size') : 10);
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
     $filter_trans = $this->request->getPost('filter_trans');
+    $isApprove  = $this->request->getPost('isApprove');
 
     $params = [];
 
@@ -79,10 +80,22 @@ class WorkOrder extends BaseController
       $params['tipe_id'] = $filter_trans;
     }
 
+    // TAMBAHAN (2026-08-08, diperluas 2026-08-09): endpoint ini dipakai juga
+    // sbg picker "Referensi Work Order" (mis. modal WO di form Barang
+    // Keluar, dikirim dgn isApprove=true) - utk WO (baik tipe Sales Order
+    // maupun tipe Sample) yang Qty order-nya sudah sama persis dgn Qty yang
+    // sudah di-Delivery Order (sudah selesai dikirim semua, tidak ada lagi
+    // sisa yg perlu direferensikan), sembunyikan dari picker itu. Listing
+    // utama "Work Order" (tanpa isApprove) TETAP menampilkan semua WO apa
+    // adanya, termasuk yang sudah selesai.
+    // if (!empty($isApprove)) {
+    //   $params['hide_selesai'] = true;
+    // }
+
     $results = $this->mWalkorder->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mWalkorder->getDataCnt($filters, $params);
     $totaldata = $this->mWalkorder->getDataCnt(null, $params);
-    $maxpage = ceil($totalfiltered / $limit);
+    $maxpage = $limit > 0 ? ceil($totalfiltered / $limit) : 1;
 
     $build_array = array(
       "last_page" => $maxpage,
@@ -311,20 +324,86 @@ class WorkOrder extends BaseController
       $params_d['id_walkorder_detail'] = $row->id;
       $data_detail = $this->mWalkorder->getData_warna(null, 0, 9999, null, null, $params_d);
 
+      $curQty = (float)($row->qty ?? 0);
+      $needsRecalc = false;
+      $sum_gram = 0;
+      $sum_gram_nd = 0;
+      $sum_kg = 0;
+      $sum_kg_loss = 0;
+      $sum_total = 0;
+      $sum_kuota_tambah = 0;
+      $row_loss = (!empty($row->loss) && (float)$row->loss > 0) ? (float)$row->loss : 5;
+
+      if (!empty($data_detail)) {
+        foreach ($data_detail as &$w_item) {
+          $item_gram = (float)($w_item->gram ?? 0);
+          $expected_gram_nd = $item_gram * $curQty;
+          if (abs((float)($w_item->gram_nd ?? 0) - $expected_gram_nd) > 0.01) {
+            $needsRecalc = true;
+          }
+          $item_loss = (!empty($w_item->loss) && (float)$w_item->loss > 0) ? (float)$w_item->loss : $row_loss;
+          $w_item->gram_nd = $expected_gram_nd;
+          $w_item->kg = $w_item->gram_nd / 1000;
+          $w_item->loss = $item_loss;
+          $w_item->kg_loss = ($w_item->kg * $item_loss) / 100;
+          $w_item->total = $w_item->kg + $w_item->kg_loss;
+          $w_item->kuota_history = (float)($w_item->kuota ?? 0);
+          $w_item->kuota_tambah = $w_item->kuota_history - $w_item->total;
+
+          $sum_gram += $item_gram;
+          $sum_gram_nd += $w_item->gram_nd;
+          $sum_kg += $w_item->kg;
+          $sum_kg_loss += $w_item->kg_loss;
+          $sum_total += $w_item->total;
+          $sum_kuota_tambah += $w_item->kuota_tambah;
+        }
+        unset($w_item);
+
+        // Jika ada selisih perhitungan, otomatis perbarui ke database agar tersinkron permanen
+        if ($needsRecalc && !empty($row->ref_detail_id)) {
+          $this->mWalkorder->db->table('trans_walkorder_detail')
+            ->where('id', $row->id)
+            ->update([
+              'qty'          => $curQty,
+              'gram'         => $sum_gram,
+              'gram_nd'      => $sum_gram_nd,
+              'kg'           => $sum_kg,
+              'loss'         => $row_loss,
+              'kg_loss'      => $sum_kg_loss,
+              'total'        => $sum_total,
+              'kuota_tambah' => $sum_kuota_tambah,
+              'updated_at'   => date('Y-m-d H:i:s')
+            ]);
+          foreach ($data_detail as $w_item) {
+            $this->mWalkorder->db->table('trans_walkorder_warna')
+              ->where('id', $w_item->id)
+              ->update([
+                'gram_nd'      => $w_item->gram_nd,
+                'kg'           => $w_item->kg,
+                'loss'         => $w_item->loss,
+                'kg_loss'      => $w_item->kg_loss,
+                'total'        => $w_item->total,
+                'kuota_tambah' => $w_item->kuota_tambah,
+                'updated_at'   => date('Y-m-d H:i:s')
+              ]);
+          }
+        }
+      }
+
       array_push(
         $build_array["data"],
         array(
           "id"      => ($id),
           "wdasar"  => ($row->wdasar),
-          "qty"     => $row->qty,
-          "gram"    => $row->gram,
-          "gram_nd" => $row->gram_nd,
-          "kg"      => $row->kg,
-          "kg_loss" => $row->kg_loss,
-          "total"   => $row->total,
-          "loss"    => $row->loss,
+          "qty"     => $curQty,
+          "gram"    => !empty($data_detail) ? $sum_gram : $row->gram,
+          "gram_nd" => !empty($data_detail) ? $sum_gram_nd : $row->gram_nd,
+          "kg"      => !empty($data_detail) ? $sum_kg : $row->kg,
+          "kg_loss" => !empty($data_detail) ? $sum_kg_loss : $row->kg_loss,
+          "total"   => !empty($data_detail) ? $sum_total : $row->total,
+          "loss"    => $row_loss,
           "kuota"   => $row->total_kuota_history,
-          "kuota_tambah"    => $row->kuota_tambah,
+          "kuota_tambah"    => !empty($data_detail) ? $sum_kuota_tambah : $row->kuota_tambah,
           'details' => !empty($data_detail) ? $data_detail : []
         )
       );
@@ -466,12 +545,28 @@ class WorkOrder extends BaseController
     $i = 1;
     $list_proses = json_decode($list_proses, true);
     $proses_arr = [];
+    $role_id = session()->get('role_id');
+    $can_edit_harga = in_array((int)$role_id, [1, 2]);
+
     foreach ($list_proses as $item) {
       // print_r($item);exit;
+      $harga_proses = !empty($item['harga']) ? $item['harga'] : 0;
+      if (!$can_edit_harga) {
+        $prm_prs['id_walkorder'] = $dataid;
+        $prm_prs['id_proses'] = $item['proses'];
+        $dt_prs_exist = $this->mWalkorder->getData_proses(null, 0, 1, null, null, $prm_prs);
+        if (!empty($dt_prs_exist)) {
+          $harga_proses = $dt_prs_exist[0]->harga;
+        } else {
+          $master_prs = $this->mPproduksi->find($item['proses']);
+          $harga_proses = !empty($master_prs->harga) ? $master_prs->harga : 0;
+        }
+      }
+
       $isiProses = [
         'id_walkorder' => $dataid,
         'id_proses' => $item['proses'],
-        'harga' => !empty($item['harga']) ? $item['harga'] : 0,
+        'harga' => $harga_proses,
         'created_at' => date('Y-m-d H:i:s')
       ];
       
@@ -754,6 +849,11 @@ class WorkOrder extends BaseController
     $config['size']         = '1024';
     $config['black']        = [255, 255, 255];
     $config['white']        = [255, 255, 255];
+    // Lazy-init: property ini terdeklarasi langsung di BaseController (bukan undefined),
+    // jadi magic __get() di BaseController tidak pernah terpanggil dan nilainya tetap null.
+    if ($this->ciqrcode === null) {
+      $this->ciqrcode = new \App\Libraries\CIQRCode();
+    }
     $this->ciqrcode->initialize($config);
 
     $print_type_text = $print_type == 1 ? "PRODUKSI" : "PERBAIKAN"; 

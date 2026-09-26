@@ -116,7 +116,10 @@ class ReceiveItem extends BaseController
           // "date_exc" => fdate_eng_to_ind($row->date_exc),
           "date_exc" => fdate_eng_to_ind($row->date_exc),
           "rec_date" => fdate_eng_to_ind($rec_date),
-          "qty" => $row->qty,
+          // Beberapa dokumen lama qty-nya "kotor" krn penjumlahan desimal di
+          // JS (mis. 293.09999999999997) - dibulatkan 2 desimal saat
+          // ditampilkan di sini supaya rapi tanpa perlu ubah data tersimpan.
+          "qty" => number_format((float) $row->qty, 2, '.', ''),
           "ship_to" => $row->ship_to,
           "form_no" => $row->form_no,
           "status" => $status
@@ -194,18 +197,64 @@ class ReceiveItem extends BaseController
     return $this->response->setJSON($build_array);
   }
 
+  // Auto-isi baris detail saat user memilih PO di modal picker (menggantikan
+  // proses tambah barang manual satu-per-satu). Mengembalikan baris PO yang
+  // qty-nya belum diterima penuh, dgn qty = sisa (qty PO - qty sudah
+  // diterima), dan Warehouse default "Gudang Utama" (tetap bisa diubah user).
+  // Lot No & Pack sengaja dikosongkan - tidak ada di data PO, dilengkapi user
+  // lewat tombol edit per baris.
+  public function dataPo()
+  {
+    $build_array = ['status' => false, 'data' => []];
+    $idPo = $this->request->getGet('idPo');
+
+    if (!empty($idPo)) {
+      $idPo = decrypt($idPo);
+      $resData = $this->mPODetail->getDataForReceive($idPo);
+      $gudangUtama = $this->mGudang->getGudangUtama();
+
+      foreach ($resData as $row) {
+        $sisa = $row->qty - $row->qty_receive;
+        $build_array['data'][] = [
+          "id" => null,
+          "id_barang" => $row->id_barang,
+          "kode_barang" => $row->kode_barang,
+          "nama_barang" => $row->nama_barang,
+          "nama_unit" => $row->nama_unit,
+          "qty" => $sisa,
+          // qty_receive dipakai sbg field referensi "qty sisa PO" saat
+          // validasi simpan (lihat form.js) - bukan qty yg sudah diterima.
+          "qty_receive" => $sisa,
+          "price" => $row->price,
+          "id_gudang" => !empty($gudangUtama) ? $gudangUtama->id : null,
+          "nama_gudang" => !empty($gudangUtama) ? $gudangUtama->nama_gudang : null,
+          "lot_no" => "",
+          "pack_id" => "",
+          "pack_name" => "",
+        ];
+      }
+      $build_array['status'] = true;
+    }
+
+    return $this->response->setJSON($build_array);
+  }
+
   public function checkLotsNo()
   {
-
     $build_array = [];
     $build_array["code"] = 200;
     $build_array["status"] = false;
 
-    $noLotNo = $this->request->getGet('lot_no');
+    $noLotNo = trim($this->request->getGet('lot_no') ?? '');
     $idBarang = $this->request->getGet('id_barang');
+    $packId = $this->request->getGet('pack_id');
 
+    // Hanya validasi jika lot_no, id_barang, dan pack_id sudah terisi lengkap
+    if (empty($noLotNo) || empty($idBarang) || empty($packId)) {
+      return $this->response->setJSON($build_array);
+    }
 
-    $resData = $this->mBarangMasuk->getLotNo($noLotNo, null);
+    $resData = $this->mBarangMasuk->getLotNo($noLotNo, null, null, null, $packId);
 
     if (!empty($resData)) {
       if ($resData->id_barang != $idBarang) {
@@ -262,6 +311,11 @@ class ReceiveItem extends BaseController
     ];
     $dataPack = $this->mPack->getData(null, 0, 99999, $sortPack);
     $this->data['pack'] = $dataPack;
+
+    $gudangUtama = $this->mGudang->getGudangUtama();
+    $this->data['gudangUtamaId'] = !empty($gudangUtama) ? $gudangUtama->id : null;
+    $this->data['gudangUtamaNama'] = !empty($gudangUtama) ? $gudangUtama->nama_gudang : null;
+
     return view($this->views . '\receive_item_form', $this->data);
   }
 

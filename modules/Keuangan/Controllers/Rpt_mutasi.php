@@ -53,14 +53,18 @@ class Rpt_mutasi extends BaseController
         }
 
         $dt_rek = $this->mtrans_akun->get_tahun();
-        $list_tahun[''] = 'Pilih Tahun';
+        $list_tahun = [];
         foreach ($dt_rek as $r) {
             $list_tahun[$r->tahun] = $r->tahun;
+        }
+        if (empty($list_tahun)) {
+            $list_tahun[date('Y')] = date('Y');
         }
         $this->data['slc_tahun'] = array(
             'name' => 'slc_tahun',
             'id' => 'slc_tahun',
             'options' => $list_tahun,
+            'selected' => (int)date('Y'),
             'class' => 'form-control'
         );
 
@@ -68,6 +72,10 @@ class Rpt_mutasi extends BaseController
         $resBulan = $this->mLaporan->getBulan();
         $this->data['tahun']    = $resTahun;
         $this->data['bulan']    = $resBulan;
+        $this->data['curr_month'] = (int)date('m');
+        $this->data['curr_year'] = (int)date('Y');
+        $this->data['curr_from_date'] = date('01-m-Y');
+        $this->data['curr_to_date'] = date('t-m-Y');
 
 		$this->data['titlehead'] = "Laporan Mutasi Beban Biaya";
         $this->data['rekening_list'] = $this->mRekening->getData(null, 0, 9999);
@@ -1103,36 +1111,46 @@ class Rpt_mutasi extends BaseController
             //     $ref_bank = $r->tipe_bayar;
             // }
 
-            if ($r->type == "Beban Biaya") {
-                if ($r->coa_id == $ref_masuk) {
-                    $grand_total_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
-                    $grand_total_sub_masuk += !empty($r->jumlah) ? $r->jumlah : 0;
+            if ($r->type == "Beban Biaya" || $r->type == "Kas Masuk") {
+                $isKasMasuk = ($r->type == "Kas Masuk" || (isset($r->tipe_transaksi) && $r->tipe_transaksi == 2) || substr($r->trans_akun_kode, 0, 3) == 'KM.');
+                $jml = !empty($r->jumlah) ? (float)$r->jumlah : 0;
+                $labelT = $isKasMasuk ? "Kas Masuk" : "Beban Biaya";
+
+                if (!$isKasMasuk) {
+                    $isMasuk = ($r->coa_id == $ref_masuk);
+                } else {
+                    $isMasuk = ($r->coa_id != $ref_masuk);
+                }
+
+                if ($isMasuk) {
+                    $grand_total_masuk += $jml;
+                    $grand_total_sub_masuk += $jml;
                     $sheets->setActiveSheetIndex(0)
                         ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                         ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                        ->setCellValue('C'.$ix, "Beban Biaya")
+                        ->setCellValue('C'.$ix, $labelT)
                         ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
                         ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
                         ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
                         ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                        ->setCellValue('H'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
-                    $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()
-                    ->setFormatCode('#,##0.00');
+                        ->setCellValue('H'.$ix, $jml)
+                        ->setCellValue('I'.$ix, 0);
+                    $sheets->getActiveSheet()->getStyle("H" . $ix )->getNumberFormat()->setFormatCode('#,##0.00');
                 }
                 else {
-                    $grand_total += !empty($r->jumlah) ? $r->jumlah : 0;
-                    $grand_total_sub += !empty($r->jumlah) ? $r->jumlah : 0;
+                    $grand_total += $jml;
+                    $grand_total_sub += $jml;
                     $sheets->setActiveSheetIndex(0)
                         ->setCellValue('A'.$ix, !empty($r->tipe_bayar) ? $r->tipe_bayar : "-")
                         ->setCellValue('B'.$ix, !empty($r->tgl_transaksi) ? formatTanggalIndonesia(date('Y-m-d', strtotime(str_replace('/', '-', $r->tgl_transaksi)))) : "-")
-                        ->setCellValue('C'.$ix, "Beban Biaya")
+                        ->setCellValue('C'.$ix, $labelT)
                         ->setCellValue('D'.$ix, !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-")
                         ->setCellValue('E'.$ix, !empty($r->kode) ? $r->kode : 0)
                         ->setCellValue('F'.$ix, !empty($r->nama) ? $r->nama : 0)
                         ->setCellValue('G'.$ix, !empty($r->keterangan) ? $r->keterangan : 0)
-                        ->setCellValue('I'.$ix, !empty($r->jumlah) ? $r->jumlah : 0);
-                    $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()
-                        ->setFormatCode('#,##0.00');
+                        ->setCellValue('H'.$ix, 0)
+                        ->setCellValue('I'.$ix, $jml);
+                    $sheets->getActiveSheet()->getStyle("I" . $ix )->getNumberFormat()->setFormatCode('#,##0.00');
                 }
             }
 
@@ -1455,4 +1473,216 @@ class Rpt_mutasi extends BaseController
     }
 
 
+
+    public function preview_beban()
+    {
+        $from_date = $this->request->getPost('from_date');
+        $to_date = $this->request->getPost('to_date');
+        $ref_rekening = $this->request->getPost('select_payment_type');
+
+        if ($ref_rekening == "all" || empty($ref_rekening)) {
+            $ref_rekening = null;
+        }
+
+        $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
+        $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
+
+        $results = $this->mcoa->get_mutasi_export($tanggal_sql_from, $tanggal_sql_to, $ref_rekening);
+
+        $data = [];
+        $total = 0;
+        foreach ($results as $r) {
+            $jml = (float)($r->jumlah ?? 0);
+            $total += $jml;
+            $data[] = [
+                'tipe_bayar'       => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                'trans_akun_date'  => !empty($r->trans_akun_date) ? date('d-m-Y', strtotime($r->trans_akun_date)) : "-",
+                'trans_akun_kode'  => !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-",
+                'kode'             => !empty($r->kode) ? $r->kode : "-",
+                'nama'             => !empty($r->nama) ? $r->nama : "-",
+                'keterangan'       => !empty($r->keterangan) ? $r->keterangan : "-",
+                'jumlah'           => $jml
+            ];
+        }
+
+        return $this->response->setJSON([
+            'status' => true,
+            'total'  => $total,
+            'data'   => $data
+        ]);
+    }
+
+    public function preview_mutasi()
+    {
+        $bulan = (int)$this->request->getPost('filter_bulan');
+        $tahun = (int)$this->request->getPost('filter_tahun');
+        $ref_masuk = $this->request->getPost('select_payment_type_one');
+        $id_perusahaan = $this->request->getPost('id_perusahaan');
+
+        $results = $this->mcoa->get_mutasi_export_all($bulan, $tahun, $ref_masuk);
+        $resultsSO = $this->mcoa->get_mutasi_export_so($bulan, $tahun, $ref_masuk);
+        $resultsCR = $this->mcoa->get_mutasi_export_cr($bulan, $tahun, $ref_masuk);
+        $resultsPB = $this->mcoa->get_mutasi_export_pb($bulan, $tahun, $ref_masuk);
+
+        // gabung semua data
+        $results_all = array_merge($results, $resultsSO, $resultsCR, $resultsPB);
+
+        // sort berdasarkan tanggal
+        usort($results_all, function ($a, $b) {
+            return strtotime($a->tgl_transaksi) <=> strtotime($b->tgl_transaksi);
+        });
+
+        $getBulan = $bulan;
+        $getTahun = $tahun;
+        if ($bulan == 1) {
+            $getBulan = 12;
+            $getTahun = $tahun - 1;
+        } else {
+            $getBulan = $bulan - 1;
+        }
+
+        $saldoObj = $this->mcoa->get_mutasi_history($getBulan, $getTahun, $ref_masuk);
+        $saldoAwal = !empty($saldoObj) ? (float)$saldoObj->saldo : 0;
+
+        $data = [];
+        $grand_masuk = 0;
+        $grand_keluar = 0;
+        $runningSaldo = $saldoAwal;
+
+        // Tambahkan baris Saldo Awal jika ada
+        $data[] = [
+            'tipe_bayar'      => "-",
+            'tgl_transaksi'   => "-",
+            'transaksi'       => "<span class='badge bg-info'>SALDO AWAL</span>",
+            'kode_transaksi'  => "-",
+            'kode'            => "-",
+            'nama'            => "-",
+            'keterangan'      => "Saldo Awal Periode",
+            'masuk'           => 0,
+            'keluar'          => 0,
+            'saldo'           => $runningSaldo
+        ];
+
+        foreach ($results_all as $r) {
+            if ($r->type == "Beban Biaya" || $r->type == "Kas Masuk") {
+                $isKasMasuk = ($r->type == "Kas Masuk" || (isset($r->tipe_transaksi) && $r->tipe_transaksi == 2) || substr($r->trans_akun_kode, 0, 3) == 'KM.');
+                $jml = !empty($r->jumlah) ? (float)$r->jumlah : 0;
+
+                // Logika Debit (Masuk) / Kredit (Keluar):
+                if (!$isKasMasuk) {
+                    $isMasuk = ($r->coa_id == $ref_masuk);
+                } else {
+                    $isMasuk = ($r->coa_id != $ref_masuk);
+                }
+
+                if ($isMasuk) {
+                    $grand_masuk += $jml;
+                    $runningSaldo += $jml;
+                    $rowMasuk = $jml;
+                    $rowKeluar = 0;
+                } else {
+                    $grand_keluar += $jml;
+                    $runningSaldo -= $jml;
+                    $rowMasuk = 0;
+                    $rowKeluar = $jml;
+                }
+
+                $data[] = [
+                    'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'   => !empty($r->tgl_transaksi) ? date('d-m-Y', strtotime($r->tgl_transaksi)) : "-",
+                    'transaksi'       => $isKasMasuk ? "<span class='badge bg-success'>Kas Masuk</span>" : "Beban Biaya",
+                    'kode_transaksi'  => !empty($r->trans_akun_kode) ? $r->trans_akun_kode : "-",
+                    'kode'            => !empty($r->kode) ? $r->kode : "-",
+                    'nama'            => !empty($r->nama) ? $r->nama : "-",
+                    'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                    'masuk'           => $rowMasuk,
+                    'keluar'          => $rowKeluar,
+                    'saldo'           => $runningSaldo
+                ];
+            } else if ($r->type == "Sales Order") {
+                $tgl_transaksi = $r->tgl_transaksi;
+                if ($tgl_transaksi) {
+                    $dt = new \DateTime($tgl_transaksi);
+                    if ($dt->format('n') == $bulan && $dt->format('Y') == $tahun) {
+                        $uang_dp = !empty($r->uang_dp) ? (float)$r->uang_dp : 0;
+                        $grand_masuk += $uang_dp;
+                        $runningSaldo += $uang_dp;
+                        $data[] = [
+                            'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                            'tgl_transaksi'   => date('d-m-Y', strtotime($tgl_transaksi)),
+                            'transaksi'       => "Sales Order",
+                            'kode_transaksi'  => !empty($r->kode_sales_order) ? $r->kode_sales_order : "-",
+                            'kode'            => "-",
+                            'nama'            => "-",
+                            'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                            'masuk'           => $uang_dp,
+                            'keluar'          => 0,
+                            'saldo'           => $runningSaldo
+                        ];
+                    }
+                }
+                if (!empty($r->tgl_transaksi_2)) {
+                    $dt2 = new \DateTime($r->tgl_transaksi_2);
+                    if ($dt2->format('n') == $bulan && $dt2->format('Y') == $tahun) {
+                        $uang_dp_2 = !empty($r->uang_dp_2) ? (float)$r->uang_dp_2 : 0;
+                        $grand_masuk += $uang_dp_2;
+                        $runningSaldo += $uang_dp_2;
+                        $data[] = [
+                            'tipe_bayar'      => !empty($r->tipe_bayar_2) ? $r->tipe_bayar_2 : "-",
+                            'tgl_transaksi'   => date('d-m-Y', strtotime($r->tgl_transaksi_2)),
+                            'transaksi'       => "Sales Order",
+                            'kode_transaksi'  => !empty($r->kode_sales_order) ? $r->kode_sales_order : "-",
+                            'kode'            => "-",
+                            'nama'            => "-",
+                            'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                            'masuk'           => $uang_dp_2,
+                            'keluar'          => 0,
+                            'saldo'           => $runningSaldo
+                        ];
+                    }
+                }
+            } else if ($r->type == "Customer Receipt") {
+                $total_bayar = !empty($r->total_bayar) ? (float)$r->total_bayar : 0;
+                $grand_masuk += $total_bayar;
+                $runningSaldo += $total_bayar;
+                $data[] = [
+                    'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'   => !empty($r->tgl_transaksi) ? date('d-m-Y', strtotime($r->tgl_transaksi)) : "-",
+                    'transaksi'       => "Customer Receipt",
+                    'kode_transaksi'  => !empty($r->kode_cr) ? $r->kode_cr : "-",
+                    'kode'            => "-",
+                    'nama'            => "-",
+                    'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                    'masuk'           => $total_bayar,
+                    'keluar'          => 0,
+                    'saldo'           => $runningSaldo
+                ];
+            } else if ($r->type == "Pembayaran") {
+                $total_bayar = !empty($r->total_bayar) ? (float)$r->total_bayar : 0;
+                $grand_keluar += $total_bayar;
+                $runningSaldo -= $total_bayar;
+                $data[] = [
+                    'tipe_bayar'      => !empty($r->tipe_bayar) ? $r->tipe_bayar : "-",
+                    'tgl_transaksi'   => !empty($r->tgl_transaksi) ? date('d-m-Y', strtotime($r->tgl_transaksi)) : "-",
+                    'transaksi'       => "Pembayaran",
+                    'kode_transaksi'  => !empty($r->pay_no) ? $r->pay_no : "-",
+                    'kode'            => "-",
+                    'nama'            => "-",
+                    'keterangan'      => !empty($r->keterangan) ? $r->keterangan : "-",
+                    'masuk'           => 0,
+                    'keluar'          => $total_bayar,
+                    'saldo'           => $runningSaldo
+                ];
+            }
+        }
+
+        return $this->response->setJSON([
+            'status'      => true,
+            'saldo_awal'  => $saldoAwal,
+            'total_masuk' => $grand_masuk,
+            'total_keluar'=> $grand_keluar,
+            'saldo_akhir' => $runningSaldo,
+            'data'        => $data
+        ]);
+    }
 }

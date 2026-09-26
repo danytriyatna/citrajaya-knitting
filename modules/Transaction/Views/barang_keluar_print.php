@@ -214,63 +214,59 @@
     </table>
     <br>
     <?php if(!empty($detail) ) : ?>
-    <?php
-    // $rows = hasil getData()
-        $packHeaders = getPackHeaders($detail);
-        $maxPacks = count($packHeaders);
-    ?>
     <table class="table-bordered w-100">
         <thead>
             <tr>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 12%">COLOR CODE</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 18%">ITEM NAME</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 8%">UNIT</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 7%">LOT</th>
-                <?php if ($maxPacks > 0): ?>
-                    <th class="text-center" colspan="<?= $maxPacks ?>">PACK</th>
-                <?php endif; ?>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL PACK</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">TOTAL QTY</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">QTY TRANSFER</th>
-                <th class="text-center" rowspan="2" style="vertical-align: middle; width: 10%">QTY SISA</th>
-            </tr>
-            <tr>
-                <?php foreach ($packHeaders as $packName): ?>
-                    <th class="text-center"><?= esc($packName) ?></th>
-                <?php endforeach; ?>
+                <th class="text-center" style="vertical-align: middle; width: 20%">KODE WARNA</th>
+                <th class="text-center" style="vertical-align: middle; width: 24%">NAMA BARANG</th>
+                <th class="text-center" style="vertical-align: middle; width: 6%">UNIT</th>
+                <th class="text-center" style="vertical-align: middle; width: 8%">LOT</th>
+                <th class="text-center" style="vertical-align: middle; width: 10.5%">QTY TRANSFER</th>
+                <th class="text-center" style="vertical-align: middle; width: 10.5%">QTY PAKAI</th>
+                <th class="text-center" style="vertical-align: middle; width: 10.5%">QTY SISA</th>
+                <th class="text-center" style="vertical-align: middle; width: 10.5%">QTY RETUR</th>
             </tr>
         </thead>
         <tbody>
-            <?php $i = 1; $qty_total = 0; $qty_transfer_total = 0; $junmlah = 0; $pack_total = 0;
-            foreach ($detail as $row) : ?>
             <?php 
-                $packs = parsePacks($row->pack_data);
-                $qty_total += $row->qty;
-                $qty_transfer_total += $row->qty_transfer;
-                $pack_total += count($packs);
+            $qty_total = 0; 
+            $qty_transfer_total = 0; 
+            $qty_retur_total = 0;
+            $qty_pemakaian_sebelumnya_total = 0; 
+            $qty_sisa_total = 0;
+            foreach ($detail as $row) : 
+                $qtyTerima = !empty($row->qty_terima) ? (float) $row->qty_terima : 0;
+                $qtyRetur = !empty($row->qty_retur) ? (float) $row->qty_retur : 0;
+                $qtyPemakaianSebelumnya = !empty($row->qty_pemakaian_sebelumnya) ? (float) $row->qty_pemakaian_sebelumnya : 0;
+                $qtySisaAwal = !empty($row->qty_sisa) ? (float) $row->qty_sisa : 0;
+
+                $qtyTransfer = $qtyTerima; // Hanya mengambil nilai Qty Transfer
+                $qtyPakai = (float) $row->qty;
+                $qtySisaAkhir = $qtySisaAwal - $qtyPakai;
+
+                $qty_total += $qtyPakai;
+                $qty_transfer_total += $qtyTransfer;
+                $qty_retur_total += $qtyRetur;
+                $qty_pemakaian_sebelumnya_total += $qtyPemakaianSebelumnya;
+                $qty_sisa_total += $qtySisaAkhir;
             ?>
                 <tr>
                     <td><?= $row->kode_warna ?></td>
                     <td><?= $row->nama_barang ?></td>
                     <td><?= $row->nama_unit ?></td>
                     <td class="text-left"><?= $row->lot_no ?></td>
-                    <?php foreach ($packHeaders as $packName): ?>
-                        <td class="text-right">
-                            <?= isset($packs[$packName]) ? $packs[$packName] : '-' ?>
-                        </td>
-                    <?php endforeach; ?>
-                    <td class="text-right"><?= count($packs) ?> PACK</td>
-                    <td class="text-right"><?= number_format($row->qty, 2) ?></td>
-                    <td class="text-right"><?= number_format($row->qty_transfer, 2) ?></td>
-                    <td class="text-right"><?= number_format($row->qty_transfer - $row->qty, 2) ?></td>
+                    <td class="text-right"><?= number_format($qtyTransfer, 2) ?></td>
+                    <td class="text-right"><?= number_format($qtyPakai, 2) ?></td>
+                    <td class="text-right"><?= number_format($qtySisaAkhir, 2) ?></td>
+                    <td class="text-right"><?= number_format($qtyRetur, 2) ?></td>
                 </tr>
             <?php endforeach ?>
             <tr>
-                <th colspan="<?= $maxPacks + 4 ?>" class="text-center">JUMLAH</th>
-                <th class="text-right"><?= $pack_total ?> PACK</th>
-                <th class="text-right"><?= number_format($qty_total, 2) ?></th>
+                <th colspan="4" class="text-center">JUMLAH</th>
                 <th class="text-right"><?= number_format($qty_transfer_total, 2) ?></th>
-                <th class="text-right"><?= number_format($qty_transfer_total - $qty_total, 2) ?></th>
+                <th class="text-right"><?= number_format($qty_total, 2) ?></th>
+                <th class="text-right"><?= number_format($qty_sisa_total, 2) ?></th>
+                <th class="text-right"><?= number_format($qty_retur_total, 2) ?></th>
             </tr>
 
         </tbody>

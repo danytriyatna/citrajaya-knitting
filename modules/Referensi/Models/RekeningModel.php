@@ -19,7 +19,11 @@ class RekeningModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " rk");
 
-        $builder->select("rk.id, rk.rekening_no, rk.rekening_bank, rk.keterangan, rk.rekening_an");
+        // rk.coa_id: relasi ke m_coa, dipakai laporan Mutasi Keuangan (Mcoa::get_mutasi_export_all
+        // dkk, filter "rr.coa_id") untuk menghubungkan tipe pembayaran ini ke akun COA-nya.
+        $builder->select("rk.id, rk.rekening_no, rk.rekening_bank, rk.keterangan, rk.rekening_an,
+                           rk.coa_id, mc.kode AS coa_kode, mc.nama AS coa_nama");
+        $builder->join("m_coa mc", "mc.id = rk.coa_id", "left");
 
         if ($id == null or $id == "") {
             $builder->where('rk.active = 1');

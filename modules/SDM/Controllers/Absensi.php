@@ -115,6 +115,8 @@ class Absensi extends BaseController
             $status_kehadiran = "Tanpa Keterangan";
           } if($row->status_kehadiran == 5){
             $status_kehadiran = "Cuti";
+          } if($row->status_kehadiran == 6){
+            $status_kehadiran = "Dispen";
           }
 
           $status_lembur = "";
@@ -202,6 +204,7 @@ class Absensi extends BaseController
           $isi['jam_keluar'] = ($dt_shift) ? $tgl_absen . ' ' .$dt_shift->jam_pulang : $tgl_absen . ' ' . '08:00';
           $isi['jadwal_masuk'] = ($dt_shift) ? $dt_shift->jam_masuk : '08:00';
           $isi['jadwal_pulang'] = ($dt_shift) ? $dt_shift->jam_pulang : '17:00';
+          $isi['skor_harian'] = 10.0;
           $isi['tgl_absen'] = fdate_ind_to_eng($tgl_absen);
           $this->mabsen->insertRecordGetid($this->mabsen->table, $isi);
         }
@@ -314,6 +317,8 @@ class Absensi extends BaseController
           $status_kehadiran = 4;
         } if($x['status_kehadiran'] == "Cuti"){
           $status_kehadiran = 5;
+        } if($x['status_kehadiran'] == "Dispen"){
+          $status_kehadiran = 6;
         }
 
         $status_lembur = $x['status_lembur'];
@@ -338,10 +343,37 @@ class Absensi extends BaseController
           $hari_hadir = (int) $x['hari_hadir'];
         }
 
+        $skorHarian = 0.0;
+        if ($status_kehadiran == 1) {
+          $terlambatMenit = !empty($x['terlambat']) ? (float)$x['terlambat'] : 0.0;
+          if ($terlambatMenit <= 0) {
+            $skorHarian = 10.0;
+          } elseif ($terlambatMenit <= 15) {
+            $skorHarian = 9.5;
+          } elseif ($terlambatMenit <= 30) {
+            $skorHarian = 9.0;
+          } elseif ($terlambatMenit <= 60) {
+            $skorHarian = 8.0;
+          } else {
+            $skorHarian = 6.5;
+          }
+        } elseif ($status_kehadiran == 5) {
+          $skorHarian = 10.0; // Cuti
+        } elseif ($status_kehadiran == 6) {
+          $skorHarian = 8.5;  // Dispen
+        } elseif ($status_kehadiran == 3) {
+          $skorHarian = 7.5;  // Sakit
+        } elseif ($status_kehadiran == 2) {
+          $skorHarian = 6.0;  // Izin
+        } else {
+          $skorHarian = 0.0;  // Tanpa Keterangan / Alpa
+        }
+
         $isi = [];
         $isi['jam_masuk'] = $tgl_absen . ' ' . $x['jam_masuk'];
         $isi['jam_keluar'] = $tgl_absen . ' ' . $x['jam_keluar'];
         $isi['status_kehadiran'] = $status_kehadiran;
+        $isi['skor_harian'] = $skorHarian;
         $isi['hari_hadir'] = $hari_hadir;
         $isi['keterangan_kehadiran'] = $x['keterangan_kehadiran'];
         $isi['status_lembur'] = $status_lembur;
@@ -559,6 +591,34 @@ class Absensi extends BaseController
                   $isi['jadwal_masuk'] = $jadwal_masuk;
                   $isi['jadwal_pulang'] = $jadwal_pulang; 
 
+                  // Hitung skor harian
+                  $skorHarian = 0.0;
+                  if ($status_kehadiran == 1) {
+                      $terlambatMenit = !empty($terlambat) ? (float)$terlambat : 0.0;
+                      if ($terlambatMenit <= 0) {
+                          $skorHarian = 10.0;
+                      } elseif ($terlambatMenit <= 15) {
+                          $skorHarian = 9.5;
+                      } elseif ($terlambatMenit <= 30) {
+                          $skorHarian = 9.0;
+                      } elseif ($terlambatMenit <= 60) {
+                          $skorHarian = 8.0;
+                      } else {
+                          $skorHarian = 6.5;
+                      }
+                  } elseif ($status_kehadiran == 5) {
+                      $skorHarian = 10.0; // Cuti
+                  } elseif ($status_kehadiran == 6) {
+                      $skorHarian = 8.5;  // Dispen
+                  } elseif ($status_kehadiran == 3) {
+                      $skorHarian = 7.5;  // Sakit
+                  } elseif ($status_kehadiran == 2) {
+                      $skorHarian = 6.0;  // Izin
+                  } else {
+                      $skorHarian = 0.0;  // Alpa
+                  }
+                  $isi['skor_harian'] = $skorHarian;
+
                   $this->mabsen->insertRecordGetid($this->mabsen->table, $isi);
                 }
               }
@@ -577,6 +637,7 @@ class Absensi extends BaseController
           $isi = [];
           $isi['id_karyawan'] = $dt->id;
           $isi['posisi'] = $dt->posisi;
+          $isi['skor_harian'] = 0.0;
           $isi['tgl_absen'] = fdate_ind_to_eng($tgl_absen);
           $this->mabsen->insertRecordGetid($this->mabsen->table, $isi);
         }
@@ -639,6 +700,33 @@ class Absensi extends BaseController
   
       $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
       $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
+
+      $db = \Config\Database::connect();
+      $qHk = $db->query("
+          SELECT 
+              COALESCE(rk.kategori_posisi, 2) as kategori_posisi,
+              MAX(user_days.total_hadir) as max_hari_kerja
+          FROM (
+              SELECT sa.id_karyawan, COUNT(DISTINCT sa.tgl_absen) as total_hadir
+              FROM sdm_absensi sa
+              WHERE sa.tgl_absen >= " . $db->escape($from) . " AND sa.tgl_absen <= " . $db->escape($to) . "
+                AND sa.status_kehadiran = 1
+                AND EXTRACT(DOW FROM sa.tgl_absen) != 0
+                AND sa.active = 1
+              GROUP BY sa.id_karyawan
+          ) user_days
+          JOIN ref_karyawan rk ON rk.id = user_days.id_karyawan
+          WHERE rk.active = 1 AND rk.type = 1
+          GROUP BY COALESCE(rk.kategori_posisi, 2)
+      ")->getResult();
+
+      $hkMap = [1 => 23, 2 => 24];
+      foreach ($qHk as $r) {
+          $hkMap[(int)$r->kategori_posisi] = (int)$r->max_hari_kerja;
+      }
+      $userKat = (int)($data_karyawan->kategori_posisi ?? 2);
+      $this->data['jumlah_hari_kerja'] = $hkMap[$userKat] ?? ($userKat == 1 ? 23 : 24);
+
       $this->data['karyawan'] = $data_karyawan;
       $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate($id, $from, $to);
       $this->data['detail_absensi'] = $this->mabsen->getDetailAbsensiByKaryawanAndDate($id, $from, $to);
@@ -683,6 +771,35 @@ class Absensi extends BaseController
 
       $from = DateTime::createFromFormat('d-m-Y', $from)->format('Y-m-d');
       $to = DateTime::createFromFormat('d-m-Y', $to)->format('Y-m-d');
+
+      $db = \Config\Database::connect();
+      $qHk = $db->query("
+          SELECT 
+              COALESCE(rk.kategori_posisi, 2) as kategori_posisi,
+              MAX(user_days.total_hadir) as max_hari_kerja
+          FROM (
+              SELECT sa.id_karyawan, COUNT(DISTINCT sa.tgl_absen) as total_hadir
+              FROM sdm_absensi sa
+              WHERE sa.tgl_absen >= " . $db->escape($from) . " AND sa.tgl_absen <= " . $db->escape($to) . "
+                AND sa.status_kehadiran = 1
+                AND EXTRACT(DOW FROM sa.tgl_absen) != 0
+                AND sa.active = 1
+              GROUP BY sa.id_karyawan
+          ) user_days
+          JOIN ref_karyawan rk ON rk.id = user_days.id_karyawan
+          WHERE rk.active = 1 AND rk.type = 1
+          GROUP BY COALESCE(rk.kategori_posisi, 2)
+      ")->getResult();
+
+      $hkMap = [1 => 23, 2 => 24, 3 => 24];
+      foreach ($qHk as $r) {
+          $hkMap[(int)$r->kategori_posisi] = (int)$r->max_hari_kerja;
+      }
+      $this->data['jumlah_hari_kerja_mesin'] = $hkMap[1] ?? 23;
+      $this->data['jumlah_hari_kerja_non_mesin'] = $hkMap[2] ?? 24;
+      $this->data['jumlah_hari_kerja_staff_khusus'] = $hkMap[3] ?? ($hkMap[2] ?? 24);
+      $this->data['jumlah_hari_kerja'] = $hkMap[2] ?? 24;
+
       $this->data['rekap_absensi'] = $this->mabsen->getRekapAbsensiByKaryawanAndDate(null, $from, $to, 'rekap');
       $this->data['total_karyawan'] = json_decode(json_encode($this->data['rekap_absensi']), true);
       $this->data['total_karyawan'] = count($this->data['total_karyawan']);

@@ -10,7 +10,10 @@
     </div>
     <div class="col-md-7 align-self-center text-right">
       <div class="d-flex justify-content-end align-items-center">
-        <ol class="breadcrumb">
+        <a href="<?= base_url('trans/incoming-goods/panduan') ?>" target="_blank" class="btn btn-sm btn-info text-white shadow-sm me-3">
+          <i class="fa fa-book me-1"></i> Panduan Penggunaan
+        </a>
+        <ol class="breadcrumb mb-0">
           <li class="breadcrumb-item"><?= $name_app ?></li>
           <li class="breadcrumb-item">Transaksi</li>
           <li class="breadcrumb-item active"><?= $titlehead ?></li>

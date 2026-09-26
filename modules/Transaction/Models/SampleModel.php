@@ -253,11 +253,16 @@ class SampleModel extends \App\Models\PrModel
 
     function getDataDetailSample_crostab($id, $dtUkuran = null)
     {
+        $id = intval($id);
         if ($dtUkuran === null) {
             // get data ukuran 
             $pru['use'] = 1; // ambil ukuran yang digunnakan order 
             $pru['id_sample'] = $id;
             $dtUkuran = $this->getUkuranTrans($pru);
+        }
+
+        if (empty($dtUkuran)) {
+            return [];
         }
 
         // looping data ukuran
@@ -428,6 +433,7 @@ class SampleModel extends \App\Models\PrModel
 
     function getDataDetailSample_crostab_si($id, $idInvoice = null)
     {
+        $id = intval($id);
         $pru['use'] = 1;
         $pru['id_sample'] = $id;
         $dtUkuran = $this->getUkuranTrans($pru);
@@ -442,8 +448,9 @@ class SampleModel extends \App\Models\PrModel
         $col_harga  = "";
 
         if (!empty($idInvoice)) {
-            $tddInvoice = " AND td_head.id_invoice = $idInvoice";
-            $idInvoice  = " AND td_head.id_invoice = $idInvoice";
+            $idInvoiceInt = intval($idInvoice);
+            $tddInvoice = " AND td_head.id_invoice = $idInvoiceInt";
+            $idInvoice  = " AND td_head.id_invoice = $idInvoiceInt";
         } else {
             $idInvoice = "";
         }
@@ -792,17 +799,19 @@ class SampleModel extends \App\Models\PrModel
                     AND bbx.id_sample = $idSample
                     AND bbx.id_sample_det = $idSampleDet
                 WHERE abx.active = 1
-                ORDER BY abx.id";
+                ORDER BY abx.seq";
         $result = $this->db->query($sql);
         $this->_data   = $result->getResult();
         return $this->_data;
     }
 
-    function getDataDetailSampleWarna($idSample, $id = null)
+    function getDataDetailSampleWarna($idSample = null, $id = null)
     {
 
         $builder = $this->db->table("trans_sample_det");
-        $builder->where("id_sample", $idSample);
+        if (!empty($idSample)) {
+            $builder->where("id_sample", $idSample);
+        }
         if (!empty($id)) {
             $builder->where("id", $id);
             $this->_data = $builder->get()->getRow();
@@ -1046,21 +1055,23 @@ class SampleModel extends \App\Models\PrModel
             $queryStatus = true;
             $IDS = [];
             foreach ($dataUkuran as $rowData) {
-                $harga_total = (!empty($rowData['qty']) && !empty($rowData['harga_satuan'])) ? $rowData['qty'] * $rowData['harga_satuan'] : 0;
+                $qty = (!empty($rowData['qty']) && is_numeric($rowData['qty'])) ? (int)$rowData['qty'] : 0;
+                $harga_satuan = (!empty($rowData['harga_satuan']) && is_numeric($rowData['harga_satuan'])) ? (float)$rowData['harga_satuan'] : 0;
+                $harga_total = $qty * $harga_satuan;
                 $arrDataUkuran = [
                     "id_sample" => $dataWarna['id_sample'],
                     "id_sample_det" => !empty($dataWarna['id']) ? $dataWarna['id'] : $idSampleDet,
-                    "id_ukuran" => $rowData['id_ukuran'],
-                    "qty" => $rowData['qty'],
-                    "harga_satuan" => $rowData['harga_satuan'],
+                    "id_ukuran" => (!empty($rowData['id_ukuran']) && is_numeric($rowData['id_ukuran'])) ? (int)$rowData['id_ukuran'] : null,
+                    "qty" => $qty,
+                    "harga_satuan" => $harga_satuan,
                     "harga_total" =>  $harga_total, //$rowData['harga_total'],
                     "active" => 1,
                     "created_at" =>  date("Y-m-d H:i:s"),
 
                 ];
 
-                $head_qty = $head_qty + (!empty($rowData['qty'])) ? (int) $rowData['qty'] : 0;
-                $head_total = $head_total + (!empty($harga_total)) ? (float) $harga_total : 0;
+                $head_qty = $head_qty + $qty;
+                $head_total = $head_total + $harga_total;
 
                 $ukuranId = !empty($rowData['id']) ? $rowData['id'] : null;
                 $getSOUkuran = $this->getDataUkuranSample($ukuranId);
@@ -1171,15 +1182,15 @@ class SampleModel extends \App\Models\PrModel
                     
                     $arrDataGram = [
                         "id_sample_det" => $idSampleDet,
-                        "id_warna" => $xrow['id_warna'],
-                        "id_barang" => $xrow['id_barang'],
-                        "qty" => $xrow['qty'],
-                        "gram" => $xrow['gram'],
-                        "gram_nd" => $xrow['gram_nd'],
-                        "kg" => $xrow['kg'],
+                        "id_warna" => (!empty($xrow['id_warna']) && is_numeric($xrow['id_warna'])) ? (int)$xrow['id_warna'] : null,
+                        "id_barang" => (!empty($xrow['id_barang']) && is_numeric($xrow['id_barang'])) ? (int)$xrow['id_barang'] : null,
+                        "qty" => (!empty($xrow['qty']) && is_numeric($xrow['qty'])) ? (int)$xrow['qty'] : 0,
+                        "gram" => (!empty($xrow['gram']) && is_numeric($xrow['gram'])) ? (float)$xrow['gram'] : 0,
+                        "gram_nd" => (!empty($xrow['gram_nd']) && is_numeric($xrow['gram_nd'])) ? (float)$xrow['gram_nd'] : 0,
+                        "kg" => (!empty($xrow['kg']) && is_numeric($xrow['kg'])) ? (float)$xrow['kg'] : 0,
                         "loss" => (!empty($xrow['loss']) && (float)$xrow['loss'] > 0) ? (float)$xrow['loss'] : 5,
-                        "kg_loss" => $xrow['kg_loss'],
-                        "total" => $xrow['total'],
+                        "kg_loss" => (!empty($xrow['kg_loss']) && is_numeric($xrow['kg_loss'])) ? (float)$xrow['kg_loss'] : 0,
+                        "total" => (!empty($xrow['total']) && is_numeric($xrow['total'])) ? (float)$xrow['total'] : 0,
                         "active" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
     
@@ -1352,6 +1363,42 @@ class SampleModel extends \App\Models\PrModel
                                 'created_at' => date("Y-m-d H:i:s")
                             ];
                             $this->insertRecordGetid("trans_walkorder_warna", $arrWarna);
+                        }
+                    }
+                }
+            }
+
+            // Sync trans_walkorder_proses_ukuran jika trans_walkorder_proses sudah dibuat
+            $woProsesList = $this->db->table("trans_walkorder_proses")
+                ->where("id_walkorder", $idWorkOrder)
+                ->where("active", 1)
+                ->get()
+                ->getResult();
+
+            if (!empty($woProsesList)) {
+                $pru['use'] = 1;
+                $pru['id_sample'] = $id;
+                $dtUkuran = $this->getUkuranTrans($pru);
+
+                foreach ($woProsesList as $wop) {
+                    foreach ($dataWarna as $rowData) {
+                        foreach ($dtUkuran as $uk) {
+                            $exist = $this->db->table("trans_walkorder_proses_ukuran")
+                                ->where("id_walkorder_proses", $wop->id)
+                                ->where("id_ukuran", $uk->id_ukuran)
+                                ->where("ref_detail_id", $rowData->id)
+                                ->countAllResults();
+
+                            if ($exist == 0) {
+                                $this->insertRecordGetid("trans_walkorder_proses_ukuran", [
+                                    'id_walkorder_proses' => $wop->id,
+                                    'id_ukuran'           => $uk->id_ukuran,
+                                    'ref_detail_id'       => $rowData->id,
+                                    'qty'                 => 0,
+                                    'active'              => 1,
+                                    'created_at'          => date("Y-m-d H:i:s")
+                                ]);
+                            }
                         }
                     }
                 }

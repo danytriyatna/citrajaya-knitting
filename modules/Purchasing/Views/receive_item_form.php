@@ -32,6 +32,8 @@
               <input type="hidden" id="edit" name="edit" class="form-control" required>
               <input type="hidden" id="idBarang" name="idBarang" class="form-control" required>
               <input type="hidden" id="kodeBarang" name="kodeBarang" class="form-control" required>
+              <input type="hidden" id="gudang_utama_id" value="<?= !empty($gudangUtamaId) ? $gudangUtamaId : '' ?>">
+              <input type="hidden" id="gudang_utama_nama" value="<?= !empty($gudangUtamaNama) ? $gudangUtamaNama : '' ?>">
               <span id="spanBarang" class="input-group-text bg-white" id="basic-addon11"><i class="ti-search"></i></span>
             </div>
           </div>
@@ -269,5 +271,5 @@
 
 <?= $this->endSection('content'); ?>]
 <?= $this->section('script'); ?>
-<script src="script/app/purchasing/receive/form.js"></script>
+<script src="<?= base_url('script/app/purchasing/receive/form.js?v=' . time()); ?>"></script>
 <?= $this->endSection('script'); ?>

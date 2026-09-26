@@ -155,7 +155,7 @@ class IncomingGoodsModel extends \App\Models\PrModel
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
-    function getLotNo($lotNo = null, $idBarang = null, $idLotNo = null, $idGudang = null)
+    function getLotNo($lotNo = null, $idBarang = null, $idLotNo = null, $idGudang = null, $packId = null)
     {
         $builder = $this->db->table("trans_lots");
         $builder->select("*");
@@ -171,6 +171,13 @@ class IncomingGoodsModel extends \App\Models\PrModel
         }
         if (!empty($idGudang)) {
             $builder->where('id_gudang', $idGudang);
+        }
+        // Ditambahkan supaya pengecekan "lot sudah dipakai barang lain" (lihat
+        // ReceiveItem::checkLotsNo()) bisa disaring per pack juga - lot_no yang
+        // sama boleh dipakai lagi kalau pack-nya beda, jadi tidak salah tangkap
+        // baris pack lain yang kebetulan lot_no-nya sama.
+        if (!empty($packId)) {
+            $builder->where('pack_id', $packId);
         }
         $this->_data = $builder->get()->getRow();
         return $this->_data;

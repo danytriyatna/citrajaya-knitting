@@ -945,7 +945,8 @@ class SalesInvoice extends BaseController
       // get produksi data
       $params['id_invoice'] = $resData->id;
       $params['id_konsumen'] = $resData->id_konsumen;
-      $dtails = $this->mInvoice->getDataDetailNew(null, null, null, null. null, null, $params);
+      $order = [['field' => 'abx.id', 'dir' => 'asc']];
+      $dtails = $this->mInvoice->getDataDetailNew(null, 0, 99999, $order, null, $params);
       $ukuranSize = array_column($this->mUkuran->getData(null, null, 99999), 'key_ukuran');
       $dtails_so = [];
       $kode_ref = [];
@@ -1023,7 +1024,24 @@ class SalesInvoice extends BaseController
                         }
                         else if ($size == "xxxxxxl") {
                             $size = "6xl";
-                            
+
+                        }
+                        // Ukuran di atas 6XL (7XL, 8XL, 9XL, 10XL, dst - disimpan sbg
+                        // n huruf "x" + "l") tidak ada di daftar di atas, jadi sebelumnya
+                        // $size dibiarkan mentah (mis. "xxxxxxxxl" utk 8XL). Ini bikin
+                        // strtoupper($size) jadi "XXXXXXXXL", gagal cocok dgn kode_ukuran
+                        // asli ("8XL") saat lookup kolom SIZE di invoice cetak - sehingga
+                        // ukuran besar hilang total dari tabel SIZE walau qty & harganya
+                        // sudah benar ikut terhitung ke TOTAL (Rp). Sekarang dihitung
+                        // otomatis dari jumlah huruf "x"-nya, sama seperti perbaikan di
+                        // ProductionModel::getTotalBTMSO().
+                        // x{2,} (bukan x+) - ukuran "xl" (1 huruf x = XL) sengaja TIDAK
+                        // masuk sini krn XL sudah benar apa adanya (strtoupper('xl') =
+                        // 'XL'). Kalau ikut tertangkap, "xl" jadi "1xl"/"1XL" yang
+                        // salah dan bikin ukuran XL sendiri malah hilang dari cetakan.
+                        else if (preg_match('/^x{2,}l$/', $size)) {
+                            $jumlahX = strlen($size) - 1;
+                            $size = $jumlahX . 'xl';
                         }
                         $qty_total += $qty;
                         $rowsToDisplay[] = ['size' => strtoupper($size), 'qty' => $qty, 'harga_satuan' => $valueso->$hargaSatuan];
@@ -1199,7 +1217,11 @@ class SalesInvoice extends BaseController
       $params['kode_ukuran'] = array_map(function($val) {
           return strtoupper(trim($val));
       }, $params['kode_ukuran']);
-      $getSeqUkuran = $this->mUkuran->getDataUkuranByKey(null, null, null, null, null, $params);
+      // limit diisi eksplisit (bukan null) - getDataUkuranByKey() defaultnya cuma
+      // ambil 10 baris kalau limit kosong, jadi kalau 1 invoice punya lebih dari
+      // 10 ukuran berbeda (mis. sampai 10XL), ukuran paling akhir ikut kepotong
+      // dan hilang dari cetakan walau qty & harganya sudah benar (kasus SI260800007).
+      $getSeqUkuran = $this->mUkuran->getDataUkuranByKey(null, 0, 999, null, null, $params);
       $kodeUkuranSaja = array_column($getSeqUkuran, 'kode_ukuran');
       $kodeUkuranSaja = array_map(function($val) {
           return strtoupper(trim($val));

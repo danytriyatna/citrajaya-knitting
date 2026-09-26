@@ -232,10 +232,16 @@
             </div>
             <div class="col-sm-9">
               <div class="row">
-                <div class="table-striped table-centered" id="dt-detail"></div>
+                <div class="col-12">
+                  <h6 class="f-w-700 m-b-6">DETAIL PESANAN (WARNA &amp; UKURAN)</h6>
+                  <div class="table-striped table-centered" id="dt-detail"></div>
+                </div>
               </div>
               <div class="row mt-3">
-                <div class="table-striped table-centered" id="dt-detail-barang"></div>
+                <div class="col-12">
+                  <h6 class="f-w-700 m-b-6 m-t-8">RINGKASAN PEMAKAIAN BAHAN PER WARNA</h6>
+                  <div class="table-striped table-centered" id="dt-detail-barang"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -246,7 +252,7 @@
             <div class="col-sm-12">
               <h5><b>PRODUCTION PROCESS</b></h5>
                 <div class="row">
-                  <table class="table table-striped table-sm no-footer mb-0">
+                  <table class="table table-striped table-sm table-bordered no-footer mb-0">
                       <thead>
                         <tr>
                           <th style="width: 60%">Proses</th>
@@ -255,9 +261,17 @@
                         </tr>
                       </thead>
                       <tbody>
+                          <?php
+                            $totalQtyProdProses = 0;
+                            $totalQtyFixProses = 0;
+                          ?>
                           <?php foreach ($proses as $r) { ?>
+                            <?php
+                              $totalQtyProdProses += (float) $r->qty_prod;
+                              $totalQtyFixProses  += (float) $r->qty_fix;
+                            ?>
                             <tr>
-                              <td> 
+                              <td>
                                   <h5 class="form-check-h1" for="proses_<?= $r->seq ?>"><?= $r->nama ?></h5>
                                   <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty_prod ?>" />
                               </td>
@@ -269,19 +283,8 @@
                               </td>
                             </tr>
                           <?php } ?>
-                            <!-- <tr>
-                              <td> 
-                                  <h5 class="form-check-h1" for="proses_ready">Ready</h5>
-                              </td>
-                              <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_ready" id="qty_ready"> -->
-                                  <!-- !empty($last_data) ? ($last_data->qty_prod - $qty_kirim) : 0; -->
-                                  <!-- <?= !empty($last_data) ? ($last_data->qty_prod) : 0; ?>
-                                </label>
-                              </td>
-                            </tr> -->
                             <tr>
-                              <td> 
+                              <td>
                                  <h5 class="form-check-h1" for="proses_kirim">Kirim</h5>
                               </td>
                               <td style="text-align:right;">
@@ -292,6 +295,13 @@
                               </td>
                             </tr>
                       </tbody>
+                      <tfoot>
+                        <tr class="table-light">
+                          <th class="text-end">TOTAL</th>
+                          <th style="text-align:right;"><?= number_format($totalQtyProdProses, 0, ',', '.') ?></th>
+                          <th style="text-align:right;"><?= number_format($totalQtyFixProses, 0, ',', '.') ?></th>
+                        </tr>
+                      </tfoot>
                   </table>
 
                 </div>
@@ -353,6 +363,17 @@
                     <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
                     <button type="button" class="btn btn-info text-white" id="btn-add-detail"><i class="fa fa-plus"></i></button> 
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-sm-12">
+              <div class="col-md-4" style="float: right;">
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="ti-search"></i></span>
+                  <input type="text" id="tb-search-prod" class="form-control" placeholder="Cari Kode Transaksi / Operator...">
                 </div>
               </div>
             </div>

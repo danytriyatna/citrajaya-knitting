@@ -35,6 +35,22 @@ class SalesOrderModel extends \App\Models\PrModel
                 $builder->groupEnd();
             }
 
+            if (!empty($params['status'])) {
+                $builder->where('abx.status', (int)$params['status']);
+            }
+
+            if (!empty($params['id_konsumen'])) {
+                $builder->where('abx.id_konsumen', $params['id_konsumen']);
+            }
+
+            if (!empty($params['from_date'])) {
+                $builder->where('abx.tgl_transaksi >=', $params['from_date']);
+            }
+
+            if (!empty($params['to_date'])) {
+                $builder->where('abx.tgl_transaksi <=', $params['to_date']);
+            }
+
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -48,7 +64,7 @@ class SalesOrderModel extends \App\Models\PrModel
 
             $this->_data = $builder->get()->getResult();
         } else {
-            $builder->where("abx.id", $id);
+            $builder->where("abx.id", (int)$id);
 
             $this->_data = $builder->get()->getRow();
         }
@@ -79,12 +95,99 @@ class SalesOrderModel extends \App\Models\PrModel
             $builder->where("abx.style", $params['style']);
         }
 
+        if (!empty($params['status'])) {
+            $builder->where("abx.status", (int)$params['status']);
+        }
+
         if (!empty($params['id_konsumen'])) {
             $builder->where("abx.id_konsumen", $params['id_konsumen']);
         }
 
+        if (!empty($params['from_date'])) {
+            $builder->where('abx.tgl_transaksi >=', $params['from_date']);
+        }
+
+        if (!empty($params['to_date'])) {
+            $builder->where('abx.tgl_transaksi <=', $params['to_date']);
+        }
+
         $row = $builder->get()->getRow();
         return $row ? (int)$row->_cnt : 0;
+    }
+
+    public function evaluateAndSyncClosedStatus($id_sales_order)
+    {
+        if (empty($id_sales_order)) return null;
+        $idSo = (int)$id_sales_order;
+
+        $so = $this->db->table($this->table)->where('id', $idSo)->where('active', 1)->get()->getRow();
+        if (!$so || (int)$so->status === 1) {
+            // Draft SO tidak dievaluasi
+            return null;
+        }
+
+        // 1. Total Qty SO & Total Nilai SO
+        $stmtUk = $this->db->query("
+            SELECT COALESCE(SUM(qty), 0) as total_qty_so, COALESCE(SUM(qty * harga_satuan), 0) as total_amount_so
+            FROM trans_sales_order_ukuran
+            WHERE id_sales_order = {$idSo}
+        ")->getRow();
+
+        $totalQtySo = (float)($stmtUk->total_qty_so ?? 0);
+        $totalAmountSo = (float)($stmtUk->total_amount_so ?? 0) + (float)($so->pengiriman ?? 0);
+
+        // 2. Total Qty DO (Approved: status = 1)
+        $stmtDo = $this->db->query("
+            SELECT COALESCE(SUM(td.qty), 0) as total_qty_do
+            FROM trans_delivery td
+            INNER JOIN trans_walkorder tw ON tw.id = td.id_walkorder
+            WHERE tw.ref_id = {$idSo} AND tw.tipe_id = 2 AND td.active = 1 AND td.status = 1
+        ")->getRow();
+        $totalQtyDo = (float)($stmtDo->total_qty_do ?? 0);
+
+        // 3. Invoices for this SO
+        $invoices = $this->db->query("
+            SELECT DISTINCT ti.id
+            FROM trans_invoice ti
+            INNER JOIN trans_invoice_detail tid ON tid.id_invoice = ti.id
+            WHERE tid.id_ref = {$idSo} AND ti.active = 1
+        ")->getResult();
+
+        $totalCrPay = 0;
+        if (!empty($invoices)) {
+            $invIds = implode(',', array_map('intval', array_column($invoices, 'id')));
+            if (!empty($invIds)) {
+                $stmtCr = $this->db->query("
+                    SELECT COALESCE(SUM(crd.pay_item), 0) as total_cr_pay
+                    FROM trans_customer_receipt_detail crd
+                    INNER JOIN trans_customer_receipt cr ON cr.id = crd.id_cr
+                    WHERE crd.id_invoice IN ({$invIds}) AND cr.active = 1 AND cr.status = 1
+                ")->getRow();
+                $totalCrPay = (float)($stmtCr->total_cr_pay ?? 0);
+            }
+        }
+
+        $totalDp = (float)($so->uang_dp ?? 0) + (float)($so->uang_dp_2 ?? 0);
+        $totalPaid = $totalDp + $totalCrPay;
+
+        $isQtyComplete = ($totalQtySo > 0 && $totalQtyDo >= $totalQtySo);
+        $isPaymentComplete = ($totalAmountSo > 0 && $totalPaid >= $totalAmountSo);
+
+        // Jika SO masih Approved (2) dan memenuhi kedua syarat, otomatis promosikan ke Closed (3)
+        if ((int)$so->status === 2 && $isQtyComplete && $isPaymentComplete) {
+            $this->db->table($this->table)->where('id', $idSo)->update(['status' => 3]);
+            $so->status = 3;
+            return 3;
+        }
+
+        // Jika SO berstatus Closed (3) tetapi syarat belum terpenuhi (ada sisa Qty DO atau sisa tagihan), kembalikan ke Approved (2)
+        if ((int)$so->status === 3 && (!$isQtyComplete || !$isPaymentComplete)) {
+            $this->db->table($this->table)->where('id', $idSo)->update(['status' => 2]);
+            $so->status = 2;
+            return 2;
+        }
+
+        return (int)$so->status;
     }
 
     function getDataUkuran($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null, $idProses = null)
@@ -243,11 +346,17 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetailSalesOrder_crostab($id)
+    function getDataDetailSalesOrder_crostab($id, $dtUkuran = null)
     {
-        $pru['use'] = 1;
-        $pru['id_sales_order'] = $id;
-        $dtUkuran = $this->getUkuranTrans($pru);
+        if ($dtUkuran === null) {
+            $pru['use'] = 1;
+            $pru['id_sales_order'] = $id;
+            $dtUkuran = $this->getUkuranTrans($pru);
+        }
+
+        if (empty($dtUkuran)) {
+            return [];
+        }
 
         $col11     = "";
         $col21     = "";
@@ -314,6 +423,7 @@ class SalesOrderModel extends \App\Models\PrModel
                             CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
                             CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END
                         )
+                        LIMIT 1
                     ), 0
                 ) AS harga_satuan_$codeSub";
 
@@ -422,7 +532,7 @@ class SalesOrderModel extends \App\Models\PrModel
             INNER JOIN trans_sales_order_det td ON td.id = tbl.id
             INNER JOIN trans_sales_order tso ON tso.id = td.id_sales_order
 
-            -- JOIN ref_barang untuk query utama
+            -- JOIN ref_barang langsung dari trans_sales_order_det (independen dari sample)
             LEFT JOIN ref_barang b1 ON b1.id = td.id_barang_1
             LEFT JOIN ref_barang b2 ON b2.id = td.id_barang_2
             LEFT JOIN ref_barang b3 ON b3.id = td.id_barang_3
@@ -448,11 +558,17 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
-    function getDataDetailSalesOrder_crostab_si($id, $idInvoice = null)
+    function getDataDetailSalesOrder_crostab_si($id, $idInvoice = null, $dtUkuran = null)
     {
-        $pru['use'] = 1;
-        $pru['id_sales_order'] = $id;
-        $dtUkuran = $this->getUkuranTrans($pru);
+        if ($dtUkuran === null) {
+            $pru['use'] = 1;
+            $pru['id_sales_order'] = $id;
+            $dtUkuran = $this->getUkuranTrans($pru);
+        }
+
+        if (empty($dtUkuran)) {
+            return [];
+        }
 
         $col11      = "";
         $col21      = "";
@@ -528,6 +644,7 @@ class SalesOrderModel extends \App\Models\PrModel
                             CASE WHEN w7.kode_warna IS NOT NULL THEN '~' || w7.kode_warna ELSE '' END ||
                             CASE WHEN w8.kode_warna IS NOT NULL THEN '~' || w8.kode_warna ELSE '' END
                         )
+                        LIMIT 1
                     ), 0
                 ) AS harga_satuan_$codeSub";
 
@@ -600,14 +717,10 @@ class SalesOrderModel extends \App\Models\PrModel
                 {$col11},
                 COALESCE((
                     SELECT SUM(tdp.qty_do * tdp.harga_satuan)
-                    FROM trans_delivery_detail tdd
-                    INNER JOIN trans_delivery_prod tdp 
-                        ON tdp.id_delivery = tdd.id_delivery 
-                        AND tdp.id_ukuran = tdd.id_ukuran 
-                        AND tdp.ref_detail_id = tdd.ref_detail_id
+                    FROM trans_delivery_prod tdp 
                     INNER JOIN trans_delivery td_head 
-                        ON td_head.id = tdd.id_delivery
-                    WHERE tdd.ref_detail_id = tbl.id {$tddInvoice}
+                        ON td_head.id = tdp.id_delivery
+                    WHERE tdp.ref_detail_id = tbl.id {$tddInvoice}
                 ), 0) AS total_harga,
                 {$col_harga}
 
@@ -619,12 +732,12 @@ class SalesOrderModel extends \App\Models\PrModel
                         ru.seq,
                         (CASE WHEN ru.key_ukuran = 'all' THEN 'all_' ELSE 
                             LOWER(REGEXP_REPLACE(ru.key_ukuran, '[^a-zA-Z0-9]+', '_', 'g')) END) AS key_ukuran,
-                        SUM(COALESCE(tdd.qty, 0)) AS qty_do
+                        SUM(COALESCE(tdp.qty_do, 0)) AS qty_do
                     FROM 
-                        trans_delivery_detail tdd
-                    INNER JOIN trans_delivery td_head ON td_head.id = tdd.id_delivery
-                    INNER JOIN trans_sales_order_det td ON td.id = tdd.ref_detail_id
-                    INNER JOIN ref_ukuran ru ON ru.id = tdd.id_ukuran
+                        trans_delivery_prod tdp
+                    INNER JOIN trans_delivery td_head ON td_head.id = tdp.id_delivery
+                    INNER JOIN trans_sales_order_det td ON td.id = tdp.ref_detail_id
+                    INNER JOIN ref_ukuran ru ON ru.id = tdp.id_ukuran
                     WHERE td.id_sales_order = {$id}
                     {$idInvoice}
                     GROUP BY td.id, ru.key_ukuran, ru.seq
@@ -701,6 +814,8 @@ class SalesOrderModel extends \App\Models\PrModel
 
     function getDataDetailSampleUkuran($idSalesOrder, $idSalesOrderDet)
     {
+        $idSalesOrder = (int)$idSalesOrder;
+        $idSalesOrderDet = (int)$idSalesOrderDet;
         $sql = "SELECT
                     bbx.id,
                     abx.kode_ukuran as ukuran,
@@ -714,19 +829,47 @@ class SalesOrderModel extends \App\Models\PrModel
                     AND bbx.id_sales_order = $idSalesOrder
                     AND bbx.id_sales_order_det = $idSalesOrderDet
                     WHERE abx.active = 1
-                    ORDER BY abx.id";
+                    ORDER BY abx.seq";
         $result = $this->db->query($sql);
         $this->_data   = $result->getResult();
         return $this->_data;
     }
 
-    function getDataDetailSampleWarna($idSample, $id)
+    function getBarangIdByWarnaId($idWarna)
     {
+        if (empty($idWarna)) return null;
+        $row = $this->db->table("ref_barang")
+            ->select("id")
+            ->where("id_warna", $idWarna)
+            ->where("active", 1)
+            ->orderBy("id", "ASC")
+            ->get()->getRow();
+        return !empty($row) ? $row->id : null;
+    }
 
+    function getWarnaIdByBarangId($idBarang)
+    {
+        if (empty($idBarang)) return null;
+        $row = $this->db->table("ref_barang")
+            ->select("id_warna")
+            ->where("id", $idBarang)
+            ->where("active", 1)
+            ->get()->getRow();
+        return !empty($row) ? $row->id_warna : null;
+    }
+
+    function getDataDetailSampleWarna($idSample, $id = null)
+    {
+        $idSample = (int)$idSample;
         $builder = $this->db->table("trans_sales_order_det");
         $builder->where("id_sales_order", $idSample);
-        $builder->where("id", $id);
-        $this->_data = $builder->get()->getRow();
+        if (!empty($id)) {
+            $builder->where("id", (int)$id);
+            $this->_data = $builder->get()->getRow();
+        } else {
+            $builder->orderBy("id", "ASC");
+            $this->_data = $builder->get()->getResult();
+        }
         return $this->_data;
     }
 
@@ -898,6 +1041,18 @@ class SalesOrderModel extends \App\Models\PrModel
         return $this->_data;
     }
 
+    function getWoWarnaList($ref_detail_id = null)
+    {
+        $builder = $this->db->table("trans_walkorder_warna abx");
+        $builder->select("abx.id, abx.id_barang, abx.id_walkorder_detail");
+        $builder->join("trans_walkorder_detail twd", "twd.id = abx.id_walkorder_detail", 'inner');
+        $builder->where("twd.ref_detail_id", $ref_detail_id);
+        $builder->where("twd.tipe_id", 2);
+        $builder->orderBy("abx.id", "ASC");
+        $this->_data = $builder->get()->getResult();
+        return $this->_data;
+    }
+
     function getWoWarna($id_barang = null, $ref_detail_id = null)
     {
         $builder = $this->db->table("trans_walkorder_warna abx");
@@ -919,10 +1074,11 @@ class SalesOrderModel extends \App\Models\PrModel
                 $dataWarna['updated_at'] = date("Y-m-d H:i:s");
                 
                 $getOldWarna = $this->getDataDetailSampleWarna($dataWarna['id_sales_order'], $dataWarna['id']);
+                $woWarnaList = $this->getWoWarnaList($dataWarna['id']);
                 for ($i=0; $i < 8; $i++) { 
                     $barangId = 'id_barang_' . ($i+1);
                     if (!empty($getOldWarna->$barangId)) {
-                        $getWOWarna = $this->getWoWarna($getOldWarna->$barangId, $dataWarna['id']);
+                        $getWOWarna = $woWarnaList[$i] ?? null;
                         if (!empty($getWOWarna)) {
                             $dataUPdateWO = [
                                 "id_barang" => $dataWarna[$barangId],
@@ -966,7 +1122,15 @@ class SalesOrderModel extends \App\Models\PrModel
                 $head_total = $head_total + (!empty($harga_total)) ? (float) $harga_total : 0;
 
                 $ukuranId = !empty($rowData['id']) ? $rowData['id'] : null;
-                $getSOUkuran = $this->getDataUkuranSO($ukuranId);
+                $getSOUkuran = !empty($ukuranId) ? $this->getDataUkuranSO($ukuranId) : null;
+                if (empty($getSOUkuran)) {
+                    $targetDetId = !empty($dataWarna['id']) ? $dataWarna['id'] : $idSampleDet;
+                    $getSOUkuran = $this->db->table('trans_sales_order_ukuran')
+                        ->where('id_sales_order', $dataWarna['id_sales_order'])
+                        ->where('id_sales_order_det', $targetDetId)
+                        ->where('id_ukuran', $rowData['id_ukuran'])
+                        ->get()->getRow();
+                }
                 if (!empty($getSOUkuran)) {
                     $getDODet = $this->getDataDODetail($dataWarna['id'], $rowData['id_ukuran'], "<>");
                     if (count($getDODet) > 0) {
@@ -1114,15 +1278,13 @@ class SalesOrderModel extends \App\Models\PrModel
                 $this->db->transRollback();
                 return $msgError;
             }
-            // update data qty dan total harga 
-            // $head_up['qty'] = $head_qty;
-            // $head_up['total_harga'] = $head_total;
-            // $this->updateRecord($this->table, $head_up, 'id', $dataWarna['id_sales_order']);
 
-            // $head_up_wo['qty'] = $head_qty;
-            // $this->updateRecord("trans_walkorder", $head_up_wo, 'ref_id', $dataWarna['id_sales_order']);
+            // Sinkronkan otomatis Qty dan perhitungan gramasi ke Work Order jika WO sudah ada
+            $targetDetIdForSync = !empty($dataWarna['id']) ? $dataWarna['id'] : $idSampleDet;
+            if (!empty($targetDetIdForSync)) {
+                $this->syncWoGramasiFromSoDet($targetDetIdForSync);
+            }
 
-            
             $this->db->transComplete();
             if ($this->db->transStatus() === TRUE) {
                 return true;
@@ -1132,6 +1294,105 @@ class SalesOrderModel extends \App\Models\PrModel
         } catch (\Exception $e) {
             $this->db->transRollback();
             throw $e;
+        }
+    }
+
+    public function syncWoGramasiFromSoDet($idSalesOrderDet)
+    {
+        if (empty($idSalesOrderDet)) return;
+        $idSalesOrderDet = (int)$idSalesOrderDet;
+
+        // 1. Ambil total Qty terbaru dari trans_sales_order_ukuran
+        $qtyRow = $this->db->table('trans_sales_order_ukuran')
+            ->selectSum('qty')
+            ->where('id_sales_order_det', $idSalesOrderDet)
+            ->get()->getRow();
+        $newQty = !empty($qtyRow->qty) ? (float)$qtyRow->qty : 0;
+
+        // 2. Cari semua trans_walkorder_detail yang terhubung (tipe_id = 2)
+        $woDets = $this->db->table('trans_walkorder_detail')
+            ->where('ref_detail_id', $idSalesOrderDet)
+            ->where('tipe_id', 2)
+            ->get()->getResult();
+
+        if (empty($woDets)) return;
+
+        foreach ($woDets as $woDet) {
+            // Ambil semua warna untuk WO detail ini
+            $warnaRows = $this->db->table('trans_walkorder_warna')
+                ->where('id_walkorder_detail', $woDet->id)
+                ->orderBy('id', 'ASC')
+                ->get()->getResult();
+
+            $sumGram = 0;
+            $sumGramNd = 0;
+            $sumKg = 0;
+            $sumKgLoss = 0;
+            $sumTotal = 0;
+            $sumKuota = 0;
+            $sumKuotaTambah = 0;
+            $lossDetail = (!empty($woDet->loss) && (float)$woDet->loss > 0) ? (float)$woDet->loss : 5;
+
+            foreach ($warnaRows as $wRow) {
+                $gram = (float)($wRow->gram ?? 0);
+                $loss = (!empty($wRow->loss) && (float)$wRow->loss > 0) ? (float)$wRow->loss : $lossDetail;
+
+                $gramNd = $gram * $newQty;
+                $kg = $gramNd / 1000;
+                $kgLoss = ($kg * $loss) / 100;
+                $total = $kg + $kgLoss;
+                $kuota = (float)($wRow->kuota ?? 0);
+                $kuotaTambah = $kuota - $total;
+
+                $this->db->table('trans_walkorder_warna')
+                    ->where('id', $wRow->id)
+                    ->update([
+                        'gram_nd'      => $gramNd,
+                        'kg'           => $kg,
+                        'loss'         => $loss,
+                        'kg_loss'      => $kgLoss,
+                        'total'        => $total,
+                        'kuota_tambah' => $kuotaTambah,
+                        'updated_at'   => date('Y-m-d H:i:s')
+                    ]);
+
+                $sumGram += $gram;
+                $sumGramNd += $gramNd;
+                $sumKg += $kg;
+                $sumKgLoss += $kgLoss;
+                $sumTotal += $total;
+                $sumKuota += $kuota;
+                $sumKuotaTambah += $kuotaTambah;
+            }
+
+            // Update trans_walkorder_detail
+            $this->db->table('trans_walkorder_detail')
+                ->where('id', $woDet->id)
+                ->update([
+                    'qty'          => $newQty,
+                    'gram'         => $sumGram,
+                    'gram_nd'      => $sumGramNd,
+                    'kg'           => $sumKg,
+                    'loss'         => $lossDetail,
+                    'kg_loss'      => $sumKgLoss,
+                    'total'        => $sumTotal,
+                    'kuota_tambah' => $sumKuotaTambah,
+                    'updated_at'   => date('Y-m-d H:i:s')
+                ]);
+
+            // Update total qty di header trans_walkorder
+            $totalWoQtyRow = $this->db->table('trans_walkorder_detail')
+                ->selectSum('qty')
+                ->where('id_walkorder', $woDet->id_walkorder)
+                ->get()->getRow();
+            $totalWoQty = !empty($totalWoQtyRow->qty) ? (float)$totalWoQtyRow->qty : 0;
+
+            $this->db->table('trans_walkorder')
+                ->where('id', $woDet->id_walkorder)
+                ->update([
+                    'qty'        => $totalWoQty,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
         }
     }
 

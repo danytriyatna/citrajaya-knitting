@@ -71,8 +71,8 @@ class PrModel extends Model
         $builder = $this->db->table($table);
         if ($builder->insert($data) === false) {
             $error = $this->db->error();
-            var_dump($error);
-            die;
+            log_message('error', 'insertRecordGetid failed on table ' . $table . ': ' . json_encode($error));
+            return false;
         }
         return $this->db->insertID();
     }

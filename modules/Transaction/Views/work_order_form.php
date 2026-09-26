@@ -218,7 +218,11 @@
                       </tr>
                     </thead>
                     <tbody>
-                         <?php foreach ($proses as $r) { ?>
+                          <?php 
+                            $curr_role_id = session()->get('role_id');
+                            $can_edit_harga = in_array((int)$curr_role_id, [1, 2]); // 1: superadmin, 2: ADMIN APLIKASI
+                          ?>
+                          <?php foreach ($proses as $r) { ?>
                           <tr>
                             <td>
                               <div class="form-check-inline">
@@ -227,7 +231,7 @@
                               </div>
                             </td>
                             <td>
-                              <input type="number" class="form-control" name="harga-proses" id="harga-proses-<?= $r->id ?>" value="<?= $r->harga ?>">
+                              <input type="number" class="form-control" name="harga-proses" id="harga-proses-<?= $r->id ?>" value="<?= $r->harga ?>" <?= !$can_edit_harga ? 'readonly style="background-color: #f1f3f5; cursor: not-allowed;"' : '' ?>>
                             </td>
                           </tr>
                           <?php } ?>

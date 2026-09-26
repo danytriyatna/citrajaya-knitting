@@ -20,6 +20,7 @@ class IonAuth extends \IonAuth\Config\IonAuth
 	];
 
 	public $superAdminGroup = 'superadmin';
+	public $adminGroup      = 'ADMIN APLIKASI';
 	public $identity    	= 'username';             
 	public $emailActivation = true;   
 	

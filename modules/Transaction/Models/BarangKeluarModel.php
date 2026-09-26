@@ -226,6 +226,37 @@ class BarangKeluarModel extends \App\Models\PrModel
                     $idBarang = $rowData['id_barang'];
                 }
 
+                // Kunci harga: pastikan harga setiap barang keluar selalu mengikuti harga resmi
+                // perolehan lot (trans_receive_detail) atau ref_barang, tidak boleh dimanipulasi user.
+                $authenticPrice = null;
+                $lotNoVal = trim((string)($rowData['lot_no'] ?? ''));
+                if (!empty($lotNoVal) && $lotNoVal !== '-') {
+                    $rowRec = $this->db->table('trans_receive_detail trd')
+                        ->select('trd.price')
+                        ->join('trans_receive_header trh', 'trh.id = trd.id_header')
+                        ->where('trd.id_barang', $idBarang)
+                        ->where('trd.lot_no', $lotNoVal)
+                        ->where('trd.price >', 0)
+                        ->where('trd.active', 1)
+                        ->orderBy('trh.id', 'DESC')
+                        ->get()->getRow();
+                    if (!empty($rowRec) && !empty($rowRec->price) && (float)$rowRec->price > 0) {
+                        $authenticPrice = (float)$rowRec->price;
+                    }
+                }
+                if (empty($authenticPrice) && !empty($idBarang)) {
+                    $refB = $this->db->table('ref_barang')
+                        ->select('harga_satuan')
+                        ->where('id', $idBarang)
+                        ->get()->getRow();
+                    if (!empty($refB) && !empty($refB->harga_satuan) && (float)$refB->harga_satuan > 0) {
+                        $authenticPrice = (float)$refB->harga_satuan;
+                    }
+                }
+                if (!empty($authenticPrice) && $authenticPrice > 0) {
+                    $rowData['price'] = $authenticPrice;
+                }
+
                 $dataDetail = [
                     "id_barang" => $idBarang,
                     "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,

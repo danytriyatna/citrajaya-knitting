@@ -43,10 +43,9 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <!-- Dikunci (readonly): harga otomatis mengikuti riwayat transfer/lot, tidak
-                 boleh diubah manual staff - ini sumber utama harga menyimpang dari Receive
-                 asli yang dilaporkan user. Disamakan dgn perlakuan field price di Transfer Item. -->
-            <input type="text" id="price" name="price" pattern="\d{10,13}" class="form-control" placeholder="Ketikkan Price" value="" readonly>
+            <!-- Dikunci permanen: harga otomatis mengikuti riwayat receive/lot asli,
+                 sama sekali tidak boleh dan tidak bisa diubah user. -->
+            <input type="text" id="price" name="price" class="form-control" placeholder="Harga otomatis terisi" value="" readonly tabindex="-1" style="background-color: #e9ecef !important; pointer-events: none; cursor: not-allowed;">
           </div>
         </div>
 

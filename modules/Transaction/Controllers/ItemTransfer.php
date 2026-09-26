@@ -805,6 +805,55 @@ class ItemTransfer extends BaseController
       $dataHeader['created_at'] = date("Y-m-d H:i:s");
       $dataHeader['created_by'] = $this->get_userid();
     }
+    // Kunci harga: pastikan harga setiap item transfer selalu mengikuti harga resmi
+    // perolehan lot (trans_receive_detail) atau ref_barang, tidak boleh dimanipulasi user.
+    if (!empty($dataDetail) && is_array($dataDetail)) {
+        $db = \Config\Database::connect();
+        foreach ($dataDetail as $idx => $det) {
+            $idBarang = !empty($det['id_barang']) ? (is_numeric($det['id_barang']) ? (int)$det['id_barang'] : decrypt($det['id_barang'])) : 0;
+            $lotNo = trim((string)($det['lot_no'] ?? ''));
+            $authenticPrice = null;
+
+            if (empty($lotNo) || $lotNo === '-') {
+                if (!empty($det['lot_id'])) {
+                    $lotObj = $db->table('trans_lots')->where('id', $det['lot_id'])->get()->getRow();
+                    if (!empty($lotObj) && !empty($lotObj->lot_no)) {
+                        $lotNo = trim((string)$lotObj->lot_no);
+                    }
+                }
+            }
+
+            if (!empty($lotNo) && $lotNo !== '-') {
+                $rowRec = $db->table('trans_receive_detail trd')
+                    ->select('trd.price')
+                    ->join('trans_receive_header trh', 'trh.id = trd.id_header')
+                    ->where('trd.id_barang', $idBarang)
+                    ->where('trd.lot_no', $lotNo)
+                    ->where('trd.price >', 0)
+                    ->where('trd.active', 1)
+                    ->orderBy('trh.id', 'DESC')
+                    ->get()->getRow();
+                if (!empty($rowRec) && !empty($rowRec->price) && (float)$rowRec->price > 0) {
+                    $authenticPrice = (float)$rowRec->price;
+                }
+            }
+
+            if (empty($authenticPrice) && $idBarang > 0) {
+                $refB = $db->table('ref_barang')
+                    ->select('harga_satuan')
+                    ->where('id', $idBarang)
+                    ->get()->getRow();
+                if (!empty($refB) && !empty($refB->harga_satuan) && (float)$refB->harga_satuan > 0) {
+                    $authenticPrice = (float)$refB->harga_satuan;
+                }
+            }
+
+            if (!empty($authenticPrice) && $authenticPrice > 0) {
+                $dataDetail[$idx]['price'] = $authenticPrice;
+            }
+        }
+    }
+
     $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
     if ($res) {
       $status = true;

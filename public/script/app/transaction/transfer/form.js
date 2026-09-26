@@ -858,12 +858,20 @@ if (detailData.length > 0) {
 }
 
 
-inpPrice.on("input", function (e) {
-    e.target.value = formatRupiah(e.target.value)
-})
+// Lockdown field Price: tidak boleh diedit manual, selalu mengikuti harga lot/barang
+inpPrice.prop('readonly', true).attr('tabindex', '-1').css({
+    'pointer-events': 'none',
+    'background-color': '#e9ecef',
+    'cursor': 'not-allowed'
+});
+
+inpPrice.on("keydown keypress paste drop", function (e) {
+    e.preventDefault();
+    return false;
+});
 
 function formatRupiah(value) {
-    value = value.replace(/[^\d]/g, '').toString();
+    value = (value || '').toString().replace(/[^\d]/g, '');
     // Pisahkan angka menjadi ribuan
     let split = value.split(',');
     let sisa = split[0].length % 3;
@@ -881,31 +889,6 @@ function formatRupiah(value) {
 
     return rupiah ? 'Rp ' + rupiah : '';
 }
-
-
-inpPrice.keyup(function (e) {
-
-    if (inpBarang.val().length === 0) {
-        e.target.value = ""
-        return Swal.fire({
-            text: `Barang harus dipilih dahulu.`,
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
-    }
-
-    // if(!regex.test(e.target.value)){
-    //     e.target.value = ""
-    //     return Swal.fire({
-    //         text: "Price harus berupa angka",
-    //         icon: 'error',
-    //         showConfirmButton: false,
-    //         timer: 2000
-    //     });
-    // }
-
-})
 
 selectGudangTujuan.on("change", function (e) {
     checkCMT(e.target.value)

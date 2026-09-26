@@ -43,12 +43,9 @@
         <div class="form-group row">
           <label class="control-label text-start text-md-end col-md-2 col-form-label" for="price">Price</label>
           <div class="col-md-9">
-            <!-- TAMBAHAN (2026-08-08): dikunci readonly - harga otomatis mengikuti Lot
-                 yang dipilih (harga beli asli), staff tidak boleh mengetik manual. Ini
-                 sumber bug harga "ketuker" antar barang yang dilaporkan user (mis. harga
-                 Benang Polyester/Hydrosoft kebawa ke transaksi barang lain). Disamakan
-                 dgn perlakuan field price di Barang Keluar. -->
-            <input type="text" id="price" name="price" class="form-control" placeholder="Ketikkan Price" value="" readonly>
+            <!-- Dikunci permanen: harga otomatis mengikuti riwayat receive/lot asli,
+                 sama sekali tidak boleh dan tidak bisa diubah user. -->
+            <input type="text" id="price" name="price" class="form-control" placeholder="Harga otomatis terisi" value="" readonly tabindex="-1" style="background-color: #e9ecef !important; pointer-events: none; cursor: not-allowed;">
           </div>
         </div>
         <div class="form-group row">

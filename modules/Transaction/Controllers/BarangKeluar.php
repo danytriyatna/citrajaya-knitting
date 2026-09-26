@@ -359,6 +359,46 @@ class BarangKeluar extends BaseController
             }
         }
 
+        // Kunci harga: pastikan harga setiap barang keluar selalu mengikuti harga resmi
+        // perolehan lot (trans_receive_detail) atau ref_barang, tidak boleh dimanipulasi user.
+        if (!empty($dataDetail) && is_array($dataDetail)) {
+            $db = \Config\Database::connect();
+            foreach ($dataDetail as $idx => $det) {
+                $idBarang = !empty($det['id_barang']) ? (is_numeric($det['id_barang']) ? (int)$det['id_barang'] : decrypt($det['id_barang'])) : 0;
+                $lotNo = trim((string)($det['lot_no'] ?? ''));
+                $authenticPrice = null;
+
+                if (!empty($lotNo) && $lotNo !== '-') {
+                    $rowRec = $db->table('trans_receive_detail trd')
+                        ->select('trd.price')
+                        ->join('trans_receive_header trh', 'trh.id = trd.id_header')
+                        ->where('trd.id_barang', $idBarang)
+                        ->where('trd.lot_no', $lotNo)
+                        ->where('trd.price >', 0)
+                        ->where('trd.active', 1)
+                        ->orderBy('trh.id', 'DESC')
+                        ->get()->getRow();
+                    if (!empty($rowRec) && !empty($rowRec->price) && (float)$rowRec->price > 0) {
+                        $authenticPrice = (float)$rowRec->price;
+                    }
+                }
+
+                if (empty($authenticPrice) && $idBarang > 0) {
+                    $refB = $db->table('ref_barang')
+                        ->select('harga_satuan')
+                        ->where('id', $idBarang)
+                        ->get()->getRow();
+                    if (!empty($refB) && !empty($refB->harga_satuan) && (float)$refB->harga_satuan > 0) {
+                        $authenticPrice = (float)$refB->harga_satuan;
+                    }
+                }
+
+                if (!empty($authenticPrice) && $authenticPrice > 0) {
+                    $dataDetail[$idx]['price'] = $authenticPrice;
+                }
+            }
+        }
+
         if ($statusData == 1 && !empty($dataDetail) && is_array($dataDetail)) {
             foreach ($dataDetail as $det) {
                 if (isset($det['price']) && (float)$det['price'] <= 0) {

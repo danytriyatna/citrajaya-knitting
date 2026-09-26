@@ -853,6 +853,104 @@ class ProductionModel extends \App\Models\PrModel
         return $randomNumber;
     }
 
+    public function getRendemenRajutData($id_produksi, $id_walkorder, $kode_walkorder, $ref_id = null, $ref_kode = null)
+    {
+        $idWo = (int)$id_walkorder;
+        $kodeWo = trim((string)$kode_walkorder);
+
+        // 1. Target Gramatur & Kebutuhan WO
+        $woRow = $this->db->query("
+            SELECT COALESCE(AVG(gram), 0) as target_gram,
+                   COALESCE(SUM(gram_nd)/1000, 0) as target_kg_murni,
+                   COALESCE(SUM(total), 0) as target_kg_total
+            FROM trans_walkorder_detail
+            WHERE id_walkorder = ? AND active = 1
+        ", [$idWo])->getRow();
+
+        $targetGram = $woRow ? (float)$woRow->target_gram : 0;
+        $targetKg   = $woRow ? (float)$woRow->target_kg_total : 0;
+
+        // 2. Benang Terpakai / Keluar (BTK Pemakaian id_kategori = 5)
+        $btkRow = $this->db->query("
+            SELECT COALESCE(SUM(tbd.qty), 0) as benang_keluar,
+                   COALESCE(SUM(tbd.qty_sisa), 0) as benang_sisa
+            FROM trans_barang_detail tbd
+            INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+            WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+        ", [$kodeWo])->getRow();
+
+        $benangKeluar = $btkRow ? (float)$btkRow->benang_keluar : 0;
+        $benangSisa   = $btkRow ? (float)$btkRow->benang_sisa : 0;
+
+        // 3. Hasil BTM Proses Rajut (trans_barang_masuk_produksi)
+        $whereBtm = [];
+        $bindsBtm = [];
+        if (!empty($ref_kode)) {
+            $whereBtm[] = "tbmp.kode_sales_order = ?";
+            $bindsBtm[] = $ref_kode;
+        }
+        if (!empty($ref_id)) {
+            $whereBtm[] = "tbmp.id_ref = ?";
+            $bindsBtm[] = (int)$ref_id;
+        }
+
+        $btmRow = null;
+        if (!empty($whereBtm)) {
+            $whereClause = "(" . implode(" OR ", $whereBtm) . ")";
+            $btmRow = $this->db->query("
+                SELECT COALESCE(SUM(tbmp.qty), 0) as pcs_rajut,
+                       COALESCE(SUM(tbmp.berat), 0) as berat_kain
+                FROM trans_barang_masuk_produksi tbmp
+                INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
+                WHERE {$whereClause} AND tbh.active = 1
+            ", $bindsBtm)->getRow();
+        }
+
+        $pcsRajut  = $btmRow ? (float)$btmRow->pcs_rajut : 0;
+        $beratKain = $btmRow ? (float)$btmRow->berat_kain : 0;
+
+        // 4. Hitung Rasio Rendemen & Gramatur
+        $rendemen = ($benangKeluar > 0 && $beratKain > 0) ? round(($beratKain / $benangKeluar) * 100, 2) : 0;
+        $gramAktual = ($pcsRajut > 0 && $beratKain > 0) ? round(($beratKain * 1000) / $pcsRajut, 1) : 0;
+        $deviasiGram = ($targetGram > 0 && $gramAktual > 0) ? round($gramAktual - $targetGram, 1) : 0;
+
+        // Status badge
+        $statusBadge = 'text-muted';
+        $statusText = 'Belum Ada Data';
+        if ($benangKeluar > 0 && $beratKain > 0) {
+            if ($rendemen >= 93 && $rendemen <= 97) {
+                $statusBadge = 'badge bg-success';
+                $statusText = 'Normal (Ideal)';
+            } elseif ($rendemen >= 90 && $rendemen < 93) {
+                $statusBadge = 'badge bg-warning text-dark';
+                $statusText = 'Waspada (Susut Agak Tinggi)';
+            } elseif ($rendemen > 97 && $rendemen <= 100) {
+                $statusBadge = 'badge bg-info text-dark';
+                $statusText = 'Sangat Efisien';
+            } elseif ($rendemen > 100) {
+                $statusBadge = 'badge bg-danger';
+                $statusText = 'Anomali (> 100%)';
+            } else {
+                $statusBadge = 'badge bg-danger';
+                $statusText = 'Susut Tinggi (< 90%)';
+            }
+        }
+
+        return [
+            'target_gram'    => $targetGram,
+            'target_kg'      => $targetKg,
+            'benang_keluar'  => $benangKeluar,
+            'benang_sisa'    => $benangSisa,
+            'pcs_rajut'      => $pcsRajut,
+            'berat_kain'     => $beratKain,
+            'rendemen'       => $rendemen,
+            'gram_aktual'    => $gramAktual,
+            'deviasi_gram'   => $deviasiGram,
+            'status_badge'   => $statusBadge,
+            'status_text'    => $statusText,
+        ];
+    }
+
     public function getLabaKotorData($id_produksi, $id_walkorder, $id_so, $tipe_id, $kode_walkorder)
     {
         $idSo = (int)$id_so;

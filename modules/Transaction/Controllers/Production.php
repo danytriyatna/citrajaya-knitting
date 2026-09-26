@@ -473,6 +473,15 @@ class Production extends BaseController
       $canViewLaba = $this->canViewLabaKotor();
       $this->data['can_view_laba'] = $canViewLaba;
 
+      $refKodeVal = property_exists($resData, 'ref_kode') ? $resData->ref_kode : (property_exists($stdData, 'ref_kode') ? $stdData->ref_kode : null);
+      $this->data['rendemen_rajut'] = $this->mProduksi->getRendemenRajutData(
+          $resData->id,
+          $resData->id_walkorder,
+          $resData->kode_walkorder,
+          $stdData->ref_id,
+          $refKodeVal
+      );
+
       if ($canViewLaba) {
         $labaKotorForm = $this->mProduksi->getLabaKotorData($resData->id, $resData->id_walkorder, $stdData->ref_id, $stdData->tipe_id, $resData->kode_walkorder);
         $breakdownForm = $this->mProduksi->getLabaKotorBreakdown($resData->id, $resData->kode_walkorder);

@@ -243,196 +243,59 @@
                   <div class="table-striped table-centered" id="dt-detail-barang"></div>
                 </div>
               </div>
+              <div class="row mt-3">
+                <div class="col-12">
+                  <h6 class="f-w-700 m-b-6 m-t-8">ANALISIS RENDEMEN RAJUT &amp; GRAMATUR (HASIL RAJUT VS BENANG)</h6>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-striped align-middle mb-0">
+                      <thead style="background-color: #1e293b !important; color: #ffffff !important;">
+                        <tr class="text-center text-nowrap" style="white-space: nowrap !important;">
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Target Gramatur WO</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Benang Terpakai (BTK)</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Hasil Qty Rajut</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Berat Kain Rajut (BTM)</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Rendemen Rajut (%)</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Gramatur Aktual</th>
+                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Selisih / Deviasi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="text-center fw-bold fs-6">
+                          <td class="text-primary"><?= number_format($rendemen_rajut['target_gram'] ?? 0, 1, ',', '.'); ?> Gr/Pcs</td>
+                          <td class="text-warning"><?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg</td>
+                          <td class="text-dark"><?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs</td>
+                          <td class="text-success"><?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg</td>
+                          <td>
+                            <?php if (($rendemen_rajut['benang_keluar'] ?? 0) > 0 && ($rendemen_rajut['berat_kain'] ?? 0) > 0) : ?>
+                              <span class="<?= $rendemen_rajut['status_badge'] ?? 'badge bg-secondary'; ?> px-2 py-1">
+                                <?= number_format($rendemen_rajut['rendemen'] ?? 0, 2, ',', '.'); ?>%
+                              </span>
+                            <?php else : ?>
+                              <span class="text-muted">-</span>
+                            <?php endif; ?>
+                          </td>
+                          <td class="text-dark"><?= ($rendemen_rajut['gram_aktual'] ?? 0) > 0 ? number_format($rendemen_rajut['gram_aktual'], 1, ',', '.') . ' Gr/Pcs' : '-'; ?></td>
+                          <td>
+                            <?php 
+                              $dev = (float)($rendemen_rajut['deviasi_gram'] ?? 0);
+                              if (($rendemen_rajut['gram_aktual'] ?? 0) > 0 && ($rendemen_rajut['target_gram'] ?? 0) > 0) {
+                                  $colorDev = (abs($dev) <= 5) ? 'text-success' : ($dev > 0 ? 'text-danger' : 'text-warning');
+                                  $signDev = ($dev > 0) ? '+' : '';
+                                  echo "<span class='{$colorDev}'>{$signDev}" . number_format($dev, 1, ',', '.') . " Gr</span>";
+                              } else {
+                                  echo "<span class='text-muted'>-</span>";
+                              }
+                            ?>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <?php if (!empty($can_view_laba) && !empty($laba_kotor)) : ?>
           <hr>
-
-          <!-- CARD ANALISIS LABA KOTOR PRODUKSI -->
-          <?php 
-            $isUntung = ($laba_kotor['laba_kotor'] >= 0);
-            $cardBorderColor = $isUntung ? '#16a34a' : '#dc2626';
-            $badgeLabaClass = $isUntung ? 'bg-success text-white' : 'bg-danger text-white';
-          ?>
-          <div class="card mb-4 shadow-sm" style="border: 2px solid <?= $cardBorderColor ?> !important;">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
-              <h6 class="m-0 fw-bold text-dark"><i class="fa fa-chart-line text-primary me-2"></i>ANALISIS LABA KOTOR TRANSAKSI INI</h6>
-              <span class="badge <?= $badgeLabaClass ?> px-3 py-2 fs-6 fw-bold">
-                <?= $isUntung ? 'PROFIT' : 'DEFISIT' ?>: <?= $laba_kotor['f_laba_kotor']; ?> (Margin: <?= $laba_kotor['margin_persen']; ?>%)
-              </span>
-            </div>
-            <div class="card-body p-3">
-              <div class="row g-2 text-center mb-3">
-                <div class="col-md col-sm-4">
-                  <div class="p-2 rounded bg-white" style="border: 2px solid #1d4ed8; box-shadow: 0 2px 4px rgba(29, 78, 216, 0.12);">
-                    <div class="f-s-11 text-uppercase fw-bold" style="color: #1e40af;">Nilai SO</div>
-                    <div class="f-w-800 f-s-15" style="color: #1d4ed8;"><?= $laba_kotor['f_nilai_so']; ?></div>
-                    <small class="f-s-11 fw-bold text-muted">Target: <?= !empty($laba_kotor['f_qty_so']) ? $laba_kotor['f_qty_so'] : '0 Pcs'; ?></small>
-                  </div>
-                </div>
-                <div class="col-md col-sm-4">
-                  <div class="p-2 rounded bg-white" style="border: 2px solid #0284c7; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.12);">
-                    <div class="f-s-11 text-uppercase fw-bold" style="color: #0369a1;">Pendapatan Masuk</div>
-                    <div class="f-w-800 f-s-15" style="color: #0284c7;"><?= $laba_kotor['f_nilai_pendapatan']; ?></div>
-                    <small class="f-s-11 text-muted">DP &amp; Pelunasan CR</small>
-                  </div>
-                </div>
-                <div class="col-md col-sm-4">
-                  <div class="p-2 rounded bg-white" style="border: 2px solid #d97706; box-shadow: 0 2px 4px rgba(217, 119, 6, 0.12);">
-                    <div class="f-s-11 text-uppercase fw-bold" style="color: #b45309;">Bahan Baku</div>
-                    <div class="f-w-800 f-s-15" style="color: #d97706;"><?= $laba_kotor['f_nilai_bahan']; ?></div>
-                    <small class="f-s-11 text-muted">BTK Pemakaian</small>
-                  </div>
-                </div>
-                <div class="col-md col-sm-6">
-                  <div class="p-2 rounded bg-white" style="border: 2px solid #dc2626; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.12);">
-                    <div class="f-s-11 text-uppercase fw-bold" style="color: #b91c1c;">Tenaga Kerja</div>
-                    <div class="f-w-800 f-s-15" style="color: #dc2626;"><?= $laba_kotor['f_nilai_tk']; ?></div>
-                    <small class="f-s-11 text-muted">Upah Operator</small>
-                  </div>
-                </div>
-                <div class="col-md col-sm-6">
-                  <div class="p-2 rounded bg-white" style="border: 2px solid <?= $cardBorderColor ?>; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);">
-                    <div class="f-s-11 text-uppercase fw-bold" style="color: <?= $isUntung ? '#15803d' : '#b91c1c' ?>;">Laba Kotor</div>
-                    <div class="f-w-800 f-s-15" style="color: <?= $isUntung ? '#16a34a' : '#dc2626' ?>;"><?= $laba_kotor['f_laba_kotor']; ?></div>
-                    <small class="f-s-11 fw-bold text-muted">Margin: <?= $laba_kotor['margin_persen']; ?>%</small>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ACCORDION DETAIL ONGKOS & BAHAN -->
-              <div class="accordion" id="accordionLabaDetail">
-                <div class="accordion-item">
-                  <h2 class="accordion-header" id="headingLabaTk">
-                    <button class="accordion-button collapsed py-2 fw-bold text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLabaTk" aria-expanded="false" aria-controls="collapseLabaTk">
-                      <i class="fa fa-users me-2"></i> Rincian Biaya Tenaga Kerja Operator (trans_produksi_operator) &mdash; Total: <?= $laba_kotor['f_nilai_tk']; ?>
-                    </button>
-                  </h2>
-                  <div id="collapseLabaTk" class="accordion-collapse collapse" aria-labelledby="headingLabaTk" data-bs-parent="#accordionLabaDetail">
-                    <div class="accordion-body p-2">
-                      <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped align-middle mb-0">
-                          <thead style="background-color: #1e293b !important; color: #ffffff !important;">
-                            <tr class="text-nowrap" style="white-space: nowrap !important;">
-                              <th class="text-center text-nowrap" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">No</th>
-                              <th class="text-nowrap" style="background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Tahapan Proses</th>
-                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty SO</th>
-                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty Prod</th>
-                              <th class="text-end text-nowrap" style="width: 11%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Qty Perbaikan</th>
-                              <th class="text-end text-nowrap" style="width: 10%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Total Qty</th>
-                              <th class="text-end text-nowrap" style="width: 17%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Tarif / Pcs</th>
-                              <th class="text-end text-nowrap" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important; white-space: nowrap !important;">Subtotal Ongkos</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php if (!empty($breakdown['tenaga_kerja'])) : ?>
-                              <?php 
-                                $no = 1; 
-                                $fTotSo = !empty($breakdown['qty_so']) ? $breakdown['qty_so'] : (!empty($laba_kotor['qty_so']) ? $laba_kotor['qty_so'] : 0);
-                                $fTotProd = 0;
-                                $fTotFix = 0;
-                                $fTotAll = 0;
-                                foreach ($breakdown['tenaga_kerja'] as $tk) : 
-                                  $fTotProd += (float)($tk->qty_prod ?? 0);
-                                  $fTotFix  += (float)($tk->qty_fix ?? 0);
-                                  $fTotAll  += (float)($tk->total_qty ?? $tk->qty_prod ?? 0);
-                              ?>
-                                <tr>
-                                  <td class="text-center"><?= $no++; ?></td>
-                                  <td class="fw-bold text-dark"><?= $tk->nama_proses; ?></td>
-                                  <td class="text-end fw-bold" style="color: #1e40af;"><?= number_format((float)($tk->qty_so ?? $fTotSo), 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold" style="color: #16a34a;"><?= number_format((float)($tk->qty_prod ?? 0), 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold" style="color: #d97706;"><?= number_format((float)($tk->qty_fix ?? 0), 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold text-dark"><?= number_format((float)($tk->total_qty ?? $tk->qty_prod ?? 0), 0, ',', '.'); ?></td>
-                                  <td class="text-end">Rp <?= number_format($tk->avg_harga, 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold text-danger">Rp <?= number_format($tk->subtotal_ongkos, 0, ',', '.'); ?></td>
-                                </tr>
-                              <?php endforeach; ?>
-                            <?php else : ?>
-                              <tr><td colspan="8" class="text-center text-muted py-2">Belum ada input pengerjaan operator</td></tr>
-                            <?php endif; ?>
-                          </tbody>
-                          <?php if (!empty($breakdown['tenaga_kerja'])) : ?>
-                          <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
-                            <tr class="text-nowrap" style="white-space: nowrap !important;">
-                              <td colspan="2" class="text-end text-dark text-nowrap" style="white-space: nowrap !important;">TOTAL:</td>
-                              <td class="text-end text-primary"><?= number_format($fTotSo, 0, ',', '.'); ?></td>
-                              <td class="text-end text-success"><?= number_format($fTotProd, 0, ',', '.'); ?></td>
-                              <td class="text-end text-warning"><?= number_format($fTotFix, 0, ',', '.'); ?></td>
-                              <td class="text-end text-dark"><?= number_format($fTotAll, 0, ',', '.'); ?></td>
-                              <td class="text-end text-dark text-nowrap" style="white-space: nowrap !important;">TOTAL BIAYA:</td>
-                              <td class="text-end text-danger fs-6 text-nowrap" style="white-space: nowrap !important;"><?= $laba_kotor['f_nilai_tk']; ?></td>
-                            </tr>
-                          </tfoot>
-                          <?php endif; ?>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="accordion-item">
-                  <h2 class="accordion-header" id="headingLabaBahan">
-                    <button class="accordion-button collapsed py-2 fw-bold text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLabaBahan" aria-expanded="false" aria-controls="collapseLabaBahan">
-                      <i class="fa fa-boxes me-2"></i> Rincian Biaya Pemakaian Bahan Baku (BTK) &mdash; Total: <?= $laba_kotor['f_nilai_bahan']; ?>
-                    </button>
-                  </h2>
-                  <div id="collapseLabaBahan" class="accordion-collapse collapse" aria-labelledby="headingLabaBahan" data-bs-parent="#accordionLabaDetail">
-                    <div class="accordion-body p-2">
-                      <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped align-middle mb-0">
-                          <thead style="background-color: #1e293b !important; color: #ffffff !important;">
-                            <tr>
-                              <th class="text-center" style="width: 5%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
-                              <th style="background-color: #1e293b !important; color: #ffffff !important;">Kode / Nama Barang</th>
-                              <th style="background-color: #1e293b !important; color: #ffffff !important;">Warna</th>
-                              <th class="text-end" style="width: 15%; background-color: #1e293b !important; color: #ffffff !important;">Qty Pakai</th>
-                              <th class="text-end" style="width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Harga Satuan</th>
-                              <th class="text-end" style="width: 22%; background-color: #1e293b !important; color: #ffffff !important;">Subtotal Bahan</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php if (!empty($breakdown['bahan_baku'])) : ?>
-                              <?php 
-                                $no = 1; 
-                                $fTotBahanQty = 0;
-                                foreach ($breakdown['bahan_baku'] as $bb) : 
-                                  $fTotBahanQty += (float)($bb->qty_pakai ?? 0);
-                              ?>
-                                <tr>
-                                  <td class="text-center"><?= $no++; ?></td>
-                                  <td class="fw-bold text-dark"><?= $bb->kode_barang; ?> - <?= $bb->nama_barang; ?></td>
-                                  <td><?= (!empty($bb->kode_warna) ? $bb->kode_warna : '') . (!empty($bb->nama_warna) ? ' - ' . $bb->nama_warna : ''); ?></td>
-                                  <td class="text-end fw-bold text-dark"><?= number_format($bb->qty_pakai, 2, ',', '.'); ?></td>
-                                  <td class="text-end">Rp <?= number_format($bb->harga_satuan, 0, ',', '.'); ?></td>
-                                  <td class="text-end fw-bold" style="color: #d97706;">Rp <?= number_format($bb->subtotal_bahan, 0, ',', '.'); ?></td>
-                                </tr>
-                              <?php endforeach; ?>
-                            <?php else : ?>
-                              <tr><td colspan="6" class="text-center text-muted py-2">Belum ada data pemakaian bahan baku untuk nomor WO ini</td></tr>
-                            <?php endif; ?>
-                          </tbody>
-                          <?php if (!empty($breakdown['bahan_baku'])) : ?>
-                          <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
-                            <tr>
-                              <td colspan="3" class="text-end text-dark">TOTAL:</td>
-                              <td class="text-end text-dark"><?= number_format($fTotBahanQty, 2, ',', '.'); ?></td>
-                              <td class="text-end text-dark">TOTAL BIAYA:</td>
-                              <td class="text-end text-warning fs-6"><?= $laba_kotor['f_nilai_bahan']; ?></td>
-                            </tr>
-                          </tfoot>
-                          <?php endif; ?>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-          <?php endif; ?>
 
           <div class="row">
             <div class="col-sm-12">

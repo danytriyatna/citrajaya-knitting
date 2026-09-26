@@ -472,6 +472,7 @@ $(document).ready(function () {
         $("#modal-laba-detail").modal("show");
         
         // Reset modal state
+        $("#tbl-mdl-rekap-bahan tbody").html('<tr><td colspan="7" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data rekapitulasi bahan baku...</td></tr>');
         $("#tbl-mdl-tk tbody").html('<tr><td colspan="8" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data tenaga kerja...</td></tr>');
         $("#tbl-mdl-bahan tbody").html('<tr><td colspan="6" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data bahan baku...</td></tr>');
 
@@ -517,6 +518,56 @@ $(document).ready(function () {
                     $("#mdl-lbl-laba-title").css({"color": "#15803d"});
                     $("#mdl-val-laba").css({"color": "#16a34a"});
                 }
+
+                // Render Rekapitulasi Pemakaian Bahan Baku
+                let htmlRekapBahan = "";
+                let totKebutuhan = 0;
+                let totTrf = 0;
+                let totKembali = 0;
+                let totPakai = 0;
+                let totSisa = 0;
+
+                if (res.rekap_bahan && res.rekap_bahan.length > 0) {
+                    let no = 1;
+                    res.rekap_bahan.forEach(function(item) {
+                        let keb = parseFloat(item.total || item.kebutuhan || 0);
+                        let trf = parseFloat(item.total_qty_trf || 0);
+                        let kbl = parseFloat(item.total_qty_kembali || 0);
+                        let pki = parseFloat(item.total_qty_pakai || 0);
+                        let sisa = parseFloat(item.sisa || 0);
+
+                        totKebutuhan += keb;
+                        totTrf += trf;
+                        totKembali += kbl;
+                        totPakai += pki;
+                        totSisa += sisa;
+
+                        let sisaColor = sisa < 0 ? "#dc2626" : "#16a34a";
+                        let sisaWeight = sisa < 0 ? "700" : "600";
+                        let namaWarna = item.kode_warna || item.nama_barang || "-";
+
+                        htmlRekapBahan += `<tr>
+                            <td class="text-center">${no++}</td>
+                            <td class="fw-bold text-dark">${namaWarna}</td>
+                            <td class="text-end fw-bold" style="color: #1e40af;">${keb.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end fw-bold" style="color: #0284c7;">${trf.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end fw-bold" style="color: #64748b;">${kbl.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end fw-bold" style="color: #d97706;">${pki.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end" style="color: ${sisaColor}; font-weight: ${sisaWeight};">${sisa.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>`;
+                    });
+                } else {
+                    htmlRekapBahan = '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada data rekapitulasi kebutuhan &amp; pemakaian bahan baku untuk nomor WO ini</td></tr>';
+                }
+                $("#tbl-mdl-rekap-bahan tbody").html(htmlRekapBahan);
+                $("#mdl-rekap-badge-kebutuhan").text("Total Kebutuhan: " + totKebutuhan.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " Kg");
+                $("#mdl-tot-rekap-kebutuhan").text(totKebutuhan.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $("#mdl-tot-rekap-trf").text(totTrf.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $("#mdl-tot-rekap-kembali").text(totKembali.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $("#mdl-tot-rekap-pakai").text(totPakai.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                
+                let sisaTotalColor = totSisa < 0 ? "#dc2626" : "#16a34a";
+                $("#mdl-tot-rekap-sisa").css({"color": sisaTotalColor, "font-weight": "700"}).text(totSisa.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
                 // Render Breakdown Tenaga Kerja Operator (Split Prod & Perbaikan)
                 let htmlTk = "";

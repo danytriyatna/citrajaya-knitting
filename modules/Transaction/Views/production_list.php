@@ -67,6 +67,46 @@
           </div>
         </div>
 
+        <!-- TABEL REKAPITULASI PEMAKAIAN BAHAN BAKU (WARNA TEGAS) -->
+        <div class="card mb-4 shadow-sm" style="border: 2px solid #d97706 !important;">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background-color: #fffbeb; border-bottom: 1px solid #fde68a;">
+            <h6 class="m-0 fw-bold" style="color: #b45309;">
+              <i class="fa fa-boxes me-2"></i>REKAPITULASI PEMAKAIAN BAHAN BAKU
+            </h6>
+            <span class="badge px-2 py-1 fw-bold text-white shadow-sm" style="background-color: #d97706;" id="mdl-rekap-badge-kebutuhan">Total Kebutuhan: 0 Kg</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered table-striped align-middle mb-0" id="tbl-mdl-rekap-bahan">
+                <thead style="background-color: #1e293b !important; color: #ffffff !important;">
+                  <tr>
+                    <th class="text-center" style="width: 4%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
+                    <th style="background-color: #1e293b !important; color: #ffffff !important;">Warna / Benang</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Kebutuhan (Kg)</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pengiriman (Kg)</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pengembalian (Kg)</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Pemakaian (Kg)</th>
+                    <th class="text-end" style="width: 16%; background-color: #1e293b !important; color: #ffffff !important;">Sisa (Kg)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="7" class="text-center text-muted py-2">Memuat data rekapitulasi bahan baku...</td></tr>
+                </tbody>
+                <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
+                  <tr>
+                    <td colspan="2" class="text-end text-dark">TOTAL:</td>
+                    <td class="text-end text-primary" id="mdl-tot-rekap-kebutuhan">0.00</td>
+                    <td class="text-end text-info" id="mdl-tot-rekap-trf">0.00</td>
+                    <td class="text-end text-secondary" id="mdl-tot-rekap-kembali">0.00</td>
+                    <td class="text-end text-warning" id="mdl-tot-rekap-pakai">0.00</td>
+                    <td class="text-end" id="mdl-tot-rekap-sisa">0.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- BREAKDOWN TABS -->
         <ul class="nav nav-tabs nav-bordered mb-3" role="tablist">
           <li class="nav-item">

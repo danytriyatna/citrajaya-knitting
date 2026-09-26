@@ -255,6 +255,11 @@ class Production extends BaseController
     $labaData = $this->mProduksi->getLabaKotorData($row->id, $row->id_walkorder, $row->id_walkorder_ref, $row->tipe_id, $row->kode_walkorder);
     $breakdown = $this->mProduksi->getLabaKotorBreakdown($row->id, $row->kode_walkorder);
 
+    $rekapBahan = [];
+    if (!empty($row->id_walkorder)) {
+      $rekapBahan = $this->mWalkorder->getData_warna_print($row->id_walkorder);
+    }
+
     return $this->response->setJSON([
       'status' => true,
       'info' => [
@@ -267,7 +272,8 @@ class Production extends BaseController
         'f_qty_so' => !empty($labaData['f_qty_so']) ? $labaData['f_qty_so'] : '0 Pcs',
       ],
       'laba_data' => $labaData,
-      'breakdown' => $breakdown
+      'breakdown' => $breakdown,
+      'rekap_bahan' => $rekapBahan
     ]);
   }
 
@@ -472,9 +478,11 @@ class Production extends BaseController
         $breakdownForm = $this->mProduksi->getLabaKotorBreakdown($resData->id, $resData->kode_walkorder);
         $this->data['laba_kotor'] = $labaKotorForm;
         $this->data['breakdown'] = $breakdownForm;
+        $this->data['rekap_bahan'] = $walkOrderDet;
       } else {
         $this->data['laba_kotor'] = null;
         $this->data['breakdown'] = null;
+        $this->data['rekap_bahan'] = null;
       }
 
       $status = $stdData->status;

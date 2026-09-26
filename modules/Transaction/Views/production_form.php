@@ -245,26 +245,42 @@
               </div>
               <div class="row mt-3">
                 <div class="col-12">
-                  <h6 class="f-w-800 m-b-6 m-t-8 text-dark" style="letter-spacing: 0.5px;">ANALISIS RENDEMEN RAJUT &amp; GRAMATUR (HASIL RAJUT VS BENANG)</h6>
+                  <h6 class="f-w-800 m-b-6 m-t-8 text-dark" style="letter-spacing: 0.5px;">ANALISIS RENDEMEN RAJUT &amp; BERAT (HASIL RAJUT VS BENANG)</h6>
                   <div class="table-responsive rounded" style="border: 2px solid #0f172a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);">
                     <table class="table table-bordered table-hover align-middle mb-0" style="border-collapse: collapse;">
                       <thead style="background: #0f172a !important; color: #ffffff !important;">
                         <tr class="text-center text-nowrap" style="white-space: nowrap !important;">
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">TARGET GRAMATUR WO</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">TARGET BERAT WO</th>
                           <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BENANG TERPAKAI (BTK)</th>
                           <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">HASIL QTY RAJUT</th>
                           <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BERAT KAIN RAJUT (BTM)</th>
                           <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">RENDEMEN RAJUT (%)</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">GRAMATUR AKTUAL</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BERAT AKTUAL / PCS</th>
                           <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">SELISIH / DEVIASI</th>
                         </tr>
                       </thead>
                       <tbody style="background: #ffffff;">
                         <tr class="text-center" style="font-size: 15px; font-weight: 800;">
-                          <td style="color: #1d4ed8; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['target_gram'] ?? 0, 1, ',', '.'); ?> Gr/Pcs</td>
-                          <td style="color: #b45309; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg</td>
-                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs</td>
-                          <td style="color: #15803d; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg</td>
+                          <!-- Target Berat WO -->
+                          <td style="color: #1d4ed8; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                            <?php 
+                              $targetKgVal = (float)($rendemen_rajut['target_kg_pcs'] ?? (($rendemen_rajut['target_gram'] ?? 0) / 1000));
+                              echo number_format($targetKgVal, 3, ',', '.') . ' Kg/Pcs';
+                            ?>
+                          </td>
+                          <!-- Benang Terpakai -->
+                          <td style="color: #b45309; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                            <?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg
+                          </td>
+                          <!-- Hasil Qty Rajut -->
+                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                            <?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs
+                          </td>
+                          <!-- Berat Kain Rajut -->
+                          <td style="color: #15803d; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                            <?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg
+                          </td>
+                          <!-- Rendemen Rajut -->
                           <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
                             <?php 
                               $benangVal = (float)($rendemen_rajut['benang_keluar'] ?? 0);
@@ -288,22 +304,27 @@
                               <span class="text-muted fw-bold">-</span>
                             <?php endif; ?>
                           </td>
+                          <!-- Berat Aktual / Pcs -->
                           <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
-                            <?= ($rendemen_rajut['gram_aktual'] ?? 0) > 0 ? number_format($rendemen_rajut['gram_aktual'], 1, ',', '.') . ' Gr/Pcs' : '-'; ?>
+                            <?php 
+                              $beratAktualKgVal = (float)($rendemen_rajut['berat_aktual_kg'] ?? ((($rendemen_rajut['gram_aktual'] ?? 0)) / 1000));
+                              echo $beratAktualKgVal > 0 ? number_format($beratAktualKgVal, 3, ',', '.') . ' Kg/Pcs' : '-';
+                            ?>
                           </td>
+                          <!-- Selisih / Deviasi -->
                           <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
                             <?php 
-                              $dev = (float)($rendemen_rajut['deviasi_gram'] ?? 0);
-                              if (($rendemen_rajut['gram_aktual'] ?? 0) > 0 && ($rendemen_rajut['target_gram'] ?? 0) > 0) {
-                                  if (abs($dev) <= 5) {
+                              $devKg = (float)($rendemen_rajut['deviasi_kg'] ?? ((($rendemen_rajut['deviasi_gram'] ?? 0)) / 1000));
+                              if ($beratAktualKgVal > 0 && $targetKgVal > 0) {
+                                  if (abs($devKg) <= 0.010) {
                                       $devStyle = 'background: #dcfce7; color: #15803d; border: 1px solid #86efac;';
-                                  } elseif ($dev > 0) {
+                                  } elseif ($devKg > 0) {
                                       $devStyle = 'background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;';
                                   } else {
                                       $devStyle = 'background: #fef9c3; color: #a16207; border: 1px solid #fde047;';
                                   }
-                                  $signDev = ($dev > 0) ? '+' : '';
-                                  echo "<span class='px-2 py-1 rounded fw-bold fs-6' style='{$devStyle} font-weight: 800; display: inline-block;'>{$signDev}" . number_format($dev, 1, ',', '.') . " Gr</span>";
+                                  $signDev = ($devKg > 0) ? '+' : '';
+                                  echo "<span class='px-2 py-1 rounded fw-bold fs-6' style='{$devStyle} font-weight: 800; display: inline-block;'>{$signDev}" . number_format($devKg, 3, ',', '.') . " Kg/Pcs</span>";
                               } else {
                                   echo "<span class='text-muted fw-bold'>-</span>";
                               }

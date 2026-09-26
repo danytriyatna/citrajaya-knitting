@@ -981,8 +981,15 @@ class ProductionModel extends \App\Models\PrModel
             }
         }
 
-        // 4. Hitung Rasio Rendemen & Gramatur
+        // 4. Hitung Rasio Rendemen & Berat (Kg)
         $rendemen = ($benangKeluar > 0 && $beratKain > 0) ? round(($beratKain / $benangKeluar) * 100, 2) : 0;
+        
+        // Versi Kg
+        $targetKgPcs = $targetGram > 0 ? round($targetGram / 1000, 3) : 0;
+        $beratAktualKg = ($pcsRajut > 0 && $beratKain > 0) ? round($beratKain / $pcsRajut, 3) : 0;
+        $deviasiKg = ($targetKgPcs > 0 && $beratAktualKg > 0) ? round($beratAktualKg - $targetKgPcs, 3) : 0;
+
+        // Versi Gram (tetap disimpan untuk fleksibilitas)
         $gramAktual = ($pcsRajut > 0 && $beratKain > 0) ? round(($beratKain * 1000) / $pcsRajut, 1) : 0;
         $deviasiGram = ($targetGram > 0 && $gramAktual > 0) ? round($gramAktual - $targetGram, 1) : 0;
 
@@ -1009,17 +1016,20 @@ class ProductionModel extends \App\Models\PrModel
         }
 
         return [
-            'target_gram'    => $targetGram,
-            'target_kg'      => $targetKg,
-            'benang_keluar'  => $benangKeluar,
-            'benang_sisa'    => $benangSisa,
-            'pcs_rajut'      => $pcsRajut,
-            'berat_kain'     => $beratKain,
-            'rendemen'       => $rendemen,
-            'gram_aktual'    => $gramAktual,
-            'deviasi_gram'   => $deviasiGram,
-            'status_badge'   => $statusBadge,
-            'status_text'    => $statusText,
+            'target_gram'       => $targetGram,
+            'target_kg_pcs'     => $targetKgPcs,
+            'target_kg'         => $targetKg,
+            'benang_keluar'     => $benangKeluar,
+            'benang_sisa'       => $benangSisa,
+            'pcs_rajut'         => $pcsRajut,
+            'berat_kain'        => $beratKain,
+            'rendemen'          => $rendemen,
+            'berat_aktual_kg'   => $beratAktualKg,
+            'deviasi_kg'        => $deviasiKg,
+            'gram_aktual'       => $gramAktual,
+            'deviasi_gram'      => $deviasiGram,
+            'status_badge'      => $statusBadge,
+            'status_text'       => $statusText,
         ];
     }
 

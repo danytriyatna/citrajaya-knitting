@@ -242,7 +242,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             dbx.kode_barang,
             ebx.nama_jenis_barang,
             fbx.nama_satuan,
-            abx.price,
+            COALESCE(
+                NULLIF(abx.price, 0),
+                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND trd.lot_no = abx.lot_no AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
+                dbx.harga_satuan,
+                0
+            ) AS price,
             dbx.id_jenis_barang
         FROM
             raw_trans abx
@@ -278,7 +283,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             dbx.kode_barang,
             ebx.nama_jenis_barang,
             fbx.nama_satuan,
-            abx.price,
+            COALESCE(
+                NULLIF(abx.price, 0),
+                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND trd.lot_no = abx.lot_no AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
+                dbx.harga_satuan,
+                0
+            ) AS price,
             dbx.id_jenis_barang
         FROM
             raw_trans abx

@@ -749,15 +749,15 @@ $(document).ready(function () {
                 if (res.status) {
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: res.message || 'Dokumen kontrak kerja (PDF) berhasil disiapkan.',
+                        text: res.message || 'Dokumen kontrak kerja (.docx) berhasil disiapkan.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    // Buka dokumen PDF di tab baru
-                    window.open(res.download_url, '_blank');
+                    // Trigger download dokumen Word (.docx)
+                    window.location.href = res.download_url;
                     // Update badge
-                    $('#kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
+                    $('#kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
                     dtList.setData();
                 } else {
                     Swal.fire({ text: res.message || 'Gagal menghasilkan kontrak', icon: 'error' });
@@ -790,7 +790,7 @@ $(document).ready(function () {
 
         Swal.fire({
             title: 'Menyiapkan Dokumen Kontrak...',
-            text: 'Harap tunggu, berkas PDF sedang disiapkan lengkap dengan tanda tangan digital',
+            text: 'Harap tunggu, berkas Word (.docx) sedang disiapkan lengkap dengan tanda tangan digital',
             allowOutsideClick: false,
             showConfirmButton: false,
             didOpen: () => { Swal.showLoading(); }
@@ -810,17 +810,17 @@ $(document).ready(function () {
                 if (res.status) {
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: 'Dokumen kontrak kerja (PDF) berhasil disiapkan dan dibuka.',
+                        text: 'Dokumen kontrak kerja (.docx) berhasil disiapkan dan mulai diunduh.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    window.open(res.download_url, '_blank');
+                    window.location.href = res.download_url;
                     $('#form_display_tgl_selesai').val(res.tgl_selesai_kontrak || '');
                     if (res.status_kontrak == 2) {
                         $('#form-kontrak-status-badge').attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
                     } else {
-                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
+                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
                     }
                     dtList.setData();
                 } else {

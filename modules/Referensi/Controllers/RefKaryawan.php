@@ -659,7 +659,7 @@ class RefKaryawan extends BaseController
         $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->full_name ?? 'Karyawan');
         $cleanNip = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nip ?? 'KRY');
 
-        $format = $this->request->getGet('format') ?? 'pdf';
+        $format = $this->request->getGet('format') ?? 'docx';
 
         if ($format === 'pdf') {
             $dompdf = new \App\Libraries\DompdfGenerator();
@@ -1270,7 +1270,7 @@ class RefKaryawan extends BaseController
         // Sematkan ke document.xml
         // 1. Baris Pihak Pertama & Kedua:
         if ($has1 || $has2) {
-            $replacementRow1 = '<w:p w14:paraId="00101CFB" w14:textId="221C93B7" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00D17176" w:rsidP="00D17176"><w:pPr><w:tabs><w:tab w:val="left" w:pos="6643"/></w:tabs><w:spacing w:line="192" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
+            $replacementRow1 = '<w:p w14:paraId="00101CFB" w14:textId="221C93B7" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00D17176" w:rsidP="00D17176"><w:pPr><w:tabs><w:tab w:val="left" w:pos="6643"/></w:tabs><w:spacing w:line="160" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
                 . (!empty($drawSig1) ? $drawSig1 : '<w:r><w:t xml:space="preserve">                </w:t></w:r>')
                 . '<w:r><w:tab/><w:tab/><w:tab/><w:tab/></w:r>'
                 . (!empty($drawSig2) ? $drawSig2 : '')
@@ -1280,7 +1280,7 @@ class RefKaryawan extends BaseController
 
         // 2. Baris Mengetahui:
         if ($has3) {
-            $replacementRow2 = '<w:p w14:paraId="658818E4" w14:textId="77777777" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00BD78BE" w:rsidP="00BD78BE"><w:pPr><w:spacing w:line="192" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
+            $replacementRow2 = '<w:p w14:paraId="658818E4" w14:textId="77777777" w:rsidR="00BD78BE" w:rsidRPr="0045474D" w:rsidRDefault="00BD78BE" w:rsidP="00BD78BE"><w:pPr><w:spacing w:line="160" w:lineRule="auto"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr>'
                 . '<w:r><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/><w:tab/></w:r>'
                 . $drawSig3
                 . '</w:p>';
@@ -1288,7 +1288,7 @@ class RefKaryawan extends BaseController
         }
     }
 
-    private function buildDrawingXml($rId, $docPrId, $name, $cx = 1371600, $cy = 685800)
+    private function buildDrawingXml($rId, $docPrId, $name, $cx = 1000000, $cy = 320000)
     {
         return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'
             . '<wp:extent cx="' . $cx . '" cy="' . $cy . '"/>'

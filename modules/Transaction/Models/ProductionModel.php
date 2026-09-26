@@ -74,10 +74,6 @@ class ProductionModel extends \App\Models\PrModel
 
             if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
 
-            if (!empty($params['tahun'])) {
-                $builder->where('EXTRACT(YEAR FROM abx.tgl_transaksi) =', (int)$params['tahun']);
-            }
-
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
@@ -133,10 +129,6 @@ class ProductionModel extends \App\Models\PrModel
         }
 
         if(!empty($params['tipe_id']))  $builder->where('abx.tipe_id', $params['tipe_id']);
-
-        if (!empty($params['tahun'])) {
-            $builder->where('EXTRACT(YEAR FROM abx.tgl_transaksi) =', (int)$params['tahun']);
-        }
 
         $this->_data = $builder->get()->getRow()->_cnt;
 

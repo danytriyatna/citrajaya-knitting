@@ -70,16 +70,15 @@ class Production extends BaseController
       $params['tipe_id'] = $tipe_id;
     }
 
-    if (!empty($tahun)) {
-      $params['tahun'] = $tahun;
-    } else {
-      $params['tahun'] = date('Y');
-    }
-    
+    // List transaksi tidak difilter tahun (tetap seperti semula)
     $results = $this->mProduksi->getData(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mProduksi->getDataCnt($filters, $params);
     $totaldata = $this->mProduksi->getDataCnt(null, $params);
     $maxpage = ceil($totalfiltered / $limit);
+
+    // Summary global difilter per tahun terpilih
+    $summary_params = $params;
+    $summary_params['tahun'] = !empty($tahun) ? $tahun : date('Y');
 
     $build_array = array(
       "last_page" => $maxpage,
@@ -213,7 +212,7 @@ class Production extends BaseController
         )
       );
     }
-    $build_array["summary_global"] = $this->mProduksi->getGlobalLabaKotorSummary($filters, $params);
+    $build_array["summary_global"] = $this->mProduksi->getGlobalLabaKotorSummary($filters, $summary_params);
     return $this->response->setJSON($build_array);
   }
 

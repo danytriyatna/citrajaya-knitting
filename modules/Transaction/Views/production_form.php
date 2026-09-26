@@ -223,8 +223,8 @@
             <div class="col-sm-3 text-center">
               <h6 class="f-w-700 m-b-6"><?= $row->kode_prod; ?></h6>
               <h6 class="f-w-700 m-b-6"><?= $row->kode_walkorder; ?></h6>
-              <h5 class="f-w-700 m-b-12"><?= $row->keterangan_style; ?></h5>
-              <h7 class="f-w-700 m-b-12"><?= $row->keterangan; ?></h7>
+              <h5 class="f-w-700 m-b-6"><?= $row->keterangan_style; ?></h5>
+              <h6 class="f-w-600 m-b-12 text-muted"><?= $row->keterangan; ?></h6>
               <p class="m-y-0"><?= fdate_eng_to_ind($row->tgl_transaksi); ?></p>
               <p class="m-y-0"><em>Deadline: <?= fdate_eng_to_ind($row->tgl_deadline); ?></em></p>
               <p class="f-w-700 m-t-4"><?= $row->konsumen_nama; ?></p>
@@ -245,43 +245,43 @@
               </div>
               <div class="row mt-3">
                 <div class="col-12">
-                  <h6 class="f-w-800 m-b-6 m-t-8 text-dark" style="letter-spacing: 0.5px;">ANALISIS RENDEMEN RAJUT &amp; BERAT (HASIL RAJUT VS BENANG)</h6>
-                  <div class="table-responsive rounded" style="border: 2px solid #0f172a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);">
+                  <h6 class="f-w-700 m-b-6 m-t-8">ANALISIS RENDEMEN RAJUT &amp; BERAT (HASIL RAJUT VS BENANG)</h6>
+                  <div class="table-responsive rounded" style="border: 1px solid #cbd5e1;">
                     <table class="table table-bordered table-hover align-middle mb-0" style="border-collapse: collapse;">
-                      <thead style="background: #0f172a !important; color: #ffffff !important;">
+                      <thead style="background: #1e293b !important; color: #ffffff !important;">
                         <tr class="text-center text-nowrap" style="white-space: nowrap !important;">
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">TARGET BERAT WO</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BENANG TERPAKAI (BTK)</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">HASIL QTY RAJUT</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BERAT KAIN RAJUT (BTM)</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">RENDEMEN RAJUT (%)</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BERAT AKTUAL / PCS</th>
-                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">SELISIH / DEVIASI</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">TARGET BERAT WO</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">BENANG TERPAKAI (BTK)</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">HASIL QTY RAJUT</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">BERAT KAIN RAJUT (BTM)</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">RENDEMEN RAJUT (%)</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">BERAT AKTUAL / PCS</th>
+                          <th style="background: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 6px; border: 1px solid #334155;">SELISIH / DEVIASI</th>
                         </tr>
                       </thead>
                       <tbody style="background: #ffffff;">
-                        <tr class="text-center" style="font-size: 15px; font-weight: 800;">
+                        <tr class="text-center" style="font-size: 13px; font-weight: 600;">
                           <!-- Target Berat WO -->
-                          <td style="color: #1d4ed8; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                          <td style="color: #1d4ed8; padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?php 
                               $targetKgVal = (float)($rendemen_rajut['target_kg_pcs'] ?? (($rendemen_rajut['target_gram'] ?? 0) / 1000));
                               echo number_format($targetKgVal, 3, ',', '.') . ' Kg/Pcs';
                             ?>
                           </td>
                           <!-- Benang Terpakai -->
-                          <td style="color: #b45309; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                          <td style="color: #b45309; padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg
                           </td>
                           <!-- Hasil Qty Rajut -->
-                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                          <td style="color: #0f172a; padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs
                           </td>
                           <!-- Berat Kain Rajut -->
-                          <td style="color: #15803d; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                          <td style="color: #15803d; padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg
                           </td>
                           <!-- Rendemen Rajut -->
-                          <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
+                          <td style="padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?php 
                               $benangVal = (float)($rendemen_rajut['benang_keluar'] ?? 0);
                               $kainVal   = (float)($rendemen_rajut['berat_kain'] ?? 0);
@@ -297,22 +297,22 @@
                                       $solidBg = 'background: #dc2626 !important; color: #ffffff !important;';
                                   }
                             ?>
-                              <span class="badge px-3 py-2 fs-6 fw-bold" style="<?= $solidBg ?> font-weight: 800; border-radius: 4px;">
+                              <span class="badge px-2 py-1" style="<?= $solidBg ?> font-weight: 700; border-radius: 4px; font-size: 12px;">
                                 <?= number_format($yieldVal, 2, ',', '.'); ?>%
                               </span>
                             <?php else : ?>
-                              <span class="text-muted fw-bold">-</span>
+                              <span class="text-muted">-</span>
                             <?php endif; ?>
                           </td>
                           <!-- Berat Aktual / Pcs -->
-                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                          <td style="color: #0f172a; padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?php 
                               $beratAktualKgVal = (float)($rendemen_rajut['berat_aktual_kg'] ?? ((($rendemen_rajut['gram_aktual'] ?? 0)) / 1000));
                               echo $beratAktualKgVal > 0 ? number_format($beratAktualKgVal, 3, ',', '.') . ' Kg/Pcs' : '-';
                             ?>
                           </td>
                           <!-- Selisih / Deviasi -->
-                          <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
+                          <td style="padding: 8px 6px; border: 1px solid #cbd5e1;">
                             <?php 
                               $devKg = (float)($rendemen_rajut['deviasi_kg'] ?? ((($rendemen_rajut['deviasi_gram'] ?? 0)) / 1000));
                               if ($beratAktualKgVal > 0 && $targetKgVal > 0) {
@@ -324,9 +324,9 @@
                                       $devStyle = 'background: #fef9c3; color: #a16207; border: 1px solid #fde047;';
                                   }
                                   $signDev = ($devKg > 0) ? '+' : '';
-                                  echo "<span class='px-2 py-1 rounded fw-bold fs-6' style='{$devStyle} font-weight: 800; display: inline-block;'>{$signDev}" . number_format($devKg, 3, ',', '.') . " Kg/Pcs</span>";
+                                  echo "<span class='px-2 py-1 rounded fw-semibold' style='{$devStyle} font-size: 12px; display: inline-block;'>{$signDev}" . number_format($devKg, 3, ',', '.') . " Kg/Pcs</span>";
                               } else {
-                                  echo "<span class='text-muted fw-bold'>-</span>";
+                                  echo "<span class='text-muted'>-</span>";
                               }
                             ?>
                           </td>
@@ -342,112 +342,105 @@
 
           <div class="row">
             <div class="col-sm-12">
-              <h5><b>PRODUCTION PROCESS</b></h5>
-                <div class="row">
-                  <table class="table table-striped table-sm table-bordered no-footer mb-0">
-                      <thead style="background-color: #1e293b !important; color: #ffffff !important;">
-                        <tr>
-                          <th style="width: 60%; background-color: #1e293b !important; color: #ffffff !important;">Proses</th>
-                          <th style="text-align:right; width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Qty Prod</th>
-                          <th style="text-align:right; width: 20%; background-color: #1e293b !important; color: #ffffff !important;">Qty Perbaikan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                          <?php foreach ($proses as $r) { ?>
-                            <tr>
-                              <td>
-                                  <h5 class="form-check-h1" for="proses_<?= $r->seq ?>"><?= $r->nama ?></h5>
-                                  <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty_prod ?>" />
-                              </td>
-                              <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_prod ?></label>
-                              </td>
-                              <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_<?= $r->seq ?>"><?= $r->qty_fix ?></label>
-                              </td>
-                            </tr>
-                          <?php } ?>
-                            <tr>
-                              <td>
-                                 <h5 class="form-check-h1" for="proses_kirim">Kirim</h5>
-                              </td>
-                              <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_kirim" id="qty_kirim"><?= !empty($qty_kirim) ? $qty_kirim : 0; ?></label>
-                              </td>
-                              <td style="text-align:right;">
-                                <label class="form-check-label" for="proses_kirim_fix" id="qty_kirim_fix"></label>
-                              </td>
-                            </tr>
-                      </tbody>
-                  </table>
-
-                </div>
-
-              <hr>
-
-              <br>
-
-              <div hidden class="row">
-                <div class="col-sm-2">
-                  <div class="form-group m-b-0 d-flex align-items-center">
-                    <label class="control-label text-start text-md-end m-e-8" for="filter_status">Status</label>
-                    <select id="filter_status" name="filter_status" class="form-control custom-select select2">
-                      <?php foreach ($proses as $rowData) : ?>
-                        <option value="<?= $rowData->id ?>"><?= $rowData->nama ?></option>
-                      <?php endforeach ?>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <div class="form-group m-b-0 d-flex align-items-center">
-                    <label class="control-label text-start text-md-end m-e-8" for="filter_operator">CMT</label>
-                    <select id="filter_operator" name="filter_operator" class="form-control custom-select select2">
-                      <option value="">-</option>
-                      <?php foreach ($operator as $rowData) : ?>
-                        <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
-                      <?php endforeach ?>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tgl_prod">Tanggal</label>
-                    <div class="col-md-8">
-                      <input type="text" id="tgl_prod" name="tgl_prod" class="form-control datepicker" placeholder="Pilih tanggal" value="<?= $dnow; ?>">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-sm-4">
-                  <div class="form-group row">
-                    <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nomesin">Nomor Mesin</label>
-                    <div class="col-md-9">
-                      <input type="text" id="nomesin" name="nomesin" class="form-control" placeholder="Ketikkan Nomor Mesin">
-                    </div>
-                  </div>
-                </div>
-
+              <h6 class="f-w-700 m-b-6 m-t-8">PRODUCTION PROCESS</h6>
+              <div class="table-responsive">
+                <table class="table table-striped table-sm table-bordered no-footer mb-0 align-middle">
+                    <thead style="background-color: #1e293b !important; color: #ffffff !important;">
+                      <tr class="text-nowrap">
+                        <th style="width: 60%; background-color: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 10px;">PROSES</th>
+                        <th style="text-align:right; width: 20%; background-color: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 10px;">QTY PROD</th>
+                        <th style="text-align:right; width: 20%; background-color: #1e293b !important; color: #ffffff !important; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 10px;">QTY PERBAIKAN</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($proses as $r) { ?>
+                          <tr style="font-size: 13px;">
+                            <td style="padding: 6px 10px;">
+                              <span class="fw-semibold text-dark"><?= $r->nama ?></span>
+                              <input type="hidden" id="proses_<?= $r->id ?>" value="<?= $r->qty_prod ?>" />
+                            </td>
+                            <td style="text-align:right; padding: 6px 10px; font-weight: 600;">
+                              <?= number_format($r->qty_prod ?? 0, 0, ',', '.') ?>
+                            </td>
+                            <td style="text-align:right; padding: 6px 10px; font-weight: 600;">
+                              <?= number_format($r->qty_fix ?? 0, 0, ',', '.') ?>
+                            </td>
+                          </tr>
+                        <?php } ?>
+                          <tr style="font-size: 13px;">
+                            <td style="padding: 6px 10px;">
+                              <span class="fw-semibold text-dark">Kirim</span>
+                            </td>
+                            <td style="text-align:right; padding: 6px 10px; font-weight: 600;" id="qty_kirim">
+                              <?= !empty($qty_kirim) ? number_format($qty_kirim, 0, ',', '.') : 0; ?>
+                            </td>
+                            <td style="text-align:right; padding: 6px 10px; font-weight: 600;" id="qty_kirim_fix">
+                              0
+                            </td>
+                          </tr>
+                    </tbody>
+                </table>
               </div>
+            </div>
+          </div>
 
-              <div hidden class="row mt-1">
-                <!-- <div class="col-sm-2"> -->
-                  <!-- <button type="button" class="btn btn-sm btn-info text-white mb-2" id="btn-add-detail"> Tambah <i class="fa fa-plus"></i></button> -->
+          <hr>
 
-                <!-- </div> -->
-                <div class="col-sm-12">
-                  <div class="input-group my-2">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
-                    <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
-                    <button type="button" class="btn btn-info text-white" id="btn-add-detail"><i class="fa fa-plus"></i></button> 
-                  </div>
+          <div hidden class="row">
+            <div class="col-sm-2">
+              <div class="form-group m-b-0 d-flex align-items-center">
+                <label class="control-label text-start text-md-end m-e-8" for="filter_status">Status</label>
+                <select id="filter_status" name="filter_status" class="form-control custom-select select2">
+                  <?php foreach ($proses as $rowData) : ?>
+                    <option value="<?= $rowData->id ?>"><?= $rowData->nama ?></option>
+                  <?php endforeach ?>
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group m-b-0 d-flex align-items-center">
+                <label class="control-label text-start text-md-end m-e-8" for="filter_operator">CMT</label>
+                <select id="filter_operator" name="filter_operator" class="form-control custom-select select2">
+                  <option value="">-</option>
+                  <?php foreach ($operator as $rowData) : ?>
+                    <option value="<?= $rowData->id ?>"><?= $rowData->nama_operator ?></option>
+                  <?php endforeach ?>
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group row">
+                <label class="control-label text-start text-md-end col-md-4 col-form-label" for="tgl_prod">Tanggal</label>
+                <div class="col-md-8">
+                  <input type="text" id="tgl_prod" name="tgl_prod" class="form-control datepicker" placeholder="Pilih tanggal" value="<?= $dnow; ?>">
                 </div>
+              </div>
+            </div>
+
+            <div class="col-sm-4">
+              <div class="form-group row">
+                <label class="control-label text-start text-md-end col-md-3 col-form-label" for="nomesin">Nomor Mesin</label>
+                <div class="col-md-9">
+                  <input type="text" id="nomesin" name="nomesin" class="form-control" placeholder="Ketikkan Nomor Mesin">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div hidden class="row mt-1">
+            <div class="col-sm-12">
+              <div class="input-group my-2">
+                <span class="input-group-text" id="basic-addon1"><i class="fa fa-qrcode"></i></span>
+                <input type="text" class="form-control bg-info bg-opacity-25 ui-autocomplete-input" placeholder="Scan" aria-label="Scan" aria-describedby="basic-addon1" id="text_barcode" autocomplete="on">
+                <button type="button" class="btn btn-info text-white" id="btn-add-detail"><i class="fa fa-plus"></i></button> 
               </div>
             </div>
           </div>
 
           <div class="row mb-2">
-            <div class="col-sm-12">
-              <div class="col-md-4" style="float: right;">
+            <div class="col-sm-12 d-flex justify-content-end">
+              <div class="col-md-4 col-sm-6">
                 <div class="input-group">
                   <span class="input-group-text bg-white"><i class="ti-search"></i></span>
                   <input type="text" id="tb-search-prod" class="form-control" placeholder="Cari Kode Transaksi / Operator...">

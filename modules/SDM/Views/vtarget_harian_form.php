@@ -41,7 +41,7 @@
                   <th width="6%" class="bg-light text-primary"><?= $slot ?></th>
                 <?php endforeach; ?>
                 <th width="6%" class="font-weight-bold" style="background-color: #fff3cd !important; color: #856404;" title="Target Jam Lembur">Tgt Lembur</th>
-                <th width="6%" class="font-weight-bold" style="background-color: #ffe69c !important; color: #856404;" title="Realisasi Jam Lembur">Jam Lembur</th>
+                <th width="6%" class="font-weight-bold" style="background-color: #ffe69c !important; color: #856404;" title="Realisasi Output Jam Lembur">Realisasi Lembur</th>
                 <th width="7%" class="bg-success text-white font-weight-bold">Total Realisasi</th>
               </tr>
             </thead>

@@ -260,8 +260,11 @@ class Production extends BaseController
       'info' => [
         'kode_prod' => $row->kode_prod,
         'kode_walkorder' => $row->kode_walkorder,
+        'ref_kode' => !empty($row->ref_kode) ? $row->ref_kode : '',
         'konsumen_nama' => $row->konsumen_nama,
         'keterangan_style' => $row->keterangan_style,
+        'qty_so' => !empty($labaData['qty_so']) ? $labaData['qty_so'] : 0,
+        'f_qty_so' => !empty($labaData['f_qty_so']) ? $labaData['f_qty_so'] : '0 Pcs',
       ],
       'laba_data' => $labaData,
       'breakdown' => $breakdown

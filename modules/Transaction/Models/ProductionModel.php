@@ -918,7 +918,26 @@ class ProductionModel extends \App\Models\PrModel
         $margin_persen = ($nilai_pendapatan > 0) ? round(($laba_kotor / $nilai_pendapatan) * 100, 1) : 0;
         $margin_so_persen = ($nilai_so > 0) ? round(($laba_kotor_so / $nilai_so) * 100, 1) : 0;
 
+        $qty_so = 0;
+        if (!empty($idProd)) {
+            $tpQtyRow = $this->db->table("trans_produksi")->select("qty")->where("id", $idProd)->get()->getRow();
+            if (!empty($tpQtyRow) && !empty($tpQtyRow->qty)) {
+                $qty_so = (float)$tpQtyRow->qty;
+            }
+        }
+        if (empty($qty_so) && !empty($idSo)) {
+            if ($tipe_id == 1) {
+                $sampleUkRow = $this->db->query("SELECT COALESCE(SUM(qty), 0) as tot_qty FROM trans_sample_ukuran WHERE id_sample = {$idSo}")->getRow();
+                $qty_so = (float)($sampleUkRow->tot_qty ?? 0);
+            } else {
+                $soUkRow = $this->db->query("SELECT COALESCE(SUM(qty), 0) as tot_qty FROM trans_sales_order_ukuran WHERE id_sales_order = {$idSo}")->getRow();
+                $qty_so = (float)($soUkRow->tot_qty ?? 0);
+            }
+        }
+
         return [
+            'qty_so'            => $qty_so,
+            'f_qty_so'          => number_format($qty_so, 0, ',', '.') . ' Pcs',
             'nilai_so'          => $nilai_so,
             'nilai_pendapatan'  => $nilai_pendapatan,
             'nilai_bahan'       => $nilai_bahan,
@@ -941,11 +960,35 @@ class ProductionModel extends \App\Models\PrModel
         $idProd = (int)$id_produksi;
         $kodeWo = trim((string)$kode_walkorder);
 
+        // Target Qty SO
+        $qty_so = 0;
+        if (!empty($idProd)) {
+            $tpRow = $this->db->table("trans_produksi tp")
+                ->select("tp.qty, tw.ref_id, tw.tipe_id")
+                ->join("trans_walkorder tw", "tw.id = tp.id_walkorder", "left")
+                ->where("tp.id", $idProd)
+                ->get()->getRow();
+            if (!empty($tpRow)) {
+                $qty_so = (float)($tpRow->qty ?? 0);
+                if (empty($qty_so) && !empty($tpRow->ref_id)) {
+                    if ($tpRow->tipe_id == 1) {
+                        $sRow = $this->db->query("SELECT COALESCE(SUM(qty), 0) as tot FROM trans_sample_ukuran WHERE id_sample = {$tpRow->ref_id}")->getRow();
+                        $qty_so = (float)($sRow->tot ?? 0);
+                    } else {
+                        $sRow = $this->db->query("SELECT COALESCE(SUM(qty), 0) as tot FROM trans_sales_order_ukuran WHERE id_sales_order = {$tpRow->ref_id}")->getRow();
+                        $qty_so = (float)($sRow->tot ?? 0);
+                    }
+                }
+            }
+        }
+
         // Breakdown Tenaga Kerja
         $tk_list = [];
         if (!empty($idProd)) {
             $tk_list = $this->db->query("
                 SELECT jpp.nama as nama_proses, jpp.seq,
+                       SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod,
+                       SUM(CASE WHEN tpo.print_type = 2 THEN tpo.qty ELSE 0 END) AS qty_fix,
                        COALESCE(SUM(tpo.qty), 0) as total_qty,
                        COALESCE(AVG(tpo.harga), 0) as avg_harga,
                        COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as subtotal_ongkos
@@ -955,6 +998,10 @@ class ProductionModel extends \App\Models\PrModel
                 GROUP BY jpp.nama, jpp.seq, jpp.id
                 ORDER BY jpp.seq ASC
             ")->getResult();
+
+            foreach ($tk_list as $tk) {
+                $tk->qty_so = $qty_so;
+            }
         }
 
         // Breakdown Bahan Baku
@@ -976,6 +1023,8 @@ class ProductionModel extends \App\Models\PrModel
         }
 
         return [
+            'qty_so'       => $qty_so,
+            'f_qty_so'     => number_format($qty_so, 0, ',', '.') . ' Pcs',
             'tenaga_kerja' => $tk_list,
             'bahan_baku'   => $bb_list
         ];

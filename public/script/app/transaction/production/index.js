@@ -31,32 +31,34 @@ $(document).ready(function () {
         if (data.laba_kotor) {
             let lk = data.laba_kotor;
             let isUntung = (lk.laba_kotor >= 0);
-            let badgeLabaClass = isUntung ? 'bg-success text-white' : 'bg-danger text-white';
+            let badgeLabaBg = isUntung ? '#16a34a' : '#dc2626';
 
             headerActionHtml = `
               <div class="d-flex align-items-center gap-1 my-1">
                   ${aksi}
-                  <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap py-1 px-2 f-s-12" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
+                  <button type="button" class="btn btn-sm text-white fw-bold btn-detail-laba text-nowrap py-1 px-2 f-s-12 shadow-sm" style="background-color: #0284c7; border: 1px solid #0369a1;" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
                     <i class="fa fa-chart-line me-1"></i> Rincian Laba
                   </button>
               </div>`;
 
+            let qtySoBadge = lk.f_qty_so ? ` <span class="badge bg-white text-dark px-1 py-0 ms-1 fw-bold" style="font-size: 10px;">${lk.f_qty_so}</span>` : '';
+
             badgesHtml = `
               <div class="d-flex flex-wrap justify-content-end align-items-center gap-1 my-1">
-                <span class="badge border py-1 px-2 text-nowrap" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
-                  <span class="text-muted f-s-10">SO:</span> <span class="fw-bold f-s-11 text-primary">${lk.f_nilai_so}</span>
+                <span class="badge py-1 px-2 text-nowrap shadow-sm" style="background: #1e40af; border: 1px solid #1d4ed8 !important; color: #ffffff; font-weight: 700;">
+                  <span class="opacity-75 f-s-10">SO:</span> <span class="f-s-11">${lk.f_nilai_so}</span>${qtySoBadge}
                 </span>
-                <span class="badge border py-1 px-2 text-nowrap" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
-                  <span class="text-muted f-s-10">Masuk:</span> <span class="fw-bold f-s-11 text-info">${lk.f_nilai_pendapatan}</span>
+                <span class="badge py-1 px-2 text-nowrap shadow-sm" style="background: #0284c7; border: 1px solid #0369a1 !important; color: #ffffff; font-weight: 700;">
+                  <span class="opacity-75 f-s-10">Masuk:</span> <span class="f-s-11">${lk.f_nilai_pendapatan}</span>
                 </span>
-                <span class="badge border py-1 px-2 text-nowrap" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
-                  <span class="text-muted f-s-10">Bahan:</span> <span class="fw-bold f-s-11 text-warning">${lk.f_nilai_bahan}</span>
+                <span class="badge py-1 px-2 text-nowrap shadow-sm" style="background: #d97706; border: 1px solid #b45309 !important; color: #ffffff; font-weight: 700;">
+                  <span class="opacity-75 f-s-10">Bahan:</span> <span class="f-s-11">${lk.f_nilai_bahan}</span>
                 </span>
-                <span class="badge border py-1 px-2 text-nowrap" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
-                  <span class="text-muted f-s-10">Upah:</span> <span class="fw-bold f-s-11 text-danger">${lk.f_nilai_tk}</span>
+                <span class="badge py-1 px-2 text-nowrap shadow-sm" style="background: #dc2626; border: 1px solid #b91c1c !important; color: #ffffff; font-weight: 700;">
+                  <span class="opacity-75 f-s-10">Upah:</span> <span class="f-s-11">${lk.f_nilai_tk}</span>
                 </span>
-                <span class="badge border ${badgeLabaClass} py-1 px-2 text-nowrap">
-                  <span class="f-s-10 opacity-75">Laba:</span> <span class="fw-bold f-s-11">${lk.f_laba_kotor}</span> <span class="f-s-10 opacity-75">(${lk.margin_persen}%)</span>
+                <span class="badge py-1 px-2 text-nowrap shadow-sm" style="background: ${badgeLabaBg}; border: 1px solid ${badgeLabaBg} !important; color: #ffffff; font-weight: 700;">
+                  <span class="opacity-75 f-s-10">Laba:</span> <span class="f-s-11">${lk.f_laba_kotor}</span> <span class="opacity-75 f-s-10">(${lk.margin_persen}%)</span>
                 </span>
               </div>`;
         }
@@ -288,11 +290,15 @@ $(document).ready(function () {
                 $('#sum-glob-margin').text('Margin: ' + s.total_margin_persen + '%');
 
                 if (s.total_laba_kotor < 0) {
-                    $('#card-glob-laba').css({'background-color': '#fdeeee', 'border-color': '#ef9a9a'});
-                    $('#sum-glob-laba').removeClass('text-success').addClass('text-danger');
+                    $('#card-glob-laba').css({'border-color': '#dc2626'});
+                    $('#lbl-glob-laba-title').css({'color': '#b91c1c'});
+                    $('#sum-glob-laba').css({'color': '#dc2626'});
+                    $('#sum-glob-margin').removeClass('bg-success').addClass('bg-danger');
                 } else {
-                    $('#card-glob-laba').css({'background-color': '#e8f5e9', 'border-color': '#a5d6a7'});
-                    $('#sum-glob-laba').removeClass('text-danger').addClass('text-success');
+                    $('#card-glob-laba').css({'border-color': '#16a34a'});
+                    $('#lbl-glob-laba-title').css({'color': '#15803d'});
+                    $('#sum-glob-laba').css({'color': '#16a34a'});
+                    $('#sum-glob-margin').removeClass('bg-danger').addClass('bg-success');
                 }
             }
 
@@ -466,7 +472,7 @@ $(document).ready(function () {
         $("#modal-laba-detail").modal("show");
         
         // Reset modal state
-        $("#tbl-mdl-tk tbody").html('<tr><td colspan="5" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data tenaga kerja...</td></tr>');
+        $("#tbl-mdl-tk tbody").html('<tr><td colspan="8" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data tenaga kerja...</td></tr>');
         $("#tbl-mdl-bahan tbody").html('<tr><td colspan="6" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data bahan baku...</td></tr>');
 
         $.ajax({
@@ -480,13 +486,20 @@ $(document).ready(function () {
                     return;
                 }
 
-                $("#mdl-lbl-prod").text(res.info.kode_prod || "-");
-                $("#mdl-lbl-wo").text(res.info.kode_walkorder || "-");
-                $("#mdl-lbl-konsumen").text(res.info.konsumen_nama || "-");
-                $("#mdl-lbl-style").text(res.info.keterangan_style || "-");
-
                 let l = res.laba_data;
+                let info = res.info || {};
+                let qtySo = info.qty_so || l.qty_so || 0;
+                let fQtySo = info.f_qty_so || l.f_qty_so || (Number(qtySo).toLocaleString("id-ID") + " Pcs");
+
+                $("#mdl-lbl-prod").text(info.kode_prod || "-");
+                $("#mdl-lbl-wo").text(info.kode_walkorder || "-");
+                $("#mdl-lbl-so").text(info.ref_kode || "SO");
+                $("#mdl-lbl-konsumen").text(info.konsumen_nama || "-");
+                $("#mdl-lbl-qty-so").text("Qty SO: " + fQtySo);
+                $("#mdl-lbl-style").text(info.keterangan_style || "-");
+
                 $("#mdl-val-so").text(l.f_nilai_so);
+                $("#mdl-val-qty-so").text("Target: " + fQtySo);
                 $("#mdl-val-pendapatan").text(l.f_nilai_pendapatan);
                 $("#mdl-val-bahan").text(l.f_nilai_bahan);
                 $("#mdl-val-tk").text(l.f_nilai_tk);
@@ -494,51 +507,81 @@ $(document).ready(function () {
                 $("#mdl-val-margin").text("Margin: " + l.margin_persen + "%");
 
                 if (l.laba_kotor < 0) {
-                    $("#mdl-badge-laba").removeClass("bg-success").addClass("bg-danger").text("Laba Kotor: " + l.f_laba_kotor + " (Rugi)");
-                    $("#mdl-val-laba").removeClass("text-success").addClass("text-danger");
+                    $("#mdl-badge-laba").removeClass("bg-success").addClass("bg-danger").text("Laba Kotor: " + l.f_laba_kotor + " (Defisit)");
+                    $("#mdl-card-laba").css({"border-color": "#dc2626"});
+                    $("#mdl-lbl-laba-title").css({"color": "#b91c1c"});
+                    $("#mdl-val-laba").css({"color": "#dc2626"});
                 } else {
-                    $("#mdl-badge-laba").removeClass("bg-danger").addClass("bg-success").text("Laba Kotor: " + l.f_laba_kotor + " (Untung)");
-                    $("#mdl-val-laba").removeClass("text-danger").addClass("text-success");
+                    $("#mdl-badge-laba").removeClass("bg-danger").addClass("bg-success").text("Laba Kotor: " + l.f_laba_kotor + " (Profit)");
+                    $("#mdl-card-laba").css({"border-color": "#16a34a"});
+                    $("#mdl-lbl-laba-title").css({"color": "#15803d"});
+                    $("#mdl-val-laba").css({"color": "#16a34a"});
                 }
 
-                // Render Breakdown Tenaga Kerja Operator
+                // Render Breakdown Tenaga Kerja Operator (Split Prod & Perbaikan)
                 let htmlTk = "";
+                let totQtySo = 0;
+                let totQtyProd = 0;
+                let totQtyFix = 0;
+                let totQtyAll = 0;
+
                 if (res.breakdown && res.breakdown.tenaga_kerja && res.breakdown.tenaga_kerja.length > 0) {
                     let no = 1;
                     res.breakdown.tenaga_kerja.forEach(function(item) {
+                        let rowQtySo = Number(item.qty_so || qtySo || 0);
+                        let rowQtyProd = Number(item.qty_prod || 0);
+                        let rowQtyFix = Number(item.qty_fix || 0);
+                        let rowQtyTotal = Number(item.total_qty || (rowQtyProd + rowQtyFix));
+
+                        totQtySo += rowQtySo;
+                        totQtyProd += rowQtyProd;
+                        totQtyFix += rowQtyFix;
+                        totQtyAll += rowQtyTotal;
+
                         htmlTk += `<tr>
                             <td class="text-center">${no++}</td>
-                            <td class="fw-semibold">${item.nama_proses}</td>
-                            <td class="text-end">${Number(item.total_qty).toLocaleString("id-ID")}</td>
+                            <td class="fw-bold text-dark">${item.nama_proses}</td>
+                            <td class="text-end fw-bold" style="color: #1e40af;">${rowQtySo.toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold" style="color: #16a34a;">${rowQtyProd.toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold" style="color: #d97706;">${rowQtyFix.toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold text-dark">${rowQtyTotal.toLocaleString("id-ID")}</td>
                             <td class="text-end">Rp ${Number(item.avg_harga).toLocaleString("id-ID")}</td>
                             <td class="text-end fw-bold text-danger">Rp ${Number(item.subtotal_ongkos).toLocaleString("id-ID")}</td>
                         </tr>`;
                     });
                 } else {
-                    htmlTk = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data pengerjaan operator pada transaksi produksi ini</td></tr>';
+                    htmlTk = '<tr><td colspan="8" class="text-center text-muted py-3">Belum ada data pengerjaan operator pada transaksi produksi ini</td></tr>';
                 }
                 $("#tbl-mdl-tk tbody").html(htmlTk);
+                $("#mdl-total-qty-so").text(Number(qtySo).toLocaleString("id-ID"));
+                $("#mdl-total-qty-prod").text(totQtyProd.toLocaleString("id-ID"));
+                $("#mdl-total-qty-fix").text(totQtyFix.toLocaleString("id-ID"));
+                $("#mdl-total-qty-all").text(totQtyAll.toLocaleString("id-ID"));
                 $("#mdl-total-tk").text(l.f_nilai_tk);
 
                 // Render Breakdown Bahan Baku
                 let htmlBahan = "";
+                let totBahanQty = 0;
                 if (res.breakdown && res.breakdown.bahan_baku && res.breakdown.bahan_baku.length > 0) {
                     let no = 1;
                     res.breakdown.bahan_baku.forEach(function(item) {
                         let warna = (item.kode_warna ? item.kode_warna : "") + (item.nama_warna ? " - " + item.nama_warna : "");
+                        let bQty = Number(item.qty_pakai || 0);
+                        totBahanQty += bQty;
                         htmlBahan += `<tr>
                             <td class="text-center">${no++}</td>
-                            <td class="fw-semibold">${item.kode_barang} - ${item.nama_barang}</td>
+                            <td class="fw-bold text-dark">${item.kode_barang} - ${item.nama_barang}</td>
                             <td>${warna || "-"}</td>
-                            <td class="text-end">${Number(item.qty_pakai).toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="text-end fw-bold text-dark">${bQty.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td class="text-end">Rp ${Number(item.harga_satuan).toLocaleString("id-ID")}</td>
-                            <td class="text-end fw-bold text-warning">Rp ${Number(item.subtotal_bahan).toLocaleString("id-ID")}</td>
+                            <td class="text-end fw-bold" style="color: #d97706;">Rp ${Number(item.subtotal_bahan).toLocaleString("id-ID")}</td>
                         </tr>`;
                     });
                 } else {
                     htmlBahan = '<tr><td colspan="6" class="text-center text-muted py-3">Belum ada data pemakaian bahan baku (BTK) untuk nomor WO ini</td></tr>';
                 }
                 $("#tbl-mdl-bahan tbody").html(htmlBahan);
+                $("#mdl-total-bahan-qty").text(totBahanQty.toLocaleString("id-ID", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                 $("#mdl-total-bahan").text(l.f_nilai_bahan);
             },
             error: function() {

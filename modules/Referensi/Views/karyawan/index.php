@@ -220,6 +220,19 @@
           </div>
         </div>
 
+        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2 mt-4">Foto Karyawan</h6>
+        <div class="row mb-4">
+          <label class="col-md-3 col-form-label text-md-end" for="fileKaryawan">Upload Foto</label>
+          <div class="col-md-8">
+            <input type="hidden" id="fileKaryawanOld">
+            <input type="file" id="fileKaryawan" onchange="readURL(this,'#fileKaryawan')" name="fileKaryawan" class="form-control" accept=".jpg, .jpeg, .png">
+            <div class="form-text mt-2 text-muted">Format: JPG, PNG. Maksimal 1MB.</div>
+            <div class="mt-3">
+               <img class="img-thumbnail d-none" id="linkFileKaryawan" style="max-height: 150px;" alt="Preview">
+            </div>
+          </div>
+        </div>
+
         <!-- Section Kontrak Kerja di Form Utama -->
         <div id="section-kontrak-karyawan" class="mt-4 pt-2 border-top">
           <div class="d-flex justify-content-between align-items-center mb-3">
@@ -289,19 +302,6 @@
                 <i class="fa fa-check-circle text-success me-1"></i> Berkas tersimpan: <strong id="form-kontrak-file-name">-</strong>
                 <a href="#" target="_blank" class="ms-2 btn btn-link btn-sm p-0" id="form-kontrak-file-link"><i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas</a>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2 mt-4">Foto Karyawan</h6>
-        <div class="row">
-          <label class="col-md-3 col-form-label text-md-end" for="fileKaryawan">Upload Foto</label>
-          <div class="col-md-8">
-            <input type="hidden" id="fileKaryawanOld">
-            <input type="file" id="fileKaryawan" onchange="readURL(this,'#fileKaryawan')" name="fileKaryawan" class="form-control" accept=".jpg, .jpeg, .png">
-            <div class="form-text mt-2 text-muted">Format: JPG, PNG. Maksimal 1MB.</div>
-            <div class="mt-3">
-               <img class="img-thumbnail d-none" id="linkFileKaryawan" style="max-height: 150px;" alt="Preview">
             </div>
           </div>
         </div>

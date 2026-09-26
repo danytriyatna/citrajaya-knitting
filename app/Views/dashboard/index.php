@@ -2,6 +2,91 @@
 <?= $this->extend('template'); ?>
 <?= $this->section('content'); ?>
   <div class="container-fluid">
+    <style>
+      /* ==========================================================================
+         STANDAR UI/UX & KODING DASHBOARD (MANDAT SAKRAL DANY TRIYATNA)
+         ========================================================================== */
+      .card-header h6 {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+      }
+
+      /* Standar Thead Tabulator & Table */
+      .tabulator .tabulator-header,
+      .tabulator.table-striped .tabulator-header,
+      .tabulator.table-striped .tabulator-header .tabulator-headers .tabulator-col,
+      .tabulator.table-striped .tabulator-col-content .tabulator-header .tabulator-headers .tabulator-col,
+      .tabulator.table-striped .tabulator-cell .tabulator-header .tabulator-headers .tabulator-col,
+      #tbl-tracking .tabulator-header,
+      #tbl-tracking .tabulator-col,
+      #tbl-persediaan-ringkasan .tabulator-header,
+      #tbl-persediaan-ringkasan .tabulator-col,
+      #tbl-persediaan-detail .tabulator-header,
+      #tbl-persediaan-detail .tabulator-col,
+      #tbl-invoice .tabulator-header,
+      #tbl-invoice .tabulator-col,
+      #tbl-po .tabulator-header,
+      #tbl-po .tabulator-col,
+      #tbl-saldo .tabulator-header,
+      #tbl-saldo .tabulator-col,
+      table.table thead th {
+        background-color: #1e293b !important;
+        background: #1e293b !important;
+        color: #ffffff !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        border-color: #334155 !important;
+      }
+
+      .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+        color: #ffffff !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+      }
+
+      /* Standar Tbody Rows & Cells */
+      .tabulator .tabulator-row .tabulator-cell,
+      #tbl-tracking .tabulator-row .tabulator-cell,
+      #tbl-persediaan-ringkasan .tabulator-row .tabulator-cell,
+      #tbl-persediaan-detail .tabulator-row .tabulator-cell,
+      #tbl-invoice .tabulator-row .tabulator-cell,
+      #tbl-po .tabulator-row .tabulator-cell,
+      #tbl-saldo .tabulator-row .tabulator-cell,
+      table.table tbody td {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        padding: 6px 10px !important;
+        border-color: #cbd5e1 !important;
+        vertical-align: middle !important;
+      }
+
+      /* Standar Bottom Footer / Totals */
+      .tabulator .tabulator-footer,
+      .tabulator .tabulator-calcs-holder,
+      .tabulator-calcs-holder .tabulator-cell,
+      #tbl-tracking .tabulator-calcs-holder .tabulator-cell,
+      #tbl-persediaan-ringkasan .tabulator-calcs-holder .tabulator-cell {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        border-top: 1px solid #cbd5e1 !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+      }
+
+      /* Border Container */
+      .tabulator {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 4px;
+      }
+    </style>
+
     <div class="row page-titles">
       <div class="col-md-5 align-self-center">
         <h4 class="text-themecolor"><?= $titlehead ?></h4>
@@ -20,7 +105,7 @@
       <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">TRACKING PRODUKSI</h6>
+            <h6 class="mb-0 f-w-700">TRACKING PRODUKSI</h6>
           </div>
           <div class="card-body">
             <div class="row mb-2 align-items-end">
@@ -57,7 +142,7 @@
       <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">RINGKASAN PERSEDIAAN</h6>
+            <h6 class="mb-0 f-w-700">RINGKASAN PERSEDIAAN</h6>
           </div>
           <div class="card-body">
 
@@ -112,12 +197,14 @@
               </div>
             </div>
 
-            <div class="table-striped" id="tbl-persediaan-ringkasan"></div>
+            <div class="table-responsive">
+              <div class="table-striped" id="tbl-persediaan-ringkasan"></div>
+            </div>
 
             <div id="panel-persediaan-detail" class="mt-3" style="display:none; border:2px dashed #e0a800; border-radius:8px; padding:14px 16px; background:#fffdf5;">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                  <h6 class="mb-0 f-w-600" id="txt-persediaan-detail-title">Detail Stock Card</h6>
+                  <h6 class="mb-0 f-w-700" id="txt-persediaan-detail-title">Detail Stock Card</h6>
                   <small class="text-muted" id="txt-persediaan-detail-sub">-</small>
                 </div>
                 <button type="button" class="btn-close" id="btn-close-persediaan-detail" aria-label="Tutup"></button>
@@ -158,36 +245,19 @@
       <div class="col-lg-6">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">PIUTANG PENJUALAN</h6>
+            <h6 class="mb-0 f-w-700">PIUTANG PENJUALAN</h6>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-sm-4 offset-md-8">
-                <div class="form-group">
-                  <div class="input-group mb-3">
-                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text"id="inp-invoice" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                  </div>
+            <div class="row mb-2">
+              <div class="col-sm-12 d-flex justify-content-end">
+                <div class="input-group" style="max-width: 320px; width: 100%;">
+                  <span class="input-group-text bg-white" id="basic-addon-inv"><i class="ti-search"></i></span>
+                  <input type="text" id="inp-invoice" class="form-control" placeholder="Cari No. Invoice / Buyer...">
                 </div>
               </div>
             </div>
             <div class="table-responsive">
               <div class="table-striped"  id="tbl-invoice"></div>
-              <!-- <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>NO. INVOICE</th>
-                    <th>TGL INVOICE</th>
-                    <th>BUYER</th>
-                    <th>TGL JATUH TEMPO</th>
-                    <th>NILAI INVOICE</th>
-                    <th>PEMBAYARAN</th>
-                    <th>SISA</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table> -->
             </div>
           </div>
         </div>
@@ -196,42 +266,25 @@
       <div class="col-lg-6">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">HUTANG PEMBELIAN</h6>
+            <h6 class="mb-0 f-w-700">HUTANG PEMBELIAN</h6>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-sm-4 offset-md-8">
-                <div class="form-group">
-                  <div class="input-group mb-3">
-                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text"id="inp-po" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                  </div>
+            <div class="row mb-2">
+              <div class="col-sm-12 d-flex justify-content-end">
+                <div class="input-group" style="max-width: 320px; width: 100%;">
+                  <span class="input-group-text bg-white" id="basic-addon-po"><i class="ti-search"></i></span>
+                  <input type="text" id="inp-po" class="form-control" placeholder="Cari No. PO / Vendor...">
                 </div>
               </div>
             </div>
             <div class="table-responsive">
-            <div class="table-striped"  id="tbl-po"></div>
-              <!-- <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>NO. PO</th>
-                    <th>TGL PO</th>
-                    <th>VENDOR</th>
-                    <th>TGL JATUH TEMPO</th>
-                    <th>NILAI PO</th>
-                    <th>PEMBAYARAN</th>
-                    <th>SISA</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table> -->
+              <div class="table-striped"  id="tbl-po"></div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0 f-w-600">SALDO KAS BON</h6>
+            <h6 class="mb-0 f-w-700">SALDO KAS BON</h6>
           </div>
           <div class="card-body">
             <div class="row">
@@ -272,12 +325,10 @@
                   <button id="btn_update" class="btn btn-info update_saldo" type="button">Update</button>
                 </div>
               </div>
-              <div class="col-sm-4 justify-content-end mb-2">
-                <div class="form-group">
-                  <div class="input-group mb-3">
-                    <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
-                    <input type="text"id="inp-saldo" class="form-control p-s-0" placeholder="Pencarian" aria-label="Username" aria-describedby="basic-addon11" style="border-left-width: 0px;">
-                  </div>
+              <div class="col-sm-4 d-flex justify-content-end mb-2">
+                <div class="input-group" style="width: 100%;">
+                  <span class="input-group-text bg-white" id="basic-addon-saldo"><i class="ti-search"></i></span>
+                  <input type="text" id="inp-saldo" class="form-control" placeholder="Pencarian...">
                 </div>
               </div>
             </div>
@@ -408,7 +459,7 @@
         <div class="col-lg-6 mb-3">
           <div class="card h-100">
             <div class="card-header">
-              <h6 class="mb-0 f-w-600">GRAFIK PENJUALAN DAN BIAYA</h6>
+              <h6 class="mb-0 f-w-700">GRAFIK PENJUALAN DAN BIAYA</h6>
             </div>
             <div class="card-body mt-5">
               
@@ -420,8 +471,8 @@
         <div class="col-lg-6 mb-3">
           <div class="card h-100">
             <div class="card-header">
-            <h6 class="mb-0 f-w-600">LAPORAN LABA/RUGI</h6>
-          </div>
+              <h6 class="mb-0 f-w-700">LAPORAN LABA/RUGI</h6>
+            </div>
           <div class="card-body">
             <div class="row">
               <div class="col-sm-6">

@@ -634,7 +634,7 @@ $(document).ready(function () {
                 if (st === 2) {
                     badgeEl.attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
                 } else if (st === 1) {
-                    badgeEl.attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                    badgeEl.attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
                 } else {
                     badgeEl.attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
                 }
@@ -728,8 +728,8 @@ $(document).ready(function () {
         }
 
         Swal.fire({
-            title: 'Memproses Draf Kontrak...',
-            text: 'Harap tunggu, berkas Word sedang disiapkan',
+            title: 'Memproses Dokumen Kontrak...',
+            text: 'Harap tunggu, berkas PDF sedang disiapkan...',
             allowOutsideClick: false,
             showConfirmButton: false,
             onBeforeOpen: () => { Swal.showLoading(); }
@@ -749,15 +749,15 @@ $(document).ready(function () {
                 if (res.status) {
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: res.message || 'Dokumen kontrak kerja (.docx) berhasil disiapkan.',
+                        text: res.message || 'Dokumen kontrak kerja (.pdf) berhasil disiapkan.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    // Trigger download dokumen Word (.docx)
-                    window.location.href = res.download_url;
+                    // Buka PDF di tab baru
+                    window.open(res.download_url, '_blank');
                     // Update badge
-                    $('#kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                    $('#kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
                     dtList.setData();
                 } else {
                     Swal.fire({ text: res.message || 'Gagal menghasilkan kontrak', icon: 'error' });
@@ -790,7 +790,7 @@ $(document).ready(function () {
 
         Swal.fire({
             title: 'Menyiapkan Dokumen Kontrak...',
-            text: 'Harap tunggu, berkas Word (.docx) sedang disiapkan lengkap dengan tanda tangan digital',
+            text: 'Harap tunggu, berkas PDF (.pdf) sedang disiapkan lengkap dengan tanda tangan digital...',
             allowOutsideClick: false,
             showConfirmButton: false,
             didOpen: () => { Swal.showLoading(); }
@@ -810,17 +810,17 @@ $(document).ready(function () {
                 if (res.status) {
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: 'Dokumen kontrak kerja (.docx) berhasil disiapkan dan mulai diunduh.',
+                        text: 'Dokumen kontrak kerja (.pdf) berhasil disiapkan.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    window.location.href = res.download_url;
+                    window.open(res.download_url, '_blank');
                     $('#form_display_tgl_selesai').val(res.tgl_selesai_kontrak || '');
                     if (res.status_kontrak == 2) {
                         $('#form-kontrak-status-badge').attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
                     } else {
-                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
                     }
                     dtList.setData();
                 } else {
@@ -1123,7 +1123,7 @@ $(document).ready(function () {
                         $('#kontrak-status-badge, #form-kontrak-status-badge')
                             .attr('class', 'badge bg-success p-2')
                             .html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
-                        $('#btn-form-generate-docx').removeClass('btn-primary').addClass('btn-success').html('<i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak Sah (.docx)');
+                        $('#btn-form-generate-docx').removeClass('btn-primary').addClass('btn-danger').html('<i class="fa fa-file-pdf-o me-1"></i> Lihat / Unduh Kontrak Sah (.pdf)');
                         $('#form-kontrak-action-info').html('<span class="text-success fw-bold"><i class="fa fa-check-circle me-1"></i> Seluruh pihak sudah bertandatangan digital. Berkas siap diunduh!</span>');
                     }
 
@@ -1199,7 +1199,7 @@ $(document).ready(function () {
                             if (res.status_kontrak === 1) {
                                 $('#kontrak-status-badge, #form-kontrak-status-badge')
                                     .attr('class', 'badge bg-warning text-dark p-2')
-                                    .html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                                    .html('<i class="fa fa-file-pdf-o me-1"></i> Draf Terbit');
                             }
 
                             dtList.setData();

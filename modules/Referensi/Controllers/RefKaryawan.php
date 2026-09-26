@@ -659,7 +659,7 @@ class RefKaryawan extends BaseController
         $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->full_name ?? 'Karyawan');
         $cleanNip = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nip ?? 'KRY');
 
-        $format = $this->request->getGet('format') ?? 'docx';
+        $format = $this->request->getGet('format') ?? 'pdf';
 
         if ($format === 'pdf') {
             $dompdf = new \App\Libraries\DompdfGenerator();

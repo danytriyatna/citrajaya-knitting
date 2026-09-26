@@ -845,15 +845,9 @@ $(document).ready(function () {
                 fotoText.attr("src", data.file_gambar)
                 tglDeadlineText.html(`<i class="fa fa-calendar-week f-s-11"></i>&nbsp; <em>Deadline: ${formatterDate(data.tgl_deadline)}</em>`)
                 if (data.detail) {
-                    idSampleDet = data.detail.id
-                    inpPoWarna1.val(data.detail.id_warna_1).trigger('change');
-                    inpPoWarna2.val(data.detail.id_warna_2).trigger('change');
-                    inpPoWarna3.val(data.detail.id_warna_3).trigger('change');
-                    inpPoWarna4.val(data.detail.id_warna_4).trigger('change');
-                    inpPoWarna5.val(data.detail.id_warna_5).trigger('change');
-                    inpPoWarna6.val(data.detail.id_warna_6).trigger('change');
-                    inpPoWarna7.val(data.detail.id_warna_7).trigger('change');
-                    inpPoWarna8.val(data.detail.id_warna_8).trigger('change');
+                    idSampleDet = data.detail.id;
+                    let isViaBarang = !!(data.detail.id_barang_1 || data.detail.id_barang_2 || data.detail.id_barang_3 || data.detail.id_barang_4 || data.detail.id_barang_5 || data.detail.id_barang_6 || data.detail.id_barang_7 || data.detail.id_barang_8);
+
                     inpPoBarang1.val(data.detail.id_barang_1).trigger('change');
                     inpPoBarang2.val(data.detail.id_barang_2).trigger('change');
                     inpPoBarang3.val(data.detail.id_barang_3).trigger('change');
@@ -862,6 +856,15 @@ $(document).ready(function () {
                     inpPoBarang6.val(data.detail.id_barang_6).trigger('change');
                     inpPoBarang7.val(data.detail.id_barang_7).trigger('change');
                     inpPoBarang8.val(data.detail.id_barang_8).trigger('change');
+
+                    inpPoWarna1.val(isViaBarang ? (data.detail.id_barang_1 ? data.detail.id_warna_1 : '') : data.detail.id_warna_1).trigger('change');
+                    inpPoWarna2.val(isViaBarang ? (data.detail.id_barang_2 ? data.detail.id_warna_2 : '') : data.detail.id_warna_2).trigger('change');
+                    inpPoWarna3.val(isViaBarang ? (data.detail.id_barang_3 ? data.detail.id_warna_3 : '') : data.detail.id_warna_3).trigger('change');
+                    inpPoWarna4.val(isViaBarang ? (data.detail.id_barang_4 ? data.detail.id_warna_4 : '') : data.detail.id_warna_4).trigger('change');
+                    inpPoWarna5.val(isViaBarang ? (data.detail.id_barang_5 ? data.detail.id_warna_5 : '') : data.detail.id_warna_5).trigger('change');
+                    inpPoWarna6.val(isViaBarang ? (data.detail.id_barang_6 ? data.detail.id_warna_6 : '') : data.detail.id_warna_6).trigger('change');
+                    inpPoWarna7.val(isViaBarang ? (data.detail.id_barang_7 ? data.detail.id_warna_7 : '') : data.detail.id_warna_7).trigger('change');
+                    inpPoWarna8.val(isViaBarang ? (data.detail.id_barang_8 ? data.detail.id_warna_8 : '') : data.detail.id_warna_8).trigger('change');
                 }
 
                 dtListDetailQty.setData(data.detailUkuran);
@@ -1227,18 +1230,28 @@ $(document).ready(function () {
             });
         }
 
+        let isUsingBarang = !!(inpPoBarang1.val() || inpPoBarang2.val() || inpPoBarang3.val() || inpPoBarang4.val() || inpPoBarang5.val() || inpPoBarang6.val() || inpPoBarang7.val() || inpPoBarang8.val());
+        let w1 = isUsingBarang ? (inpPoBarang1.val() ? inpPoWarna1.val() : '') : inpPoWarna1.val();
+        let w2 = isUsingBarang ? (inpPoBarang2.val() ? inpPoWarna2.val() : '') : inpPoWarna2.val();
+        let w3 = isUsingBarang ? (inpPoBarang3.val() ? inpPoWarna3.val() : '') : inpPoWarna3.val();
+        let w4 = isUsingBarang ? (inpPoBarang4.val() ? inpPoWarna4.val() : '') : inpPoWarna4.val();
+        let w5 = isUsingBarang ? (inpPoBarang5.val() ? inpPoWarna5.val() : '') : inpPoWarna5.val();
+        let w6 = isUsingBarang ? (inpPoBarang6.val() ? inpPoWarna6.val() : '') : inpPoWarna6.val();
+        let w7 = isUsingBarang ? (inpPoBarang7.val() ? inpPoWarna7.val() : '') : inpPoWarna7.val();
+        let w8 = isUsingBarang ? (inpPoBarang8.val() ? inpPoWarna8.val() : '') : inpPoWarna8.val();
+
         $.ajax({
             type: 'POST',
             url: '/trans/sample/save-detail',
             data: {
-                warna1: inpPoWarna1.val(),
-                warna2: inpPoWarna2.val(),
-                warna3: inpPoWarna3.val(),
-                warna4: inpPoWarna4.val(),
-                warna5: inpPoWarna5.val(),
-                warna6: inpPoWarna6.val(),
-                warna7: inpPoWarna7.val(),
-                warna8: inpPoWarna8.val(),
+                warna1: w1,
+                warna2: w2,
+                warna3: w3,
+                warna4: w4,
+                warna5: w5,
+                warna6: w6,
+                warna7: w7,
+                warna8: w8,
                 barang1: inpPoBarang1.val(),
                 barang2: inpPoBarang2.val(),
                 barang3: inpPoBarang3.val(),
@@ -1364,6 +1377,7 @@ $(document).ready(function () {
         let selectedOption = selectEl.find("option:selected");
         let idBarang = selectEl.val();
         let idWarna = selectedOption.attr("data-warna") || selectEl.find("option:selected").data("warna");
+        let targetWarnaId = mapping[selectEl.attr("id")];
 
         if (idBarang && (!idWarna || idWarna == "0" || idWarna == "" || idWarna == "null")) {
             let namaBarang = selectedOption.text();
@@ -1375,8 +1389,15 @@ $(document).ready(function () {
                 confirmButtonText: 'OK'
             });
             selectEl.val("").trigger("change.select2");
+            if (targetWarnaId) {
+                $("#" + targetWarnaId).val("").trigger("change");
+            }
             buildGramasiData();
             return false;
+        }
+
+        if (targetWarnaId) {
+            $("#" + targetWarnaId).val(idBarang ? (idWarna || "") : "").trigger("change");
         }
 
         buildGramasiData();

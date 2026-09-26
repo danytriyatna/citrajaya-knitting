@@ -415,14 +415,14 @@ class SampleModel extends \App\Models\PrModel
             LEFT JOIN ref_barang b6 ON td.id_barang_6 = b6.id
             LEFT JOIN ref_barang b7 ON td.id_barang_7 = b7.id
             LEFT JOIN ref_barang b8 ON td.id_barang_8 = b8.id
-            LEFT JOIN ref_warna w1 ON COALESCE(b1.id_warna, td.id_warna_1) = w1.id
-            LEFT JOIN ref_warna w2 ON COALESCE(b2.id_warna, td.id_warna_2) = w2.id
-            LEFT JOIN ref_warna w3 ON COALESCE(b3.id_warna, td.id_warna_3) = w3.id
-            LEFT JOIN ref_warna w4 ON COALESCE(b4.id_warna, td.id_warna_4) = w4.id
-            LEFT JOIN ref_warna w5 ON COALESCE(b5.id_warna, td.id_warna_5) = w5.id
-            LEFT JOIN ref_warna w6 ON COALESCE(b6.id_warna, td.id_warna_6) = w6.id
-            LEFT JOIN ref_warna w7 ON COALESCE(b7.id_warna, td.id_warna_7) = w7.id
-            LEFT JOIN ref_warna w8 ON COALESCE(b8.id_warna, td.id_warna_8) = w8.id;
+            LEFT JOIN ref_warna w1 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b1.id_warna ELSE td.id_warna_1 END) = w1.id
+            LEFT JOIN ref_warna w2 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b2.id_warna ELSE td.id_warna_2 END) = w2.id
+            LEFT JOIN ref_warna w3 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b3.id_warna ELSE td.id_warna_3 END) = w3.id
+            LEFT JOIN ref_warna w4 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b4.id_warna ELSE td.id_warna_4 END) = w4.id
+            LEFT JOIN ref_warna w5 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b5.id_warna ELSE td.id_warna_5 END) = w5.id
+            LEFT JOIN ref_warna w6 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b6.id_warna ELSE td.id_warna_6 END) = w6.id
+            LEFT JOIN ref_warna w7 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b7.id_warna ELSE td.id_warna_7 END) = w7.id
+            LEFT JOIN ref_warna w8 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b8.id_warna ELSE td.id_warna_8 END) = w8.id;
         ";
 
         $query = $this->db->query($sql);
@@ -486,14 +486,14 @@ class SampleModel extends \App\Models\PrModel
                         LEFT JOIN ref_barang bsub8 ON bsub8.id = tsd.id_barang_8
 
                         -- JOIN ref_warna dengan COALESCE ref_barang, fallback ke tsd
-                        LEFT JOIN ref_warna rw1 ON rw1.id = COALESCE(bsub1.id_warna, tsd.id_warna_1)
-                        LEFT JOIN ref_warna rw2 ON rw2.id = COALESCE(bsub2.id_warna, tsd.id_warna_2)
-                        LEFT JOIN ref_warna rw3 ON rw3.id = COALESCE(bsub3.id_warna, tsd.id_warna_3)
-                        LEFT JOIN ref_warna rw4 ON rw4.id = COALESCE(bsub4.id_warna, tsd.id_warna_4)
-                        LEFT JOIN ref_warna rw5 ON rw5.id = COALESCE(bsub5.id_warna, tsd.id_warna_5)
-                        LEFT JOIN ref_warna rw6 ON rw6.id = COALESCE(bsub6.id_warna, tsd.id_warna_6)
-                        LEFT JOIN ref_warna rw7 ON rw7.id = COALESCE(bsub7.id_warna, tsd.id_warna_7)
-                        LEFT JOIN ref_warna rw8 ON rw8.id = COALESCE(bsub8.id_warna, tsd.id_warna_8)
+                        LEFT JOIN ref_warna rw1 ON rw1.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub1.id_warna ELSE tsd.id_warna_1 END)
+                        LEFT JOIN ref_warna rw2 ON rw2.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub2.id_warna ELSE tsd.id_warna_2 END)
+                        LEFT JOIN ref_warna rw3 ON rw3.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub3.id_warna ELSE tsd.id_warna_3 END)
+                        LEFT JOIN ref_warna rw4 ON rw4.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub4.id_warna ELSE tsd.id_warna_4 END)
+                        LEFT JOIN ref_warna rw5 ON rw5.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub5.id_warna ELSE tsd.id_warna_5 END)
+                        LEFT JOIN ref_warna rw6 ON rw6.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub6.id_warna ELSE tsd.id_warna_6 END)
+                        LEFT JOIN ref_warna rw7 ON rw7.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub7.id_warna ELSE tsd.id_warna_7 END)
+                        LEFT JOIN ref_warna rw8 ON rw8.id = (CASE WHEN tsd.id_barang_1 IS NOT NULL THEN bsub8.id_warna ELSE tsd.id_warna_8 END)
 
                         WHERE tsu.id_sample_det = tbl.id
                         AND ru.key_ukuran = '$codeSub' 
@@ -638,15 +638,15 @@ class SampleModel extends \App\Models\PrModel
             LEFT JOIN ref_barang b7 ON b7.id = td.id_barang_7
             LEFT JOIN ref_barang b8 ON b8.id = td.id_barang_8
 
-            -- JOIN ref_warna: COALESCE dari ref_barang, fallback ke id_warna di trans_sample_det
-            LEFT JOIN ref_warna w1 ON w1.id = COALESCE(b1.id_warna, td.id_warna_1)
-            LEFT JOIN ref_warna w2 ON w2.id = COALESCE(b2.id_warna, td.id_warna_2)
-            LEFT JOIN ref_warna w3 ON w3.id = COALESCE(b3.id_warna, td.id_warna_3)
-            LEFT JOIN ref_warna w4 ON w4.id = COALESCE(b4.id_warna, td.id_warna_4)
-            LEFT JOIN ref_warna w5 ON w5.id = COALESCE(b5.id_warna, td.id_warna_5)
-            LEFT JOIN ref_warna w6 ON w6.id = COALESCE(b6.id_warna, td.id_warna_6)
-            LEFT JOIN ref_warna w7 ON w7.id = COALESCE(b7.id_warna, td.id_warna_7)
-            LEFT JOIN ref_warna w8 ON w8.id = COALESCE(b8.id_warna, td.id_warna_8);
+            -- JOIN ref_warna: prioritaskan warna ref_barang jika via barang, fallback ke trans_sample_det jika via warna
+            LEFT JOIN ref_warna w1 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b1.id_warna ELSE td.id_warna_1 END) = w1.id
+            LEFT JOIN ref_warna w2 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b2.id_warna ELSE td.id_warna_2 END) = w2.id
+            LEFT JOIN ref_warna w3 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b3.id_warna ELSE td.id_warna_3 END) = w3.id
+            LEFT JOIN ref_warna w4 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b4.id_warna ELSE td.id_warna_4 END) = w4.id
+            LEFT JOIN ref_warna w5 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b5.id_warna ELSE td.id_warna_5 END) = w5.id
+            LEFT JOIN ref_warna w6 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b6.id_warna ELSE td.id_warna_6 END) = w6.id
+            LEFT JOIN ref_warna w7 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b7.id_warna ELSE td.id_warna_7 END) = w7.id
+            LEFT JOIN ref_warna w8 ON (CASE WHEN td.id_barang_1 IS NOT NULL THEN b8.id_warna ELSE td.id_warna_8 END) = w8.id;
         ";
 
         $query = $this->db->query($sql);
@@ -875,15 +875,15 @@ class SampleModel extends \App\Models\PrModel
         $builder->join("ref_barang b7", "td.id_barang_7 = b7.id", "left");
         $builder->join("ref_barang b8", "td.id_barang_8 = b8.id", "left");
 
-        // JOIN ref_warna dengan COALESCE: prioritaskan warna dari ref_barang, fallback ke trans_sample_det
-        $builder->join("ref_warna w1", "COALESCE(b1.id_warna, td.id_warna_1) = w1.id", "left");
-        $builder->join("ref_warna w2", "COALESCE(b2.id_warna, td.id_warna_2) = w2.id", "left");
-        $builder->join("ref_warna w3", "COALESCE(b3.id_warna, td.id_warna_3) = w3.id", "left");
-        $builder->join("ref_warna w4", "COALESCE(b4.id_warna, td.id_warna_4) = w4.id", "left");
-        $builder->join("ref_warna w5", "COALESCE(b5.id_warna, td.id_warna_5) = w5.id", "left");
-        $builder->join("ref_warna w6", "COALESCE(b6.id_warna, td.id_warna_6) = w6.id", "left");
-        $builder->join("ref_warna w7", "COALESCE(b7.id_warna, td.id_warna_7) = w7.id", "left");
-        $builder->join("ref_warna w8", "COALESCE(b8.id_warna, td.id_warna_8) = w8.id", "left");
+        // JOIN ref_warna: prioritaskan warna dari ref_barang jika via barang, fallback ke trans_sample_det jika via warna
+        $builder->join("ref_warna w1", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b1.id_warna ELSE td.id_warna_1 END) = w1.id", "left");
+        $builder->join("ref_warna w2", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b2.id_warna ELSE td.id_warna_2 END) = w2.id", "left");
+        $builder->join("ref_warna w3", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b3.id_warna ELSE td.id_warna_3 END) = w3.id", "left");
+        $builder->join("ref_warna w4", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b4.id_warna ELSE td.id_warna_4 END) = w4.id", "left");
+        $builder->join("ref_warna w5", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b5.id_warna ELSE td.id_warna_5 END) = w5.id", "left");
+        $builder->join("ref_warna w6", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b6.id_warna ELSE td.id_warna_6 END) = w6.id", "left");
+        $builder->join("ref_warna w7", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b7.id_warna ELSE td.id_warna_7 END) = w7.id", "left");
+        $builder->join("ref_warna w8", "(CASE WHEN td.id_barang_1 IS NOT NULL THEN b8.id_warna ELSE td.id_warna_8 END) = w8.id", "left");
 
         if (!empty($params['id_ukuran_so'])) {
             $builder->where("tu.id", $params['id_ukuran_so']);

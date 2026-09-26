@@ -715,7 +715,6 @@ class Sample extends BaseController
     $warna6 = $this->request->getPost('warna6');
     $warna7 = $this->request->getPost('warna7');
     $warna8 = $this->request->getPost('warna8');
-    $warna1 = $this->request->getPost('warna1');
     $barang1 = $this->request->getPost('barang1');
     $barang2 = $this->request->getPost('barang2');
     $barang3 = $this->request->getPost('barang3');
@@ -726,6 +725,24 @@ class Sample extends BaseController
     $barang8 = $this->request->getPost('barang8');
     $dataUkuran = $this->request->getPost('dataUkuran');
     $dataGram = $this->request->getPost('dataGram');
+
+    $allBarangIds = array_values(array_filter([$barang1, $barang2, $barang3, $barang4, $barang5, $barang6, $barang7, $barang8]));
+    if (!empty($allBarangIds)) {
+      $barangRows = $this->db->table('ref_barang')->whereIn('id', $allBarangIds)->get()->getResult();
+      $barangWarnaMap = [];
+      foreach ($barangRows as $bRow) {
+        $barangWarnaMap[$bRow->id] = $bRow->id_warna;
+      }
+      $warna1 = !empty($barang1) ? ($barangWarnaMap[$barang1] ?? null) : null;
+      $warna2 = !empty($barang2) ? ($barangWarnaMap[$barang2] ?? null) : null;
+      $warna3 = !empty($barang3) ? ($barangWarnaMap[$barang3] ?? null) : null;
+      $warna4 = !empty($barang4) ? ($barangWarnaMap[$barang4] ?? null) : null;
+      $warna5 = !empty($barang5) ? ($barangWarnaMap[$barang5] ?? null) : null;
+      $warna6 = !empty($barang6) ? ($barangWarnaMap[$barang6] ?? null) : null;
+      $warna7 = !empty($barang7) ? ($barangWarnaMap[$barang7] ?? null) : null;
+      $warna8 = !empty($barang8) ? ($barangWarnaMap[$barang8] ?? null) : null;
+    }
+
     $dataWarna = [
       "id_barang_1" => !empty($barang1) ? $barang1 : null,
       "id_barang_2" => !empty($barang2) ? $barang2 : null,

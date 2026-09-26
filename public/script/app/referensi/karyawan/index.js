@@ -109,6 +109,20 @@ $(document).ready(function () {
             updateSingleSigBox('form', 1, sig1, p1Name, p1Role);
             updateSingleSigBox('form', 2, sig2, data_row.full_name || 'Karyawan', data_row.posisi || 'Karyawan');
             updateSingleSigBox('form', 3, sig3, p3Name, p3Role);
+
+            if (data_row.file_kontrak_url) {
+                $('#btn-form-view-signed-file').removeClass('d-none').attr('href', data_row.file_kontrak_url);
+            } else {
+                $('#btn-form-view-signed-file').addClass('d-none').attr('href', '#');
+            }
+
+            if (data_row.all_signed || st === 2) {
+                $('#btn-form-generate-docx').removeClass('btn-primary').addClass('btn-success').html('<i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak Sah (.docx)');
+                $('#form-kontrak-action-info').html('<span class="text-success fw-bold"><i class="fa fa-check-circle me-1"></i> Seluruh pihak sudah bertandatangan digital. Berkas siap diunduh!</span>');
+            } else {
+                $('#btn-form-generate-docx').removeClass('btn-success').addClass('btn-primary').html('<i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)');
+                $('#form-kontrak-action-info').text('Unduh berkas kontrak kerja Word (.docx) lengkap dengan tanda tangan digital para pihak.');
+            }
         } else {
             divCMT.removeClass("d-none");
             selectCMT.val(data_row.id_operator).trigger("change");
@@ -373,7 +387,7 @@ $(document).ready(function () {
 
         $('#form_tgl_mulai_kontrak').val('');
         $('#form_durasi_kontrak').val('3');
-        $('#form_display_tgl_selesai').text('-');
+        $('#form_display_tgl_selesai').val('');
         $('#form-kontrak-status-badge').attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
         $('#form_ttd_pihak2_nama').text('-');
         $('#form_ttd_pihak2_jabatan').text('Karyawan');
@@ -381,6 +395,10 @@ $(document).ready(function () {
         updateSingleSigBox('form', 1, null, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
         updateSingleSigBox('form', 2, null, '-', 'Karyawan');
         updateSingleSigBox('form', 3, null, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
+
+        $('#btn-form-view-signed-file').addClass('d-none').attr('href', '#');
+        $('#btn-form-generate-docx').removeClass('btn-success').addClass('btn-primary').html('<i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)');
+        $('#form-kontrak-action-info').text('Unduh berkas kontrak kerja Word (.docx) lengkap dengan tanda tangan digital para pihak.');
 
         setTimeout(() => {
             inpBank.val("").trigger('change');
@@ -524,7 +542,7 @@ $(document).ready(function () {
         let tglMulai = $('#form_tgl_mulai_kontrak').val();
         let durasi = parseInt($('#form_durasi_kontrak').val()) || 1;
         if (!tglMulai) {
-            $('#form_display_tgl_selesai').text('-');
+            $('#form_display_tgl_selesai').val('');
             return;
         }
         let parts = tglMulai.split('-');
@@ -534,7 +552,7 @@ $(document).ready(function () {
         let y = d.getFullYear();
         let m = String(d.getMonth() + 1).padStart(2, '0');
         let day = String(d.getDate()).padStart(2, '0');
-        $('#form_display_tgl_selesai').text(day + '-' + m + '-' + y);
+        $('#form_display_tgl_selesai').val(y + '-' + m + '-' + day);
     }
 
     $('#form_tgl_mulai_kontrak, #form_durasi_kontrak').on('change input', function () {
@@ -559,7 +577,7 @@ $(document).ready(function () {
         let tglMulai = $('#input_tgl_mulai_kontrak').val();
         let durasi = parseInt($('#select_durasi_kontrak').val()) || 1;
         if (!tglMulai) {
-            $('#display_tgl_selesai_kontrak').text('-');
+            $('#display_tgl_selesai_kontrak').val('');
             return;
         }
         let parts = tglMulai.split('-');
@@ -569,7 +587,7 @@ $(document).ready(function () {
         let y = d.getFullYear();
         let m = String(d.getMonth() + 1).padStart(2, '0');
         let day = String(d.getDate()).padStart(2, '0');
-        $('#display_tgl_selesai_kontrak').text(day + '-' + m + '-' + y);
+        $('#display_tgl_selesai_kontrak').val(y + '-' + m + '-' + day);
     }
 
     $('#input_tgl_mulai_kontrak, #select_durasi_kontrak').on('change input', function () {
@@ -750,6 +768,74 @@ $(document).ready(function () {
                 Swal.fire({ text: 'Terjadi kesalahan sistem saat generate kontrak.', icon: 'error' });
             }
         });
+    });
+
+    $('#btn-form-generate-docx').on('click', function () {
+        let karyawanId = inpData.val();
+        if (!karyawanId) {
+            Swal.fire({
+                text: 'Data profil karyawan belum tersimpan. Silakan simpan data karyawan terlebih dahulu sebelum mengunduh dokumen kontrak!',
+                icon: 'warning'
+            });
+            return;
+        }
+
+        let tglMulai = $('#form_tgl_mulai_kontrak').val();
+        let durasi = $('#form_durasi_kontrak').val();
+
+        if (!tglMulai) {
+            Swal.fire({ text: 'Tanggal mulai kontrak wajib diisi terlebih dahulu!', icon: 'warning' });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Menyiapkan Dokumen Kontrak...',
+            text: 'Harap tunggu, berkas Word (.docx) sedang disiapkan lengkap dengan tanda tangan digital',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: '/master-data/karyawan/generate-kontrak',
+            data: {
+                id: karyawanId,
+                tgl_mulai_kontrak: tglMulai,
+                durasi_kontrak_bulan: durasi
+            },
+            dataType: 'json',
+            success: function (res) {
+                Swal.close();
+                if (res.status) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'Dokumen kontrak kerja berhasil disiapkan dan mulai diunduh.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    window.location.href = res.download_url;
+                    $('#form_display_tgl_selesai').val(res.tgl_selesai_kontrak || '');
+                    if (res.status_kontrak == 2) {
+                        $('#form-kontrak-status-badge').attr('class', 'badge bg-success p-2').html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                    } else {
+                        $('#form-kontrak-status-badge').attr('class', 'badge bg-warning text-dark p-2').html('<i class="fa fa-file-word-o me-1"></i> Draf Terbit');
+                    }
+                    dtList.setData();
+                } else {
+                    Swal.fire({ text: res.message || 'Gagal menghasilkan kontrak', icon: 'error' });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({ text: 'Terjadi kesalahan sistem saat memproses kontrak.', icon: 'error' });
+            }
+        });
+    });
+
+    $(document).on('click', '#btn-quick-download-signed', function () {
+        $('#btn-do-generate-kontrak').trigger('click');
     });
 
     $('#btn-do-upload-kontrak').on('click', function () {
@@ -1037,6 +1123,8 @@ $(document).ready(function () {
                         $('#kontrak-status-badge, #form-kontrak-status-badge')
                             .attr('class', 'badge bg-success p-2')
                             .html('<i class="fa fa-check-circle me-1"></i> Ditandatangani');
+                        $('#btn-form-generate-docx').removeClass('btn-primary').addClass('btn-success').html('<i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak Sah (.docx)');
+                        $('#form-kontrak-action-info').html('<span class="text-success fw-bold"><i class="fa fa-check-circle me-1"></i> Seluruh pihak sudah bertandatangan digital. Berkas siap diunduh!</span>');
                     }
 
                     dtList.setData();

@@ -262,13 +262,10 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-secondary mb-1">
+                <label class="form-label small fw-bold text-secondary mb-1" for="form_display_tgl_selesai">
                   <i class="fa fa-flag-checkered me-1 text-success"></i> Tanggal Akhir Kontrak
                 </label>
-                <div class="form-control bg-white fw-bold text-primary d-flex align-items-center justify-content-between" style="min-height: 38px;">
-                  <span id="form_display_tgl_selesai" class="fs-6">-</span>
-                  <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px;">Otomatis</span>
-                </div>
+                <input type="date" id="form_display_tgl_selesai" name="form_display_tgl_selesai" class="form-control bg-light" readonly>
               </div>
             </div>
           </div>
@@ -331,6 +328,26 @@
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tombol Aksi Dokumen Kontrak Kerja -->
+          <div class="card border rounded-3 p-3 bg-light bg-opacity-75 mb-3 shadow-none" id="form-kontrak-action-container">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div>
+                <div class="fw-bold text-dark"><i class="fa fa-file-text text-primary me-1"></i> Dokumen Kontrak Kerja</div>
+                <div class="small text-muted" id="form-kontrak-action-info">
+                  Unduh berkas kontrak kerja Word (.docx) lengkap dengan tanda tangan digital para pihak.
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary px-3 shadow-sm" id="btn-form-generate-docx">
+                  <i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)
+                </button>
+                <a href="#" target="_blank" class="btn btn-outline-success px-3 shadow-sm d-none" id="btn-form-view-signed-file">
+                  <i class="fa fa-external-link me-1"></i> Buka Berkas Scan
+                </a>
               </div>
             </div>
           </div>
@@ -433,8 +450,8 @@
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label small fw-bold">Tanggal Akhir / Selesai</label>
-                  <div class="form-control bg-light fw-bold text-primary" id="display_tgl_selesai_kontrak">-</div>
+                  <label class="form-label small fw-bold" for="display_tgl_selesai_kontrak">Tanggal Akhir / Selesai</label>
+                  <input type="date" id="display_tgl_selesai_kontrak" name="display_tgl_selesai_kontrak" class="form-control bg-light" readonly>
                 </div>
               </div>
 
@@ -452,10 +469,12 @@
                       <i class="fa fa-check-circle text-success fs-4 me-2"></i>
                       <div>
                         <strong class="d-block text-success">Semua Pihak Sudah Bertandatangan Digital!</strong>
-                        <span class="small text-muted">Dokumen kontrak sah secara digital. Klik tombol di bawah untuk mengunduh berkas lengkap.</span>
+                        <span class="small text-muted">Dokumen kontrak sah secara digital lengkap dengan 3 tanda tangan.</span>
                       </div>
                     </div>
-                    <span class="badge bg-success px-2 py-1"><i class="fa fa-certificate me-1"></i> Sah & Terverifikasi</span>
+                    <button type="button" class="btn btn-success btn-sm px-3 shadow-sm" id="btn-quick-download-signed">
+                      <i class="fa fa-download me-1"></i> Unduh Dokumen (.docx)
+                    </button>
                   </div>
                 </div>
 
@@ -515,44 +534,23 @@
 
               <div class="mt-3 text-end">
                 <button type="button" class="btn btn-primary px-3" id="btn-do-generate-kontrak">
-                  <i class="fa fa-download me-1"></i> Unduh Draf Kontrak (.docx)
+                  <i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)
                 </button>
               </div>
             </form>
           </div>
 
-          <!-- Upload Signed Scan -->
-          <div class="border rounded p-3 bg-white">
-            <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="fa fa-cloud-upload me-1"></i> Unggah Berkas Kontrak Bertandatangan</h6>
-            <p class="small text-muted mb-3">
-              Setelah dokumen draf dicetak dan ditandatangani basah oleh kedua belah pihak beserta pimpinan, unggah hasil scan dokumen di sini.
-            </p>
-
-            <div id="kontrak-existing-file" class="alert alert-success d-none mb-3 py-2 px-3">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                  <i class="fa fa-check-circle me-1"></i> Berkas kontrak bertandatangan tersimpan: 
-                  <strong id="kontrak-file-name">-</strong>
-                </div>
-                <a href="#" target="_blank" class="btn btn-sm btn-success" id="link-download-signed-kontrak">
-                  <i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas
-                </a>
+          <!-- Berkas arsip jika sebelumnya pernah diunggah -->
+          <div id="kontrak-existing-file" class="alert alert-success d-none mb-3 py-2 px-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <i class="fa fa-check-circle me-1"></i> Berkas kontrak arsip tersimpan: 
+                <strong id="kontrak-file-name">-</strong>
               </div>
+              <a href="#" target="_blank" class="btn btn-sm btn-success" id="link-download-signed-kontrak">
+                <i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas
+              </a>
             </div>
-
-            <form id="form-upload-kontrak" enctype="multipart/form-data">
-              <div class="row align-items-end g-2">
-                <div class="col-md-8">
-                  <label class="form-label small fw-bold" for="file_scan_kontrak">Pilih File Scan (PDF / JPG / PNG / WEBP, Maks. 5MB)</label>
-                  <input type="file" id="file_scan_kontrak" name="file_kontrak" class="form-control" accept=".pdf, .jpg, .jpeg, .png, .webp">
-                </div>
-                <div class="col-md-4">
-                  <button type="button" class="btn btn-success w-100" id="btn-do-upload-kontrak">
-                    <i class="fa fa-upload me-1"></i> Simpan Berkas
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
         </div>
 

@@ -240,72 +240,72 @@
             <span class="badge" id="form-kontrak-status-badge">Status Kontrak</span>
           </div>
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="row">
-                <label class="col-md-6 col-form-label text-md-end" for="form_tgl_mulai_kontrak">Tgl Mulai Kontrak</label>
-                <div class="col-md-6">
-                  <input type="date" id="form_tgl_mulai_kontrak" name="form_tgl_mulai_kontrak" class="form-control">
-                </div>
+          <!-- Periode Masa Kontrak Kerja (1 Baris) -->
+          <div class="card border bg-light bg-opacity-50 rounded-3 mb-3 p-3 shadow-none">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary mb-1" for="form_tgl_mulai_kontrak">
+                  <i class="fa fa-calendar me-1 text-primary"></i> Tanggal Mulai Kontrak
+                </label>
+                <input type="date" id="form_tgl_mulai_kontrak" name="form_tgl_mulai_kontrak" class="form-control bg-white">
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="row">
-                <label class="col-md-5 col-form-label text-md-end" for="form_durasi_kontrak">Durasi Kontrak</label>
-                <div class="col-md-6">
-                  <select id="form_durasi_kontrak" name="form_durasi_kontrak" class="form-select">
-                    <option value="1">1 Bulan</option>
-                    <option value="2">2 Bulan</option>
-                    <option value="3" selected>3 Bulan</option>
-                    <option value="6">6 Bulan</option>
-                    <option value="12">12 Bulan (1 Tahun)</option>
-                  </select>
-                </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary mb-1" for="form_durasi_kontrak">
+                  <i class="fa fa-hourglass-half me-1 text-warning"></i> Durasi Masa Kerja
+                </label>
+                <select id="form_durasi_kontrak" name="form_durasi_kontrak" class="form-select bg-white">
+                  <option value="1">1 Bulan</option>
+                  <option value="2">2 Bulan</option>
+                  <option value="3" selected>3 Bulan</option>
+                  <option value="6">6 Bulan</option>
+                  <option value="12">12 Bulan (1 Tahun)</option>
+                </select>
               </div>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="row">
-                <label class="col-md-6 col-form-label text-md-end">Tgl Akhir Kontrak</label>
-                <div class="col-md-6">
-                  <div class="form-control bg-light fw-bold text-primary" id="form_display_tgl_selesai">-</div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary mb-1">
+                  <i class="fa fa-flag-checkered me-1 text-success"></i> Tanggal Akhir Kontrak
+                </label>
+                <div class="form-control bg-white fw-bold text-primary d-flex align-items-center justify-content-between" style="min-height: 38px;">
+                  <span id="form_display_tgl_selesai" class="fs-6">-</span>
+                  <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px;">Otomatis</span>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Penandatangan Kontrak (3 Pihak) -->
-          <div class="row mb-3">
-            <label class="col-md-3 col-form-label text-md-end">Penandatangan</label>
-            <div class="col-md-8">
-              <div class="row g-2">
-                <!-- Pihak Pertama -->
-                <div class="col-md-4">
-                  <div class="border rounded p-2 bg-light text-center h-100">
-                    <span class="badge bg-primary mb-1">PIHAK PERTAMA</span>
-                    <div class="fw-bold text-dark small" id="form_ttd_pihak1_nama">Eva Fiantina</div>
-                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_pihak1_jabatan">HRD Citra Jaya Knitting</div>
-                  </div>
+          <div class="card border rounded-3 p-3 bg-white mb-2 shadow-none">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="small fw-bold text-muted text-uppercase" style="letter-spacing: 0.5px; font-size: 11px;">
+                <i class="fa fa-pencil-square-o me-1 text-primary"></i> Pihak Penandatangan Dokumen Kontrak
+              </span>
+              <span class="badge bg-light text-muted border" style="font-size: 10px;">Lembar Pengesahan</span>
+            </div>
+            <div class="row g-2">
+              <!-- Pihak Pertama -->
+              <div class="col-md-4">
+                <div class="p-2 rounded border bg-light text-center h-100">
+                  <span class="badge bg-primary px-2 py-1 mb-1" style="font-size: 10px;">PIHAK PERTAMA</span>
+                  <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak1_nama" title="Eva Fiantina">Eva Fiantina</div>
+                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_pihak1_jabatan">HRD Citra Jaya Knitting</div>
                 </div>
+              </div>
 
-                <!-- Pihak Kedua -->
-                <div class="col-md-4">
-                  <div class="border rounded p-2 bg-light text-center h-100">
-                    <span class="badge bg-success mb-1">PIHAK KEDUA</span>
-                    <div class="fw-bold text-dark small" id="form_ttd_pihak2_nama">-</div>
-                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_pihak2_jabatan">Karyawan</div>
-                  </div>
+              <!-- Pihak Kedua -->
+              <div class="col-md-4">
+                <div class="p-2 rounded border bg-light text-center h-100">
+                  <span class="badge bg-success px-2 py-1 mb-1" style="font-size: 10px;">PIHAK KEDUA</span>
+                  <div class="fw-bold text-dark text-truncate" id="form_ttd_pihak2_nama">-</div>
+                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_pihak2_jabatan">Karyawan</div>
                 </div>
+              </div>
 
-                <!-- Mengetahui -->
-                <div class="col-md-4">
-                  <div class="border rounded p-2 bg-light text-center h-100">
-                    <span class="badge bg-dark mb-1">MENGETAHUI</span>
-                    <div class="fw-bold text-dark small" id="form_ttd_mengetahui_nama">Edwin Ferdiansyah</div>
-                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_mengetahui_jabatan">Pimpinan CV. Citra Jaya Knitting</div>
-                  </div>
+              <!-- Mengetahui -->
+              <div class="col-md-4">
+                <div class="p-2 rounded border bg-light text-center h-100">
+                  <span class="badge bg-dark px-2 py-1 mb-1" style="font-size: 10px;">MENGETAHUI</span>
+                  <div class="fw-bold text-dark text-truncate" id="form_ttd_mengetahui_nama" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
+                  <div class="text-muted text-truncate" style="font-size: 11px;" id="form_ttd_mengetahui_jabatan">Pimpinan CV. Citra Jaya Knitting</div>
                 </div>
               </div>
             </div>

@@ -158,14 +158,16 @@
             padding: 0 8pt;
         }
         .sig-box {
-            height: 48px;
-            vertical-align: middle;
+            height: 46px;
+            vertical-align: bottom;
             text-align: center;
+            padding-bottom: 3pt;
         }
         .sig-img {
-            max-height: 44px;
-            max-width: 125px;
+            max-height: 40px;
+            max-width: 120px;
             display: inline-block;
+            vertical-align: bottom;
         }
         .sig-line-name {
             display: inline-block;
@@ -509,22 +511,22 @@
     <div class="sig-container">
         <table class="sig-table">
             <tr>
-                <td class="sig-col" style="font-weight: bold;">PIHAK PERTAMA</td>
-                <td class="sig-col" style="font-weight: bold;">PIHAK KEDUA</td>
+                <td class="sig-col" style="font-weight: bold; padding-bottom: 6pt;">PIHAK PERTAMA</td>
+                <td class="sig-col" style="font-weight: bold; padding-bottom: 6pt;">PIHAK KEDUA</td>
             </tr>
             <tr>
                 <td class="sig-col sig-box">
                     <?php if (!empty($b64Sig1)): ?>
                         <img src="<?= $b64Sig1 ?>" class="sig-img" alt="TTD Pihak 1" />
                     <?php else: ?>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 38px;"></div>
                     <?php endif; ?>
                 </td>
                 <td class="sig-col sig-box">
                     <?php if (!empty($b64Sig2)): ?>
                         <img src="<?= $b64Sig2 ?>" class="sig-img" alt="TTD Pihak 2" />
                     <?php else: ?>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 38px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -533,22 +535,23 @@
                     <span class="sig-line-name"><?= htmlspecialchars($p1Nama) ?></span>
                     <div class="sig-role"><?= htmlspecialchars($p1Jabatan) ?></div>
                 </td>
-                <td class="sig-col" style="vertical-align: bottom;">
-                    <div class="sig-name" style="margin-top: 12px;">(<?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?>)</div>
+                <td class="sig-col">
+                    <div class="sig-name">(<?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?>)</div>
+                    <div class="sig-role" style="visibility: hidden;">&nbsp;</div>
                 </td>
             </tr>
             <tr>
                 <td colspan="2" style="height: 10pt;"></td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align: center; font-weight: bold;">Mengetahui,</td>
+                <td colspan="2" style="text-align: center; font-weight: bold; padding-bottom: 6pt;">Mengetahui,</td>
             </tr>
             <tr>
                 <td colspan="2" class="sig-box" style="text-align: center;">
                     <?php if (!empty($b64Sig3)): ?>
                         <img src="<?= $b64Sig3 ?>" class="sig-img" alt="TTD Mengetahui" />
                     <?php else: ?>
-                        <div style="height: 40px;"></div>
+                        <div style="height: 38px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>

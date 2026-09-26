@@ -674,9 +674,9 @@ class RefKaryawan extends BaseController
             $sig2Path = !empty($row->ttd_pihak2_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_pihak2_file : null;
             $sig3Path = !empty($row->ttd_mengetahui_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_mengetahui_file : null;
 
-            $b64Sig1 = ($sig1Path && file_exists($sig1Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig1Path)) : null;
-            $b64Sig2 = ($sig2Path && file_exists($sig2Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig2Path)) : null;
-            $b64Sig3 = ($sig3Path && file_exists($sig3Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig3Path)) : null;
+            $b64Sig1 = $this->getTrimmedBase64Sig($sig1Path);
+            $b64Sig2 = $this->getTrimmedBase64Sig($sig2Path);
+            $b64Sig3 = $this->getTrimmedBase64Sig($sig3Path);
 
             $pdfFilename = 'KONTRAK_KERJA_' . $cleanNip . '_' . $cleanName . '.pdf';
 
@@ -1304,6 +1304,76 @@ class RefKaryawan extends BaseController
             . '</pic:pic>'
             . '</a:graphicData></a:graphic>'
             . '</wp:inline></w:drawing></w:r>';
+    }
+
+    private function getTrimmedBase64Sig($filePath)
+    {
+        if (!$filePath || !file_exists($filePath)) {
+            return null;
+        }
+
+        if (function_exists('imagecreatefrompng') && function_exists('imagecrop')) {
+            $im = @imagecreatefrompng($filePath);
+            if ($im) {
+                imagealphablending($im, false);
+                imagesavealpha($im, true);
+
+                $width = imagesx($im);
+                $height = imagesy($im);
+                $top = 0;
+                $bottom = $height - 1;
+                $left = 0;
+                $right = $width - 1;
+
+                for (; $top < $height; $top++) {
+                    for ($x = 0; $x < $width; $x++) {
+                        $color = imagecolorat($im, $x, $top);
+                        $alpha = ($color >> 24) & 0x7F;
+                        if ($alpha < 120) break 2;
+                    }
+                }
+                for (; $bottom >= $top; $bottom--) {
+                    for ($x = 0; $x < $width; $x++) {
+                        $color = imagecolorat($im, $x, $bottom);
+                        $alpha = ($color >> 24) & 0x7F;
+                        if ($alpha < 120) break 2;
+                    }
+                }
+                for (; $left < $width; $left++) {
+                    for ($y = $top; $y <= $bottom; $y++) {
+                        $color = imagecolorat($im, $left, $y);
+                        $alpha = ($color >> 24) & 0x7F;
+                        if ($alpha < 120) break 2;
+                    }
+                }
+                for (; $right >= $left; $right--) {
+                    for ($y = $top; $y <= $bottom; $y++) {
+                        $color = imagecolorat($im, $right, $y);
+                        $alpha = ($color >> 24) & 0x7F;
+                        if ($alpha < 120) break 2;
+                    }
+                }
+
+                if ($top <= $bottom && $left <= $right) {
+                    $cropWidth = ($right - $left) + 1;
+                    $cropHeight = ($bottom - $top) + 1;
+                    $cropped = imagecrop($im, ['x' => $left, 'y' => $top, 'width' => $cropWidth, 'height' => $cropHeight]);
+                    if ($cropped !== false) {
+                        imagealphablending($cropped, false);
+                        imagesavealpha($cropped, true);
+                        ob_start();
+                        imagepng($cropped);
+                        $data = ob_get_clean();
+                        imagedestroy($cropped);
+                        imagedestroy($im);
+                        return 'data:image/png;base64,' . base64_encode($data);
+                    }
+                }
+                imagedestroy($im);
+            }
+        }
+
+        return 'data:image/png;base64,' . base64_encode(file_get_contents($filePath));
     }
 
     private function getCompanyProfile($idPerusahaan = 1)

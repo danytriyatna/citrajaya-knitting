@@ -882,7 +882,7 @@ class ProductionModel extends \App\Models\PrModel
         $benangKeluar = $btkRow ? (float)$btkRow->benang_keluar : 0;
         $benangSisa   = $btkRow ? (float)$btkRow->benang_sisa : 0;
 
-        // 3. Hasil BTM Proses Rajut (trans_barang_masuk_produksi)
+        // 3. Hasil BTM & Qty Murni Proses Rajut (BTM & trans_produksi_operator)
         $whereBtm = [];
         $bindsBtm = [];
         if (!empty($ref_kode)) {
@@ -894,20 +894,74 @@ class ProductionModel extends \App\Models\PrModel
             $bindsBtm[] = (int)$ref_id;
         }
 
-        $btmRow = null;
+        $pcsRajut  = 0;
+        $beratKain = 0;
+
+        // A. Cek BTM Khusus Proses Rajut (trans_barang_masuk_produksi)
+        // Hanya menarik BTM yang prosesnya adalah Rajut agar tidak terakumulasi proses lain
         if (!empty($whereBtm)) {
             $whereClause = "(" . implode(" OR ", $whereBtm) . ")";
-            $btmRow = $this->db->query("
+            
+            $btmRajut = $this->db->query("
                 SELECT COALESCE(SUM(tbmp.qty), 0) as pcs_rajut,
                        COALESCE(SUM(tbmp.berat), 0) as berat_kain
                 FROM trans_barang_masuk_produksi tbmp
                 INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
-                WHERE {$whereClause} AND tbh.active = 1
+                LEFT JOIN _jenis_proses_produksi jpp ON jpp.id = tbh.id_proses
+                WHERE {$whereClause} 
+                  AND tbh.active = 1
+                  AND (
+                      jpp.is_rajut = 1 
+                      OR UPPER(jpp.nama) LIKE '%RAJUT%' 
+                      OR tbh.id_proses IN (1, 29, 31)
+                      OR jpp.seq = 1
+                  )
             ", $bindsBtm)->getRow();
+
+            if (!empty($btmRajut)) {
+                $pcsRajut  = (float)$btmRajut->pcs_rajut;
+                $beratKain = (float)$btmRajut->berat_kain;
+            }
+
+            // Fallback berat kain jika di header BTM id_proses belum terpetakan spesifik
+            if ($beratKain <= 0) {
+                $btmAny = $this->db->query("
+                    SELECT COALESCE(SUM(tbmp.berat), 0) as berat_kain
+                    FROM trans_barang_masuk_produksi tbmp
+                    INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
+                    WHERE {$whereClause} AND tbh.active = 1
+                ", $bindsBtm)->getRow();
+                if (!empty($btmAny)) {
+                    $beratKain = (float)$btmAny->berat_kain;
+                }
+            }
         }
 
-        $pcsRajut  = $btmRow ? (float)$btmRow->pcs_rajut : 0;
-        $beratKain = $btmRow ? (float)$btmRow->berat_kain : 0;
+        // B. Qty Rajut: Jika dari BTM kosong atau 0, ambil murni dari Qty Proses Rajut di trans_produksi_operator
+        // Prioritaskan Rajut DBT (id 31 / Depan Belakang Tangan) -> Rajut BD/Depan -> Rajut DB -> Proses Rajut seq 1
+        // Menjamin HANYA mengambil output tahapan rajut dan TIDAK menjumlahkan tahapan lanjutan (linking, cuci, finishing)
+        if ($pcsRajut <= 0 && !empty($id_produksi)) {
+            $idProd = (int)$id_produksi;
+            $opRajut = $this->db->query("
+                SELECT COALESCE(SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END), 0) as pcs_rajut
+                FROM trans_produksi_operator tpo
+                INNER JOIN _jenis_proses_produksi jpp ON jpp.id = tpo.id_proses
+                WHERE tpo.id_produksi = ?
+                  AND (tpo.kode_transaksi NOT LIKE 'BTMC%' OR tpo.kode_transaksi IS NULL)
+                  AND (
+                      jpp.id = 31 
+                      OR UPPER(jpp.nama) LIKE '%RAJUT DBT%' 
+                      OR UPPER(jpp.nama) LIKE '%DBT%' 
+                      OR jpp.is_rajut = 1 
+                      OR UPPER(jpp.nama) LIKE '%RAJUT%'
+                      OR jpp.seq = 1
+                  )
+            ", [$idProd])->getRow();
+
+            if (!empty($opRajut) && (float)$opRajut->pcs_rajut > 0) {
+                $pcsRajut = (float)$opRajut->pcs_rajut;
+            }
+        }
 
         // 4. Hitung Rasio Rendemen & Gramatur
         $rendemen = ($benangKeluar > 0 && $beratKain > 0) ? round(($beratKain / $benangKeluar) * 100, 2) : 0;

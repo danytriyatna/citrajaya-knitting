@@ -5,13 +5,13 @@
     <title>Kontrak Kerjasama - <?= htmlspecialchars($karyawan->full_name ?? 'Karyawan') ?></title>
     <style>
         @page {
-            size: A4 portrait;
+            size: 595.32pt 841.92pt;
             margin: 36pt 36pt 36pt 36pt;
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 10pt;
-            line-height: 1.15;
+            line-height: 1.2;
             color: #000;
         }
         .page-break {
@@ -21,127 +21,129 @@
             position: fixed;
             top: 28%;
             left: 10%;
-            width: 460px;
+            width: 480px;
             opacity: 0.08;
             z-index: -1000;
+        }
+        p {
+            text-align: justify;
+            margin: 0 0 11.5pt 0;
+            line-height: 1.2;
         }
         /* KOP SURAT */
         .header-box {
             text-align: center;
-            border-bottom: 1px solid #000;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            border-bottom: 1.5pt solid #000;
+            padding-bottom: 5pt;
+            margin-bottom: 14pt;
         }
         .header-logo {
-            height: 52px;
+            height: 56px;
             display: block;
-            margin: 0 auto 3px auto;
+            margin: 0 auto 3pt auto;
         }
         .header-company-name {
-            font-size: 12pt;
+            font-size: 16pt;
             font-weight: bold;
-            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+            margin-bottom: 2pt;
         }
         .header-address {
-            font-size: 8.5pt;
+            font-size: 9pt;
             color: #000;
         }
         /* JUDUL DOKUMEN */
         .doc-title {
             text-align: center;
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: bold;
-            margin-top: 8px;
-            margin-bottom: 10px;
+            margin-top: 14pt;
+            margin-bottom: 12pt;
+            letter-spacing: 0.5px;
         }
         /* PASAL HEADERS */
         .pasal-title {
             text-align: center;
             font-weight: bold;
             font-size: 10pt;
-            margin-top: 6pt;
+            margin-top: 12pt;
             margin-bottom: 1pt;
         }
         .pasal-subtitle {
             text-align: center;
             font-weight: bold;
             font-size: 10pt;
-            margin-bottom: 4pt;
+            margin-bottom: 12pt;
         }
         .ayat-title {
             font-weight: bold;
             font-size: 10pt;
-            margin-top: 5pt;
-            margin-bottom: 3pt;
-        }
-        .ayat-content {
-            padding-left: 24pt;
-        }
-        p {
-            text-align: justify;
-            margin: 0 0 4pt 0;
-            line-height: 1.15;
+            margin-top: 12pt;
+            margin-bottom: 10pt;
         }
         /* TABEL IDENTITAS */
         .identity-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 3pt 0 6pt 0;
+            margin: 0 0 11.5pt 0;
         }
         .identity-table td {
             padding: 1.5pt 0;
             vertical-align: top;
             font-size: 10pt;
-            line-height: 1.15;
+            line-height: 1.2;
         }
         .col-indent {
-            width: 25pt;
+            width: 18pt;
         }
         .col-label {
-            width: 120pt;
+            width: 110pt;
             white-space: nowrap;
         }
         .col-colon {
-            width: 14pt;
+            width: 15pt;
             text-align: center;
         }
         .col-val {
             text-align: left;
         }
-        /* DAFTAR ALFABET & SUB-BULLET */
-        ol.list-alpha {
-            margin: 2pt 0 4pt 0;
+        /* DAFTAR LIST PRESISI WORD */
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        .list-table td {
+            padding: 0 0 1.2pt 0;
+            vertical-align: top;
+            font-size: 10pt;
+            line-height: 1.2;
+        }
+        .col-mark {
+            width: 18pt;
             padding-left: 18pt;
-            list-style-type: lower-alpha;
+            white-space: nowrap;
         }
-        ol.list-alpha > li {
-            margin-bottom: 2pt;
+        .col-submark {
+            width: 18pt;
+            padding-left: 45pt;
+            white-space: nowrap;
+        }
+        .col-text {
             text-align: justify;
-            line-height: 1.15;
         }
-        ul.list-sub {
-            margin: 2pt 0 2pt 0;
-            padding-left: 16pt;
-            list-style-type: circle;
+        /* PASAL 5 INDENTS */
+        .pasal5-block {
+            margin-left: 36pt;
+            margin-bottom: 11.5pt;
         }
-        ul.list-sub > li {
-            margin-bottom: 1.5pt;
-            text-align: justify;
-            line-height: 1.15;
-        }
-        ol.list-num {
-            margin: 2pt 0 2pt 0;
-            padding-left: 16pt;
-            list-style-type: decimal;
-        }
-        ol.list-num > li {
-            margin-bottom: 1.5pt;
-            line-height: 1.15;
+        .pasal5-block p {
+            margin: 0 0 11.5pt 0;
         }
         /* TABEL TANDA TANGAN */
         .sig-container {
             width: 100%;
-            margin-top: 8pt;
+            margin-top: 12pt;
             page-break-inside: avoid;
         }
         .sig-table {
@@ -153,7 +155,7 @@
             width: 50%;
             text-align: center;
             vertical-align: top;
-            padding: 0 4pt;
+            padding: 0 8pt;
         }
         .sig-box {
             height: 48px;
@@ -165,25 +167,24 @@
             max-width: 125px;
             display: inline-block;
         }
+        .sig-line-name {
+            display: inline-block;
+            min-width: 140px;
+            border-bottom: 1pt solid #000;
+            padding-bottom: 1px;
+            font-size: 10pt;
+        }
         .sig-name {
             font-size: 10pt;
-            margin-top: 2px;
-            margin-bottom: 1px;
         }
         .sig-role {
             font-size: 10pt;
+            margin-top: 2pt;
             color: #000;
         }
     </style>
 </head>
 <body>
-
-    <script type="text/php">
-        if (isset($pdf)) {
-            $font = $fontMetrics->getFont("Arial, Helvetica, sans-serif", "normal");
-            $pdf->page_text(555, 808, "{PAGE_NUM}", $font, 10, array(0,0,0));
-        }
-    </script>
 
     <?php if (!empty($b64Watermark)): ?>
         <img src="<?= $b64Watermark ?>" class="watermark" alt="Watermark" />
@@ -204,7 +205,7 @@
 
     <div class="doc-title">KONTRAK KERJASAMA</div>
 
-    <p>Yang bertanda tangan di bawah ini:</p>
+    <p style="margin-bottom: 10pt;">Yang bertanda tangan di bawah ini:</p>
 
     <table class="identity-table">
         <tr>
@@ -220,7 +221,7 @@
             <td class="col-val"><?= htmlspecialchars($p1Jabatan) ?></td>
         </tr>
         <tr>
-            <td colspan="4" style="padding-top: 3pt; padding-bottom: 5pt;">
+            <td colspan="4" style="padding-top: 6pt; padding-bottom: 8pt;">
                 Dalam hal ini bertindak untuk dan atas nama CV. Citra Jaya Knitting. Selanjutnya disebut <strong>PIHAK PERTAMA</strong>.
             </td>
         </tr>
@@ -249,7 +250,7 @@
             <td class="col-val"><?= htmlspecialchars(strtoupper($karyawan->alamat ?? '-')) ?></td>
         </tr>
         <tr>
-            <td colspan="4" style="padding-top: 3pt; padding-bottom: 2pt;">
+            <td colspan="4" style="padding-top: 6pt; padding-bottom: 4pt;">
                 Dalam hal ini bertindak untuk dan atas nama diri pribadi dan selanjutnya disebut <strong>PIHAK KEDUA</strong>.
             </td>
         </tr>
@@ -268,96 +269,145 @@
     </p>
 
     <div class="ayat-title">Ayat (1) Jam Kerja</div>
-    <ol class="list-alpha">
-        <li>Senin – Kamis masuk pukul 08.00 – 17.00. istirahat pukul 12.00 – 13.00</li>
-        <li>Jum’at masuk pukul 08 .00 – 17.30. istirahat pukul 11.30 – 13.00</li>
-        <li>
-            Sabtu masuk pukul 08 .00 – 17.00. istirahat pukul 12.00 – 13.00
-            <ul class="list-sub">
-                <li>Batas absensi dari pukul 07.00 - 08.00</li>
-                <li>Batas pulang mulai dari jam 17.00</li>
-            </ul>
-        </li>
-        <li>
-            Apabila lembur minimal 2 jam ada waktu istirahat selama ½ jam, dengan ketentuan sebagai berikut :
-            <ul class="list-sub">
-                <li>Kepulangan Ke-1 pukul 17.00</li>
-                <li>Istirahat pukul 18.00 –18.30</li>
-                <li>Kepulangan Ke-2 pukul 19.30 atau</li>
-                <li>Untuk waktu kepulangan di sesuaikan dengan kebutuhan yang diperlukan .</li>
-            </ul>
-        </li>
-        <li>
-            Untuk Karyawan Borongan diperbolehkan pulang di awal waktu jika persediaan barang yang harus diselesaikan tidak ada (habis) dan harus ada persetujuan dari Kepala Bagian Produksi (Ibu Wanti).
-            <ul class="list-sub">
-                <li>Jika diperlukan untuk lembur harus siap dengan catatan tidak ada upah untuk lembur</li>
-            </ul>
-        </li>
-    </ol>
+    <table class="list-table">
+        <tr>
+            <td class="col-mark">a.</td>
+            <td class="col-text">Senin – Kamis masuk pukul 08.00 – 17.00. istirahat pukul 12.00 – 13.00</td>
+        </tr>
+        <tr>
+            <td class="col-mark">b.</td>
+            <td class="col-text">Jum’at masuk pukul 08 .00 – 17.30. istirahat pukul 11.30 – 13.00</td>
+        </tr>
+        <tr>
+            <td class="col-mark">c.</td>
+            <td class="col-text">Sabtu masuk pukul 08 .00 – 17.00. istirahat pukul 12.00 – 13.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Batas absensi dari pukul 07.00 - 08.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Batas pulang mulai dari jam 17.00</td>
+        </tr>
+        <tr>
+            <td class="col-mark">d.</td>
+            <td class="col-text">Apabila lembur minimal 2 jam ada waktu istirahat selama ½ jam, dengan ketentuan sebagai berikut :</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Kepulangan Ke-1 pukul 17.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Istirahat pukul 18.00 –18.30</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Kepulangan Ke-2 pukul 19.30 atau</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Untuk waktu kepulangan di sesuaikan dengan kebutuhan yang diperlukan .</td>
+        </tr>
+        <tr>
+            <td class="col-mark">e.</td>
+            <td class="col-text">Untuk Karyawan Borongan diperbolehkan pulang di awal waktu jika persediaan barang yang harus diselesaikan tidak ada (habis) dan harus ada persetujuan dari Kepala Bagian Produksi (Ibu Wanti).</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Jika diperlukan untuk lembur harus siap dengan catatan tidak ada upah untuk lembur</td>
+        </tr>
+    </table>
 
     <!-- ======================================================== -->
     <!-- HALAMAN 2 -->
     <!-- ======================================================== -->
     <div class="page-break"></div>
 
-    <ol class="list-alpha" start="6" style="margin-top: 0; margin-bottom: 3pt;">
-        <li>
-            Untuk Operator Mesin Jam Kerja 12 Jam tidak ada lembur kecuali atas Intruksi dari Atasan.
-            <ul class="list-sub">
-                <li>Shift Pagi batas absensi dari pukul 07.00 - 08.00</li>
-                <li>Batas pulang mulai dari jam 20.00</li>
-                <li>Shift Malam batas absensi dari pukul 19.00 - 20.00</li>
-                <li>Batas pulang mulai dari jam 08.00</li>
-            </ul>
-        </li>
-    </ol>
+    <table class="list-table" style="margin-top: 0; margin-bottom: 12pt;">
+        <tr>
+            <td class="col-mark">f.</td>
+            <td class="col-text">Untuk Operator Mesin Jam Kerja 12 Jam tidak ada lembur kecuali atas Intruksi dari Atasan.</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Shift Pagi batas absensi dari pukul 07.00 - 08.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Batas pulang mulai dari jam 20.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Shift Malam batas absensi dari pukul 19.00 - 20.00</td>
+        </tr>
+        <tr>
+            <td class="col-submark">o</td>
+            <td class="col-text">Batas pulang mulai dari jam 08.00</td>
+        </tr>
+    </table>
 
     <div class="ayat-title">Ayat (2) Peraturan</div>
     <p>Peraturan yang harus diikuti oleh karyawan:</p>
-    <ol class="list-alpha">
-        <li>Seluruh karyawan datang ke kantor/pabrik melakukan absensi sidik jari sebanyak 4 kali (masuk kerja, keluar istirahat, masuk kembali setelah istirahat, dan pulang kerja) dengan aturan yang berlaku, serta ditambah 2 kali absensi lembur (masuk lembur dan pulang lembur).</li>
-        <li>Karyawan yang datang melewati pukul 08.00 WIB dinyatakan terlambat dan tidak berhak mendapatkan premi kehadiran Rp5.000 per hari dalam periode 2 (dua) minggu, meskipun keterlambatan hanya terjadi 1 (satu) kali.</li>
-        <li>Jika mengabaikan kewajiban absensi maka akan dianggap mangkir / tidak hadir, kecuali ada penjelasan sakit.</li>
-        <li>Apabila tidak masuk kerja karena sakit wajib membawa Surat Keterangan Dokter asli dan diserahkan ke HRD saat kembali bekerja. Surat berlaku maksimal 3 (tiga) hari, dan jika melebihi wajib melampirkan kembali dari dokter yang sama.</li>
-        <li>Seluruh karyawan diharuskan masuk kerja lembur jika terdapat pekerjaan mendesak (urgent).</li>
-        <li>Seluruh Karyawan Wanita disarankan berhijab, tidak menggunakan perhiasan dan makeup berlebihan.</li>
-        <li>Seluruh karyawan Laki-Laki diwajibkan berpakaian rapi dan rambut rapi.</li>
-        <li>Masuk dan Keluar Jam Kerja sesuai dengan Bell yang berbunyi.</li>
-        <li>Jam istirahat siang digunakan untuk sholat dzuhur dan makan.</li>
-        <li>Jam istirahat lembur digunakan untuk sholat dan makan.</li>
-        <li>Tidak membuat kegaduhan pada saat jam kerja.</li>
-        <li>Tidak merokok pada saat jam kerja dan di dalam area Produksi.</li>
-        <li>Tidak menggunakan serta mengedarkan Minuman Keras dan Obat-obatan Terlarang.</li>
-        <li>Menjaga hubungan baik antar karyawan.</li>
-        <li>Dilarang mangkir / tidak masuk kerja tanpa alasan.</li>
-        <li>Dilarang meninggalkan tugas / pekerjaan atau tempat kerja tanpa izin atasan.</li>
-        <li>Dilarang tidur di waktu jam kerja.</li>
-        <li>Dilarang MENGOPERASIONALKAN HANDPHONE (HP) saat kerja tanpa izin atasan.</li>
-        <li>Dilarang berlama-lama di toilet selama jam kerja.</li>
-        <li>Dilarang memanfaatkan toilet tidak sesuai fungsinya.</li>
-        <li>Dilarang dengan sengaja merusak alat-alat kerja.</li>
-        <li>Dilarang berada di tempat lain yang bukan area kerja tanpa izin atasan.</li>
-        <li>Dilarang menolak perintah kerja atau bekerja tidak sesuai petunjuk atasan.</li>
-        <li>Dilarang melakukan penganiayaan, berkelahi atau bertengkar.</li>
-        <li>Dilarang melakukan PENIPUAN, PENCURIAN atau PENGGELAPAN barang dan/atau uang milik perusahaan atau pihak lain.</li>
-        <li>Dilarang membocorkan rahasia perusahaan yang seharusnya dirahasiakan.</li>
-        <li>Dilarang berjualan di lingkungan perusahaan tanpa izin pada saat waktu jam kerja.</li>
-    </ol>
+    <table class="list-table" style="margin-bottom: 12pt;">
+        <tr><td class="col-mark">a.</td><td class="col-text">Seluruh karyawan datang ke kantor/pabrik melakukan absensi sidik jari sebanyak 4 kali (masuk kerja, keluar istirahat, masuk kembali setelah istirahat, dan pulang kerja) dengan aturan yang berlaku, serta ditambah 2 kali absensi lembur (masuk lembur dan pulang lembur).</td></tr>
+        <tr><td class="col-mark">b.</td><td class="col-text">Karyawan yang datang melewati pukul 08.00 WIB dinyatakan terlambat dan tidak berhak mendapatkan premi kehadiran Rp5.000 per hari dalam periode 2 (dua) minggu, meskipun keterlambatan hanya terjadi 1 (satu) kali.</td></tr>
+        <tr><td class="col-mark">c.</td><td class="col-text">Jika mengabaikan kewajiban absensi maka akan dianggap mangkir / tidak hadir, kecuali ada penjelasan sakit.</td></tr>
+        <tr><td class="col-mark">d.</td><td class="col-text">Apabila tidak masuk kerja karena sakit wajib membawa Surat Keterangan Dokter asli dan diserahkan ke HRD saat kembali bekerja. Surat berlaku maksimal 3 (tiga) hari, dan jika melebihi wajib melampirkan kembali dari dokter yang sama.</td></tr>
+        <tr><td class="col-mark">e.</td><td class="col-text">Seluruh karyawan diharuskan masuk kerja lembur jika terdapat pekerjaan mendesak (urgent).</td></tr>
+        <tr><td class="col-mark">f.</td><td class="col-text">Seluruh Karyawan Wanita disarankan berhijab, tidak menggunakan perhiasan dan makeup berlebihan.</td></tr>
+        <tr><td class="col-mark">g.</td><td class="col-text">Seluruh karyawan Laki-Laki diwajibkan berpakaian rapi dan rambut rapi.</td></tr>
+        <tr><td class="col-mark">h.</td><td class="col-text">Masuk dan Keluar Jam Kerja sesuai dengan Bell yang berbunyi.</td></tr>
+        <tr><td class="col-mark">i.</td><td class="col-text">Jam istirahat siang digunakan untuk sholat dzuhur dan makan.</td></tr>
+        <tr><td class="col-mark">j.</td><td class="col-text">Jam istirahat lembur digunakan untuk sholat dan makan.</td></tr>
+        <tr><td class="col-mark">k.</td><td class="col-text">Tidak membuat kegaduhan pada saat jam kerja.</td></tr>
+        <tr><td class="col-mark">l.</td><td class="col-text">Tidak merokok pada saat jam kerja dan di dalam area Produksi.</td></tr>
+        <tr><td class="col-mark">m.</td><td class="col-text">Tidak menggunakan serta mengedarkan Minuman Keras dan Obat-obatan Terlarang.</td></tr>
+        <tr><td class="col-mark">n.</td><td class="col-text">Menjaga hubungan baik antar karyawan.</td></tr>
+        <tr><td class="col-mark">o.</td><td class="col-text">Dilarang mangkir / tidak masuk kerja tanpa alasan.</td></tr>
+        <tr><td class="col-mark">p.</td><td class="col-text">Dilarang meninggalkan tugas / pekerjaan atau tempat kerja tanpa izin atasan.</td></tr>
+        <tr><td class="col-mark">q.</td><td class="col-text">Dilarang tidur di waktu jam kerja.</td></tr>
+        <tr><td class="col-mark">r.</td><td class="col-text">Dilarang MENGOPERASIONALKAN HANDPHONE (HP) saat kerja tanpa izin atasan.</td></tr>
+        <tr><td class="col-mark">s.</td><td class="col-text">Dilarang berlama-lama di toilet selama jam kerja.</td></tr>
+        <tr><td class="col-mark">t.</td><td class="col-text">Dilarang memanfaatkan toilet tidak sesuai fungsinya.</td></tr>
+        <tr><td class="col-mark">u.</td><td class="col-text">Dilarang dengan sengaja merusak alat-alat kerja.</td></tr>
+        <tr><td class="col-mark">v.</td><td class="col-text">Dilarang berada di tempat lain yang bukan area kerja tanpa izin atasan.</td></tr>
+        <tr><td class="col-mark">w.</td><td class="col-text">Dilarang menolak perintah kerja atau bekerja tidak sesuai petunjuk atasan.</td></tr>
+        <tr><td class="col-mark">x.</td><td class="col-text">Dilarang melakukan penganiayaan, berkelahi atau bertengkar.</td></tr>
+        <tr><td class="col-mark">y.</td><td class="col-text">Dilarang melakukan PENIPUAN, PENCURIAN atau PENGGELAPAN barang dan/atau uang milik perusahaan atau pihak lain.</td></tr>
+        <tr><td class="col-mark">z.</td><td class="col-text">Dilarang membocorkan rahasia perusahaan yang seharusnya dirahasiakan.</td></tr>
+        <tr><td class="col-mark">å.</td><td class="col-text">Dilarang berjualan di lingkungan perusahaan tanpa izin pada saat waktu jam kerja.</td></tr>
+    </table>
 
     <div class="ayat-title">Ayat (3) Sanksi</div>
-    <p>Pelanggaran terhadap peraturan-peraturan diatas dapat mengakibatkan Karyawan dijatuhi sanksi beupa :</p>
-    <ol class="list-alpha">
-        <li>
-            Peringatan Berupa:
-            <ol class="list-num">
-                <li>Lisan</li>
-                <li>Tulisan</li>
-            </ol>
-        </li>
-        <li>Pemotongan Upah</li>
-        <li>Skorsing</li>
-        <li>Pemutusan Hubungan Kerja (PHK).</li>
-    </ol>
+    <p>Pelanggaran terhadap peraturan-peraturan diatas dapat mengakibatkan Karyawan dijatuhi <em>sanksi</em> beupa :</p>
+    <table class="list-table">
+        <tr>
+            <td class="col-mark">a.</td>
+            <td class="col-text">Peringatan Berupa:</td>
+        </tr>
+        <tr>
+            <td class="col-submark">1.</td>
+            <td class="col-text">Lisan</td>
+        </tr>
+        <tr>
+            <td class="col-submark">2.</td>
+            <td class="col-text">Tulisan</td>
+        </tr>
+        <tr>
+            <td class="col-mark"><em>b.</em></td>
+            <td class="col-text">Pemotongan Upah</td>
+        </tr>
+        <tr>
+            <td class="col-mark"><em>c.</em></td>
+            <td class="col-text">Skorsing</td>
+        </tr>
+        <tr>
+            <td class="col-mark">d.</td>
+            <td class="col-text">Pemutusan Hubungan Kerja (PHK).</td>
+        </tr>
+    </table>
 
     <!-- ======================================================== -->
     <!-- HALAMAN 3 -->
@@ -374,13 +424,13 @@
     <div class="pasal-subtitle">GAJI DAN UPAH LEMBUR</div>
     <p>PIHAK PERTAMA harus memberikan gaji kepada PIHAK KEDUA sebesar Rp. <?= $upahHarian ?>/hari.</p>
     <p>Pembayaran Gaji dilakukan setiap 2 minggu sekali.</p>
-    <p>Pembayaran gantungan/sisa upah akan dibayarkan secara transfer atau cash setelah administrasi tuntas.</p>
+    <p>Pembayaran gantungan/sisa upah akan dibayarkan secara <em>transfer</em> atau <em>cash</em> setelah administrasi tuntas.</p>
 
     <div class="pasal-title">PASAL 5</div>
     <div class="pasal-subtitle">CUTI</div>
 
     <div class="ayat-title">Ayat (1) Ketentuan Umum Cuti</div>
-    <div class="ayat-content">
+    <div class="pasal5-block">
         <p>PIHAK KEDUA berhak mendapatkan cuti tahunan yang dibayar sebanyak 12 (dua belas) hari dalam 1 (satu) tahun kerja. Hak cuti tersebut hanya berlaku bagi PIHAK KEDUA yang telah bekerja minimal 1 (satu) tahun di CV. Citra Jaya Knitting.</p>
         <p>Pengajuan cuti wajib dilakukan paling lambat 3 (tiga) hari sebelum pelaksanaan cuti dengan mengajukan surat izin cuti kepada atasan.</p>
         <p>Persetujuan cuti ditentukan oleh PIHAK PERTAMA berdasarkan kondisi operasional di lapangan.</p>
@@ -388,19 +438,19 @@
     </div>
 
     <div class="ayat-title">Ayat (2) Jenis-Jenis Cuti</div>
-    <div class="ayat-content">
+    <div class="pasal5-block">
         <p>PIHAK KEDUA berhak mengajukan cuti untuk keperluan sebagai berikut:</p>
         <p>Cuti menikah selama 3 (tiga) hari, cuti menikahkan anak selama 2 (dua) hari, cuti khitanan anak selama 2 (dua) hari, cuti istri melahirkan/keguguran selama 2 (dua) hari, cuti anggota keluarga meninggal dunia selama 1 (satu) hari, cuti anggota keluarga serumah meninggal dunia selama 2 (dua) hari, serta cuti melahirkan selama 45 (empat puluh lima) hari.</p>
     </div>
 
     <div class="ayat-title">Ayat (3) Ketentuan Pembayaran Cuti</div>
-    <div class="ayat-content">
+    <div class="pasal5-block">
         <p>Cuti sebagaimana dimaksud pada Ayat (2) akan tetap dibayarkan apabila masih termasuk dalam jatah cuti tahunan sebanyak 12 (dua belas) hari.</p>
         <p>Apabila jumlah cuti yang diambil melebihi jatah cuti tahunan, maka kelebihan cuti tersebut tidak dibayarkan.</p>
     </div>
 
     <div class="ayat-title">Ayat (4) Cuti Sakit</div>
-    <div class="ayat-content">
+    <div class="pasal5-block">
         <p>Cuti sakit yang dibayarkan di luar jatah cuti tahunan hanya berlaku bagi PIHAK KEDUA yang mengalami sakit hingga memerlukan perawatan medis (rawat inap).</p>
         <p>PIHAK KEDUA wajib melampirkan Surat Keterangan Dokter atau bukti rawat inap dari rumah sakit sebagai syarat pengajuan cuti sakit yang dibayarkan (sesuai Upah), dengan ketentuan maksimal 3 (tiga) hari.</p>
     </div>
@@ -418,11 +468,20 @@
     <div class="pasal-title">PASAL 7</div>
     <div class="pasal-subtitle">PENGUNDURAN DIRI</div>
     <p>Pengunduran diri secara baik-baik diperlihatkan dengan cara-cara sebagai berikut:</p>
-    <ol class="list-alpha">
-        <li>PIHAK KEDUA telah mengajukan surat permohonan pengunduran diri maksimal 1 Bulan sebelumnya.</li>
-        <li>PIHAK KEDUA tetap melaksanakan tugas dan kewajibannya hingga batas waktu pengunduran dirinya berlaku.</li>
-        <li>PIHAK KEDUA telah menyerahkan barang-barang yang dipercayakan kepadanya dan juga telah menyelesaikan administrasi keuangan yang harus diselesaikan.</li>
-    </ol>
+    <table class="list-table" style="margin-bottom: 11.5pt;">
+        <tr>
+            <td class="col-mark">a.</td>
+            <td class="col-text">PIHAK KEDUA telah mengajukan surat permohonan pengunduran diri maksimal 1 Bulan sebelumnya.</td>
+        </tr>
+        <tr>
+            <td class="col-mark">b.</td>
+            <td class="col-text">PIHAK KEDUA tetap melaksanakan tugas dan kewajibannya hingga batas waktu pengunduran dirinya berlaku.</td>
+        </tr>
+        <tr>
+            <td class="col-mark">c.</td>
+            <td class="col-text">PIHAK KEDUA telah menyerahkan barang-barang yang dipercayakan kepadanya dan juga telah menyelesaikan administrasi keuangan yang harus diselesaikan.</td>
+        </tr>
+    </table>
 
     <div class="pasal-title">PASAL 8</div>
     <div class="pasal-subtitle">PENURUNAN ORDER</div>
@@ -437,10 +496,10 @@
     <div class="pasal-subtitle">PENUTUP</div>
     <p>Demikianlah perjanjian ini dibuat, disetujui, dan ditandatangani dengan keadaan sadar dan tanpa paksaan dari pihak manapun.</p>
 
-    <table style="width: 100%; margin-top: 10pt; margin-bottom: 6pt;">
+    <table style="width: 100%; margin-top: 14pt; margin-bottom: 8pt;">
         <tr>
             <td style="width: 50%;"></td>
-            <td style="width: 50%; text-align: center;">
+            <td style="width: 50%; text-align: center; font-size: 10pt;">
                 Bandung, <?= $tglTtd ?>
             </td>
         </tr>
@@ -458,28 +517,28 @@
                     <?php if (!empty($b64Sig1)): ?>
                         <img src="<?= $b64Sig1 ?>" class="sig-img" alt="TTD Pihak 1" />
                     <?php else: ?>
-                        <div style="height: 44px;"></div>
+                        <div style="height: 40px;"></div>
                     <?php endif; ?>
                 </td>
                 <td class="sig-col sig-box">
                     <?php if (!empty($b64Sig2)): ?>
                         <img src="<?= $b64Sig2 ?>" class="sig-img" alt="TTD Pihak 2" />
                     <?php else: ?>
-                        <div style="height: 44px;"></div>
+                        <div style="height: 40px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>
             <tr>
                 <td class="sig-col">
-                    <div class="sig-name"><?= htmlspecialchars($p1Nama) ?></div>
+                    <span class="sig-line-name"><?= htmlspecialchars($p1Nama) ?></span>
                     <div class="sig-role"><?= htmlspecialchars($p1Jabatan) ?></div>
                 </td>
-                <td class="sig-col">
-                    <div class="sig-name">(<?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?>)</div>
+                <td class="sig-col" style="vertical-align: bottom;">
+                    <div class="sig-name" style="margin-top: 12px;">(<?= htmlspecialchars(strtoupper($karyawan->full_name ?? '-')) ?>)</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2" style="height: 6pt;"></td>
+                <td colspan="2" style="height: 10pt;"></td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: center; font-weight: bold;">Mengetahui,</td>
@@ -489,18 +548,24 @@
                     <?php if (!empty($b64Sig3)): ?>
                         <img src="<?= $b64Sig3 ?>" class="sig-img" alt="TTD Mengetahui" />
                     <?php else: ?>
-                        <div style="height: 44px;"></div>
+                        <div style="height: 40px;"></div>
                     <?php endif; ?>
                 </td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: center;">
-                    <div class="sig-name"><?= htmlspecialchars($p3Nama) ?></div>
+                    <span class="sig-line-name"><?= htmlspecialchars($p3Nama) ?></span>
                     <div class="sig-role"><?= htmlspecialchars($p3Jabatan) ?></div>
                 </td>
             </tr>
         </table>
     </div>
 
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("Arial", "normal");
+            $pdf->page_text(555, 814, "{PAGE_NUM}", $font, 10, array(0,0,0));
+        }
+    </script>
 </body>
 </html>

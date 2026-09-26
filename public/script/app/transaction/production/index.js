@@ -40,38 +40,30 @@ $(document).ready(function () {
         
         // HTML Card Layout
         var cardHtml = `<div class="card shadow-sm mb-3 border">
-                  <div class="card-header py-2" style="background-color: #f8fafc; border-bottom: 1px solid #e9ecef;">
-                    <div class="row align-items-center">
-                      <div class="col-xl-3 col-lg-4 col-sm-12 text-start mb-2 mb-lg-0 d-flex align-items-center gap-1">
+                  <div class="card-header py-1 px-3" style="background-color: #f8fafc; border-bottom: 1px solid #e9ecef;">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                      <div class="d-flex align-items-center gap-1 my-1">
                           ${aksi}
-                          <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
+                          <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap py-1 px-2 f-s-12" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
                             <i class="fa fa-chart-line me-1"></i> Rincian Laba
                           </button>
                       </div>
-                      <div class="col-xl-9 col-lg-8 col-sm-12">
-                        <div class="d-flex flex-wrap justify-content-lg-end align-items-center gap-1">
-                          <div class="badge border py-1 px-2 text-start" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
-                            <div class="f-s-9 text-muted text-uppercase">NILAI SO</div>
-                            <div class="f-w-700 f-s-12 text-primary">${lk.f_nilai_so}</div>
-                          </div>
-                          <div class="badge border py-1 px-2 text-start" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
-                            <div class="f-s-9 text-muted text-uppercase">PENDAPATAN</div>
-                            <div class="f-w-700 f-s-12 text-info">${lk.f_nilai_pendapatan}</div>
-                          </div>
-                          <div class="badge border py-1 px-2 text-start" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
-                            <div class="f-s-9 text-muted text-uppercase">BAHAN BAKU</div>
-                            <div class="f-w-700 f-s-12 text-warning">${lk.f_nilai_bahan}</div>
-                          </div>
-                          <div class="badge border py-1 px-2 text-start" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
-                            <div class="f-s-9 text-muted text-uppercase">TENAGA KERJA</div>
-                            <div class="f-w-700 f-s-12 text-danger">${lk.f_nilai_tk}</div>
-                          </div>
-                          <div class="badge border ${badgeLabaClass} py-1 px-2 text-start">
-                            <div class="f-s-9 text-uppercase" style="opacity: 0.85;">LABA KOTOR</div>
-                            <div class="f-w-700 f-s-12">${lk.f_laba_kotor}</div>
-                            <div class="f-s-9">Margin: ${lk.margin_persen}%</div>
-                          </div>
-                        </div>
+                      <div class="d-flex flex-wrap justify-content-end align-items-center gap-1 my-1">
+                        <span class="badge border py-1 px-2 text-nowrap" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
+                          <span class="text-muted f-s-10">SO:</span> <span class="fw-bold f-s-11 text-primary">${lk.f_nilai_so}</span>
+                        </span>
+                        <span class="badge border py-1 px-2 text-nowrap" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
+                          <span class="text-muted f-s-10">Masuk:</span> <span class="fw-bold f-s-11 text-info">${lk.f_nilai_pendapatan}</span>
+                        </span>
+                        <span class="badge border py-1 px-2 text-nowrap" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
+                          <span class="text-muted f-s-10">Bahan:</span> <span class="fw-bold f-s-11 text-warning">${lk.f_nilai_bahan}</span>
+                        </span>
+                        <span class="badge border py-1 px-2 text-nowrap" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
+                          <span class="text-muted f-s-10">Upah:</span> <span class="fw-bold f-s-11 text-danger">${lk.f_nilai_tk}</span>
+                        </span>
+                        <span class="badge border ${badgeLabaClass} py-1 px-2 text-nowrap">
+                          <span class="f-s-10 opacity-75">Laba:</span> <span class="fw-bold f-s-11">${lk.f_laba_kotor}</span> <span class="f-s-10 opacity-75">(${lk.margin_persen}%)</span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -259,6 +251,8 @@ $(document).ready(function () {
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
+            params.filter_trans = $("#filter_status").val();
+            params.tahun = $("#filter_tahun").val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();
@@ -454,6 +448,10 @@ $(document).ready(function () {
 
     $("#filter_status").on("change",  function(){
         const val = $(this).val()
+        dtList.setData();
+    });
+
+    $("#filter_tahun").on("change", function(){
         dtList.setData();
     });
 

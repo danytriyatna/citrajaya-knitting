@@ -59,11 +59,21 @@ class Production extends BaseController
     $filters    = $this->request->getPost('filter');
     $order      = $this->request->getPost('sort');
     $filter_trans = $this->request->getPost('filter_trans');
+    $tipe_id      = $this->request->getPost('tipe_id');
+    $tahun        = $this->request->getPost('tahun');
 
     $params = [];
 
-    if(!empty($filter_trans)){
+    if (!empty($filter_trans)) {
       $params['tipe_id'] = $filter_trans;
+    } else if (!empty($tipe_id)) {
+      $params['tipe_id'] = $tipe_id;
+    }
+
+    if (!empty($tahun)) {
+      $params['tahun'] = $tahun;
+    } else {
+      $params['tahun'] = date('Y');
     }
     
     $results = $this->mProduksi->getData(null, $start, $limit, $order, $filters, $params);

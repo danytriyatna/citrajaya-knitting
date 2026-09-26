@@ -220,6 +220,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             FROM trans_barang abx
             WHERE EXTRACT(MONTH FROM abx.tanggal) = $month
               AND EXTRACT(YEAR FROM abx.tanggal) = $year
+              AND COALESCE(abx.active, 1) = 1
         ),
         normalized_trans as ( SELECT
             abx.tanggal,
@@ -803,8 +804,10 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     ) AS authentic_price
                 FROM trans_barang tb
                 WHERE {$wherePeriodTb}
+                  AND COALESCE(tb.active, 1) = 1
             ) sub
             WHERE trans_barang.id = sub.id
+              AND COALESCE(trans_barang.active, 1) = 1
               AND sub.authentic_price IS NOT NULL
               AND sub.authentic_price > 0
               AND (
@@ -840,6 +843,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
               AND tbd.id_barang = tb.id_barang
               AND COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
               AND tb.price > 0
+              AND COALESCE(tb.active, 1) = 1
               AND (tbd.price IS NULL OR tbd.price <> tb.price)
               AND {$wherePeriodHdr}
         ";
@@ -871,6 +875,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
               AND ttd.id_barang = tb.id_barang
               AND COALESCE(NULLIF(TRIM(ttd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(tb.lot_no), ''), '-')
               AND tb.price > 0
+              AND COALESCE(tb.active, 1) = 1
               AND (ttd.price IS NULL OR ttd.price <> tb.price)
               AND {$wherePeriodTrf}
         ";
@@ -1092,6 +1097,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                             AND abx2.tanggal < :next_cutoff:
                             AND abx2.price IS NOT NULL
                             AND abx2.price > 0
+                            AND COALESCE(abx2.active, 1) = 1
                             ORDER BY
                                 CASE WHEN LEFT(abx2.kode_transaksi, 3) IN ('BTM', 'REC') THEN 0 ELSE 1 END,
                                 abx2.tanggal DESC
@@ -1115,6 +1121,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         AND COALESCE(NULLIF(abx3.lot_no, ''), '-') = :lot_no:
                         AND abx3.pack_id $pack_id_clause
                         AND abx3.tanggal < :next_cutoff:
+                        AND COALESCE(abx3.active, 1) = 1
                         ORDER BY abx3.tanggal DESC
                         LIMIT 1
                     ) AS tanggal,
@@ -1157,6 +1164,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                             ) AS rn
                         FROM trans_barang abx_inner
                         WHERE abx_inner.id_barang = :id_barang:
+                          AND COALESCE(abx_inner.active, 1) = 1
                     ) t
                     WHERE rn = 1
                 ) abx

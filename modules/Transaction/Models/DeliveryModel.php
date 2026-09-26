@@ -392,6 +392,7 @@ class DeliveryModel extends \App\Models\PrModel
             $trxRows = $this->db->table('trans_barang')
                 ->select('id_barang, lot_id, id_gudang_asal, SUM(jumlah) as jumlah')
                 ->where('kode_transaksi', $header->delivery_kode)
+                ->where('COALESCE(active, 1) = 1')
                 ->groupBy('id_barang, lot_id, id_gudang_asal')
                 ->get()->getResult();
 
@@ -415,8 +416,16 @@ class DeliveryModel extends \App\Models\PrModel
                             ->update();
                     }
                 }
-                // Hapus pencatatan kartu stok trans_barang milik DO ini
-                $this->db->table('trans_barang')->where('kode_transaksi', $header->delivery_kode)->delete();
+                // Soft-delete pencatatan kartu stok trans_barang milik DO ini
+                $this->db->table('trans_barang')
+                    ->where('kode_transaksi', $header->delivery_kode)
+                    ->where('COALESCE(active, 1) = 1')
+                    ->set([
+                        'active'     => 0,
+                        'deleted_at' => date('Y-m-d H:i:s'),
+                        'deleted_by' => $updatedBy ?? (session()->get('user_id') ?? 1),
+                    ])
+                    ->update();
             }
 
             // 3. Kembalikan status header ke Draft (1)
@@ -480,6 +489,7 @@ class DeliveryModel extends \App\Models\PrModel
                 $trxRows = $this->db->table('trans_barang')
                     ->select('id_barang, lot_id, id_gudang_asal, SUM(jumlah) as jumlah')
                     ->where('kode_transaksi', $header->delivery_kode)
+                    ->where('COALESCE(active, 1) = 1')
                     ->groupBy('id_barang, lot_id, id_gudang_asal')
                     ->get()->getResult();
 
@@ -503,7 +513,15 @@ class DeliveryModel extends \App\Models\PrModel
                                 ->update();
                         }
                     }
-                    $this->db->table('trans_barang')->where('kode_transaksi', $header->delivery_kode)->delete();
+                    $this->db->table('trans_barang')
+                        ->where('kode_transaksi', $header->delivery_kode)
+                        ->where('COALESCE(active, 1) = 1')
+                        ->set([
+                            'active'     => 0,
+                            'deleted_at' => date('Y-m-d H:i:s'),
+                            'deleted_by' => $updatedBy ?? (session()->get('user_id') ?? 1),
+                        ])
+                        ->update();
                 }
             }
 

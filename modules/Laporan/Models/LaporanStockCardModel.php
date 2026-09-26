@@ -87,6 +87,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
                        ORDER BY abx.id DESC
                    ) AS rn
             FROM trans_barang abx
+            WHERE COALESCE(abx.active, 1) = 1
         ),
         normalized_trans AS ( SELECT
             abx.tanggal,
@@ -278,6 +279,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
                            ORDER BY abx.id DESC
                        ) AS rn
                 FROM trans_barang abx
+                WHERE COALESCE(abx.active, 1) = 1
             )
             SELECT
                 COALESCE(

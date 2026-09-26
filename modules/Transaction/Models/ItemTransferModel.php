@@ -858,6 +858,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         $oldTransBarangTrf = $this->db->table($this->tblTrxBarang)
                             ->select('lot_id, jenis_transaksi, SUM(jumlah) as jumlah')
                             ->where('kode_transaksi', $data['kode_transaksi'])
+                            ->where('COALESCE(active, 1) = 1')
                             ->groupBy('lot_id, jenis_transaksi')
                             ->get()->getResult();
 
@@ -870,7 +871,16 @@ class ItemTransferModel extends \App\Models\PrModel
                                 ->update();
                         }
 
-                        $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $data['kode_transaksi'])->delete();
+                        $userId = session()->get('user_id') ?? ($data['updated_by'] ?? ($data['created_by'] ?? 1));
+                        $this->db->table($this->tblTrxBarang)
+                            ->where('kode_transaksi', $data['kode_transaksi'])
+                            ->where('COALESCE(active, 1) = 1')
+                            ->set([
+                                'active'     => 0,
+                                'deleted_at' => date('Y-m-d H:i:s'),
+                                'deleted_by' => $userId,
+                            ])
+                            ->update();
                     }
                     if ($data['status'] == 1) {
                         $mBarangMasuk = new IncomingGoodsModel();
@@ -958,7 +968,11 @@ class ItemTransferModel extends \App\Models\PrModel
     
                         if (!empty($resLotNo)) {
                             $idLots = $resLotNo->id;
-                            $this->updateRecords($this->tblTrxLots, array("qty" => $resLotNo->qty - $rowData['qty']), array("id" => $idLots));
+                            $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
+                            if ($sisaLot < -0.0001) {
+                                throw new \Exception("Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2));
+                            }
+                            $this->updateRecords($this->tblTrxLots, array("qty" => $sisaLot), array("id" => $idLots));
                         }
     
                         $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
@@ -1078,6 +1092,7 @@ class ItemTransferModel extends \App\Models\PrModel
             $trxRows = $this->db->table($this->tblTrxBarang)
                 ->select('id_barang, lot_id, pack_id, jenis_transaksi, id_gudang_asal, id_gudang_tujuan, SUM(jumlah) as jumlah')
                 ->where('kode_transaksi', $header->kode_transaksi)
+                ->where('COALESCE(active, 1) = 1')
                 ->groupBy('id_barang, lot_id, pack_id, jenis_transaksi, id_gudang_asal, id_gudang_tujuan')
                 ->get()->getResult();
 
@@ -1104,8 +1119,17 @@ class ItemTransferModel extends \App\Models\PrModel
                 }
             }
 
-            // 3) Hapus baris trans_barang (masuk & keluar) milik dokumen ini.
-            $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $header->kode_transaksi)->delete();
+            // 3) Soft delete baris trans_barang (masuk & keluar) milik dokumen ini.
+            $userId = session()->get('user_id') ?? 1;
+            $this->db->table($this->tblTrxBarang)
+                ->where('kode_transaksi', $header->kode_transaksi)
+                ->where('COALESCE(active, 1) = 1')
+                ->set([
+                    'active'     => 0,
+                    'deleted_at' => date('Y-m-d H:i:s'),
+                    'deleted_by' => $userId,
+                ])
+                ->update();
 
             // 4) Balikkan qty_kirim BTM/tracking produksi per baris SO/Sample (hanya untuk non-reject).
             $soRows = $this->db->table($this->tblDetailSO)

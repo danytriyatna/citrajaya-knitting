@@ -304,6 +304,7 @@ class BarangMasukModel extends \App\Models\PrModel
                         $oldTransBarangBm = $this->db->table($this->tblTrxBarang)
                             ->select('lot_id, SUM(jumlah) as jumlah')
                             ->where('kode_transaksi', $data['kode_transaksi'])
+                            ->where('COALESCE(active, 1) = 1')
                             ->groupBy('lot_id')
                             ->get()->getResult();
 
@@ -315,7 +316,16 @@ class BarangMasukModel extends \App\Models\PrModel
                                 ->update();
                         }
 
-                        $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $data['kode_transaksi'])->delete();
+                        $userId = session()->get('user_id') ?? ($data['updated_by'] ?? ($data['created_by'] ?? 1));
+                        $this->db->table($this->tblTrxBarang)
+                            ->where('kode_transaksi', $data['kode_transaksi'])
+                            ->where('COALESCE(active, 1) = 1')
+                            ->set([
+                                'active'     => 0,
+                                'deleted_at' => date('Y-m-d H:i:s'),
+                                'deleted_by' => $userId,
+                            ])
+                            ->update();
                     }
 
                     if ($data['status'] == 1) {
@@ -754,6 +764,7 @@ class BarangMasukModel extends \App\Models\PrModel
             $trxRows = $this->db->table($this->tblTrxBarang)
                 ->select('id_barang, lot_id, pack_id, id_gudang_tujuan, SUM(jumlah) as jumlah')
                 ->where('kode_transaksi', $header->kode_transaksi)
+                ->where('COALESCE(active, 1) = 1')
                 ->groupBy('id_barang, lot_id, pack_id, id_gudang_tujuan')
                 ->get()->getResult();
 
@@ -778,8 +789,17 @@ class BarangMasukModel extends \App\Models\PrModel
                 }
             }
 
-            // 3) Hapus baris trans_barang milik dokumen ini.
-            $this->db->table($this->tblTrxBarang)->where('kode_transaksi', $header->kode_transaksi)->delete();
+            // 3) Soft delete baris trans_barang milik dokumen ini.
+            $userId = session()->get('user_id') ?? 1;
+            $this->db->table($this->tblTrxBarang)
+                ->where('kode_transaksi', $header->kode_transaksi)
+                ->where('COALESCE(active, 1) = 1')
+                ->set([
+                    'active'     => 0,
+                    'deleted_at' => date('Y-m-d H:i:s'),
+                    'deleted_by' => $userId,
+                ])
+                ->update();
 
             // 4) Kalau dokumen ini Tipe "Penerimaan Hasil Produksi"/"Sample-Perbaikan"/"Penerimaan Barang Produksi".
             if ($header->id_kategori == 12 || $header->id_kategori == 1 || $header->id_kategori == 15) {

@@ -141,7 +141,7 @@ class ProductionModel extends \App\Models\PrModel
         $builder->select("bbx.seq,bbx.nama,bbx.id ,SUM(COALESCE(qty, 0)) AS qty, SUM(COALESCE(qty_prod, 0)) AS qty_prod,
                            COALESCE((select sum(COALESCE(tpp.harga_total, 0)) 
                                      from trans_produksi_operator tpp inner join trans_produksi tp on tp.id = tpp.id_produksi
-                                     where tp.id_walkorder = abx.id_walkorder and tpp.id_proses = abx.id_proses and (tpp.print_type = 1 or tpp.print_type is null)),0) as harga_proses");
+                                     where tp.id_walkorder = abx.id_walkorder and tpp.id_proses = abx.id_proses and (tpp.print_type = 1 or tpp.print_type is null) and (tpp.kode_transaksi NOT LIKE 'BTMC%' OR tpp.kode_transaksi IS NULL)),0) as harga_proses");
         $builder->join("_jenis_proses_produksi bbx", "abx.id_proses = bbx.id", "inner");
         $builder->join("trans_walkorder_proses_ukuran cbx", "cbx.id_walkorder_proses = abx.id", "inner");
         if(!empty($params['id_walkorder'])){

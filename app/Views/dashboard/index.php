@@ -21,7 +21,7 @@
         text-transform: uppercase !important;
       }
 
-      /* Standar Tbody Rows & Cells */
+      /* Standar Tbody Rows & Cells (Normal Font Weight - Tidak Bold) */
       .tabulator .tabulator-row .tabulator-cell,
       #tbl-tracking .tabulator-row .tabulator-cell,
       #tbl-persediaan-ringkasan .tabulator-row .tabulator-cell,
@@ -31,9 +31,13 @@
       #tbl-saldo .tabulator-row .tabulator-cell,
       table.table tbody td {
         font-size: 13px !important;
-        font-weight: 600 !important;
+        font-weight: 400 !important;
         padding: 6px 10px !important;
         vertical-align: middle !important;
+      }
+
+      .tabulator .tabulator-row .tabulator-cell * {
+        font-weight: 400 !important;
       }
 
       /* Standar Bottom Footer / Totals */

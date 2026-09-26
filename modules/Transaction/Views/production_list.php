@@ -1,6 +1,7 @@
 <?= $this->extend('template'); ?>
 
 <?= $this->section('modal') ?>
+<?php if (!empty($can_view_laba)) : ?>
 <!-- MODAL DETAIL RINCIAN LABA KOTOR -->
 <div id="modal-laba-detail" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
@@ -136,6 +137,7 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>
@@ -172,6 +174,7 @@
                 </select>
               </div>
             </div>
+            <?php if (!empty($can_view_laba)) : ?>
             <div class="col-md-3 col-sm-6">
               <div class="form-group m-b-0 d-flex align-items-center">
                 <label class="control-label text-start text-md-end m-e-8" for="filter_tahun">Tahun</label>
@@ -187,6 +190,9 @@
               </div>
             </div>
             <div class="col-md-4 offset-md-2 col-sm-12 mt-2 mt-md-0">
+            <?php else : ?>
+            <div class="col-md-4 offset-md-5 col-sm-12 mt-2 mt-md-0">
+            <?php endif; ?>
               <div class="form-group mb-0">
                 <div class="input-group">
                   <span class="input-group-text bg-white" id="basic-addon11" style="border-right-width: 0px;"><i class="ti-search"></i></span>
@@ -196,6 +202,7 @@
             </div>
           </div>
 
+          <?php if (!empty($can_view_laba)) : ?>
           <!-- GLOBAL SUMMARY LABA KOTOR -->
           <div class="row g-2 mb-3 mt-1" id="global-laba-summary">
             <div class="col-xl col-md-4 col-sm-6">
@@ -236,6 +243,9 @@
           </div>
 
           <hr>
+          <?php else : ?>
+          <hr class="mt-3 mb-3">
+          <?php endif; ?>
           <div class="table-responsive">
             <div class="table-responsive">
               <div class="table-striped" id="dt-list"> </div>

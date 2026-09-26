@@ -246,10 +246,10 @@
             </div>
           </div>
 
+          <?php if (!empty($can_view_laba) && !empty($laba_kotor)) : ?>
           <hr>
 
           <!-- CARD ANALISIS LABA KOTOR PRODUKSI -->
-          <?php if (!empty($laba_kotor)) : ?>
           <?php 
             $isUntung = ($laba_kotor['laba_kotor'] >= 0);
             $cardBorder = $isUntung ? 'border-success' : 'border-danger';

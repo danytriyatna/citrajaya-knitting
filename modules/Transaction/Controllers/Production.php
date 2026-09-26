@@ -38,7 +38,13 @@ class Production extends BaseController
     $this->mOperator = new OperatorModel();
     $this->mdelivery = new DeliveryModel();
     $this->mkonsumen = new KonsumenModel();
-    
+  }
+
+  private function canViewLabaKotor()
+  {
+    $role_id = (int)$this->session->get('role_id');
+    $role_name = strtolower(trim((string)$this->session->get('role_name')));
+    return (in_array($role_id, [1, 2]) || in_array($role_name, ['superadmin', 'admin aplikasi']));
   }
 
   public function index()
@@ -47,6 +53,7 @@ class Production extends BaseController
       return redirect()->to('/auth/login');
     }
 
+    $this->data['can_view_laba'] = $this->canViewLabaKotor();
     $this->data['titlehead'] = "Production";
 
     return view($this->views . '\production_list', $this->data);
@@ -80,11 +87,14 @@ class Production extends BaseController
     $summary_params = $params;
     $summary_params['tahun'] = !empty($tahun) ? $tahun : date('Y');
 
+    $canViewLaba = $this->canViewLabaKotor();
+
     $build_array = array(
       "last_page" => $maxpage,
       "recordsTotal" => $totaldata,
       "recordsFiltered" => $totalfiltered,
-      "data" => array()
+      "data" => array(),
+      "can_view_laba" => $canViewLaba
     );
 
     foreach ($results as $row) {
@@ -181,7 +191,10 @@ class Production extends BaseController
         $file_gambar = !empty($ref_data->file_name) ? base_url() . "uploads/sales_order/"  . $ref_data->file_name : "";
       }
 
-      $laba_kotor_data = $this->mProduksi->getLabaKotorData($row->id, $row->id_walkorder, $row->id_walkorder_ref, $row->tipe_id, $row->kode_walkorder);
+      $laba_kotor_data = null;
+      if ($canViewLaba) {
+        $laba_kotor_data = $this->mProduksi->getLabaKotorData($row->id, $row->id_walkorder, $row->id_walkorder_ref, $row->tipe_id, $row->kode_walkorder);
+      }
 
       array_push(
         $build_array["data"],
@@ -212,12 +225,20 @@ class Production extends BaseController
         )
       );
     }
-    $build_array["summary_global"] = $this->mProduksi->getGlobalLabaKotorSummary($filters, $summary_params);
+    if ($canViewLaba) {
+      $build_array["summary_global"] = $this->mProduksi->getGlobalLabaKotorSummary($filters, $summary_params);
+    } else {
+      $build_array["summary_global"] = null;
+    }
     return $this->response->setJSON($build_array);
   }
 
   public function get_laba_detail()
   {
+    if (!$this->canViewLabaKotor()) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Akses ditolak: Hanya Superadmin dan Admin Aplikasi yang berhak melihat rincian laba kotor.']);
+    }
+
     $id = $this->request->getPost('id');
     if (!empty($id)) {
       $id = decrypt($id);
@@ -440,10 +461,18 @@ class Production extends BaseController
       $this->data['dtUkuran'] = json_encode($dtUkuran);
       $this->data['walk_order_det'] = !empty($walkOrderDet) ? json_encode($walkOrderDet) : null;
 
-      $labaKotorForm = $this->mProduksi->getLabaKotorData($resData->id, $resData->id_walkorder, $stdData->ref_id, $stdData->tipe_id, $resData->kode_walkorder);
-      $breakdownForm = $this->mProduksi->getLabaKotorBreakdown($resData->id, $resData->kode_walkorder);
-      $this->data['laba_kotor'] = $labaKotorForm;
-      $this->data['breakdown'] = $breakdownForm;
+      $canViewLaba = $this->canViewLabaKotor();
+      $this->data['can_view_laba'] = $canViewLaba;
+
+      if ($canViewLaba) {
+        $labaKotorForm = $this->mProduksi->getLabaKotorData($resData->id, $resData->id_walkorder, $stdData->ref_id, $stdData->tipe_id, $resData->kode_walkorder);
+        $breakdownForm = $this->mProduksi->getLabaKotorBreakdown($resData->id, $resData->kode_walkorder);
+        $this->data['laba_kotor'] = $labaKotorForm;
+        $this->data['breakdown'] = $breakdownForm;
+      } else {
+        $this->data['laba_kotor'] = null;
+        $this->data['breakdown'] = null;
+      }
 
       $status = $stdData->status;
     }

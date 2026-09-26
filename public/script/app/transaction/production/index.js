@@ -25,46 +25,48 @@ $(document).ready(function () {
         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
         }
         
-        let lk = data.laba_kotor || {
-            f_nilai_so: 'Rp 0',
-            f_nilai_pendapatan: 'Rp 0',
-            f_nilai_bahan: 'Rp 0',
-            f_nilai_tk: 'Rp 0',
-            f_laba_kotor: 'Rp 0',
-            laba_kotor: 0,
-            margin_persen: 0
-        };
+        let headerActionHtml = `<div class="d-flex align-items-center gap-1 my-1">${aksi}</div>`;
+        let badgesHtml = '';
 
-        let isUntung = (lk.laba_kotor >= 0);
-        let badgeLabaClass = isUntung ? 'bg-success text-white' : 'bg-danger text-white';
+        if (data.laba_kotor) {
+            let lk = data.laba_kotor;
+            let isUntung = (lk.laba_kotor >= 0);
+            let badgeLabaClass = isUntung ? 'bg-success text-white' : 'bg-danger text-white';
+
+            headerActionHtml = `
+              <div class="d-flex align-items-center gap-1 my-1">
+                  ${aksi}
+                  <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap py-1 px-2 f-s-12" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
+                    <i class="fa fa-chart-line me-1"></i> Rincian Laba
+                  </button>
+              </div>`;
+
+            badgesHtml = `
+              <div class="d-flex flex-wrap justify-content-end align-items-center gap-1 my-1">
+                <span class="badge border py-1 px-2 text-nowrap" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
+                  <span class="text-muted f-s-10">SO:</span> <span class="fw-bold f-s-11 text-primary">${lk.f_nilai_so}</span>
+                </span>
+                <span class="badge border py-1 px-2 text-nowrap" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
+                  <span class="text-muted f-s-10">Masuk:</span> <span class="fw-bold f-s-11 text-info">${lk.f_nilai_pendapatan}</span>
+                </span>
+                <span class="badge border py-1 px-2 text-nowrap" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
+                  <span class="text-muted f-s-10">Bahan:</span> <span class="fw-bold f-s-11 text-warning">${lk.f_nilai_bahan}</span>
+                </span>
+                <span class="badge border py-1 px-2 text-nowrap" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
+                  <span class="text-muted f-s-10">Upah:</span> <span class="fw-bold f-s-11 text-danger">${lk.f_nilai_tk}</span>
+                </span>
+                <span class="badge border ${badgeLabaClass} py-1 px-2 text-nowrap">
+                  <span class="f-s-10 opacity-75">Laba:</span> <span class="fw-bold f-s-11">${lk.f_laba_kotor}</span> <span class="f-s-10 opacity-75">(${lk.margin_persen}%)</span>
+                </span>
+              </div>`;
+        }
         
         // HTML Card Layout
         var cardHtml = `<div class="card shadow-sm mb-3 border">
                   <div class="card-header py-1 px-3" style="background-color: #f8fafc; border-bottom: 1px solid #e9ecef;">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                      <div class="d-flex align-items-center gap-1 my-1">
-                          ${aksi}
-                          <button type="button" class="btn btn-sm btn-outline-info btn-detail-laba text-nowrap py-1 px-2 f-s-12" data-id="${data.id}" title="Lihat Rincian Laba Kotor">
-                            <i class="fa fa-chart-line me-1"></i> Rincian Laba
-                          </button>
-                      </div>
-                      <div class="d-flex flex-wrap justify-content-end align-items-center gap-1 my-1">
-                        <span class="badge border py-1 px-2 text-nowrap" style="background: #f0f7ff; border-color: #b8daff !important; color: #1e3a8a;">
-                          <span class="text-muted f-s-10">SO:</span> <span class="fw-bold f-s-11 text-primary">${lk.f_nilai_so}</span>
-                        </span>
-                        <span class="badge border py-1 px-2 text-nowrap" style="background: #e8f4fd; border-color: #90caf9 !important; color: #0288d1;">
-                          <span class="text-muted f-s-10">Masuk:</span> <span class="fw-bold f-s-11 text-info">${lk.f_nilai_pendapatan}</span>
-                        </span>
-                        <span class="badge border py-1 px-2 text-nowrap" style="background: #fff9e6; border-color: #ffe082 !important; color: #b78103;">
-                          <span class="text-muted f-s-10">Bahan:</span> <span class="fw-bold f-s-11 text-warning">${lk.f_nilai_bahan}</span>
-                        </span>
-                        <span class="badge border py-1 px-2 text-nowrap" style="background: #fdeeee; border-color: #ef9a9a !important; color: #c62828;">
-                          <span class="text-muted f-s-10">Upah:</span> <span class="fw-bold f-s-11 text-danger">${lk.f_nilai_tk}</span>
-                        </span>
-                        <span class="badge border ${badgeLabaClass} py-1 px-2 text-nowrap">
-                          <span class="f-s-10 opacity-75">Laba:</span> <span class="fw-bold f-s-11">${lk.f_laba_kotor}</span> <span class="f-s-10 opacity-75">(${lk.margin_persen}%)</span>
-                        </span>
-                      </div>
+                      ${headerActionHtml}
+                      ${badgesHtml}
                     </div>
                   </div>
                   <div class="card-body">
@@ -252,7 +254,7 @@ $(document).ready(function () {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
             params.filter_trans = $("#filter_status").val();
-            params.tahun = $("#filter_tahun").val();
+            params.tahun = $("#filter_tahun").length ? $("#filter_tahun").val() : "";
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();

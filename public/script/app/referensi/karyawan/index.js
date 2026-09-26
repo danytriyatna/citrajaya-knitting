@@ -89,6 +89,16 @@ $(document).ready(function () {
                 badgeEl.attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
             }
 
+            let p1Name = data_row.pihak1_nama || 'Eva Fiantina';
+            let p1Role = data_row.pihak1_jabatan || 'HRD Citra Jaya Knitting';
+            let p3Name = data_row.mengetahui_nama || 'Edwin Ferdiansyah';
+            let p3Role = data_row.mengetahui_jabatan || 'Pimpinan CV. Citra Jaya Knitting';
+
+            $('#form_ttd_pihak1_nama').text(p1Name).attr('title', p1Name);
+            $('#form_ttd_pihak1_jabatan').text(p1Role);
+            $('#form_ttd_mengetahui_nama').text(p3Name).attr('title', p3Name);
+            $('#form_ttd_mengetahui_jabatan').text(p3Role);
+
             $('#form_ttd_pihak2_nama').text(data_row.full_name || '-');
             $('#form_ttd_pihak2_jabatan').text(data_row.posisi || 'Karyawan');
 
@@ -96,9 +106,9 @@ $(document).ready(function () {
             let sig2 = data_row.ttd_pihak2_url ? { url: data_row.ttd_pihak2_url, tgl: data_row.ttd_pihak2_tgl } : null;
             let sig3 = data_row.ttd_mengetahui_url ? { url: data_row.ttd_mengetahui_url, tgl: data_row.ttd_mengetahui_tgl } : null;
 
-            updateSingleSigBox('form', 1, sig1, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
+            updateSingleSigBox('form', 1, sig1, p1Name, p1Role);
             updateSingleSigBox('form', 2, sig2, data_row.full_name || 'Karyawan', data_row.posisi || 'Karyawan');
-            updateSingleSigBox('form', 3, sig3, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
+            updateSingleSigBox('form', 3, sig3, p3Name, p3Role);
         } else {
             divCMT.removeClass("d-none");
             selectCMT.val(data_row.id_operator).trigger("change");
@@ -647,14 +657,24 @@ $(document).ready(function () {
                         $('#kontrak-existing-file').addClass('d-none');
                     }
 
+                    let p1Name = d.pihak1_nama || 'Eva Fiantina';
+                    let p1Role = d.pihak1_jabatan || 'HRD Citra Jaya Knitting';
+                    let p3Name = d.mengetahui_nama || 'Edwin Ferdiansyah';
+                    let p3Role = d.mengetahui_jabatan || 'Pimpinan CV. Citra Jaya Knitting';
+
+                    $('#kelola-ttd-pihak1-nama').text(p1Name).attr('title', p1Name);
+                    $('#kelola-ttd-pihak1-jabatan').text(p1Role);
+                    $('#kelola-ttd-mengetahui-nama').text(p3Name).attr('title', p3Name);
+                    $('#kelola-ttd-mengetahui-jabatan').text(p3Role);
+
                     // Tanda Tangan Digital 3 Pihak
                     let sig1 = d.ttd_pihak1_url ? { url: d.ttd_pihak1_url, tgl: d.ttd_pihak1_tgl } : null;
                     let sig2 = d.ttd_pihak2_url ? { url: d.ttd_pihak2_url, tgl: d.ttd_pihak2_tgl } : null;
                     let sig3 = d.ttd_mengetahui_url ? { url: d.ttd_mengetahui_url, tgl: d.ttd_mengetahui_tgl } : null;
 
-                    updateSingleSigBox('kelola', 1, sig1, 'Eva Fiantina', 'HRD Citra Jaya Knitting');
+                    updateSingleSigBox('kelola', 1, sig1, p1Name, p1Role);
                     updateSingleSigBox('kelola', 2, sig2, d.full_name || 'Karyawan', d.posisi || 'Karyawan');
-                    updateSingleSigBox('kelola', 3, sig3, 'Edwin Ferdiansyah', 'Pimpinan CV. Citra Jaya Knitting');
+                    updateSingleSigBox('kelola', 3, sig3, p3Name, p3Role);
 
                     if (d.all_signed) {
                         $('#kelola-sig-all-signed-banner').removeClass('d-none');
@@ -1081,8 +1101,8 @@ $(document).ready(function () {
                                 showConfirmButton: false
                             });
 
-                            let defaultName = (pihak == 1 ? 'Eva Fiantina' : (pihak == 2 ? ($('#nama_konsumen').val() || $('#kelola-ttd-pihak2-nama').text()) : 'Edwin Ferdiansyah'));
-                            let defaultRole = (pihak == 1 ? 'HRD Citra Jaya Knitting' : (pihak == 2 ? ($('#posisi').val() || $('#kelola-ttd-pihak2-jabatan').text()) : 'Pimpinan CV. Citra Jaya Knitting'));
+                            let defaultName = (pihak == 1 ? ($('#kelola-ttd-pihak1-nama').text() || $('#form_ttd_pihak1_nama').text() || 'Eva Fiantina') : (pihak == 2 ? ($('#nama_konsumen').val() || $('#kelola-ttd-pihak2-nama').text() || $('#form_ttd_pihak2_nama').text()) : ($('#kelola-ttd-mengetahui-nama').text() || $('#form_ttd_mengetahui_nama').text() || 'Edwin Ferdiansyah')));
+                            let defaultRole = (pihak == 1 ? ($('#kelola-ttd-pihak1-jabatan').text() || $('#form_ttd_pihak1_jabatan').text() || 'HRD Citra Jaya Knitting') : (pihak == 2 ? ($('#posisi').val() || $('#kelola-ttd-pihak2-jabatan').text() || $('#form_ttd_pihak2_jabatan').text()) : ($('#kelola-ttd-mengetahui-jabatan').text() || $('#form_ttd_mengetahui_jabatan').text() || 'Pimpinan CV. Citra Jaya Knitting')));
 
                             updateSingleSigBox('kelola', pihak, null, defaultName, defaultRole);
                             updateSingleSigBox('form', pihak, null, defaultName, defaultRole);

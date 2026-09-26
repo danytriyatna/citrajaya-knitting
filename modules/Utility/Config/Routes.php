@@ -51,3 +51,8 @@ $routes->post('utilitas/setting-situs/get-colors', '\Modules\Utility\Controllers
 // Pengaturan Asisten AI (Khusus Superadmin di Modul Utilitas)
 $routes->get('utilitas/asisten-ai', '\Modules\Assistant\Controllers\Kania::settings', ['filter' => 'otorisasi:MOD_ASISTEN_AI']);
 $routes->post('utilitas/asisten-ai/save', '\Modules\Assistant\Controllers\Kania::saveSettings', ['filter' => 'otorisasi:MOD_ASISTEN_AI']);
+
+// Company Profile / Profil Perusahaan & Pejabat Penandatangan
+$routes->get('utilitas/company-profile', '\Modules\Utility\Controllers\CompanyProfile::index', ['filter' => 'otorisasi:MOD_COMPANY_PROFILE']);
+$routes->post('utilitas/company-profile/save', '\Modules\Utility\Controllers\CompanyProfile::save');
+$routes->post('utilitas/company-profile/delete-ttd', '\Modules\Utility\Controllers\CompanyProfile::deleteTtd');

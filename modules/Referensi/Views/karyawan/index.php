@@ -465,8 +465,8 @@
                     <div class="border rounded p-2 bg-light text-center h-100 d-flex flex-column justify-content-between">
                       <div>
                         <span class="badge bg-primary px-2 py-1 mb-1" style="font-size: 10px;">PIHAK PERTAMA</span>
-                        <div class="fw-bold text-dark small text-truncate" title="Eva Fiantina">Eva Fiantina</div>
-                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;">HRD Citra Jaya Knitting</div>
+                        <div class="fw-bold text-dark small text-truncate" id="kelola-ttd-pihak1-nama" title="Eva Fiantina">Eva Fiantina</div>
+                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="kelola-ttd-pihak1-jabatan">HRD Citra Jaya Knitting</div>
                       </div>
                       <div id="kelola-sig-box-1" class="mt-auto">
                         <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>
@@ -499,8 +499,8 @@
                     <div class="border rounded p-2 bg-light text-center h-100 d-flex flex-column justify-content-between">
                       <div>
                         <span class="badge bg-dark px-2 py-1 mb-1" style="font-size: 10px;">MENGETAHUI</span>
-                        <div class="fw-bold text-dark small text-truncate" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
-                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;">Pimpinan CV. Citra Jaya Knitting</div>
+                        <div class="fw-bold text-dark small text-truncate" id="kelola-ttd-mengetahui-nama" title="Edwin Ferdiansyah">Edwin Ferdiansyah</div>
+                        <div class="text-muted text-truncate mb-2" style="font-size: 11px;" id="kelola-ttd-mengetahui-jabatan">Pimpinan CV. Citra Jaya Knitting</div>
                       </div>
                       <div id="kelola-sig-box-3" class="mt-auto">
                         <div class="text-muted small fst-italic mb-1" style="font-size: 10px;"><i class="fa fa-clock-o me-1"></i> Belum TTD</div>

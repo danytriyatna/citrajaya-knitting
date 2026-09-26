@@ -118,11 +118,24 @@ class RefKaryawan extends BaseController
             "data" => array()
         );
 
+        $db = \Config\Database::connect();
+        $companies = $db->table('ref_perusahaan')->get()->getResult();
+        $companyMap = [];
+        foreach ($companies as $c) {
+            $companyMap[$c->id] = $c;
+        }
+
         foreach ($results as $row) {
             if ($row->type == 1) {
                 $this->resolveTtdWithMaster($row);
             }
             $id = encrypt($row->id);
+
+            $comp = $companyMap[$row->id_perusahaan ?? 1] ?? ($companies[0] ?? null);
+            $p1Name = !empty($comp->pihak1_nama) ? $comp->pihak1_nama : 'Eva Fiantina';
+            $p1Jabatan = !empty($comp->pihak1_jabatan) ? $comp->pihak1_jabatan : 'HRD Citra Jaya Knitting';
+            $p3Name = !empty($comp->mengetahui_nama) ? $comp->mengetahui_nama : 'Edwin Ferdiansyah';
+            $p3Jabatan = !empty($comp->mengetahui_jabatan) ? $comp->mengetahui_jabatan : 'Pimpinan CV. Citra Jaya Knitting';
 
             $atr_edit = null; $atr_del = null; $btnAction = null;
             if ($this->_edit) {
@@ -195,6 +208,10 @@ class RefKaryawan extends BaseController
                     "ttd_mengetahui_url" => !empty($row->ttd_mengetahui_file) ? base_url() . "uploads/kontrak/signatures/"  . $row->ttd_mengetahui_file : "",
                     "ttd_mengetahui_tgl" => !empty($row->ttd_mengetahui_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_mengetahui_tgl)) : "",
                     "all_signed" => (!empty($row->ttd_pihak1_file) && !empty($row->ttd_pihak2_file) && !empty($row->ttd_mengetahui_file)),
+                    "pihak1_nama" => $p1Name,
+                    "pihak1_jabatan" => $p1Jabatan,
+                    "mengetahui_nama" => $p3Name,
+                    "mengetahui_jabatan" => $p3Jabatan,
                     "active" => (int) $row->active,
                 )
             );
@@ -456,6 +473,12 @@ class RefKaryawan extends BaseController
             $this->resolveTtdWithMaster($row);
         }
 
+        $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
+        $p1Nama = !empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina';
+        $p1Jabatan = !empty($company->pihak1_jabatan) ? $company->pihak1_jabatan : 'HRD Citra Jaya Knitting';
+        $p3Nama = !empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah';
+        $p3Jabatan = !empty($company->mengetahui_jabatan) ? $company->mengetahui_jabatan : 'Pimpinan CV. Citra Jaya Knitting';
+
         $missing = [];
         if (empty(trim($row->full_name ?? ''))) $missing[] = 'Nama Lengkap';
         if (empty(trim($row->tempat_lahir ?? ''))) $missing[] = 'Tempat Lahir';
@@ -514,6 +537,10 @@ class RefKaryawan extends BaseController
                 'ttd_mengetahui_url' => !empty($row->ttd_mengetahui_file) ? base_url() . "uploads/kontrak/signatures/" . $row->ttd_mengetahui_file : "",
                 'ttd_mengetahui_tgl' => !empty($row->ttd_mengetahui_tgl) ? date('d/m/Y H:i', strtotime($row->ttd_mengetahui_tgl)) : "",
                 'all_signed' => (!empty($row->ttd_pihak1_file) && !empty($row->ttd_pihak2_file) && !empty($row->ttd_mengetahui_file)),
+                'pihak1_nama' => $p1Nama,
+                'pihak1_jabatan' => $p1Jabatan,
+                'mengetahui_nama' => $p3Nama,
+                'mengetahui_jabatan' => $p3Jabatan,
             ]
         ]);
     }
@@ -656,6 +683,12 @@ class RefKaryawan extends BaseController
             $upahHarian = number_format((float)($row->upah_harian ?? 0), 0, ',', '.');
             $tglTtd = $this->formatTglIndoLengkap(date('Y-m-d'));
 
+            $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
+            $p1NamaXml = htmlspecialchars(!empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina', ENT_XML1, 'UTF-8');
+            $p1JabatanXml = htmlspecialchars(!empty($company->pihak1_jabatan) ? $company->pihak1_jabatan : 'HRD Citra Jaya Knitting', ENT_XML1, 'UTF-8');
+            $p3NamaXml = htmlspecialchars(!empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah', ENT_XML1, 'UTF-8');
+            $p3JabatanXml = htmlspecialchars(!empty($company->mengetahui_jabatan) ? $company->mengetahui_jabatan : 'Pimpinan CV. Citra Jaya Knitting', ENT_XML1, 'UTF-8');
+
             $replacements = [
                 '${NAMA}' => $namaKaryawan,
                 '${TEMPAT_TGL_LAHIR}' => $ttl,
@@ -673,6 +706,20 @@ class RefKaryawan extends BaseController
 
             foreach ($replacements as $key => $val) {
                 $xml = str_replace($key, $val, $xml);
+            }
+
+            // Ganti nama dan jabatan pejabat jika ada penyesuaian profil perusahaan
+            if ($p1NamaXml !== 'Eva Fiantina') {
+                $xml = str_replace('Eva Fiantina', $p1NamaXml, $xml);
+            }
+            if ($p1JabatanXml !== 'HRD Citra Jaya Knitting') {
+                $xml = str_replace('HRD Citra Jaya Knitting', $p1JabatanXml, $xml);
+            }
+            if ($p3NamaXml !== 'Edwin Ferdiansyah') {
+                $xml = str_replace('Edwin Ferdiansyah', $p3NamaXml, $xml);
+            }
+            if ($p3JabatanXml !== 'Pimpinan CV. Citra Jaya Knitting') {
+                $xml = str_replace('Pimpinan CV. Citra Jaya Knitting', $p3JabatanXml, $xml);
             }
 
             $this->injectSignaturesToDocx($zip, $xml, $row);
@@ -817,20 +864,22 @@ class RefKaryawan extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
         }
 
+        $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
+
         // Tentukan identitas penandatangan
         $signerName = $this->request->getPost('nama_penandatangan');
         $signerRole = $this->request->getPost('jabatan_penandatangan');
 
         if (empty($signerName)) {
             if ($pihak === 1) {
-                $signerName = 'Eva Fiantina';
-                $signerRole = 'HRD Citra Jaya Knitting';
+                $signerName = !empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina';
+                $signerRole = !empty($company->pihak1_jabatan) ? $company->pihak1_jabatan : 'HRD Citra Jaya Knitting';
             } else if ($pihak === 2) {
                 $signerName = $row->full_name ?? 'Karyawan';
                 $signerRole = $row->posisi ?? 'Karyawan';
             } else if ($pihak === 3) {
-                $signerName = 'Edwin Ferdiansyah';
-                $signerRole = 'Pimpinan CV. Citra Jaya Knitting';
+                $signerName = !empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah';
+                $signerRole = !empty($company->mengetahui_jabatan) ? $company->mengetahui_jabatan : 'Pimpinan CV. Citra Jaya Knitting';
             }
         }
 
@@ -922,6 +971,12 @@ class RefKaryawan extends BaseController
                     'ttd_pihak1_file' => $fileName,
                     'ttd_pihak1_tgl'  => $now,
                 ]);
+            if (!empty($company->id)) {
+                $db->table('ref_perusahaan')->where('id', $company->id)->update([
+                    'pihak1_ttd' => $fileName,
+                    'updated_at' => $now
+                ]);
+            }
         } else if ($pihak === 3) {
             $db->table('ref_karyawan')
                 ->where('type', 1)
@@ -934,6 +989,12 @@ class RefKaryawan extends BaseController
                     'ttd_mengetahui_file' => $fileName,
                     'ttd_mengetahui_tgl'  => $now,
                 ]);
+            if (!empty($company->id)) {
+                $db->table('ref_perusahaan')->where('id', $company->id)->update([
+                    'mengetahui_ttd' => $fileName,
+                    'updated_at' => $now
+                ]);
+            }
         } else if ($pihak === 2 && !empty($cleanSignerName)) {
             $db->table('ref_karyawan')
                 ->where('LOWER(TRIM(full_name))', strtolower($cleanSignerName))
@@ -982,12 +1043,19 @@ class RefKaryawan extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
         }
 
+        $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
+        $namaP1 = !empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina';
+        $namaP3 = !empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah';
+
         $db = \Config\Database::connect();
         $update = [];
         if ($pihak === 1) {
             $update['ttd_pihak1_file'] = null;
             $update['ttd_pihak1_tgl'] = null;
-            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', 'eva fiantina')->delete();
+            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', strtolower(trim($namaP1)))->delete();
+            if (!empty($company->id)) {
+                $db->table('ref_perusahaan')->where('id', $company->id)->update(['pihak1_ttd' => null]);
+            }
         } else if ($pihak === 2) {
             $update['ttd_pihak2_file'] = null;
             $update['ttd_pihak2_tgl'] = null;
@@ -997,7 +1065,10 @@ class RefKaryawan extends BaseController
         } else if ($pihak === 3) {
             $update['ttd_mengetahui_file'] = null;
             $update['ttd_mengetahui_tgl'] = null;
-            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', 'edwin ferdiansyah')->delete();
+            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', strtolower(trim($namaP3)))->delete();
+            if (!empty($company->id)) {
+                $db->table('ref_perusahaan')->where('id', $company->id)->update(['mengetahui_ttd' => null]);
+            }
         }
 
         if (($row->status_kontrak ?? 0) == 2 && empty($row->file_kontrak_id)) {
@@ -1023,17 +1094,28 @@ class RefKaryawan extends BaseController
         $update = [];
         $now = date('Y-m-d H:i:s');
 
-        // 1. Pihak 1 (Eva Fiantina)
-        $namaP1 = 'Eva Fiantina';
+        $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
+        $namaP1 = !empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina';
+        $namaP3 = !empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah';
+
+        // 1. Pihak 1 (HRD / Company Official)
         if (empty($row->ttd_pihak1_file)) {
-            $masterP1 = $db->table('ref_tanda_tangan_master')
-                ->where('LOWER(TRIM(nama))', strtolower(trim($namaP1)))
-                ->get()->getRow();
-            if ($masterP1 && !empty($masterP1->file_ttd)) {
-                $row->ttd_pihak1_file = $masterP1->file_ttd;
-                $row->ttd_pihak1_tgl = $masterP1->updated_at ?? $now;
-                $update['ttd_pihak1_file'] = $masterP1->file_ttd;
-                $update['ttd_pihak1_tgl'] = $masterP1->updated_at ?? $now;
+            $fileP1 = null;
+            if (!empty($company->pihak1_ttd) && file_exists(FCPATH . 'uploads/kontrak/signatures/' . $company->pihak1_ttd)) {
+                $fileP1 = $company->pihak1_ttd;
+            } else {
+                $masterP1 = $db->table('ref_tanda_tangan_master')
+                    ->where('LOWER(TRIM(nama))', strtolower(trim($namaP1)))
+                    ->get()->getRow();
+                if ($masterP1 && !empty($masterP1->file_ttd)) {
+                    $fileP1 = $masterP1->file_ttd;
+                }
+            }
+            if ($fileP1) {
+                $row->ttd_pihak1_file = $fileP1;
+                $row->ttd_pihak1_tgl = $now;
+                $update['ttd_pihak1_file'] = $fileP1;
+                $update['ttd_pihak1_tgl'] = $now;
             }
         }
 
@@ -1051,17 +1133,24 @@ class RefKaryawan extends BaseController
             }
         }
 
-        // 3. Mengetahui (Edwin Ferdiansyah)
-        $namaP3 = 'Edwin Ferdiansyah';
+        // 3. Mengetahui (Pimpinan)
         if (empty($row->ttd_mengetahui_file)) {
-            $masterP3 = $db->table('ref_tanda_tangan_master')
-                ->where('LOWER(TRIM(nama))', strtolower(trim($namaP3)))
-                ->get()->getRow();
-            if ($masterP3 && !empty($masterP3->file_ttd)) {
-                $row->ttd_mengetahui_file = $masterP3->file_ttd;
-                $row->ttd_mengetahui_tgl = $masterP3->updated_at ?? $now;
-                $update['ttd_mengetahui_file'] = $masterP3->file_ttd;
-                $update['ttd_mengetahui_tgl'] = $masterP3->updated_at ?? $now;
+            $fileP3 = null;
+            if (!empty($company->mengetahui_ttd) && file_exists(FCPATH . 'uploads/kontrak/signatures/' . $company->mengetahui_ttd)) {
+                $fileP3 = $company->mengetahui_ttd;
+            } else {
+                $masterP3 = $db->table('ref_tanda_tangan_master')
+                    ->where('LOWER(TRIM(nama))', strtolower(trim($namaP3)))
+                    ->get()->getRow();
+                if ($masterP3 && !empty($masterP3->file_ttd)) {
+                    $fileP3 = $masterP3->file_ttd;
+                }
+            }
+            if ($fileP3) {
+                $row->ttd_mengetahui_file = $fileP3;
+                $row->ttd_mengetahui_tgl = $now;
+                $update['ttd_mengetahui_file'] = $fileP3;
+                $update['ttd_mengetahui_tgl'] = $now;
             }
         }
 
@@ -1159,5 +1248,16 @@ class RefKaryawan extends BaseController
             . '</pic:pic>'
             . '</a:graphicData></a:graphic>'
             . '</wp:inline></w:drawing></w:r>';
+    }
+
+    private function getCompanyProfile($idPerusahaan = 1)
+    {
+        $db = \Config\Database::connect();
+        $targetId = !empty($idPerusahaan) ? (int)$idPerusahaan : 1;
+        $company = $db->table('ref_perusahaan')->where('id', $targetId)->get()->getRow();
+        if (!$company) {
+            $company = $db->table('ref_perusahaan')->orderBy('id', 'ASC')->get()->getRow();
+        }
+        return $company;
     }
 }

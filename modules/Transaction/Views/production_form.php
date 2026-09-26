@@ -447,15 +447,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                          <?php
-                            $totalQtyProdProses = 0;
-                            $totalQtyFixProses = 0;
-                          ?>
                           <?php foreach ($proses as $r) { ?>
-                            <?php
-                              $totalQtyProdProses += (float) $r->qty_prod;
-                              $totalQtyFixProses  += (float) $r->qty_fix;
-                            ?>
                             <tr>
                               <td>
                                   <h5 class="form-check-h1" for="proses_<?= $r->seq ?>"><?= $r->nama ?></h5>
@@ -481,13 +473,6 @@
                               </td>
                             </tr>
                       </tbody>
-                      <tfoot>
-                        <tr class="table-light">
-                          <th class="text-end">TOTAL</th>
-                          <th style="text-align:right;"><?= number_format($totalQtyProdProses, 0, ',', '.') ?></th>
-                          <th style="text-align:right;"><?= number_format($totalQtyFixProses, 0, ',', '.') ?></th>
-                        </tr>
-                      </tfoot>
                   </table>
 
                 </div>

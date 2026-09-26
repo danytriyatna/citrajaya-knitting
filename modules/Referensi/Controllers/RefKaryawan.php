@@ -293,6 +293,14 @@ class RefKaryawan extends BaseController
             'gambar_id' => !empty($fileIdKaryawan) ? $fileIdKaryawan : null
         ];
 
+        $tgl_mulai_kontrak = $this->request->getPost('tgl_mulai_kontrak');
+        $durasi_kontrak_bulan = $this->request->getPost('durasi_kontrak_bulan');
+        if (!empty($tgl_mulai_kontrak) && !empty($durasi_kontrak_bulan)) {
+            $arr_isi['tgl_mulai_kontrak'] = $tgl_mulai_kontrak;
+            $arr_isi['durasi_kontrak_bulan'] = (int)$durasi_kontrak_bulan;
+            $arr_isi['tgl_selesai_kontrak'] = date('Y-m-d', strtotime("+" . (int)$durasi_kontrak_bulan . " month -1 day", strtotime($tgl_mulai_kontrak)));
+        }
+
         
         if(empty($id)){
             $id = $this->mkaryawan->insertRecordGetid($this->mkaryawan->table, $arr_isi);

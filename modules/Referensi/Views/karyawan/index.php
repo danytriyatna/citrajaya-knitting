@@ -240,10 +240,6 @@
             <span class="badge" id="form-kontrak-status-badge">Status Kontrak</span>
           </div>
 
-          <div class="alert alert-info py-2 px-3 small mb-3">
-            <i class="fa fa-info-circle me-1"></i> Setelah data profil dan upah diisi lengkap, tentukan masa kontrak lalu klik <b>Simpan & Unduh Draf Kontrak</b>.
-          </div>
-
           <div class="row mb-3">
             <div class="col-md-6">
               <div class="row">
@@ -276,31 +272,6 @@
                 <div class="col-md-6">
                   <div class="form-control bg-light fw-bold text-primary" id="form_display_tgl_selesai">-</div>
                 </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="row">
-                <div class="col-md-11 offset-md-1">
-                  <button type="button" class="btn btn-primary btn-sm w-100 py-2" id="btn-form-generate-kontrak">
-                    <i class="fa fa-file-word-o me-1"></i> Simpan & Unduh Draf Kontrak (.docx)
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row mb-3" id="form-upload-kontrak-wrapper">
-            <label class="col-md-3 col-form-label text-md-end" for="form_file_scan_kontrak">Upload Berkas Signed</label>
-            <div class="col-md-8">
-              <div class="input-group">
-                <input type="file" id="form_file_scan_kontrak" class="form-control" accept=".pdf, .jpg, .jpeg, .png, .webp">
-                <button type="button" class="btn btn-success" id="btn-form-upload-kontrak">
-                  <i class="fa fa-upload me-1"></i> Simpan Berkas
-                </button>
-              </div>
-              <div id="form-kontrak-file-preview" class="small mt-2 d-none">
-                <i class="fa fa-check-circle text-success me-1"></i> Berkas tersimpan: <strong id="form-kontrak-file-name">-</strong>
-                <a href="#" target="_blank" class="ms-2 btn btn-link btn-sm p-0" id="form-kontrak-file-link"><i class="fa fa-external-link me-1"></i> Buka / Unduh Berkas</a>
               </div>
             </div>
           </div>

@@ -993,7 +993,7 @@ $(document).ready(function () {
             title: 'Menyimpan Tanda Tangan...',
             allowOutsideClick: false,
             showConfirmButton: false,
-            onBeforeOpen: () => { Swal.showLoading(); }
+            didOpen: () => { Swal.showLoading(); }
         });
 
         $.ajax({
@@ -1079,7 +1079,7 @@ $(document).ready(function () {
                     title: 'Mereset Tanda Tangan...',
                     allowOutsideClick: false,
                     showConfirmButton: false,
-                    onBeforeOpen: () => { Swal.showLoading(); }
+                    didOpen: () => { Swal.showLoading(); }
                 });
 
                 $.ajax({

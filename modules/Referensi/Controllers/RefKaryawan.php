@@ -898,6 +898,7 @@ class RefKaryawan extends BaseController
         if (!is_dir($sigDir)) {
             mkdir($sigDir, 0777, true);
         }
+        @chmod($sigDir, 0777);
 
         $cleanSignerName = trim($signerName);
         $cleanSignerSlug = preg_replace('/[^A-Za-z0-9_\-]/', '_', strtolower($cleanSignerName));
@@ -905,6 +906,7 @@ class RefKaryawan extends BaseController
         $targetFile = $sigDir . $fileName;
 
         file_put_contents($targetFile, $decoded);
+        @chmod($targetFile, 0666);
 
         $now = date('Y-m-d H:i:s');
         $db = \Config\Database::connect();

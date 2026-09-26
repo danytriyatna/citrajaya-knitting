@@ -42,7 +42,7 @@ $(document).ready(function () {
 
     if (!isReadOnly) {
         detailColumns.push({
-            title: "Aksi", width: "4%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "Aksi", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             formatter: function () {
                 return '<button type="button" class="btn btn-xs btn-danger py-1 px-2 btn-delete-row shadow-sm" title="Hapus Karyawan"><i class="fa fa-trash"></i></button>';
             },
@@ -71,10 +71,10 @@ $(document).ready(function () {
 
     detailColumns.push(
         {
-            title: "No", formatter: "rownum", width: "4%", hozAlign: "center", headerHozAlign: "center", headerSort: false
+            title: "No", formatter: "rownum", hozAlign: "center", headerHozAlign: "center", headerSort: false
         },
         {
-            title: "NIP & Nama Karyawan", field: "full_name", width: "15%", headerSort: false,
+            title: "NIP & Nama Karyawan", field: "full_name", minWidth: 160, headerSort: false,
             formatter: function (cell) {
                 let d = cell.getRow().getData();
                 let jamAbsen = parseFloat(d.jam_lembur_absen) || 0;
@@ -83,7 +83,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Pekerjaan / Tugas", field: "pekerjaan", width: "13%", headerSort: false,
+            title: "Pekerjaan / Tugas", field: "pekerjaan", minWidth: 140, headerSort: false,
             editor: isReadOnly ? false : "input",
             formatter: function (cell) {
                 let val = cell.getValue();
@@ -91,7 +91,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Target", field: "target", width: "7%", hozAlign: "right", headerHozAlign: "right", headerSort: false,
+            title: "Target", field: "target", hozAlign: "right", headerHozAlign: "right", headerSort: false,
             editor: isReadOnly ? false : "number",
             editorParams: { min: 0, step: 1 },
             formatter: function (cell) {
@@ -102,7 +102,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Satuan", field: "satuan_target", width: "6%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "Satuan", field: "satuan_target", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             editor: isReadOnly ? false : "list",
             editorParams: {
                 values: ["Pcs", "Lusin", "Kg", "Meter", "Box", "Lot", "Roll", "Lembar"],
@@ -111,7 +111,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Realisasi", field: "realisasi", width: "7%", hozAlign: "right", headerHozAlign: "right", headerSort: false,
+            title: "Realisasi", field: "realisasi", hozAlign: "right", headerHozAlign: "right", headerSort: false,
             editor: isReadOnly ? false : "number",
             editorParams: { min: 0, step: 1 },
             formatter: function (cell) {
@@ -122,7 +122,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "% Capai", field: "persentase", width: "7%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "% Capai", field: "persentase", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             formatter: function (cell) {
                 let val = parseFloat(cell.getValue()) || 0;
                 let colorClass = val >= 100 ? 'badge bg-success' : (val >= 80 ? 'badge bg-info text-white' : (val > 0 ? 'badge bg-warning text-dark' : 'badge bg-secondary'));
@@ -130,7 +130,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Masuk", field: "jam_masuk", width: "6%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "Masuk", field: "jam_masuk", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             formatter: function (cell) {
                 let val = cell.getValue();
                 if (!val || val === "-") {
@@ -140,7 +140,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Pulang", field: "jam_keluar", width: "6%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "Pulang", field: "jam_keluar", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             formatter: function (cell) {
                 let val = cell.getValue();
                 if (!val || val === "-") {
@@ -150,7 +150,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Status Lembur", field: "status_lembur", width: "8%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            title: "Status Lembur", field: "status_lembur", hozAlign: "center", headerHozAlign: "center", headerSort: false,
             formatter: function (cell) {
                 let val = cell.getValue();
                 if (val == 1 || val === "1" || val === "Lembur Weekday") {
@@ -162,7 +162,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Jam Absen", field: "jam_lembur_absen", width: "7%", hozAlign: "right", headerHozAlign: "right", headerSort: false,
+            title: "Jam Absen", field: "jam_lembur_absen", hozAlign: "right", headerHozAlign: "right", headerSort: false,
             formatter: function (cell) {
                 let val = parseFloat(cell.getValue()) || 0;
                 if (val <= 0) {
@@ -172,7 +172,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Jam Dihitung", field: "jam_lembur_dihitung", width: "8%", hozAlign: "right", headerHozAlign: "right", headerSort: false,
+            title: "Jam Dihitung", field: "jam_lembur_dihitung", hozAlign: "right", headerHozAlign: "right", headerSort: false,
             formatter: function (cell) {
                 let val = parseFloat(cell.getValue()) || 0;
                 let badgeClass = val > 0 ? 'bg-light-primary text-primary border border-primary' : 'bg-light text-muted border';
@@ -180,7 +180,7 @@ $(document).ready(function () {
             }
         },
         {
-            title: "Catatan", field: "catatan", width: "8%", headerSort: false,
+            title: "Catatan", field: "catatan", minWidth: 120, headerSort: false,
             editor: isReadOnly ? false : "input",
             formatter: function (cell) {
                 let val = cell.getValue();
@@ -191,7 +191,7 @@ $(document).ready(function () {
 
     let dtDetail = new Tabulator("#dt-detail-lembur", {
         data: initialDetailData,
-        layout: "fitColumns",
+        layout: "fitDataFill",
         placeholder: "Belum ada karyawan yang ditambahkan. Klik tombol '+ Tambah Karyawan' di atas.",
         minHeight: 250,
         columns: detailColumns,

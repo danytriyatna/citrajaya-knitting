@@ -49,6 +49,15 @@
 
 <?= $this->section('content'); ?>
 
+<style>
+  #dt-detail-lembur .tabulator-col-title {
+    white-space: nowrap !important;
+  }
+  #dt-detail-lembur .tabulator-cell {
+    white-space: nowrap !important;
+  }
+</style>
+
 <div class="container-fluid">
 
   <div class="row page-titles">

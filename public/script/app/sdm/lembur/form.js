@@ -38,7 +38,38 @@ $(document).ready(function () {
         $("#lbl-total-jam-dihitung").text(totalJamDihitung.toFixed(2));
     }
 
-    let detailColumns = [
+    let detailColumns = [];
+
+    if (!isReadOnly) {
+        detailColumns.push({
+            title: "Aksi", width: "4%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
+            formatter: function () {
+                return '<button type="button" class="btn btn-xs btn-danger py-1 px-2 btn-delete-row shadow-sm" title="Hapus Karyawan"><i class="fa fa-trash"></i></button>';
+            },
+            cellClick: function (e, cell) {
+                if ($(e.target).closest(".btn-delete-row").length) {
+                    let d = cell.getRow().getData();
+                    Swal.fire({
+                        title: "Hapus Karyawan?",
+                        text: `Karyawan "${d.full_name}" akan dihapus dari daftar penugasan lembur ini.`,
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#dc3545",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Ya, Hapus",
+                        cancelButtonText: "Batal"
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            cell.getRow().delete();
+                            updateSummaryTotals();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    detailColumns.push(
         {
             title: "No", formatter: "rownum", width: "4%", hozAlign: "center", headerHozAlign: "center", headerSort: false
         },
@@ -156,36 +187,7 @@ $(document).ready(function () {
                 return val ? val : '<span class="text-muted small">-</span>';
             }
         }
-    ];
-
-    if (!isReadOnly) {
-        detailColumns.push({
-            title: "Aksi", width: "6%", hozAlign: "center", headerHozAlign: "center", headerSort: false,
-            formatter: function () {
-                return '<button type="button" class="btn btn-xs btn-danger py-1 px-2 btn-delete-row font-weight-bold" title="Hapus Karyawan dari Lembur"><i class="fa fa-trash me-1"></i> Hapus</button>';
-            },
-            cellClick: function (e, cell) {
-                if ($(e.target).closest(".btn-delete-row").length) {
-                    let d = cell.getRow().getData();
-                    Swal.fire({
-                        title: "Hapus Karyawan?",
-                        text: `Karyawan "${d.full_name}" akan dihapus dari daftar penugasan lembur ini.`,
-                        icon: "question",
-                        showCancelButton: true,
-                        confirmButtonColor: "#dc3545",
-                        cancelButtonColor: "#6c757d",
-                        confirmButtonText: "Ya, Hapus",
-                        cancelButtonText: "Batal"
-                    }).then((res) => {
-                        if (res.isConfirmed) {
-                            cell.getRow().delete();
-                            updateSummaryTotals();
-                        }
-                    });
-                }
-            }
-        });
-    }
+    );
 
     let dtDetail = new Tabulator("#dt-detail-lembur", {
         data: initialDetailData,

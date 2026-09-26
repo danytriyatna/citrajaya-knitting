@@ -4,7 +4,7 @@
   <div class="container-fluid">
     <style>
       /* ==========================================================================
-         STANDAR UI/UX & KODING DASHBOARD (MANDAT SAKRAL DANY TRIYATNA)
+         STANDAR UI/UX DASHBOARD (WARNA ASLI DASHBOARD DIPERTAHANKAN)
          ========================================================================== */
       .card-header h6 {
         font-size: 13px !important;
@@ -12,37 +12,9 @@
         letter-spacing: 0.5px !important;
       }
 
-      /* Standar Thead Tabulator & Table */
-      .tabulator .tabulator-header,
-      .tabulator.table-striped .tabulator-header,
-      .tabulator.table-striped .tabulator-header .tabulator-headers .tabulator-col,
-      .tabulator.table-striped .tabulator-col-content .tabulator-header .tabulator-headers .tabulator-col,
-      .tabulator.table-striped .tabulator-cell .tabulator-header .tabulator-headers .tabulator-col,
-      #tbl-tracking .tabulator-header,
-      #tbl-tracking .tabulator-col,
-      #tbl-persediaan-ringkasan .tabulator-header,
-      #tbl-persediaan-ringkasan .tabulator-col,
-      #tbl-persediaan-detail .tabulator-header,
-      #tbl-persediaan-detail .tabulator-col,
-      #tbl-invoice .tabulator-header,
-      #tbl-invoice .tabulator-col,
-      #tbl-po .tabulator-header,
-      #tbl-po .tabulator-col,
-      #tbl-saldo .tabulator-header,
-      #tbl-saldo .tabulator-col,
+      /* Tipografi Thead Tabulator & Table (Warna Tetap Mengikuti Tema Asli Aplikasi) */
+      .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title,
       table.table thead th {
-        background-color: #1e293b !important;
-        background: #1e293b !important;
-        color: #ffffff !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-        border-color: #334155 !important;
-      }
-
-      .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
-        color: #ffffff !important;
         font-size: 11px !important;
         font-weight: 700 !important;
         letter-spacing: 0.5px !important;
@@ -60,9 +32,7 @@
       table.table tbody td {
         font-size: 13px !important;
         font-weight: 600 !important;
-        color: #0f172a !important;
         padding: 6px 10px !important;
-        border-color: #cbd5e1 !important;
         vertical-align: middle !important;
       }
 
@@ -72,18 +42,8 @@
       .tabulator-calcs-holder .tabulator-cell,
       #tbl-tracking .tabulator-calcs-holder .tabulator-cell,
       #tbl-persediaan-ringkasan .tabulator-calcs-holder .tabulator-cell {
-        background-color: #f1f5f9 !important;
-        color: #0f172a !important;
         font-size: 13px !important;
         font-weight: 700 !important;
-        border-top: 1px solid #cbd5e1 !important;
-        border-bottom: 1px solid #cbd5e1 !important;
-      }
-
-      /* Border Container */
-      .tabulator {
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 4px;
       }
     </style>
 

@@ -1357,17 +1357,20 @@ class RefKaryawan extends BaseController
                 if ($top <= $bottom && $left <= $right) {
                     $cropWidth = ($right - $left) + 1;
                     $cropHeight = ($bottom - $top) + 1;
-                    $cropped = imagecrop($im, ['x' => $left, 'y' => $top, 'width' => $cropWidth, 'height' => $cropHeight]);
-                    if ($cropped !== false) {
-                        imagealphablending($cropped, false);
-                        imagesavealpha($cropped, true);
-                        ob_start();
-                        imagepng($cropped);
-                        $data = ob_get_clean();
-                        imagedestroy($cropped);
-                        imagedestroy($im);
-                        return 'data:image/png;base64,' . base64_encode($data);
-                    }
+
+                    $cropped = imagecreatetruecolor($cropWidth, $cropHeight);
+                    imagealphablending($cropped, false);
+                    imagesavealpha($cropped, true);
+                    $transparent = imagecolorallocatealpha($cropped, 0, 0, 0, 127);
+                    imagefilledrectangle($cropped, 0, 0, $cropWidth, $cropHeight, $transparent);
+                    imagecopy($cropped, $im, 0, 0, $left, $top, $cropWidth, $cropHeight);
+
+                    ob_start();
+                    imagepng($cropped);
+                    $data = ob_get_clean();
+                    imagedestroy($cropped);
+                    imagedestroy($im);
+                    return 'data:image/png;base64,' . base64_encode($data);
                 }
                 imagedestroy($im);
             }

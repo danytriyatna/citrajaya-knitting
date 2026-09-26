@@ -901,12 +901,13 @@ class ProductionModel extends \App\Models\PrModel
             $nilai_bahan = (float)($bbRow->total_bahan ?? 0);
         }
 
-        // 4. Nilai Tenaga Kerja (trans_produksi_operator) - Hanya P1 (Produksi), P2 tidak dihitung
+        // 4. Nilai Tenaga Kerja (trans_produksi_operator) - Hanya P1 (BTM / Non-BTMC), P2 tidak dihitung
         if (!empty($idProd)) {
             $tkRow = $this->db->query("
                 SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as total_tk
                 FROM trans_produksi_operator tpo
                 WHERE tpo.id_produksi = {$idProd}
+                AND (tpo.kode_transaksi NOT LIKE 'BTMC%' OR tpo.kode_transaksi IS NULL)
                 AND (tpo.print_type = 1 OR tpo.print_type IS NULL)
             ")->getRow();
             $nilai_tk = (float)($tkRow->total_tk ?? 0);
@@ -996,6 +997,7 @@ class ProductionModel extends \App\Models\PrModel
                 FROM trans_produksi_operator tpo
                 INNER JOIN _jenis_proses_produksi jpp ON jpp.id = tpo.id_proses
                 WHERE tpo.id_produksi = {$idProd}
+                AND (tpo.kode_transaksi NOT LIKE 'BTMC%' OR tpo.kode_transaksi IS NULL)
                 GROUP BY jpp.nama, jpp.seq, jpp.id
                 ORDER BY jpp.seq ASC
             ")->getResult();
@@ -1135,6 +1137,7 @@ class ProductionModel extends \App\Models\PrModel
                     SELECT COALESCE(SUM(COALESCE(tpo.harga_total, tpo.qty * tpo.harga, 0)), 0) as tot_tk
                     FROM trans_produksi_operator tpo
                     WHERE tpo.id_produksi IN ({$prodList})
+                    AND (tpo.kode_transaksi NOT LIKE 'BTMC%' OR tpo.kode_transaksi IS NULL)
                     AND (tpo.print_type = 1 OR tpo.print_type IS NULL)
                 ")->getRow();
                 $tot_tk = (float)($tkRow->tot_tk ?? 0);

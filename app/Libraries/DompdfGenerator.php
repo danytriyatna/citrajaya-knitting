@@ -17,15 +17,15 @@ class DompdfGenerator
         $this->dompdf = new Dompdf($options);
     }
 
-    public function generate($html, $filename = 'document.pdf', $stream = true)
+    public function generate($html, $filename = 'document.pdf', $stream = true, $paper = 'A4', $orientation = 'landscape', $attachment = 0)
     {
         $this->dompdf->loadHtml($html);
-        $this->dompdf->setPaper('A4', 'landscape'); // Ukuran kertas dan orientasi
+        $this->dompdf->setPaper($paper, $orientation); // Ukuran kertas dan orientasi
         $this->dompdf->render();
 
         if ($stream) {
             // Stream ke browser
-            $this->dompdf->stream($filename, ['Attachment' => 0]); // Attachment 0 = tampil di browser
+            $this->dompdf->stream($filename, ['Attachment' => $attachment]); // Attachment 0 = tampil di browser, 1 = download
         } else {
             // Simpan ke file
             return $this->dompdf->output();

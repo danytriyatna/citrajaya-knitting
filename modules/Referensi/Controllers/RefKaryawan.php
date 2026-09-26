@@ -644,10 +644,7 @@ class RefKaryawan extends BaseController
             $this->resolveTtdWithMaster($row);
         }
 
-        $templatePath = WRITEPATH . 'templates/TEMPLATE_KONTRAK_KERJA.docx';
-        if (!file_exists($templatePath)) {
-            throw new \Exception('Template kontrak kerja tidak ditemukan di server.');
-        }
+        $company = $this->getCompanyProfile($row->id_perusahaan ?? 1);
 
         $tgl_mulai = !empty($row->tgl_mulai_kontrak) ? $row->tgl_mulai_kontrak : date('Y-m-d');
         $durasi = !empty($row->durasi_kontrak_bulan) ? (int)$row->durasi_kontrak_bulan : 3;
@@ -657,6 +654,63 @@ class RefKaryawan extends BaseController
             $startDate = new \DateTime($tgl_mulai);
             $endDate = (clone $startDate)->modify("+{$durasi} months")->modify('-1 day');
             $tgl_selesai = $endDate->format('Y-m-d');
+        }
+
+        $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->full_name ?? 'Karyawan');
+        $cleanNip = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nip ?? 'KRY');
+
+        $format = $this->request->getGet('format') ?? 'pdf';
+
+        if ($format === 'pdf') {
+            $dompdf = new \App\Libraries\DompdfGenerator();
+
+            // Load images as base64 for reliable PDF rendering
+            $logoPath = FCPATH . 'assets/images/kontrak/logo_cjk_header.png';
+            $wmPath = FCPATH . 'assets/images/kontrak/watermark_cjk.png';
+            $b64Logo = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+            $b64Wm = file_exists($wmPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($wmPath)) : '';
+
+            $sig1Path = !empty($row->ttd_pihak1_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_pihak1_file : null;
+            $sig2Path = !empty($row->ttd_pihak2_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_pihak2_file : null;
+            $sig3Path = !empty($row->ttd_mengetahui_file) ? FCPATH . 'uploads/kontrak/signatures/' . $row->ttd_mengetahui_file : null;
+
+            $b64Sig1 = ($sig1Path && file_exists($sig1Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig1Path)) : null;
+            $b64Sig2 = ($sig2Path && file_exists($sig2Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig2Path)) : null;
+            $b64Sig3 = ($sig3Path && file_exists($sig3Path)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($sig3Path)) : null;
+
+            $pdfFilename = 'KONTRAK_KERJA_' . $cleanNip . '_' . $cleanName . '.pdf';
+
+            $viewData = [
+                'karyawan' => $row,
+                'company' => $company,
+                'durasi' => $durasi,
+                'durasiTerbilang' => $this->terbilangAngka($durasi),
+                'tglMulaiIndo' => $this->formatTglIndoLengkap($tgl_mulai),
+                'tglSelesaiIndo' => $this->formatTglIndoLengkap($tgl_selesai),
+                'tglTtd' => $this->formatTglIndoLengkap(date('Y-m-d')),
+                'ttlIndo' => $this->formatTglIndoLengkap($row->tgl_lahir),
+                'upahHarian' => number_format((float)($row->upah_harian ?? 0), 0, ',', '.'),
+                'p1Nama' => !empty($company->pihak1_nama) ? $company->pihak1_nama : 'Eva Fiantina',
+                'p1Jabatan' => !empty($company->pihak1_jabatan) ? $company->pihak1_jabatan : 'HRD Citra Jaya Knitting',
+                'p3Nama' => !empty($company->mengetahui_nama) ? $company->mengetahui_nama : 'Edwin Ferdiansyah',
+                'p3Jabatan' => !empty($company->mengetahui_jabatan) ? $company->mengetahui_jabatan : 'Pimpinan CV. Citra Jaya Knitting',
+                'b64Logo' => $b64Logo,
+                'b64Watermark' => $b64Wm,
+                'b64Sig1' => $b64Sig1,
+                'b64Sig2' => $b64Sig2,
+                'b64Sig3' => $b64Sig3,
+            ];
+
+            $html = view($this->views . '\karyawan\kontrak_pdf', $viewData);
+
+            $attachment = ($this->request->getGet('download') == '1') ? 1 : 0;
+            $dompdf->generate($html, $pdfFilename, true, 'A4', 'portrait', $attachment);
+            exit;
+        }
+
+        $templatePath = WRITEPATH . 'templates/TEMPLATE_KONTRAK_KERJA.docx';
+        if (!file_exists($templatePath)) {
+            throw new \Exception('Template kontrak kerja tidak ditemukan di server.');
         }
 
         $tempDir = WRITEPATH . 'cache/';

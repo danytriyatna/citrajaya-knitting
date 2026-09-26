@@ -338,12 +338,12 @@
               <div>
                 <div class="fw-bold text-dark"><i class="fa fa-file-text text-primary me-1"></i> Dokumen Kontrak Kerja</div>
                 <div class="small text-muted" id="form-kontrak-action-info">
-                  Unduh berkas kontrak kerja Word (.docx) lengkap dengan tanda tangan digital para pihak.
+                  Unduh berkas kontrak kerja PDF (.pdf) lengkap dengan tanda tangan digital para pihak.
                 </div>
               </div>
               <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary px-3 shadow-sm" id="btn-form-generate-docx">
-                  <i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)
+                <button type="button" class="btn btn-danger px-3 shadow-sm" id="btn-form-generate-docx">
+                  <i class="fa fa-file-pdf-o me-1"></i> Lihat / Unduh Kontrak (.pdf)
                 </button>
                 <a href="#" target="_blank" class="btn btn-outline-success px-3 shadow-sm d-none" id="btn-form-view-signed-file">
                   <i class="fa fa-external-link me-1"></i> Buka Berkas Scan
@@ -472,8 +472,8 @@
                         <span class="small text-muted">Dokumen kontrak sah secara digital lengkap dengan 3 tanda tangan.</span>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-success btn-sm px-3 shadow-sm" id="btn-quick-download-signed">
-                      <i class="fa fa-download me-1"></i> Unduh Dokumen (.docx)
+                    <button type="button" class="btn btn-danger btn-sm px-3 shadow-sm" id="btn-quick-download-signed">
+                      <i class="fa fa-file-pdf-o me-1"></i> Unduh Kontrak (.pdf)
                     </button>
                   </div>
                 </div>
@@ -533,8 +533,8 @@
               </div>
 
               <div class="mt-3 text-end">
-                <button type="button" class="btn btn-primary px-3" id="btn-do-generate-kontrak">
-                  <i class="fa fa-download me-1"></i> Unduh Dokumen Kontrak (.docx)
+                <button type="button" class="btn btn-danger px-3" id="btn-do-generate-kontrak">
+                  <i class="fa fa-file-pdf-o me-1"></i> Generate Kontrak (.pdf)
                 </button>
               </div>
             </form>

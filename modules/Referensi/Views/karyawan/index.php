@@ -275,6 +275,41 @@
               </div>
             </div>
           </div>
+
+          <!-- Penandatangan Kontrak (3 Pihak) -->
+          <div class="row mb-3">
+            <label class="col-md-3 col-form-label text-md-end">Penandatangan</label>
+            <div class="col-md-8">
+              <div class="row g-2">
+                <!-- Pihak Pertama -->
+                <div class="col-md-4">
+                  <div class="border rounded p-2 bg-light text-center h-100">
+                    <span class="badge bg-primary mb-1">PIHAK PERTAMA</span>
+                    <div class="fw-bold text-dark small" id="form_ttd_pihak1_nama">Eva Fiantina</div>
+                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_pihak1_jabatan">HRD Citra Jaya Knitting</div>
+                  </div>
+                </div>
+
+                <!-- Pihak Kedua -->
+                <div class="col-md-4">
+                  <div class="border rounded p-2 bg-light text-center h-100">
+                    <span class="badge bg-success mb-1">PIHAK KEDUA</span>
+                    <div class="fw-bold text-dark small" id="form_ttd_pihak2_nama">-</div>
+                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_pihak2_jabatan">Karyawan</div>
+                  </div>
+                </div>
+
+                <!-- Mengetahui -->
+                <div class="col-md-4">
+                  <div class="border rounded p-2 bg-light text-center h-100">
+                    <span class="badge bg-dark mb-1">MENGETAHUI</span>
+                    <div class="fw-bold text-dark small" id="form_ttd_mengetahui_nama">Edwin Ferdiansyah</div>
+                    <div class="text-muted" style="font-size: 11px;" id="form_ttd_mengetahui_jabatan">Pimpinan CV. Citra Jaya Knitting</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -376,6 +411,34 @@
                 <div class="col-md-4">
                   <label class="form-label small fw-bold">Tanggal Akhir / Selesai</label>
                   <div class="form-control bg-light fw-bold text-primary" id="display_tgl_selesai_kontrak">-</div>
+                </div>
+              </div>
+
+              <!-- Penandatangan Kontrak (3 Pihak) di Modal Kelola -->
+              <div class="mt-3 pt-3 border-top">
+                <label class="form-label small fw-bold text-muted mb-2"><i class="fa fa-pencil-square-o me-1"></i> Penandatangan Dokumen Kontrak</label>
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 bg-light text-center h-100">
+                      <span class="badge bg-primary mb-1">PIHAK PERTAMA</span>
+                      <div class="fw-bold text-dark small">Eva Fiantina</div>
+                      <div class="text-muted" style="font-size: 11px;">HRD Citra Jaya Knitting</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 bg-light text-center h-100">
+                      <span class="badge bg-success mb-1">PIHAK KEDUA</span>
+                      <div class="fw-bold text-dark small" id="kelola-ttd-pihak2-nama">-</div>
+                      <div class="text-muted" style="font-size: 11px;" id="kelola-ttd-pihak2-jabatan">Karyawan</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 bg-light text-center h-100">
+                      <span class="badge bg-dark mb-1">MENGETAHUI</span>
+                      <div class="fw-bold text-dark small">Edwin Ferdiansyah</div>
+                      <div class="text-muted" style="font-size: 11px;">Pimpinan CV. Citra Jaya Knitting</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

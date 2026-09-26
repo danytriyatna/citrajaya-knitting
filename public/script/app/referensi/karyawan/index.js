@@ -88,6 +88,9 @@ $(document).ready(function () {
             } else {
                 badgeEl.attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
             }
+
+            $('#form_ttd_pihak2_nama').text(data_row.full_name || '-');
+            $('#form_ttd_pihak2_jabatan').text(data_row.posisi || 'Karyawan');
         } else {
             divCMT.removeClass("d-none");
             selectCMT.val(data_row.id_operator).trigger("change");
@@ -355,6 +358,8 @@ $(document).ready(function () {
         $('#form_durasi_kontrak').val('3');
         $('#form_display_tgl_selesai').text('-');
         $('#form-kontrak-status-badge').attr('class', 'badge bg-secondary p-2').html('<i class="fa fa-file-o me-1"></i> Belum Dibuat');
+        $('#form_ttd_pihak2_nama').text('-');
+        $('#form_ttd_pihak2_jabatan').text('Karyawan');
 
         setTimeout(() => {
             inpBank.val("").trigger('change');
@@ -515,6 +520,16 @@ $(document).ready(function () {
         updateFormTglSelesai();
     });
 
+    inpNama.on('input change', function () {
+        let val = $(this).val().trim();
+        $('#form_ttd_pihak2_nama').text(val ? val : '-');
+    });
+
+    inpPosisi.on('input change', function () {
+        let val = $(this).val().trim();
+        $('#form_ttd_pihak2_jabatan').text(val ? val : 'Karyawan');
+    });
+
     // ==========================================
     // KELOLA KONTRAK KERJA KARYAWAN
     // ==========================================
@@ -546,6 +561,8 @@ $(document).ready(function () {
         $('#kontrak-nama').text(row.full_name || '-');
         $('#kontrak-posisi').text(row.posisi || '-');
         $('#kontrak_karyawan_id').val(row.id);
+        $('#kelola-ttd-pihak2-nama').text(row.full_name || '-');
+        $('#kelola-ttd-pihak2-jabatan').text(row.posisi || 'Karyawan');
 
         $('#kontrak-alert-warning').addClass('d-none');
         $('#kontrak-missing-list').empty();
@@ -602,6 +619,8 @@ $(document).ready(function () {
                     $('#kontrak-preview-alamat').text(d.alamat || '-');
                     $('#kontrak-preview-posisi').text(d.posisi || '-');
                     $('#kontrak-preview-upah').text('Rp. ' + (d.upah_harian_formatted || '0') + ' / hari');
+                    $('#kelola-ttd-pihak2-nama').text(d.full_name || '-');
+                    $('#kelola-ttd-pihak2-jabatan').text(d.posisi || 'Karyawan');
 
                     // Parameter Kontrak
                     $('#input_tgl_mulai_kontrak').val(d.tgl_mulai_kontrak || '');

@@ -733,6 +733,9 @@
               </script>
             <?php endif; ?>
 
+            <!-- Alert Bar Kontrak Expiring / Expired -->
+            <div id="contract-alert-bar" class="mb-3 d-none"></div>
+
             <div class="row">
               <div class="col-sm-12">
                 <div id="dt-list" class="table-responsive table-striped"></div>

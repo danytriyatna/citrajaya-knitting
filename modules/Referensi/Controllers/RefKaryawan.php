@@ -113,14 +113,33 @@ class RefKaryawan extends BaseController
         $totaldata = $this->mkaryawan->getDataCnt(null, $params);
         $maxpage = ceil($totalfiltered / $limit);
 
+        $db = \Config\Database::connect();
+        $todayStr = date('Y-m-d');
+        $next30Days = date('Y-m-d', strtotime('+30 days'));
+
+        $cntWarning = $db->table('ref_karyawan')
+            ->where('active', 1)
+            ->where('type', 1)
+            ->where('tgl_selesai_kontrak >=', $todayStr)
+            ->where('tgl_selesai_kontrak <=', $next30Days)
+            ->countAllResults();
+
+        $cntExpired = $db->table('ref_karyawan')
+            ->where('active', 1)
+            ->where('type', 1)
+            ->where('tgl_selesai_kontrak IS NOT NULL')
+            ->where('tgl_selesai_kontrak <', $todayStr)
+            ->countAllResults();
+
         $build_array = array(
             "last_page" => $maxpage,
             "recordsTotal" => $totaldata,
             "recordsFiltered" => $totalfiltered,
+            "cnt_warning" => $cntWarning,
+            "cnt_expired" => $cntExpired,
             "data" => array()
         );
 
-        $db = \Config\Database::connect();
         $companies = $db->table('ref_perusahaan')->get()->getResult();
         $companyMap = [];
         foreach ($companies as $c) {

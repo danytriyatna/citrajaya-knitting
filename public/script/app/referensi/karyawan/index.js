@@ -364,6 +364,10 @@ $(document).ready(function () {
             let recordsFiltered = parseInt(response.recordsFiltered);
             let recordsTotal = parseInt(response.recordsTotal);
 
+            if (response.cnt_warning !== undefined) {
+                updateContractAlertBar(response.cnt_warning, response.cnt_expired);
+            }
+
             $("#table-footer .tabulator-startrow").text(startRow);
             $("#table-footer .tabulator-endrow").text(endRow);
             $("#table-footer .tabulator-totalrow").text(recordsFiltered);
@@ -375,6 +379,19 @@ $(document).ready(function () {
                     + " entri keseluruhan)");
             }
             return response;
+        },
+        rowFormatter: function (row) {
+            let data = row.getData();
+            let el = row.getElement();
+            if (data.status_expired_kontrak === 'warning') {
+                el.style.backgroundColor = "rgba(255, 193, 7, 0.12)";
+                el.style.borderLeft = "4px solid #ffc107";
+            } else if (data.status_expired_kontrak === 'expired') {
+                el.style.backgroundColor = "rgba(220, 53, 69, 0.08)";
+                el.style.borderLeft = "4px solid #dc3545";
+            } else {
+                el.style.borderLeft = "none";
+            }
         },
         footerElement: '<div id="table-footer" class="pull-left tabulator-info">'
             + 'Menampilkan <span class="tabulator-startrow"></span> - <span class="tabulator-endrow"></span> dari '
@@ -388,6 +405,50 @@ $(document).ready(function () {
         },
         selectableRows: false,
 	});
+
+    function updateContractAlertBar(cntWarning, cntExpired) {
+        let alertBar = $("#contract-alert-bar");
+        let optWarning = $('#filter_kontrak option[value="warning"]');
+        let optExpired = $('#filter_kontrak option[value="expired"]');
+
+        if (optWarning.length) {
+            optWarning.text("⚠️ Akan Habis (≤ 1 Bulan) (" + cntWarning + ")");
+        }
+        if (optExpired.length) {
+            optExpired.text("⛔ Sudah Habis (" + cntExpired + ")");
+        }
+
+        if (cntWarning > 0 || cntExpired > 0) {
+            let html = '<div class="alert alert-warning border border-warning d-flex flex-wrap align-items-center justify-content-between p-3 rounded shadow-sm mb-0 gap-2">'
+                + '<div class="d-flex align-items-center">'
+                + '<i class="fa fa-bell fa-2x text-warning me-3"></i>'
+                + '<div>'
+                + '<h6 class="fw-bold mb-1 text-dark">Perhatian: Masa Berlaku Kontrak Karyawan</h6>'
+                + '<div class="d-flex flex-wrap gap-2 mt-1">';
+            
+            if (cntWarning > 0) {
+                html += '<span class="badge bg-warning text-dark border border-warning fs-7"><i class="fa fa-clock-o me-1"></i><b>' + cntWarning + '</b> Kontrak Akan Habis (&le; 1 Bulan)</span>';
+            }
+            if (cntExpired > 0) {
+                html += '<span class="badge bg-danger text-white fs-7"><i class="fa fa-exclamation-triangle me-1"></i><b>' + cntExpired + '</b> Kontrak Sudah Habis</span>';
+            }
+            html += '</div></div></div>'
+                + '<div class="d-flex align-items-center gap-2">'
+                + (cntWarning > 0 ? '<button type="button" class="btn btn-warning btn-sm text-dark fw-bold btn-quick-filter" data-val="warning"><i class="fa fa-filter me-1"></i>Lihat Akan Habis</button>' : '')
+                + (cntExpired > 0 ? '<button type="button" class="btn btn-danger btn-sm text-white fw-bold btn-quick-filter" data-val="expired"><i class="fa fa-filter me-1"></i>Lihat Sudah Habis</button>' : '')
+                + '<button type="button" class="btn btn-outline-secondary btn-sm btn-quick-filter" data-val="all">Semua Data</button>'
+                + '</div></div>';
+
+            alertBar.html(html).removeClass("d-none");
+        } else {
+            alertBar.addClass("d-none").html("");
+        }
+    }
+
+    $(document).on("click", ".btn-quick-filter", function () {
+        let val = $(this).data("val");
+        $("#filter_kontrak").val(val).trigger("change");
+    });
 
     let searchThread = null;
     let elSearch = $("#tb-search");

@@ -98,7 +98,16 @@ class KaryawanModel extends \App\Models\PrModel
             if (!empty($order)) {
                 $builder->orderBy($order[0]['field'], $order[0]['dir'], TRUE);
             } else {
-                $builder->orderBy('id');
+                $builder->orderBy("
+                    CASE 
+                        WHEN ky.type = 1 AND ky.tgl_selesai_kontrak IS NOT NULL AND ky.tgl_selesai_kontrak >= CURRENT_DATE AND ky.tgl_selesai_kontrak <= (CURRENT_DATE + INTERVAL '30 day') THEN 1
+                        WHEN ky.type = 1 AND ky.tgl_selesai_kontrak IS NOT NULL AND ky.tgl_selesai_kontrak < CURRENT_DATE THEN 2
+                        WHEN ky.type = 1 AND ky.tgl_selesai_kontrak IS NOT NULL AND ky.tgl_selesai_kontrak > (CURRENT_DATE + INTERVAL '30 day') THEN 3
+                        ELSE 4
+                    END ASC,
+                    ky.tgl_selesai_kontrak ASC NULLS LAST,
+                    ky.id ASC
+                ", '', false);
             }
 
             if (empty($offset)) $offset = 0;

@@ -963,6 +963,7 @@ class WalkorderModel extends \App\Models\PrModel
                         FROM trans_walkorder wo3
                         WHERE wo3.id = " . (int)$id . "
                     )
+                AND tbh.id_kategori = 5 AND tbh.active = 1
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_qty_pakai,
              (
@@ -975,6 +976,7 @@ class WalkorderModel extends \App\Models\PrModel
                         FROM trans_walkorder wo3
                         WHERE wo3.id = " . (int)$id . "
                     )
+                AND tbh.id_kategori = 5 AND tbh.active = 1
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_nilai_pakai,
              (
@@ -1013,6 +1015,7 @@ class WalkorderModel extends \App\Models\PrModel
                             FROM trans_walkorder wo3
                             WHERE wo3.id = " . (int)$id . "
                         )
+                    AND tbh.id_kategori = 5 AND tbh.active = 1
                     AND tbd.id_barang      = abx.id_barang
                 )
             ) AS sisa

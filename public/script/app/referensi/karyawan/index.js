@@ -800,11 +800,18 @@ $(document).ready(function () {
                 <div class="mb-1 bg-white border rounded p-1 shadow-sm d-flex align-items-center justify-content-center" style="height: 55px;">
                     <img src="${sigInfo.url}" alt="TTD" style="max-height: 48px; max-width: 100%; object-fit: contain;">
                 </div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <span class="text-success small fw-bold" style="font-size: 10px;"><i class="fa fa-check-circle me-1"></i> ${sigInfo.tgl || 'Sudah TTD'}</span>
-                    <button type="button" class="btn btn-link text-danger p-0 btn-delete-sig" style="font-size: 11px; text-decoration: none;" title="Hapus TTD" data-pihak="${pihak}" data-nama="${name}">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                <div class="d-flex align-items-center justify-content-between px-1">
+                    <span class="text-success small fw-bold text-truncate" style="font-size: 10px;" title="${sigInfo.tgl || 'Sudah TTD'}">
+                        <i class="fa fa-check-circle me-1"></i> ${sigInfo.tgl || 'Sudah TTD'}
+                    </span>
+                    <div class="d-flex align-items-center gap-1">
+                        <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-1 btn-open-sig" style="font-size: 10px;" data-pihak="${pihak}" data-nama="${name}" data-role="${role}" title="Ganti Tanda Tangan">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-link text-danger p-0 btn-delete-sig" style="font-size: 11px; text-decoration: none;" title="Hapus TTD" data-pihak="${pihak}" data-nama="${name}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `);
         } else {
@@ -975,7 +982,9 @@ $(document).ready(function () {
             data: {
                 id: karyawanId,
                 pihak: pihak,
-                signature: sigBase64
+                signature: sigBase64,
+                nama_penandatangan: $('#sig-target-name').text(),
+                jabatan_penandatangan: $('#sig-target-role').text()
             },
             dataType: 'json',
             success: function (res) {

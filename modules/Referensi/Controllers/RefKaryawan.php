@@ -119,6 +119,9 @@ class RefKaryawan extends BaseController
         );
 
         foreach ($results as $row) {
+            if ($row->type == 1) {
+                $this->resolveTtdWithMaster($row);
+            }
             $id = encrypt($row->id);
 
             $atr_edit = null; $atr_del = null; $btnAction = null;
@@ -449,6 +452,10 @@ class RefKaryawan extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
         }
 
+        if (($row->type ?? 1) == 1) {
+            $this->resolveTtdWithMaster($row);
+        }
+
         $missing = [];
         if (empty(trim($row->full_name ?? ''))) $missing[] = 'Nama Lengkap';
         if (empty(trim($row->tempat_lahir ?? ''))) $missing[] = 'Tempat Lahir';
@@ -541,6 +548,10 @@ class RefKaryawan extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
         }
 
+        if (($row->type ?? 1) == 1) {
+            $this->resolveTtdWithMaster($row);
+        }
+
         // Mandatory check
         $missing = [];
         if (empty(trim($row->full_name ?? ''))) $missing[] = 'Nama Lengkap';
@@ -600,6 +611,10 @@ class RefKaryawan extends BaseController
         $row = $this->mkaryawan->getData($rawId);
         if (!$row) {
             throw new \Exception('Data karyawan tidak ditemukan.');
+        }
+
+        if (($row->type ?? 1) == 1) {
+            $this->resolveTtdWithMaster($row);
         }
 
         $templatePath = WRITEPATH . 'templates/TEMPLATE_KONTRAK_KERJA.docx';
@@ -786,7 +801,7 @@ class RefKaryawan extends BaseController
 
         $id = $this->request->getPost('id');
         $pihak = (int)$this->request->getPost('pihak'); // 1 = Pihak Pertama, 2 = Pihak Kedua, 3 = Mengetahui
-        $sigData = $this->request->getPost('signature_data');
+        $sigData = $this->request->getPost('signature') ?: $this->request->getPost('signature_data');
 
         if (empty($id) || empty($pihak) || empty($sigData)) {
             return $this->response->setJSON(['status' => false, 'message' => 'Parameter tanda tangan tidak lengkap.']);
@@ -800,6 +815,23 @@ class RefKaryawan extends BaseController
         $row = $this->mkaryawan->getData($rawId);
         if (!$row) {
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
+        }
+
+        // Tentukan identitas penandatangan
+        $signerName = $this->request->getPost('nama_penandatangan');
+        $signerRole = $this->request->getPost('jabatan_penandatangan');
+
+        if (empty($signerName)) {
+            if ($pihak === 1) {
+                $signerName = 'Eva Fiantina';
+                $signerRole = 'HRD Citra Jaya Knitting';
+            } else if ($pihak === 2) {
+                $signerName = $row->full_name ?? 'Karyawan';
+                $signerRole = $row->posisi ?? 'Karyawan';
+            } else if ($pihak === 3) {
+                $signerName = 'Edwin Ferdiansyah';
+                $signerRole = 'Pimpinan CV. Citra Jaya Knitting';
+            }
         }
 
         // Decode base64 PNG
@@ -818,13 +850,40 @@ class RefKaryawan extends BaseController
             mkdir($sigDir, 0777, true);
         }
 
-        $cleanNip = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nip ?? 'KRY');
-        $fileName = 'ttd_' . $pihak . '_' . $cleanNip . '_' . time() . '.png';
+        $cleanSignerName = trim($signerName);
+        $cleanSignerSlug = preg_replace('/[^A-Za-z0-9_\-]/', '_', strtolower($cleanSignerName));
+        $fileName = 'ttd_' . $pihak . '_' . $cleanSignerSlug . '_' . time() . '.png';
         $targetFile = $sigDir . $fileName;
 
         file_put_contents($targetFile, $decoded);
 
         $now = date('Y-m-d H:i:s');
+        $db = \Config\Database::connect();
+
+        // 1. Simpan / perbarui ke tabel ref_tanda_tangan_master (Master Library TTD)
+        $existingMaster = $db->table('ref_tanda_tangan_master')
+            ->where('LOWER(TRIM(nama))', strtolower($cleanSignerName))
+            ->get()->getRow();
+
+        if ($existingMaster) {
+            $db->table('ref_tanda_tangan_master')
+                ->where('id', $existingMaster->id)
+                ->update([
+                    'file_ttd'   => $fileName,
+                    'jabatan'    => $signerRole,
+                    'updated_at' => $now,
+                ]);
+        } else {
+            $db->table('ref_tanda_tangan_master')->insert([
+                'nama'       => $cleanSignerName,
+                'jabatan'    => $signerRole,
+                'file_ttd'   => $fileName,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        // 2. Perbarui baris karyawan saat ini
         $update = [];
         if ($pihak === 1) {
             $update['ttd_pihak1_file'] = $fileName;
@@ -837,7 +896,6 @@ class RefKaryawan extends BaseController
             $update['ttd_mengetahui_tgl'] = $now;
         }
 
-        // Cek kelengkapan tanda tangan ketiga pihak
         $p1 = ($pihak === 1) ? $fileName : ($row->ttd_pihak1_file ?? null);
         $p2 = ($pihak === 2) ? $fileName : ($row->ttd_pihak2_file ?? null);
         $p3 = ($pihak === 3) ? $fileName : ($row->ttd_mengetahui_file ?? null);
@@ -851,9 +909,48 @@ class RefKaryawan extends BaseController
 
         $this->mkaryawan->updateRecord($this->mkaryawan->table, $update, 'id', $rawId);
 
+        // 3. Otomatis sinkronkan file tanda tangan ini ke karyawan internal lain yang namanya / pihak-nya sama dan belum memiliki TTD
+        if ($pihak === 1) {
+            $db->table('ref_karyawan')
+                ->where('type', 1)
+                ->where('active', 1)
+                ->groupStart()
+                    ->where('ttd_pihak1_file IS NULL', null, false)
+                    ->orWhere('ttd_pihak1_file', '')
+                ->groupEnd()
+                ->update([
+                    'ttd_pihak1_file' => $fileName,
+                    'ttd_pihak1_tgl'  => $now,
+                ]);
+        } else if ($pihak === 3) {
+            $db->table('ref_karyawan')
+                ->where('type', 1)
+                ->where('active', 1)
+                ->groupStart()
+                    ->where('ttd_mengetahui_file IS NULL', null, false)
+                    ->orWhere('ttd_mengetahui_file', '')
+                ->groupEnd()
+                ->update([
+                    'ttd_mengetahui_file' => $fileName,
+                    'ttd_mengetahui_tgl'  => $now,
+                ]);
+        } else if ($pihak === 2 && !empty($cleanSignerName)) {
+            $db->table('ref_karyawan')
+                ->where('LOWER(TRIM(full_name))', strtolower($cleanSignerName))
+                ->where('active', 1)
+                ->groupStart()
+                    ->where('ttd_pihak2_file IS NULL', null, false)
+                    ->orWhere('ttd_pihak2_file', '')
+                ->groupEnd()
+                ->update([
+                    'ttd_pihak2_file' => $fileName,
+                    'ttd_pihak2_tgl'  => $now,
+                ]);
+        }
+
         return $this->response->setJSON([
             'status' => true,
-            'message' => 'Tanda tangan digital berhasil disimpan!',
+            'message' => 'Tanda tangan digital berhasil disimpan dan tersimpan otomatis ke master penandatangan!',
             'file_name' => $fileName,
             'file_url' => base_url() . 'uploads/kontrak/signatures/' . $fileName,
             'tgl_formatted' => date('d/m/Y H:i', strtotime($now)),
@@ -885,16 +982,22 @@ class RefKaryawan extends BaseController
             return $this->response->setJSON(['status' => false, 'message' => 'Data karyawan tidak ditemukan.']);
         }
 
+        $db = \Config\Database::connect();
         $update = [];
         if ($pihak === 1) {
             $update['ttd_pihak1_file'] = null;
             $update['ttd_pihak1_tgl'] = null;
+            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', 'eva fiantina')->delete();
         } else if ($pihak === 2) {
             $update['ttd_pihak2_file'] = null;
             $update['ttd_pihak2_tgl'] = null;
+            if (!empty($row->full_name)) {
+                $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', strtolower(trim($row->full_name)))->delete();
+            }
         } else if ($pihak === 3) {
             $update['ttd_mengetahui_file'] = null;
             $update['ttd_mengetahui_tgl'] = null;
+            $db->table('ref_tanda_tangan_master')->where('LOWER(TRIM(nama))', 'edwin ferdiansyah')->delete();
         }
 
         if (($row->status_kontrak ?? 0) == 2 && empty($row->file_kontrak_id)) {
@@ -908,6 +1011,71 @@ class RefKaryawan extends BaseController
             'message' => 'Tanda tangan digital berhasil direset.',
             'status_kontrak' => $update['status_kontrak'] ?? $row->status_kontrak
         ]);
+    }
+
+    private function resolveTtdWithMaster(&$row)
+    {
+        if (empty($row) || !isset($row->id)) {
+            return;
+        }
+
+        $db = \Config\Database::connect();
+        $update = [];
+        $now = date('Y-m-d H:i:s');
+
+        // 1. Pihak 1 (Eva Fiantina)
+        $namaP1 = 'Eva Fiantina';
+        if (empty($row->ttd_pihak1_file)) {
+            $masterP1 = $db->table('ref_tanda_tangan_master')
+                ->where('LOWER(TRIM(nama))', strtolower(trim($namaP1)))
+                ->get()->getRow();
+            if ($masterP1 && !empty($masterP1->file_ttd)) {
+                $row->ttd_pihak1_file = $masterP1->file_ttd;
+                $row->ttd_pihak1_tgl = $masterP1->updated_at ?? $now;
+                $update['ttd_pihak1_file'] = $masterP1->file_ttd;
+                $update['ttd_pihak1_tgl'] = $masterP1->updated_at ?? $now;
+            }
+        }
+
+        // 2. Pihak 2 (Karyawan)
+        $namaP2 = trim($row->full_name ?? '');
+        if (!empty($namaP2) && empty($row->ttd_pihak2_file)) {
+            $masterP2 = $db->table('ref_tanda_tangan_master')
+                ->where('LOWER(TRIM(nama))', strtolower(trim($namaP2)))
+                ->get()->getRow();
+            if ($masterP2 && !empty($masterP2->file_ttd)) {
+                $row->ttd_pihak2_file = $masterP2->file_ttd;
+                $row->ttd_pihak2_tgl = $masterP2->updated_at ?? $now;
+                $update['ttd_pihak2_file'] = $masterP2->file_ttd;
+                $update['ttd_pihak2_tgl'] = $masterP2->updated_at ?? $now;
+            }
+        }
+
+        // 3. Mengetahui (Edwin Ferdiansyah)
+        $namaP3 = 'Edwin Ferdiansyah';
+        if (empty($row->ttd_mengetahui_file)) {
+            $masterP3 = $db->table('ref_tanda_tangan_master')
+                ->where('LOWER(TRIM(nama))', strtolower(trim($namaP3)))
+                ->get()->getRow();
+            if ($masterP3 && !empty($masterP3->file_ttd)) {
+                $row->ttd_mengetahui_file = $masterP3->file_ttd;
+                $row->ttd_mengetahui_tgl = $masterP3->updated_at ?? $now;
+                $update['ttd_mengetahui_file'] = $masterP3->file_ttd;
+                $update['ttd_mengetahui_tgl'] = $masterP3->updated_at ?? $now;
+            }
+        }
+
+        if (!empty($update)) {
+            $p1 = $row->ttd_pihak1_file ?? null;
+            $p2 = $row->ttd_pihak2_file ?? null;
+            $p3 = $row->ttd_mengetahui_file ?? null;
+            $allSigned = (!empty($p1) && !empty($p2) && !empty($p3));
+            if ($allSigned && ($row->status_kontrak ?? 0) < 2) {
+                $update['status_kontrak'] = 2;
+                $row->status_kontrak = 2;
+            }
+            $this->mkaryawan->updateRecord($this->mkaryawan->table, $update, 'id', $row->id);
+        }
     }
 
     private function injectSignaturesToDocx(&$zip, &$xml, $row)

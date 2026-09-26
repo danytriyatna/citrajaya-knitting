@@ -245,45 +245,67 @@
               </div>
               <div class="row mt-3">
                 <div class="col-12">
-                  <h6 class="f-w-700 m-b-6 m-t-8">ANALISIS RENDEMEN RAJUT &amp; GRAMATUR (HASIL RAJUT VS BENANG)</h6>
-                  <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-striped align-middle mb-0">
-                      <thead style="background-color: #1e293b !important; color: #ffffff !important;">
+                  <h6 class="f-w-800 m-b-6 m-t-8 text-dark" style="letter-spacing: 0.5px;">ANALISIS RENDEMEN RAJUT &amp; GRAMATUR (HASIL RAJUT VS BENANG)</h6>
+                  <div class="table-responsive rounded" style="border: 2px solid #0f172a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);">
+                    <table class="table table-bordered table-hover align-middle mb-0" style="border-collapse: collapse;">
+                      <thead style="background: #0f172a !important; color: #ffffff !important;">
                         <tr class="text-center text-nowrap" style="white-space: nowrap !important;">
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Target Gramatur WO</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Benang Terpakai (BTK)</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Hasil Qty Rajut</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Berat Kain Rajut (BTM)</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Rendemen Rajut (%)</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Gramatur Aktual</th>
-                          <th style="background-color: #1e293b !important; color: #ffffff !important;">Selisih / Deviasi</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">TARGET GRAMATUR WO</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BENANG TERPAKAI (BTK)</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">HASIL QTY RAJUT</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">BERAT KAIN RAJUT (BTM)</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">RENDEMEN RAJUT (%)</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">GRAMATUR AKTUAL</th>
+                          <th style="background: #0f172a !important; color: #ffffff !important; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 10px 8px; border: 1px solid #334155;">SELISIH / DEVIASI</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        <tr class="text-center fw-bold fs-6">
-                          <td class="text-primary"><?= number_format($rendemen_rajut['target_gram'] ?? 0, 1, ',', '.'); ?> Gr/Pcs</td>
-                          <td class="text-warning"><?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg</td>
-                          <td class="text-dark"><?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs</td>
-                          <td class="text-success"><?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg</td>
-                          <td>
-                            <?php if (($rendemen_rajut['benang_keluar'] ?? 0) > 0 && ($rendemen_rajut['berat_kain'] ?? 0) > 0) : ?>
-                              <span class="<?= $rendemen_rajut['status_badge'] ?? 'badge bg-secondary'; ?> px-2 py-1">
-                                <?= number_format($rendemen_rajut['rendemen'] ?? 0, 2, ',', '.'); ?>%
+                      <tbody style="background: #ffffff;">
+                        <tr class="text-center" style="font-size: 15px; font-weight: 800;">
+                          <td style="color: #1d4ed8; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['target_gram'] ?? 0, 1, ',', '.'); ?> Gr/Pcs</td>
+                          <td style="color: #b45309; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['benang_keluar'] ?? 0, 2, ',', '.'); ?> Kg</td>
+                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['pcs_rajut'] ?? 0, 0, ',', '.'); ?> Pcs</td>
+                          <td style="color: #15803d; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;"><?= number_format($rendemen_rajut['berat_kain'] ?? 0, 2, ',', '.'); ?> Kg</td>
+                          <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
+                            <?php 
+                              $benangVal = (float)($rendemen_rajut['benang_keluar'] ?? 0);
+                              $kainVal   = (float)($rendemen_rajut['berat_kain'] ?? 0);
+                              $yieldVal  = (float)($rendemen_rajut['rendemen'] ?? 0);
+                              if ($benangVal > 0 && $kainVal > 0) : 
+                                  if ($yieldVal >= 93 && $yieldVal <= 97) {
+                                      $solidBg = 'background: #16a34a !important; color: #ffffff !important;';
+                                  } elseif ($yieldVal >= 90 && $yieldVal < 93) {
+                                      $solidBg = 'background: #eab308 !important; color: #000000 !important;';
+                                  } elseif ($yieldVal > 97 && $yieldVal <= 100) {
+                                      $solidBg = 'background: #0284c7 !important; color: #ffffff !important;';
+                                  } else {
+                                      $solidBg = 'background: #dc2626 !important; color: #ffffff !important;';
+                                  }
+                            ?>
+                              <span class="badge px-3 py-2 fs-6 fw-bold" style="<?= $solidBg ?> font-weight: 800; border-radius: 4px;">
+                                <?= number_format($yieldVal, 2, ',', '.'); ?>%
                               </span>
                             <?php else : ?>
-                              <span class="text-muted">-</span>
+                              <span class="text-muted fw-bold">-</span>
                             <?php endif; ?>
                           </td>
-                          <td class="text-dark"><?= ($rendemen_rajut['gram_aktual'] ?? 0) > 0 ? number_format($rendemen_rajut['gram_aktual'], 1, ',', '.') . ' Gr/Pcs' : '-'; ?></td>
-                          <td>
+                          <td style="color: #0f172a; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 800;">
+                            <?= ($rendemen_rajut['gram_aktual'] ?? 0) > 0 ? number_format($rendemen_rajut['gram_aktual'], 1, ',', '.') . ' Gr/Pcs' : '-'; ?>
+                          </td>
+                          <td style="padding: 12px 8px; border: 1px solid #cbd5e1;">
                             <?php 
                               $dev = (float)($rendemen_rajut['deviasi_gram'] ?? 0);
                               if (($rendemen_rajut['gram_aktual'] ?? 0) > 0 && ($rendemen_rajut['target_gram'] ?? 0) > 0) {
-                                  $colorDev = (abs($dev) <= 5) ? 'text-success' : ($dev > 0 ? 'text-danger' : 'text-warning');
+                                  if (abs($dev) <= 5) {
+                                      $devStyle = 'background: #dcfce7; color: #15803d; border: 1px solid #86efac;';
+                                  } elseif ($dev > 0) {
+                                      $devStyle = 'background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;';
+                                  } else {
+                                      $devStyle = 'background: #fef9c3; color: #a16207; border: 1px solid #fde047;';
+                                  }
                                   $signDev = ($dev > 0) ? '+' : '';
-                                  echo "<span class='{$colorDev}'>{$signDev}" . number_format($dev, 1, ',', '.') . " Gr</span>";
+                                  echo "<span class='px-2 py-1 rounded fw-bold fs-6' style='{$devStyle} font-weight: 800; display: inline-block;'>{$signDev}" . number_format($dev, 1, ',', '.') . " Gr</span>";
                               } else {
-                                  echo "<span class='text-muted'>-</span>";
+                                  echo "<span class='text-muted fw-bold'>-</span>";
                               }
                             ?>
                           </td>

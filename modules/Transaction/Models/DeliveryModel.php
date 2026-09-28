@@ -30,6 +30,7 @@ class DeliveryModel extends \App\Models\PrModel
                                     FROM trans_delivery abx2 
                                     WHERE abx2.id_produksi = abx.id_produksi 
                                     AND abx2.id < abx.id
+                                    AND abx2.active = 1
                                 ),0)
                             ) as sisa_qty");
 

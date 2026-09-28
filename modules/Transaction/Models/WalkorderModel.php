@@ -336,14 +336,18 @@ class WalkorderModel extends \App\Models\PrModel
                             WHEN abx.tipe_id = 2 THEN (
                                 SELECT SUM(tdd.qty) 
                                 FROM trans_delivery_detail tdd  
+                                INNER JOIN trans_delivery td ON td.id = tdd.id_delivery
                                 INNER JOIN trans_sales_order_det tsod ON tsod.id = tdd.ref_detail_id
                                 WHERE tdd.ref_detail_id = tso.id
+                                AND td.active = 1
                             )
                             WHEN abx.tipe_id = 1 THEN (
                                 SELECT SUM(tdd.qty) 
                                 FROM trans_delivery_detail tdd  
+                                INNER JOIN trans_delivery td ON td.id = tdd.id_delivery
                                 INNER JOIN trans_sample_det tsd ON tsd.id = tdd.ref_detail_id
                                 WHERE tdd.ref_detail_id = ts.id
+                                AND td.active = 1
                             )
                         END) as qty_do
         ");

@@ -526,10 +526,13 @@ class DeliveryModel extends \App\Models\PrModel
             }
 
             // 3. Soft delete header
+            $deleteUserId = $updatedBy ?? (session()->get('user_id') ?? 1);
             $updateHeader = [
-                'active'     => 0,
-                'status'     => 1, // normalkan status ke draft
-                'updated_at' => date('Y-m-d H:i:s')
+                'active'      => 0,
+                'status'      => 1, // normalkan status ke draft
+                'updated_at'  => date('Y-m-d H:i:s'),
+                'delete_by'   => $deleteUserId,
+                'delete_date' => date('Y-m-d H:i:s')
             ];
             if (!empty($updatedBy)) {
                 $updateHeader['updated_by'] = $updatedBy;

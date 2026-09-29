@@ -188,9 +188,9 @@ class ReceiveItem extends BaseController
           "nama_barang" => $row->nama_barang,
           "kode_barang" => $row->kode_barang,
           "nama_satuan" => $row->nama_unit,
-          "qty" => $row->qty - $row->qty_receive,
+          "qty" => round((float)$row->qty - (float)$row->qty_receive, 2),
           "price" => $row->price,
-          "qty_receive" => $row->qty_receive,
+          "qty_receive" => round((float)$row->qty_receive, 2),
         )
       );
     }

@@ -291,7 +291,8 @@ dtListBarang.on("rowClick", function (e, row) {
     var idBarang = row._row.data.id;
     var namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     var namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
-    var qty = row._row.data.qty;
+    let q = parseFloat(row._row.data.qty);
+    var qty = !isNaN(q) ? Math.round(q * 100) / 100 : row._row.data.qty;
     var price = row._row.data.price;
     // if (dtListDetail.getData().some(x => x.id_barang == idBarang)) {
     //     return Swal.fire({
@@ -747,7 +748,11 @@ function openModalDetail(row = null) {
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
         let numQty = parseFloat(data.qty);
-        inpQtyItem.val(!isNaN(numQty) ? (Math.round(numQty * 100) / 100).toString() : data.qty)
+        if (!isNaN(numQty)) {
+            inpQtyItem.val(Math.round(numQty * 100) / 100);
+        } else {
+            inpQtyItem.val(data.qty);
+        }
         // inpPrice.val(formatRupiah(data.price.toString()))
         inpPrice.val(data.price)
         selectGudang.val(data.id_gudang).trigger("change")
@@ -757,7 +762,11 @@ function openModalDetail(row = null) {
         // btnSimpanDetail) - dipulihkan di sini supaya validasi qty saat edit
         // tetap membandingkan ke sisa PO baris ini, bukan sisa item lain.
         let numSisa = parseFloat(data.qty_receive);
-        inpQtyPO.val(!isNaN(numSisa) ? (Math.round(numSisa * 100) / 100).toString() : data.qty_receive)
+        if (!isNaN(numSisa)) {
+            inpQtyPO.val(Math.round(numSisa * 100) / 100);
+        } else {
+            inpQtyPO.val(data.qty_receive);
+        }
     } else {
         inpBarang.val("")
         inpIdBarang.val("")

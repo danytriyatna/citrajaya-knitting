@@ -183,7 +183,14 @@ function loadDataPo(idPo) {
         success: function (data) {
             Swal.close();
             if (data.status) {
-                dtListDetail.setData(data.data);
+                let cleanedData = data.data.map(item => {
+                    let q = parseFloat(item.qty);
+                    if (!isNaN(q)) item.qty = Math.round(q * 100) / 100;
+                    let qr = parseFloat(item.qty_receive);
+                    if (!isNaN(qr)) item.qty_receive = Math.round(qr * 100) / 100;
+                    return item;
+                });
+                dtListDetail.setData(cleanedData);
             }
         },
         error: function (xhr, status, error) {
@@ -431,6 +438,13 @@ if (detailData.length > 0) {
     setTimeout(() => {
         try {
             let isdata = JSON.parse(detailData);
+            isdata = isdata.map(item => {
+                let q = parseFloat(item.qty);
+                if (!isNaN(q)) item.qty = Math.round(q * 100) / 100;
+                let qr = parseFloat(item.qty_receive);
+                if (!isNaN(qr)) item.qty_receive = Math.round(qr * 100) / 100;
+                return item;
+            });
             dtListDetail.setData(isdata);
         } catch (e) {
             console.error("Error parsing JSON:", e);
@@ -536,13 +550,8 @@ selectGudang.change(function () {
 });
 
 inpQtyItem.on("input", function (e) {
-    e.target.value = e.target.value.replace(",", ".");
-})
-
-inpQtyItem.keyup(function (e) {
-
     if (inpBarang.val().length === 0) {
-        e.target.value = ""
+        $(this).val("");
         return Swal.fire({
             text: `Barang harus dipilih dahulu.`,
             icon: 'error',
@@ -551,26 +560,19 @@ inpQtyItem.keyup(function (e) {
         });
     }
 
-    if (!regex.test(e.target.value)) {
-        e.target.value = ""
-        return Swal.fire({
-            text: "Quantity harus berupa angka, maksimal 2 desimal",
-            icon: 'error',
-            showConfirmButton: false,
-            timer: 2000
-        });
+    // Ganti koma jadi titik dan hanya izinkan angka + titik
+    let val = $(this).val().replace(',', '.');
+    val = val.replace(/[^0-9.]/g, '');
+    let parts = val.split('.');
+    if (parts.length > 2) {
+        val = parts[0] + '.' + parts.slice(1).join('');
     }
-
-    // if(e.target.value > parseFloat(inpQtyPO.val())){
-    //     e.target.value = ""
-    //     return Swal.fire({
-    //                 text: `Barang hanya memiliki quantity ${inpQtyPO.val()}` ,
-    //                 icon: 'error',
-    //                 showConfirmButton: false,
-    //                 timer: 2000
-    //             });
-    // }
-})
+    // Batasi maksimal 2 desimal di belakang titik secara halus
+    if (parts.length === 2 && parts[1].length > 2) {
+        val = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    $(this).val(val);
+});
 
 spanPoNo.click(function () {
     setTimeout(() => {
@@ -613,8 +615,8 @@ function validateDetailRows() {
         let r = rows[i];
         let namaBrg = r.nama_barang || `baris ke-${i + 1}`;
 
-        let qty = parseFloat(r.qty);
-        let qtySisa = parseFloat(r.qty_receive);
+        let qty = Math.round(parseFloat(r.qty) * 100) / 100;
+        let qtySisa = Math.round(parseFloat(r.qty_receive) * 100) / 100;
         if (!isNaN(qtySisa) && !isNaN(qty) && qty > qtySisa) {
             return `Quantity ${namaBrg} tidak boleh melebihi qty sisa PO (${qtySisa})`;
         }
@@ -744,7 +746,8 @@ function openModalDetail(row = null) {
         inpBarang.val(data.nama_barang)
         inpIdBarang.val(data.id_barang)
         inpUnit.val(data.nama_unit)
-        inpQtyItem.val(data.qty)
+        let numQty = parseFloat(data.qty);
+        inpQtyItem.val(!isNaN(numQty) ? (Math.round(numQty * 100) / 100).toString() : data.qty)
         // inpPrice.val(formatRupiah(data.price.toString()))
         inpPrice.val(data.price)
         selectGudang.val(data.id_gudang).trigger("change")
@@ -753,7 +756,8 @@ function openModalDetail(row = null) {
         // qty_receive dipakai sbg referensi qty sisa PO (lihat loadDataPo &
         // btnSimpanDetail) - dipulihkan di sini supaya validasi qty saat edit
         // tetap membandingkan ke sisa PO baris ini, bukan sisa item lain.
-        inpQtyPO.val(data.qty_receive)
+        let numSisa = parseFloat(data.qty_receive);
+        inpQtyPO.val(!isNaN(numSisa) ? (Math.round(numSisa * 100) / 100).toString() : data.qty_receive)
     } else {
         inpBarang.val("")
         inpIdBarang.val("")
@@ -780,7 +784,8 @@ function openModalDetail(row = null) {
             });
         }
 
-        if (inpQtyItem.val().length == 0 || inpQtyItem.val() <= 0) {
+        let valRaw = inpQtyItem.val().toString().replace(',', '.').trim();
+        if (valRaw.length == 0 || parseFloat(valRaw) <= 0 || isNaN(parseFloat(valRaw))) {
             return Swal.fire({
                 text: "Quantity tidak boleh kosong",
                 icon: 'error',
@@ -789,10 +794,11 @@ function openModalDetail(row = null) {
             });
         }
 
-
-        if (!regex.test(inpQtyItem.val())) {
+        // Bulatkan ke 2 desimal bersih (permintaan user: maksimal 2 desimal)
+        let qtyDiedit = Math.round(parseFloat(valRaw) * 100) / 100;
+        if (isNaN(qtyDiedit) || qtyDiedit <= 0) {
             return Swal.fire({
-                text: "Quantity harus berupa angka, maksimal 2 desimal",
+                text: "Quantity harus berupa angka valid",
                 icon: 'error',
                 showConfirmButton: false,
                 timer: 2000
@@ -800,11 +806,7 @@ function openModalDetail(row = null) {
         }
 
         // Qty tidak boleh melebihi sisa PO (qty PO - qty yg sudah diterima).
-        let qtySisaPo = parseFloat(inpQtyPO.val());
-        // Dibulatkan 2 desimal di sini (bukan cuma divalidasi via regex),
-        // supaya nilai yg akhirnya disimpan ke baris & dijumlahkan tetap
-        // bersih walau ada rounding error kecil dari parseFloat.
-        let qtyDiedit = Math.round(parseFloat(inpQtyItem.val().toString().replace(",", ".")) * 100) / 100;
+        let qtySisaPo = Math.round(parseFloat(inpQtyPO.val().toString().replace(',', '.')) * 100) / 100;
         if (!isNaN(qtySisaPo) && qtyDiedit > qtySisaPo) {
             return Swal.fire({
                 text: `Quantity tidak boleh melebihi qty sisa PO (${qtySisaPo})`,

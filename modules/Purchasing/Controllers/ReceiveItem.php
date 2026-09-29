@@ -214,7 +214,7 @@ class ReceiveItem extends BaseController
       $gudangUtama = $this->mGudang->getGudangUtama();
 
       foreach ($resData as $row) {
-        $sisa = $row->qty - $row->qty_receive;
+        $sisa = round((float)$row->qty - (float)$row->qty_receive, 2);
         $build_array['data'][] = [
           "id" => null,
           "id_barang" => $row->id_barang,
@@ -344,7 +344,7 @@ class ReceiveItem extends BaseController
       // "receive_date" => $receive_date,
       "status" => $statusData,
       "form_no" => $form_no,
-      "qty" => $qty,
+      "qty" => !empty($qty) ? round((float)$qty, 2) : 0,
       "nama_vendor" => $namaVendor
     ];
     if ($id) {

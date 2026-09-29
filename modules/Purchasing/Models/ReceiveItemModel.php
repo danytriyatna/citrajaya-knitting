@@ -208,7 +208,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                     "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
                     "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                     "id_header" => $id,
-                    "qty" => $rowData['qty'],
+                    "qty" => round((float)$rowData['qty'], 2),
                     "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                 ];
 
@@ -251,9 +251,9 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "id_header" => $data['id_po'],
                     ];
                     $lastStokDet = $this->getLastStokPODetail($data['id_po'], $idBarang);
-                    $stokAkhirDet = !empty($lastStokDet) ? $lastStokDet->stok : 0;
+                    $stokAkhirDet = !empty($lastStokDet) ? (float)$lastStokDet->stok : 0;
 
-                    $this->updateRecords($this->tblPoDetail, array("qty_receive" => $stokAkhirDet + $rowData['qty'], "price" => $rowData['price']), $arrParam);
+                    $this->updateRecords($this->tblPoDetail, array("qty_receive" => round($stokAkhirDet + (float)$rowData['qty'], 2), "price" => $rowData['price']), $arrParam);
                     $mBarangMasuk = new IncomingGoodsModel();
                     $arrParam =  [
                         "id_barang" => $idBarang,
@@ -270,7 +270,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "tanggal" => date("Y-m-d H:i:s"),
                         "lot_no" => $rowData['lot_no'],
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
-                        "qty" => $rowData['qty'],
+                        "qty" => round((float)$rowData['qty'], 2),
                         "active" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                     ];

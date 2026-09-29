@@ -268,8 +268,7 @@
     </div>
   </div>
 </div>
-
-<?= $this->endSection('content'); ?>]
+<?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="<?= base_url('script/app/purchasing/receive/form.js?v=' . time()); ?>"></script>
+<script src="<?= base_url('script/app/purchasing/receive/form.js'); ?>"></script>
 <?= $this->endSection('script'); ?>

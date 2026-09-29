@@ -6,6 +6,9 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="title" property="og:title" content="<?= $name_app ?>">
   <meta name="image" property="og:image" content="assets/images/og-image.webp">
   <meta name="description" property="og:description" content="<?= $deskripsi ?>">
@@ -184,14 +187,6 @@
               $preAttr  = $matches[1];
               $src      = $matches[2];
               $postAttr = $matches[3];
-
-              // Abaikan library CDN / external URL murni
-              if (preg_match('/^(https?:)?\/\//i', $src)) {
-                  $baseUrl = function_exists('base_url') ? base_url() : '';
-                  if (empty($baseUrl) || !str_contains($src, $baseUrl)) {
-                      return $matches[0];
-                  }
-              }
 
               $newSrc = function_exists('auto_version') ? auto_version($src) : $src;
               return "<script {$preAttr}src=\"{$newSrc}\"{$postAttr}>";

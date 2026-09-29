@@ -89,6 +89,12 @@ class BaseController extends Controller
 		$this->_checkAuthorization($this->MOD_ALIAS);
 		$this->setMenu();
 		$this->setSitus();
+
+		// Header anti-cache dokumen agar browser selalu merevalidasi HTML terbaru
+		// dan langsung memuat versi aset (JS/CSS) teranyar tanpa perlu clear cache.
+		$this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+		$this->response->setHeader('Pragma', 'no-cache');
+		$this->response->setHeader('Expires', '0');
 	}
 
 	public function __get($property)

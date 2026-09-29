@@ -1976,14 +1976,14 @@ function simpanData(status, isPrint = false) {
             $(".preloader").hide().css("opacity", "1");
         },
         error: function (e) {
-            let msg = e.responseJSON.message;
+            let msg = (e.responseJSON && e.responseJSON.message) ? e.responseJSON.message : (e.statusText || 'Terjadi kesalahan sistem');
             Swal.close();
 
             Swal.fire({
                 text: msg,
                 icon: 'error',
                 showConfirmButton: false,
-                timer: 2000
+                timer: 3000
             });
             $(".preloader").hide().css("opacity", "1");
         },

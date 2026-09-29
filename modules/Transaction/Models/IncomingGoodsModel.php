@@ -157,6 +157,9 @@ class IncomingGoodsModel extends \App\Models\PrModel
     }
     function getLotNo($lotNo = null, $idBarang = null, $idLotNo = null, $idGudang = null, $packId = null)
     {
+        if (empty($lotNo) && empty($idBarang) && empty($idLotNo) && empty($idGudang)) {
+            return null;
+        }
         $builder = $this->db->table("trans_lots");
         $builder->select("*");
         if (!empty($lotNo)) {

@@ -32,7 +32,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $idGudang = !empty($params['id_gudang']) ? (int)$params['id_gudang'] : 0;
         $builder->join($this->tblTrxLots . " gbx", "uk.lot_id = gbx.id AND gbx.id_gudang = {$idGudang}", "left");
         $builder->join($this->tblPack . " hbx", "uk.pack_id = hbx.id", "left");
-        $builder->select("uk.id,gbx.id as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
+        $builder->select("uk.id,COALESCE(gbx.id, uk.lot_id) as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
                           fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, 
                           uk.price, uk.keterangan, hbx.pack_name, uk.pack_id,wo.kode_walkorder,wo.id as id_wo");
 

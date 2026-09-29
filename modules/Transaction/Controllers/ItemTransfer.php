@@ -386,7 +386,7 @@ class ItemTransfer extends BaseController
         ]
       ];
 
-      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_tujuan));
+      $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang_asal));
       $resDataDetSO = $this->mRefDet->getDataDetSO($id);
       
       // Deteksi entitas perusahaan dari transaksi atau gudang asal
@@ -854,15 +854,20 @@ class ItemTransfer extends BaseController
         }
     }
 
-    $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
-    if ($res) {
-      $status = true;
-      $msg = "Data berhasil disimpan!";
-      $savedId = is_numeric($res) ? $res : (!empty($id) ? (is_numeric($id) ? $id : decrypt($id)) : null);
-      if (!empty($savedId)) {
-        $build_array['id'] = $savedId;
-        $build_array['encrypted_id'] = encrypt($savedId);
+    try {
+      $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
+      if ($res) {
+        $status = true;
+        $msg = "Data berhasil disimpan!";
+        $savedId = is_numeric($res) ? $res : (!empty($id) ? (is_numeric($id) ? $id : decrypt($id)) : null);
+        if (!empty($savedId)) {
+          $build_array['id'] = $savedId;
+          $build_array['encrypted_id'] = encrypt($savedId);
+        }
       }
+    } catch (\Throwable $e) {
+      $status = false;
+      $msg = $e->getMessage();
     }
 
     $build_array['message'] = $msg;

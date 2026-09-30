@@ -871,13 +871,14 @@ class ProductionModel extends \App\Models\PrModel
         $targetKg   = $woRow ? (float)$woRow->target_kg_total : 0;
 
         // 2. Benang Terpakai / Keluar (BTK Pemakaian id_kategori = 5)
-        $btkRow = $this->db->query("
+        $qBtk = $this->db->query("
             SELECT COALESCE(SUM(tbd.qty), 0) as benang_keluar,
                    COALESCE(SUM(tbd.qty_sisa), 0) as benang_sisa
             FROM trans_barang_detail tbd
             INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
             WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
-        ", [$kodeWo])->getRow();
+        ", [$kodeWo]);
+        $btkRow = $qBtk ? $qBtk->getRow() : null;
 
         $benangKeluar = $btkRow ? (float)$btkRow->benang_keluar : 0;
         $benangSisa   = $btkRow ? (float)$btkRow->benang_sisa : 0;
@@ -903,7 +904,7 @@ class ProductionModel extends \App\Models\PrModel
             $whereClause = "(" . implode(" OR ", $whereBtm) . ")";
             
             // Prioritas berat timbangan kain murni proses Rajut
-            $btmBeratRow = $this->db->query("
+            $qBtmBerat = $this->db->query("
                 SELECT COALESCE(SUM(tbmp.berat), 0) as berat_kain
                 FROM trans_barang_masuk_produksi tbmp
                 INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
@@ -916,18 +917,20 @@ class ProductionModel extends \App\Models\PrModel
                       OR tbh.id_proses IN (1, 29, 31)
                       OR jpp.seq = 1
                   )
-            ", $bindsBtm)->getRow();
+            ", $bindsBtm);
+            $btmBeratRow = $qBtmBerat ? $qBtmBerat->getRow() : null;
 
             if (!empty($btmBeratRow) && (float)$btmBeratRow->berat_kain > 0) {
                 $beratKain = (float)$btmBeratRow->berat_kain;
             } else {
                 // Fallback berat dari seluruh BTM aktif WO/SO terkait
-                $btmAny = $this->db->query("
+                $qBtmAny = $this->db->query("
                     SELECT COALESCE(SUM(tbmp.berat), 0) as berat_kain
                     FROM trans_barang_masuk_produksi tbmp
                     INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
                     WHERE {$whereClause} AND tbh.active = 1
-                ", $bindsBtm)->getRow();
+                ", $bindsBtm);
+                $btmAny = $qBtmAny ? $qBtmAny->getRow() : null;
                 if (!empty($btmAny)) {
                     $beratKain = (float)$btmAny->berat_kain;
                 }
@@ -942,7 +945,7 @@ class ProductionModel extends \App\Models\PrModel
             $idProd = (int)$id_produksi;
             
             // Prioritas 1: RAJUT DBT (Badan Gamis Lengkap)
-            $rowDBT = $this->db->query("
+            $queryDBT = $this->db->query("
                 SELECT jpp.nama, jpp.seq, jpp.id,
                        SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod
                 FROM trans_produksi_operator tpo
@@ -953,14 +956,16 @@ class ProductionModel extends \App\Models\PrModel
                   AND (tpo.id_category = 12 OR tpo.id_category IS NULL)
                   AND (jpp.id = 31 OR UPPER(jpp.nama) LIKE '%RAJUT DBT%' OR UPPER(jpp.nama) LIKE '%DBT%')
                 GROUP BY jpp.nama, jpp.seq, jpp.id
-            ", [$idProd])->getRow();
+            ", [$idProd]);
+            $rowDBT = $queryDBT ? $queryDBT->getRow() : null;
 
             if (!empty($rowDBT) && (float)$rowDBT->qty_prod > 0) {
                 $pcsRajut = (float)$rowDBT->qty_prod;
             } else {
                 // Prioritas 2: Proses rajut utama badan lainnya (seq awal, bukan krah / aksesoris)
-                $rowOther = $this->db->query("
-                    SELECT SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod
+                $queryOther = $this->db->query("
+                    SELECT jpp.seq, jpp.id, jpp.nama,
+                           SUM(CASE WHEN tpo.print_type = 1 OR tpo.print_type IS NULL THEN tpo.qty ELSE 0 END) AS qty_prod
                     FROM trans_produksi_operator tpo
                     JOIN trans_produksi tp ON tp.id = tpo.id_produksi
                     JOIN _jenis_proses_produksi jpp ON tpo.id_proses = jpp.id
@@ -971,9 +976,11 @@ class ProductionModel extends \App\Models\PrModel
                       AND jpp.id NOT IN (30, 32)
                       AND UPPER(jpp.nama) NOT LIKE '%KRAH%'
                       AND UPPER(jpp.nama) NOT LIKE '%KERAH%'
+                    GROUP BY jpp.seq, jpp.id, jpp.nama
                     ORDER BY jpp.seq ASC
                     LIMIT 1
-                ", [$idProd])->getRow();
+                ", [$idProd]);
+                $rowOther = $queryOther ? $queryOther->getRow() : null;
 
                 if (!empty($rowOther) && (float)$rowOther->qty_prod > 0) {
                     $pcsRajut = (float)$rowOther->qty_prod;

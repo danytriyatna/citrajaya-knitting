@@ -867,7 +867,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         }
 
         $sqlTtd = "
-            UPDATE trans_transfer_detail ttd
+            UPDATE trans_barang_trf_detail ttd
             SET price = tb.price
             FROM trans_barang tb
             JOIN trans_barang_trf_header tth ON tth.kode_transaksi = tb.kode_transaksi

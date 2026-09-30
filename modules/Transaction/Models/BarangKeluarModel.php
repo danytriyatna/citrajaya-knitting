@@ -329,21 +329,34 @@ class BarangKeluarModel extends \App\Models\PrModel
                     $lotNoValue = trim((string) ($rowData['lot_no'] ?? ''));
                     $hasLotNo = $lotNoValue !== '' && $lotNoValue !== '-';
 
+                    $qtyKeluar = (float)($rowData['qty'] ?? 0);
+
                     $idLots = null;
                     $resLotNo = $hasLotNo ? $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang']) : null;
                     // $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     if (!empty($resLotNo)) {
                         $idLots = $resLotNo->id;
-                        $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
-                        if ($sisaLot < -0.0001) {
-                            throw new \Exception("Stok Lot No. '{$resLotNo->lot_no}' tidak mencukupi di gudang ini! Tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2));
-                        }
+                        $sisaLot = (float)$resLotNo->qty - $qtyKeluar;
+                        // Pengecekan ketersediaan stok dilepas sesuai instruksi operasional pabrik,
+                        // saldo lot tetap dipotong agar merefleksikan pemakaian riil tanpa memblokir approve.
                         $this->updateRecords($this->tblTrxLots, array("qty" => $sisaLot), array("id" => $idLots));
                     } elseif ($hasLotNo) {
-                        // Lot No. beneran diisi tapi tidak ditemukan di gudang ini - jangan
-                        // lanjut dengan lot_id kosong (data ledger jadi tidak valid), batalkan
-                        // seluruh proses approve.
-                        throw new \Exception("Lot No. '" . $lotNoValue . "' tidak ditemukan di gudang tujuan untuk barang ini. Approve dibatalkan.");
+                        // Jika qty = 0 (baris catatan/kosong), lewati tanpa melempar error
+                        if ($qtyKeluar > 0) {
+                            // Jika Lot No diisi tapi belum tercatat di gudang ini, buatkan lot baru
+                            // dengan saldo negatif agar id_lots tetap valid dan ledger kartu stok utuh
+                            $newLotData = [
+                                "id_barang"   => $idBarang,
+                                "lot_no"      => $lotNoValue,
+                                "id_gudang"   => $data['id_gudang'],
+                                "qty"         => -$qtyKeluar,
+                                "tanggal"     => date("Y-m-d"),
+                                "active"      => 1,
+                                "created_at"  => date("Y-m-d H:i:s"),
+                                "pack_id"     => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null
+                            ];
+                            $idLots = $this->insertRecordGetid($this->tblTrxLots, $newLotData);
+                        }
                     }
 
                     $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);

@@ -1,6 +1,23 @@
 
 let inpIdKonsumen = $('#id_buyer');
 let inpTglReceive = $('#tanggal');
+
+// Auto-sync tanggal detail jika user merubah tanggal header (khusus status belum approved)
+inpTglReceive.on('change changeDate', function () {
+    const rawVal = $(this).val();
+    if (!rawVal) return;
+    const newDate = formatLocaleDate(rawVal);
+    if (!newDate) return;
+    if (typeof dtListProduksi !== 'undefined' && dtListProduksi && inpStatus.val() != 1 && inpStatus.val() != "1") {
+        const rows = dtListProduksi.getRows();
+        if (rows && rows.length > 0) {
+            rows.forEach(r => {
+                r.update({ tgl_transaksi: newDate });
+            });
+        }
+    }
+});
+
 let spanKonsumen = $('#spanKonsumen');
 let divNamaKonsumen = $('#divNamaKonsumen');
 let inpKonsumen = $('#nama_konsumen');
@@ -641,14 +658,25 @@ function loadDataSo(callback = null) {
                             // 1. Jika membawa data SPK Produksi, tampilkan dan langsung isi tabel produksi
                             if (hasSO) {
                                 divRefProduk.show();
+                                const headerDate = formatLocaleDate(inpTglReceive.val());
                                 const now = new Date();
                                 const yyyy = now.getFullYear();
                                 const mm = String(now.getMonth() + 1).padStart(2, '0');
                                 const dd = String(now.getDate()).padStart(2, '0');
-                                const defaultDate = `${yyyy}-${mm}-${dd}`;
+                                const defaultDate = headerDate || `${yyyy}-${mm}-${dd}`;
 
                                 const idProses = selectProses.val();
                                 const idCmt = selectOperator.val();
+
+                                // Ambil mapping tanggal transaksi yang sudah ada di tabel saat ini (jangan ditimpa jika user sudah ubah)
+                                const existingRows = (typeof dtListProduksi !== 'undefined' && dtListProduksi) ? (dtListProduksi.getData() || []) : [];
+                                const existingDateMap = {};
+                                existingRows.forEach(er => {
+                                    const key = `${er.kode_sales_order || ''}_${er.style || ''}_${er.color || ''}_${er.kode_ukuran || ''}`;
+                                    if (er.tgl_transaksi) {
+                                        existingDateMap[key] = er.tgl_transaksi;
+                                    }
+                                });
 
                                 const soData = (data.dataSO || []).map(item => {
                                     const q = (item.qty !== undefined && item.qty !== null && item.qty !== '') ? parseFloat(item.qty) : (parseFloat(item.qty_sisa) || 0);
@@ -656,8 +684,9 @@ function loadDataSo(callback = null) {
                                     item.qty = q;
                                     item.harga = h;
                                     item.amount = (q > 0 && h > 0) ? (q * h) : (parseFloat(item.amount) || 0);
+                                    const itemKey = `${item.kode_sales_order || ''}_${item.style || ''}_${item.color || ''}_${item.kode_ukuran || ''}`;
                                     if (!item.tgl_transaksi || item.tgl_transaksi === '') {
-                                        item.tgl_transaksi = defaultDate;
+                                        item.tgl_transaksi = existingDateMap[itemKey] || defaultDate;
                                     }
                                     return item;
                                 });
@@ -692,12 +721,24 @@ function loadDataSo(callback = null) {
                                     });
 
                                     Promise.all(pricePromises).then(updatedSoData => {
-                                        dtListProduksi.setData(updatedSoData);
-                                        setTimeout(() => {
-                                            if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
-                                                dtListProduksi.redraw(true);
-                                            }
-                                        }, 200);
+                                        if (typeof dtListProduksi !== 'undefined' && dtListProduksi) {
+                                            // Update hanya harga & amount pada baris yang cocok, JANGAN timpa tgl_transaksi atau edit user lainnya
+                                            updatedSoData.forEach(upd => {
+                                                const matchRow = dtListProduksi.getRows().find(r => {
+                                                    const rd = r.getData();
+                                                    return rd.kode_sales_order === upd.kode_sales_order && rd.style === upd.style && rd.color === upd.color && rd.kode_ukuran === upd.kode_ukuran;
+                                                });
+                                                if (matchRow) {
+                                                    const cur = matchRow.getData();
+                                                    if ((!cur.harga || parseFloat(cur.harga) === 0) && parseFloat(upd.harga) > 0) {
+                                                        matchRow.update({
+                                                            harga: upd.harga,
+                                                            amount: (parseFloat(cur.qty) || 0) * parseFloat(upd.harga)
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        }
                                     });
                                 }
                             } else {
@@ -809,10 +850,11 @@ selectPerusahaan.on('change', function () {
 
 setTimeout(() => {
     if (selectKategori.val() == 12 || selectKategori.val() == 1 || selectKategori.val() == 15) {
-        if (selectProses.val() && selectOperator.val()) {
-            loadDataSo();
-        } else if (!inpIdHeader.val() || inpIdHeader.val().length === 0) {
-            loadDataSo();
+        // Jangan auto-load dari transfer jika ini adalah dokumen existing / edit (sudah ada id_header)
+        if (!inpIdHeader.val() || inpIdHeader.val().length === 0) {
+            if (selectProses.val() && selectOperator.val()) {
+                loadDataSo();
+            }
         }
     }
     else {
@@ -1103,12 +1145,18 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             headerHozAlign: "center",
             sorter: "date",
             sorterParams: {
-                format: "dd-MM-yyyy",
+                format: "yyyy-MM-dd",
                 alignEmptyValues: "top",
             },
             editor: "date",
             editable: function (cell) {
                 return inpStatus.val() != 1 && inpStatus.val() != "1";
+            },
+            cellEdited: function (cell) {
+                const val = cell.getValue();
+                if (val) {
+                    cell.getRow().update({ tgl_transaksi: val });
+                }
             }
         },
         { 
@@ -1333,11 +1381,12 @@ dtListProduksiRef.on("rowClick", function (e, row) {
     let list_verif = produksi_data.filter(item => item.color === data.color && item.kode_ukuran === data.kode_ukuran);
 
 
+    const headerDate = formatLocaleDate(inpTglReceive.val());
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
+    data.tgl_transaksi = headerDate || `${yyyy}-${mm}-${dd}`;
 
     // if (list_verif.length > 0) {
     //     return Swal.fire({
@@ -1508,6 +1557,10 @@ selectKategori.on("change", function (e) {
 
 
 function submitData(status, message) {
+    // Pastikan editor sel Tabulator yang masih aktif (fokus) tersimpan sebelum data dibaca
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+    }
 
     if (selectKategori.val() == null) {
         return Swal.fire({
@@ -2209,11 +2262,12 @@ function addItem(data, typeAction = null, isScan = false) {
 
         const hargaRata = totalQty > 0 ? Math.floor(totalAmount / totalQty) : 0;
 
+        const headerDate = formatLocaleDate(inpTglReceive.val());
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
-        data.tgl_transaksi = `${yyyy}-${mm}-${dd}`;
+        data.tgl_transaksi = headerDate || `${yyyy}-${mm}-${dd}`;
 
         const hargaFix = (parseFloat(data.harga) || 0) > 0 ? parseFloat(data.harga) : hargaRata;
 

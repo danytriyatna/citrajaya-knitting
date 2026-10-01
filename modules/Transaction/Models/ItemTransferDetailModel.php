@@ -549,10 +549,10 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
     /**
      * Sisa Berat BTM (Kg) untuk No. WO tsb:
-     * Total Berat (Kg) hasil kain di Barang Masuk (trans_barang_masuk_produksi)
-     * dikurangi total pemakaian barang (BTK) yang sudah pernah tercatat/approved sebelumnya,
-     * ditambah total retur pengembalian benang dari transfer untuk No. WO tsb.
-     * Rumus: (Total BTM Masuk - Total BTK Approved Sebelumnya + Total Retur)
+     * Total Berat (Kg) hasil kain di Barang Masuk (trans_barang_masuk_produksi) yang APPROVED di Gudang Utama (id_gudang = 1)
+     * dikurangi total retur pengembalian benang dari CMT/proses ke Gudang Utama (id_gudang_tujuan = 1, id_gudang_asal != 1) untuk No. WO tsb,
+     * dikurangi total pemakaian barang (BTK) yang sudah pernah tercatat/approved sebelumnya.
+     * Rumus: (Total BTM Masuk Gudang Utama Approved - Total Retur Benang WO - Total BTK Approved Sebelumnya)
      */
     function getTotalBeratByWalkorder($noWO, $idGudang = null, $excludeHeaderId = null)
     {
@@ -560,21 +560,44 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             return 0;
         }
 
+        // 1. Total BTM Kain: Hanya dari Gudang Utama (id_gudang = 1), Approved (status = 1), dan Active (active = 1)
         $sqlBtm = "
-            SELECT SUM(tbmp.berat) AS total_berat
+            SELECT COALESCE(SUM(tbmp.berat), 0) AS total_berat
             FROM trans_barang_masuk_produksi tbmp
             INNER JOIN trans_walkorder tw
                 ON tw.ref_id = tbmp.id_ref
                AND tw.tipe_id = CASE WHEN LEFT(tbmp.kode_sales_order, 3) = 'SPL' THEN 1 ELSE 2 END
+            INNER JOIN trans_barang_header tbh
+                ON tbmp.id_header = tbh.id
             WHERE tw.kode_walkorder = :noWO:
+              AND tbh.active = 1
+              AND tbh.status = 1
+              AND tbh.id_gudang = 1
         ";
 
         $rowBtm = $this->db->query($sqlBtm, ['noWO' => $noWO])->getRow();
         $totalBtm = !empty($rowBtm) && !empty($rowBtm->total_berat) ? (float) $rowBtm->total_berat : 0;
 
-        // Total BTK sebelumnya untuk No. WO ini
+        // 2. Total Retur Benang: Seluruh benang yang kembali masuk ke Gudang Utama (id_gudang_tujuan = 1) dari luar Gudang Utama sesuai referensi WO
+        $builderRetur = $this->db->table("trans_barang_trf_detail abx");
+        $builderRetur->select("COALESCE(SUM(abx.qty), 0) as total_retur");
+        $builderRetur->join(
+            "trans_barang_trf_header trfhead",
+            "CAST(abx.id_header AS INTEGER) = trfhead.id",
+            "inner"
+        );
+        $builderRetur->where("abx.kode_walkorder", $noWO);
+        $builderRetur->where("abx.active", 1);
+        $builderRetur->where("trfhead.status", 1);
+        $builderRetur->where("trfhead.deleted_at IS NULL");
+        $builderRetur->where("trfhead.id_gudang_tujuan", 1); // Masuk kembali ke Gudang Utama
+        $builderRetur->where("trfhead.id_gudang_asal !=", 1); // Dari CMT / luar Gudang Utama
+        $rowRetur = $builderRetur->get()->getRow();
+        $totalRetur = !empty($rowRetur) && !empty($rowRetur->total_retur) ? (float) $rowRetur->total_retur : 0;
+
+        // 3. Total BTK sebelumnya untuk No. WO ini (approved)
         $builderUsed = $this->db->table("trans_barang_detail tbd");
-        $builderUsed->select("SUM(tbd.qty) as total_btk");
+        $builderUsed->select("COALESCE(SUM(tbd.qty), 0) as total_btk");
         $builderUsed->join(
             "trans_barang_header tbh",
             "CAST(tbd.id_header AS INTEGER) = tbh.id",
@@ -584,9 +607,6 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builderUsed->where("tbh.jenis_transaksi", 2);
         $builderUsed->where("tbh.active", 1);
         $builderUsed->where("tbh.status", 1);
-        if (!empty($idGudang)) {
-            $builderUsed->where("tbh.id_gudang", (int) $idGudang);
-        }
         if (!empty($excludeHeaderId)) {
             $builderUsed->where("tbh.id !=", (int) $excludeHeaderId);
         }
@@ -594,26 +614,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $rowUsed = $builderUsed->get()->getRow();
         $totalUsed = !empty($rowUsed) && !empty($rowUsed->total_btk) ? (float) $rowUsed->total_btk : 0;
 
-        // Total Retur transfer untuk No. WO ini (gudang asal = gudang pengerjaan saat ini)
-        $totalRetur = 0;
-        if (!empty($idGudang)) {
-            $builderRetur = $this->db->table("trans_barang_trf_detail abx");
-            $builderRetur->select("SUM(abx.qty) as total_retur");
-            $builderRetur->join(
-                "trans_barang_trf_header trfhead",
-                "CAST(abx.id_header AS INTEGER) = trfhead.id",
-                "left"
-            );
-            $builderRetur->where("abx.kode_walkorder", $noWO);
-            $builderRetur->where("abx.active", 1);
-            $builderRetur->where("trfhead.status", 1);
-            $builderRetur->where("trfhead.deleted_at IS NULL");
-            $builderRetur->where("trfhead.id_gudang_asal", (int) $idGudang);
-            $rowRetur = $builderRetur->get()->getRow();
-            $totalRetur = !empty($rowRetur) && !empty($rowRetur->total_retur) ? (float) $rowRetur->total_retur : 0;
-        }
-
-        $sisaBtm = round($totalBtm - $totalUsed + $totalRetur, 2);
+        // Hasil retur jadi pengurangnya, selama referensi nya ke SO/WO tersebut
+        $sisaBtm = round($totalBtm - $totalRetur - $totalUsed, 2);
 
         return max(0, $sisaBtm);
     }

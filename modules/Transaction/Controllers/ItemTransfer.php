@@ -769,6 +769,12 @@ class ItemTransfer extends BaseController
       return $this->response->setJSON($build_array);
     }
 
+    if (empty($dataDetail) && empty($dataSO)) {
+      $build_array['message'] = "Detail transfer tidak boleh kosong! Tambahkan minimal 1 item SO atau Benang sebelum menyimpan.";
+      $build_array['status'] = false;
+      return $this->response->setJSON($build_array);
+    }
+
     if ($id != "") {
       $id = decrypt($id);
     }

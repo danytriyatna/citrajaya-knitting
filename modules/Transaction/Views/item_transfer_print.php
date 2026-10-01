@@ -195,7 +195,15 @@
             </tr>
         </tbody>
     </table>
-    <p style='padding-left: 10px'>Kami Kirim Barang Sebagai berikut: </p>
+    <?php if (!empty($dataSO) || !empty($detail)) { ?>
+        <p style='padding-left: 10px'>Kami Kirim Barang Sebagai berikut: </p>
+    <?php } else { ?>
+        <div style="margin: 20px 10px; padding: 15px; border: 1px dashed #d9534f; color: #d9534f; text-align: center; font-weight: bold; background: #fff5f5;">
+            PERHATIAN: DOKUMEN TRANSFER INI BELUM MEMILIKI RINCIAN BARANG (DETAIL ITEM KOSONG).
+        </div>
+    <?php } ?>
+
+    <?php if (!empty($dataSO)) { ?>
     <table class="table-bordered w-100">
         <thead>
             <tr>
@@ -254,6 +262,7 @@
             </tr>
         </tfoot>
     </table>
+    <?php } ?>
    <?php if(!empty($detail) ) { ?>
     <?php
     // $rows = hasil getData()

@@ -1032,23 +1032,25 @@ function submitData(status, message, isPrint = false) {
         });
     }
 
-    // if(dtList.getData().length == 0){
-    //     return Swal.fire({
-    //         text: "Data SO tidak boleh kosong",
-    //         icon: 'error',
-    //         showConfirmButton: false,
-    //         timer: 2000
-    //     });
-    // }
+    let soData = dtList.getData();
+    let detailData = dtListDetail.getData();
 
-
-    if (!inpRefProduksi.is(':checked')) {
-        if (dtListDetail.getData().length == 0) {
+    if (inpRefProduksi.is(':checked')) {
+        if (!soData || soData.length === 0) {
             return Swal.fire({
-                text: "Data detail tidak boleh kosong",
-                icon: 'error',
-                showConfirmButton: false,
-                timer: 2000
+                title: "Data SO Kosong!",
+                text: "Opsi 'Proses Produksi' aktif. Silakan tambahkan / scan minimal 1 item SO sebelum menyimpan atau mencetak.",
+                icon: 'warning',
+                confirmButtonColor: '#0284c7'
+            });
+        }
+    } else {
+        if ((!detailData || detailData.length === 0) && (!soData || soData.length === 0)) {
+            return Swal.fire({
+                title: "Data Item Kosong!",
+                text: "Silakan tambahkan minimal 1 item barang/benang sebelum menyimpan atau mencetak.",
+                icon: 'warning',
+                confirmButtonColor: '#0284c7'
             });
         }
     }
@@ -1894,7 +1896,17 @@ function simpanData(status, isPrint = false) {
         });
     }
 
-    let dataSOCheck = dtList.getData();
+    let soData = dtList.getData();
+    let detailData = dtListDetail.getData();
+    if ((!soData || soData.length === 0) && (!detailData || detailData.length === 0)) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Item Transfer Kosong!',
+            text: 'Dokumen transfer tidak boleh disimpan tanpa rincian item. Tambahkan item terlebih dahulu.'
+        });
+    }
+
+    let dataSOCheck = soData;
     // Validasi Qty > Qty Ref HANYA berlaku saat tombol Approve (status == 1) ditekan.
     // Simpan Draft (status == 0) tetap diizinkan.
     if (status == 1) {

@@ -548,11 +548,9 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     }
 
     /**
-     * Sisa Berat BTM (Kg) untuk No. WO tsb:
+     * Total Berat BTM (Kg) untuk No. WO tsb:
      * Total Berat (Kg) hasil kain di Barang Masuk (trans_barang_masuk_produksi) yang APPROVED di Gudang Utama (id_gudang = 1)
-     * dikurangi total retur pengembalian benang dari CMT/proses ke Gudang Utama (id_gudang_tujuan = 1, id_gudang_asal != 1) untuk No. WO tsb,
-     * dikurangi total pemakaian barang (BTK) yang sudah pernah tercatat/approved sebelumnya.
-     * Rumus: (Total BTM Masuk Gudang Utama Approved - Total Retur Benang WO - Total BTK Approved Sebelumnya)
+     * sesuai dengan referensi No. WO tersebut (identik dengan Menu Produksi).
      */
     function getTotalBeratByWalkorder($noWO, $idGudang = null, $excludeHeaderId = null)
     {
@@ -560,7 +558,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             return 0;
         }
 
-        // 1. Total BTM Kain: Hanya dari Gudang Utama (id_gudang = 1), Approved (status = 1), dan Active (active = 1)
+        // Total BTM Kain: Hanya dari Gudang Utama (id_gudang = 1), Approved (status = 1), dan Active (active = 1) sesuai referensi WO
         $sqlBtm = "
             SELECT COALESCE(SUM(tbmp.berat), 0) AS total_berat
             FROM trans_barang_masuk_produksi tbmp
@@ -578,46 +576,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $rowBtm = $this->db->query($sqlBtm, ['noWO' => $noWO])->getRow();
         $totalBtm = !empty($rowBtm) && !empty($rowBtm->total_berat) ? (float) $rowBtm->total_berat : 0;
 
-        // 2. Total Retur Benang: Seluruh benang yang kembali masuk ke Gudang Utama (id_gudang_tujuan = 1) dari luar Gudang Utama sesuai referensi WO
-        $builderRetur = $this->db->table("trans_barang_trf_detail abx");
-        $builderRetur->select("COALESCE(SUM(abx.qty), 0) as total_retur");
-        $builderRetur->join(
-            "trans_barang_trf_header trfhead",
-            "CAST(abx.id_header AS INTEGER) = trfhead.id",
-            "inner"
-        );
-        $builderRetur->where("abx.kode_walkorder", $noWO);
-        $builderRetur->where("abx.active", 1);
-        $builderRetur->where("trfhead.status", 1);
-        $builderRetur->where("trfhead.deleted_at IS NULL");
-        $builderRetur->where("trfhead.id_gudang_tujuan", 1); // Masuk kembali ke Gudang Utama
-        $builderRetur->where("trfhead.id_gudang_asal !=", 1); // Dari CMT / luar Gudang Utama
-        $rowRetur = $builderRetur->get()->getRow();
-        $totalRetur = !empty($rowRetur) && !empty($rowRetur->total_retur) ? (float) $rowRetur->total_retur : 0;
-
-        // 3. Total BTK sebelumnya untuk No. WO ini (approved)
-        $builderUsed = $this->db->table("trans_barang_detail tbd");
-        $builderUsed->select("COALESCE(SUM(tbd.qty), 0) as total_btk");
-        $builderUsed->join(
-            "trans_barang_header tbh",
-            "CAST(tbd.id_header AS INTEGER) = tbh.id",
-            "inner"
-        );
-        $builderUsed->where("tbh.no_ref_wo", $noWO);
-        $builderUsed->where("tbh.jenis_transaksi", 2);
-        $builderUsed->where("tbh.active", 1);
-        $builderUsed->where("tbh.status", 1);
-        if (!empty($excludeHeaderId)) {
-            $builderUsed->where("tbh.id !=", (int) $excludeHeaderId);
-        }
-
-        $rowUsed = $builderUsed->get()->getRow();
-        $totalUsed = !empty($rowUsed) && !empty($rowUsed->total_btk) ? (float) $rowUsed->total_btk : 0;
-
-        // Hasil retur jadi pengurangnya, selama referensi nya ke SO/WO tersebut
-        $sisaBtm = round($totalBtm - $totalRetur - $totalUsed, 2);
-
-        return max(0, $sisaBtm);
+        return round($totalBtm, 2);
     }
 
     function getDataPrint($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)

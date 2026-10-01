@@ -522,6 +522,8 @@ class ProductionModel extends \App\Models\PrModel
         $builder->select("COALESCE(SUM(abx.berat), 0) as total_btm");
         $builder->join("trans_barang_header bbx", "abx.id_header = bbx.id", "inner");
         $builder->where('bbx.active', 1);
+        $builder->where('bbx.status', 1); // Filter dokumen BTM yang sudah Approved
+        $builder->where('bbx.id_gudang', 1); // Filter hanya Gudang Utama
         $builder->where('abx.kode_sales_order', $kode_so);
         $builder->where('UPPER(TRIM(abx.kode_ukuran))', $kode_ukuran);
         // TRIM() krn data warna kadang tersimpan dgn spasi ekstra di akhir
@@ -911,6 +913,8 @@ class ProductionModel extends \App\Models\PrModel
                 LEFT JOIN _jenis_proses_produksi jpp ON jpp.id = tbh.id_proses
                 WHERE {$whereClause} 
                   AND tbh.active = 1
+                  AND tbh.status = 1
+                  AND tbh.id_gudang = 1
                   AND (
                       jpp.is_rajut = 1 
                       OR UPPER(jpp.nama) LIKE '%RAJUT%' 
@@ -923,12 +927,12 @@ class ProductionModel extends \App\Models\PrModel
             if (!empty($btmBeratRow) && (float)$btmBeratRow->berat_kain > 0) {
                 $beratKain = (float)$btmBeratRow->berat_kain;
             } else {
-                // Fallback berat dari seluruh BTM aktif WO/SO terkait
+                // Fallback berat dari seluruh BTM aktif WO/SO terkait (khusus Gudang Utama & status Approve)
                 $qBtmAny = $this->db->query("
                     SELECT COALESCE(SUM(tbmp.berat), 0) as berat_kain
                     FROM trans_barang_masuk_produksi tbmp
                     INNER JOIN trans_barang_header tbh ON tbh.id = tbmp.id_header
-                    WHERE {$whereClause} AND tbh.active = 1
+                    WHERE {$whereClause} AND tbh.active = 1 AND tbh.status = 1 AND tbh.id_gudang = 1
                 ", $bindsBtm);
                 $btmAny = $qBtmAny ? $qBtmAny->getRow() : null;
                 if (!empty($btmAny)) {

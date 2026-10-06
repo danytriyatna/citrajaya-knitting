@@ -175,6 +175,10 @@ class RefBarang extends BaseController
             $status = true;
         }
 
+        if ($status) {
+            \Config\Services::cache()->delete('ref_barang_active');
+        }
+
         $build_array['message'] = $msg;
         $build_array['status']  = $status;
 
@@ -194,6 +198,7 @@ class RefBarang extends BaseController
         $id = (int)$id;
         $activation = $this->mBarang->activate($id);
         if ($activation) {
+            \Config\Services::cache()->delete('ref_barang_active');
             $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "User Diaktifkan");
             $this->session->setFlashdata('message', "User berhasil di aktifkan");
         } else {
@@ -220,6 +225,7 @@ class RefBarang extends BaseController
 
         $deactivate = $this->mBarang->updateRecord($this->mBarang->table, $data, 'id', $id);
         if ($deactivate) {
+            \Config\Services::cache()->delete('ref_barang_active');
             $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "Data Barang Dinonaktifkan");
             $this->session->setFlashdata('message', "Data Barang berhasil di Hapus ");
         } else {
@@ -245,6 +251,7 @@ class RefBarang extends BaseController
 
         $res = $this->mBarang->deleteUser($id);
         if ($res) {
+            \Config\Services::cache()->delete('ref_barang_active');
             $this->mcommon->setLog($this->currentUser->user_id, $this->MOD_ALIAS, $id, "Master Ukuran Dihapus");
             $this->session->setFlashdata('message', "Master Ukuran berhasil dihapus");
         } else {

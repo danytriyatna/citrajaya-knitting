@@ -65,7 +65,12 @@ class Sample extends BaseController
     $this->data['buyer'] = $cache->remember('ref_konsumen_active', 3600, fn() => $this->mkonsumen->where("active", 1)->findAll());
     $this->data['ukuran'] = $cache->remember('ref_ukuran_active', 3600, fn() => $this->mUkuran->where("active", 1)->findAll());
     $this->data['warna'] = $cache->remember('ref_warna_active', 3600, fn() => $this->mWarna->where("active", 1)->findAll());
-    $this->data['barang'] = $cache->remember('ref_barang_active', 3600, fn() => $this->mBarang->select("id, kode_barang, nama_barang, id_warna")->where("active", 1)->orderBy("nama_barang", 'asc')->findAll());
+    $this->data['barang'] = $cache->remember('ref_barang_active', 3600, fn() => $this->mBarang
+      ->select("ref_barang.id, ref_barang.kode_barang, ref_barang.nama_barang, ref_barang.id_warna, ref_warna.kode_warna")
+      ->join("ref_warna", "ref_barang.id_warna = ref_warna.id", "left")
+      ->where("ref_barang.active", 1)
+      ->orderBy("ref_barang.nama_barang", 'asc')
+      ->findAll());
     return view($this->views . '\sample_list', $this->data);
   }
 

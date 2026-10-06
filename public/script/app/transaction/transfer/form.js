@@ -1035,24 +1035,17 @@ function submitData(status, message, isPrint = false) {
     let soData = dtList.getData();
     let detailData = dtListDetail.getData();
 
-    if (inpRefProduksi.is(':checked')) {
-        if (!soData || soData.length === 0) {
-            return Swal.fire({
-                title: "Data SO Kosong!",
-                text: "Opsi 'Proses Produksi' aktif. Silakan tambahkan / scan minimal 1 item SO sebelum menyimpan atau mencetak.",
-                icon: 'warning',
-                confirmButtonColor: '#0284c7'
-            });
-        }
-    } else {
-        if ((!detailData || detailData.length === 0) && (!soData || soData.length === 0)) {
-            return Swal.fire({
-                title: "Data Item Kosong!",
-                text: "Silakan tambahkan minimal 1 item barang/benang sebelum menyimpan atau mencetak.",
-                icon: 'warning',
-                confirmButtonColor: '#0284c7'
-            });
-        }
+    let hasSO = soData && soData.length > 0;
+    let hasDetail = detailData && detailData.length > 0;
+
+    // Validasi mutlak: dokumen tidak boleh kosong sama sekali (harus ada minimal salah satu)
+    if (!hasSO && !hasDetail) {
+        return Swal.fire({
+            title: "Data Item Kosong!",
+            text: "Silakan tambahkan minimal 1 item SO atau rincian item barang/benang sebelum menyimpan atau mencetak.",
+            icon: 'warning',
+            confirmButtonColor: '#0284c7'
+        });
     }
 
     if (!selectProses.val() || selectProses.val() == "") {
@@ -1073,11 +1066,22 @@ function submitData(status, message, isPrint = false) {
         });
     }
 
+    let confirmTitle = `Apakah anda ingin ${message} data Transfer?`;
+    let confirmText = '';
+    let confirmIcon = 'question';
+
+    // Jika Proses Produksi aktif tetapi tidak ada item SO (misal hanya kirim benang/WO)
+    if (inpRefProduksi.is(':checked') && !hasSO && hasDetail) {
+        confirmTitle = `Item SO Kosong (Kirim Benang/WO)`;
+        confirmText = `Opsi 'Proses Produksi' aktif tanpa item SO. Anda tetap dapat melanjutkan ${message} data Transfer (Pengiriman Benang/WO). Lanjutkan?`;
+        confirmIcon = 'warning';
+    }
 
     Swal.fire({
-        title: `Apakah anda ingin ${message} data Transfer?`,
-        icon: 'question',
-        confirmButtonText: 'Simpan',
+        title: confirmTitle,
+        text: confirmText,
+        icon: confirmIcon,
+        confirmButtonText: 'Ya, Lanjutkan',
         confirmButtonColor: '#198754',
         showCancelButton: true,
         cancelButtonText: 'Batal',

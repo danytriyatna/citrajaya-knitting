@@ -749,6 +749,7 @@ class SalesOrder extends BaseController
                   }
 
                   // get detail wo
+                  $prms_sample = [];
                   $prms_sample['id_barang_1'] = $xrow->id_barang_1;
                   // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
                   if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
@@ -761,11 +762,13 @@ class SalesOrder extends BaseController
                   $data_detail = $this->mSample->getDataDetailSample_ori($sampleId, $prms_sample);
                  
                   if (!empty($data_detail)) {
+                    $params_wod = [];
                     $params_wod['ref_detail_id'] = $data_detail[0]->id;
                     $params_wod['tipe_id'] = 1;
                     $params_wod['single'] = true;
                     $params_wod['id_walkorder']  = $ref_sample_wo[0]->id;
                     $data_detail_wo = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $params_wod);
+                    $all_sample_gram = $this->mSample->getData_gram(null, 0, 8, null, null, ['id_sample_det' => $data_detail[0]->id]);
                     // $prgram['id_sample_det'] = $data_detail[0]->id;
                     // $dtGram = $this->mSample->getData_gram(null, 0, 9999, null,  null, $prgram);
                     if (!empty($data_detail_wo)) {
@@ -823,15 +826,16 @@ class SalesOrder extends BaseController
                           'id_walkorder_detail' => $data_detail_wo->id,
                         ];
                         $all_sample_warna = $this->mworkOrder->getData_warna(null, 0, 8, null, null, $params_sample_warna);
+                        $slot_idx = 0;
 
                         for ($i = 0; $i < 8; $i++) {
                           $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
 
-                            // Ambil data warna Sample berdasarkan urutan posisi ($i),
-                            // bukan hanya filter id_barang, agar warna ke-1 dan warna ke-3
-                            // yang memakai id_barang sama tidak tertimpa/kembar.
-                            $data_detail_row = $all_sample_warna[$i] ?? null;
+                            // Ambil data warna Sample berdasarkan urutan slot terisi ($slot_idx),
+                            // bukan indeks fisik ($i) atau hanya filter id_barang,
+                            // agar slot yang memakai id_barang sama tetap memiliki gramasi independen.
+                            $data_detail_row = $all_sample_warna[$slot_idx] ?? null;
 
                             $xgram = 0;
                             $xgram_nd = 0;
@@ -841,8 +845,10 @@ class SalesOrder extends BaseController
                             $xtotal = 0;
                             $xkuota = 0;
                             $xkuota_tambah = 0;
+                            $xpersen = 0;
 
                             if(!empty($data_detail_row)) {
+                              $xpersen = $data_detail_row->persen ?? 0;
                               if (!empty($data_detail_row->gram)) {
                                 $xgram = $data_detail_row->gram;
                                 $xgram_nd = $xgram * $qty_wodet;
@@ -854,31 +860,35 @@ class SalesOrder extends BaseController
                                 $xkuota = $data_detail_row->kuota;
                                 $xkuota_tambah = $xkuota - $xtotal;
                               }
-      
-                              $isi_warna = [
-                                'id_walkorder_detail' => $wo_det_id,
-                                'id_barang' => $xrow->$field_name,
-                                'persen'       => $data_detail_row->persen ?? 0,
-                                'gram'         => $xgram,
-                                'gram_nd'      => $xgram_nd,
-                                'kg'           => $xkg,
-                                'kg_loss'      => $xkg_loss,
-                                'total'        => $xtotal,
-                                'kuota'        => $xkuota,
-                                'kuota_tambah' => $xkuota_tambah,
-                                'loss'         => $xloss,
-                                'created_at' => date("Y-m-d H:i:s")
-                              ];
-      
-                              $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
-                            }else{
-                              $isi_warna = [
-                                'id_walkorder_detail' => $wo_det_id,
-                                'id_barang' => $xrow->$field_name,
-                                'created_at' => date("Y-m-d H:i:s")
-                              ];
-                              $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+                            } else {
+                              $gram_sample_row = $all_sample_gram[$slot_idx] ?? null;
+                              if (!empty($gram_sample_row) && !empty($gram_sample_row->gram)) {
+                                $xgram = $gram_sample_row->gram;
+                                $xgram_nd = $xgram * $qty_wodet;
+                                $xkg = $xgram_nd / 1000;
+                                $xloss = $gram_sample_row->loss;
+                                $xkg_loss = ($xkg * $xloss) / 100;
+                                $xtotal = $xkg +  $xkg_loss;
+                              }
                             }
+
+                            $isi_warna = [
+                              'id_walkorder_detail' => $wo_det_id,
+                              'id_barang' => $xrow->$field_name,
+                              'persen'       => $xpersen,
+                              'gram'         => $xgram,
+                              'gram_nd'      => $xgram_nd,
+                              'kg'           => $xkg,
+                              'kg_loss'      => $xkg_loss,
+                              'total'        => $xtotal,
+                              'kuota'        => $xkuota,
+                              'kuota_tambah' => $xkuota_tambah,
+                              'loss'         => $xloss,
+                              'created_at' => date("Y-m-d H:i:s")
+                            ];
+                            $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_warna);
+
+                            $slot_idx++;
                           }
                         }
                       }
@@ -901,11 +911,12 @@ class SalesOrder extends BaseController
                         $this->mworkOrder->updateRecord($this->mworkOrder->table2, $detail_wo, 'id', $data_detail_wo->id);
 
                         $existing_warna_list = $this->mworkOrder->getData_warna(null, 0, 8, null, null, ['id_walkorder_detail' => $data_detail_wo->id]);
+                        $slot_idx = 0;
 
                         for ($i = 0; $i < 8; $i++) {
                           $field_name = 'id_barang_' . ($i + 1);
                           if (!empty($xrow->$field_name)) {
-                            $cur_warna = $existing_warna_list[$i] ?? null;
+                            $cur_warna = $existing_warna_list[$slot_idx] ?? null;
                             if (!empty($cur_warna)) {
                               $isi_warna = [
                                 'id_walkorder_detail' => $data_detail_wo->id,
@@ -913,6 +924,7 @@ class SalesOrder extends BaseController
                               ];
                               $this->mworkOrder->updateRecord($this->mworkOrder->table5, $isi_warna, 'id', $cur_warna->id);
                             }
+                            $slot_idx++;
                           }
                         }
 
@@ -1097,6 +1109,7 @@ class SalesOrder extends BaseController
                 }
 
                 // get detail wo
+                $prms_sample = [];
                 $prms_sample['id_barang_1'] = $xrow->id_barang_1;
                 // $prms_sample['id_barang_2'] = $xrow->id_barang_2;
                 if (!empty($xrow->id_barang_2)) $prms_sample['id_barang_2'] = $xrow->id_barang_2;
@@ -1109,10 +1122,12 @@ class SalesOrder extends BaseController
                 $data_detail = $this->mSample->getDataDetailSample_ori($sampleId, $prms_sample);
                 
                 if (!empty($data_detail)) {
+                  $params_wod = [];
                   $params_wod['ref_detail_id'] = $data_detail[0]->id;
                   $params_wod['tipe_id'] = 1;
                   $params_wod['id_walkorder']  = $ref_sample_wo[0]->id;
                   $data_detail_wo = $this->mworkOrder->getData_detail(null, 0, 1, null, null, $params_wod);
+                  $all_sample_gram = $this->mSample->getData_gram(null, 0, 8, null, null, ['id_sample_det' => $data_detail[0]->id]);
                   
                   // $prgram['id_sample_det'] = $data_detail[0]->id;
                   // $dtGram = $this->mSample->getData_gram(null, 0, 9999, null,  null, $prgram);
@@ -1164,15 +1179,16 @@ class SalesOrder extends BaseController
                       'id_walkorder_detail' => $data_detail_wo[0]->id,
                     ];
                     $all_sample_warna = $this->mworkOrder->getData_warna(null, 0, 8, null, null, $params_sample_warna);
+                    $slot_idx = 0;
 
                     for ($i = 0; $i < 8; $i++) {
                       $field_name = 'id_barang_' . ($i + 1);
                       if (!empty($xrow->$field_name)) {
 
-                        // Ambil data warna Sample berdasarkan urutan posisi ($i),
-                        // bukan hanya filter id_barang, agar warna ke-1 dan warna ke-3
-                        // yang memakai id_barang sama tidak tertimpa/kembar.
-                        $data_detail_row = $all_sample_warna[$i] ?? null;
+                        // Ambil data warna Sample berdasarkan urutan slot terisi ($slot_idx),
+                        // bukan indeks fisik ($i) atau hanya filter id_barang,
+                        // agar slot yang memakai id_barang sama tetap memiliki gramasi independen.
+                        $data_detail_row = $all_sample_warna[$slot_idx] ?? null;
                         
                         $xgram = 0;
                         $xgram_nd = 0;
@@ -1182,8 +1198,10 @@ class SalesOrder extends BaseController
                         $xtotal = 0;
                         $xkuota = 0;
                         $xkuota_tambah = 0;
+                        $xpersen = 0;
                         
                         if(!empty($data_detail_row)) {
+                          $xpersen = $data_detail_row->persen ?? 0;
                           if (!empty($data_detail_row->gram)) {
                             $xgram = $data_detail_row->gram;
                             $xgram_nd = $xgram * $qty_wodet;
@@ -1195,48 +1213,36 @@ class SalesOrder extends BaseController
                             $xkuota = $data_detail_row->kuota;
                             $xkuota_tambah = $xkuota - $xtotal;
                           }
-  
-                          $isi_barang = [
-                            'id_walkorder_detail' => $wo_det_id,
-                            'id_barang' => $xrow->$field_name,
-                            'persen'       => $data_detail_row->persen ?? 0,
-                            'gram'         => $xgram,
-                            'gram_nd'      => $xgram_nd,
-                            'kg'           => $xkg,
-                            'kg_loss'      => $xkg_loss,
-                            'total'        => $xtotal,
-                            'kuota'        => $xkuota,
-                            'kuota_tambah' => $xkuota_tambah,
-                            'loss'         => $xloss,
-                            'created_at' => date("Y-m-d H:i:s")
-                          ];
-  
-                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
-                        }else{
-                          $getGramasiSample = $this->mSample->getDetailGramasi($data_detail[0]->id, $xrow->$field_name);
-                          if (!empty($getGramasiSample->gram)) {
-                            $xgram = $getGramasiSample->gram;
+                        } else {
+                          $gram_sample_row = $all_sample_gram[$slot_idx] ?? null;
+                          if (!empty($gram_sample_row) && !empty($gram_sample_row->gram)) {
+                            $xgram = $gram_sample_row->gram;
                             $xgram_nd = $xgram * $qty_wodet;
                             $xkg = $xgram_nd / 1000;
-                            $xloss = $getGramasiSample->loss;
+                            $xloss = $gram_sample_row->loss;
                             $xkg_loss = ($xkg * $xloss) / 100;
                             $xtotal = $xkg +  $xkg_loss;
                           }
-                          $isi_barang = [
-                            'id_walkorder_detail' => $wo_det_id,
-                            'id_barang' => $xrow->$field_name,
-                            'gram'         => $xgram,
-                            'gram_nd'      => $xgram_nd,
-                            'kg'           => $xkg,
-                            'kg_loss'      => $xkg_loss,
-                            'total'        => $xtotal,
-                            'kuota'        => $xkuota,
-                            'kuota_tambah' => $xkuota_tambah,
-                            'loss'         => $xloss,
-                            'created_at' => date("Y-m-d H:i:s")
-                          ];
-                          $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
                         }
+
+                        $isi_barang = [
+                          'id_walkorder_detail' => $wo_det_id,
+                          'id_barang' => $xrow->$field_name,
+                          'persen'       => $xpersen,
+                          'gram'         => $xgram,
+                          'gram_nd'      => $xgram_nd,
+                          'kg'           => $xkg,
+                          'kg_loss'      => $xkg_loss,
+                          'total'        => $xtotal,
+                          'kuota'        => $xkuota,
+                          'kuota_tambah' => $xkuota_tambah,
+                          'loss'         => $xloss,
+                          'created_at' => date("Y-m-d H:i:s")
+                        ];
+
+                        $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
+
+                        $slot_idx++;
                       }
                     }
                   } else {
@@ -1249,6 +1255,7 @@ class SalesOrder extends BaseController
                     ];
 
                     $wo_det_id = $this->mworkOrder->insertRecordGetid($this->mworkOrder->table2, $detail_wo);
+                    $slot_idx = 0;
 
                     for ($i = 0; $i < 8; $i++) {
 
@@ -1263,12 +1270,12 @@ class SalesOrder extends BaseController
 
                       $field_name = 'id_barang_' . ($i + 1);
                       if (!empty($xrow->$field_name)) {
-                        $getGramasiSample = $this->mSample->getDetailGramasi($data_detail[0]->id, $xrow->$field_name);
-                        if (!empty($getGramasiSample->gram)) {
-                          $xgram = $getGramasiSample->gram;
+                        $gram_sample_row = $all_sample_gram[$slot_idx] ?? null;
+                        if (!empty($gram_sample_row) && !empty($gram_sample_row->gram)) {
+                          $xgram = $gram_sample_row->gram;
                           $xgram_nd = $xgram * $qty_wodet;
                           $xkg = $xgram_nd / 1000;
-                          $xloss = $getGramasiSample->loss;
+                          $xloss = $gram_sample_row->loss;
                           $xkg_loss = ($xkg * $xloss) / 100;
                           $xtotal = $xkg +  $xkg_loss;
                         }
@@ -1287,6 +1294,8 @@ class SalesOrder extends BaseController
                           'created_at' => date("Y-m-d H:i:s")
                         ];
                         $this->mworkOrder->insertRecordGetid($this->mworkOrder->table5, $isi_barang);
+
+                        $slot_idx++;
                       }
                     }
                   }

@@ -327,12 +327,26 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 year,
                 stok_awal AS saldo_awal
             FROM trans_barang_history
+            WHERE year = $year AND month = $month
+            ORDER BY id_barang, COALESCE(id_gudang, 0), year, month, COALESCE(pack_id, 0), COALESCE(NULLIF(lot_no, ''), '-'), id DESC
+        ),
+        history_prev_per_lot AS (
+            SELECT DISTINCT ON (id_barang, COALESCE(id_gudang, 0), year, month, COALESCE(pack_id, 0), COALESCE(NULLIF(lot_no, ''), '-'))
+                COALESCE(NULLIF(lot_no, ''), '-') AS lot_no,
+                pack_id,
+                id_barang,
+                id_gudang,
+                month,
+                year,
+                jumlah AS saldo_akhir_prev
+            FROM trans_barang_history
+            WHERE year = {$params['prev_year']} AND month = {$params['prev_month']}
             ORDER BY id_barang, COALESCE(id_gudang, 0), year, month, COALESCE(pack_id, 0), COALESCE(NULLIF(lot_no, ''), '-'), id DESC
         ),
         normalized_trans_with_history AS (
             SELECT
                 nt.*,
-                COALESCE(h.saldo_awal, 0) AS saldo_awal_history
+                COALESCE(h.saldo_awal, hp.saldo_akhir_prev, 0) AS saldo_awal_history
             FROM normalized_trans_dedup nt
             LEFT JOIN history_per_lot h
                 ON nt.lot_no = h.lot_no
@@ -342,8 +356,11 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 -- dgn item/pack/lot/bulan/tahun yg sama ikut ke-JOIN (fan-out), bikin
                 -- baris transaksi kelipatan & merusak SUM/ROW_NUMBER window di bawah.
                 AND nt.id_gudang = h.id_gudang
-                AND EXTRACT(MONTH FROM nt.tanggal) = h.month
-                AND EXTRACT(YEAR FROM nt.tanggal) = h.year
+            LEFT JOIN history_prev_per_lot hp
+                ON nt.lot_no = hp.lot_no
+                AND nt.pack_id = hp.pack_id
+                AND nt.id_barang = hp.id_barang
+                AND nt.id_gudang = hp.id_gudang
         ),
         stock_base AS (
             SELECT
@@ -976,48 +993,80 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         if ($month == 12) {
             $nextMonth = 1;
             $nextYear = $year + 1;
-        }
-        else {
+        } else {
             $nextMonth = $month + 1;
         }
 
         $prevMonth = $month;
         $prevYear = $year;
-        if ($month == 12) {
-            $prevMonth = 1;
-            $prevYear = $year + 1;
-        }
-        else {
-            $prevMonth = $month + 1;
-        }
-        
-        
-        $data_barang_map = [];
-        $stok_awal_map = [];
-
-        foreach ($dataOld as $value) {
-            $pack_id_part = isset($value->pack_id) ? $value->pack_id : 'null';
-            $combinedKey = $value->id_barang . '_' . $value->lot_no . '_' . $pack_id_part;
-
-            if (!isset($data_barang_map[$combinedKey])) {
-                $data_barang_map[$combinedKey] = [
-                    "id_barang" => $value->id_barang,
-                    "lot_no" => $value->lot_no,
-                    "pack_id" => $value->pack_id,
-                    "id_jenis_barang" => $value->id_jenis_barang,
-                ];
-                $stok_awal_map[$combinedKey] = 0;
-            }
-
-            if (isset($value->saldo_awal_awal) && $value->saldo_awal_awal !== '' && $value->saldo_awal_awal !== null) {
-                $stok_awal_map[$combinedKey] = (float)$value->saldo_awal_awal;
-            }
+        if ($month == 1) {
+            $prevMonth = 12;
+            $prevYear = $year - 1;
+        } else {
+            $prevMonth = $month - 1;
         }
 
-        $data_barang = array_values($data_barang_map);
-        $stok_awal = array_values($stok_awal_map);
-        $pack_id = array_column($data_barang, 'pack_id');
-        $lot_no = array_column($data_barang, 'lot_no');
+        // Ambil semua barang & lot unik yang:
+        // A) Punya sisa saldo di bulan sebelumnya (carry-in), ATAU
+        // B) Punya transaksi mutasi di bulan berjalan
+        $unionParams = [
+            'prev_month' => $prevMonth,
+            'prev_year'  => $prevYear,
+            'month'      => $month,
+            'year'       => $year,
+        ];
+        $gudangPrevClause = "";
+        $gudangCurClause  = "";
+        if (!empty($idGudang)) {
+            $unionParams['id_gudang'] = $idGudang;
+            $gudangPrevClause = "AND h.id_gudang = :id_gudang:";
+            $gudangCurClause  = "AND (tb.id_gudang_asal = :id_gudang: OR tb.id_gudang_tujuan = :id_gudang:)";
+        }
+        $jenisPrevClause = "";
+        $jenisCurClause  = "";
+        if (!empty($idJenisBarang)) {
+            $unionParams['id_jenis_barang'] = $idJenisBarang;
+            $jenisPrevClause = "AND h.id_jenis_barang = :id_jenis_barang:";
+            $jenisCurClause  = "AND rb.id_jenis_barang = :id_jenis_barang:";
+        }
+
+        $unionSql = "
+            SELECT DISTINCT
+                x.id_barang,
+                x.lot_no,
+                x.pack_id,
+                x.id_jenis_barang
+            FROM (
+                SELECT
+                    h.id_barang,
+                    COALESCE(NULLIF(h.lot_no, ''), '-') AS lot_no,
+                    h.pack_id,
+                    h.id_jenis_barang
+                FROM trans_barang_history h
+                WHERE h.year = :prev_year:
+                  AND h.month = :prev_month:
+                  $gudangPrevClause
+                  $jenisPrevClause
+                  AND (h.jumlah != 0 OR h.stok_awal != 0)
+
+                UNION
+
+                SELECT
+                    tb.id_barang,
+                    COALESCE(NULLIF(tb.lot_no, ''), '-') AS lot_no,
+                    tb.pack_id,
+                    rb.id_jenis_barang
+                FROM trans_barang tb
+                JOIN ref_barang rb ON tb.id_barang = rb.id
+                WHERE EXTRACT(MONTH FROM tb.tanggal) = :month:
+                  AND EXTRACT(YEAR FROM tb.tanggal) = :year:
+                  AND COALESCE(tb.active, 1) = 1
+                  $gudangCurClause
+                  $jenisCurClause
+            ) x
+        ";
+
+        $data_barang_rows = $this->db->query($unionSql, $unionParams)->getResultArray();
 
         // Hapus snapshot lama untuk bulan dan gudang yang sedang di-update agar tidak meninggalkan baris yatim (orphan rows)
         $cleanBuilder = $this->db->table("trans_barang_history");
@@ -1031,50 +1080,98 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         }
         $cleanBuilder->delete();
 
-        foreach ($data_barang as $key => $lot) {
-            $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
-            // Awal bulan SETELAH bulan yg direkap - dipakai sbg batas atas (exclusive)
-            // utk subquery price/tanggal carry-forward di bawah, supaya mencakup semua
-            // transaksi s.d. akhir bulan yg direkap, bukan cuma yg persis di bulan itu.
-            $nextCutoffDate = sprintf('%04d-%02d-01', $nextYear, $nextMonth);
+        $cutoffDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
+        $nextCutoffDate = sprintf('%04d-%02d-01', $nextYear, $nextMonth);
+
+        foreach ($data_barang_rows as $lot) {
             $lot_no = $lot['lot_no'];
             $pack_id_val = $lot['pack_id'];
             $hasPackId = !empty($pack_id_val);
-            // Klausa pack_id dibangun sebagai fragmen SQL tetap (bukan nilai user),
-            // nilainya sendiri tetap lewat bound parameter ":pack_id:" di bawah.
             $pack_id_clause = $hasPackId ? '= :pack_id:' : 'IS NULL';
             $id_jenis_barang = $lot['id_jenis_barang'];
             $id_barang_cur = $lot['id_barang'];
 
-            // Semua nilai dari luar (lot_no, month, year, id_gudang, id_barang, pack_id)
-            // memakai bound parameter ":nama:" - sebelumnya diselipkan langsung ke
-            // string SQL (rawan SQL injection), pola yang sama dengan yang sudah
-            // diperbaiki di LaporanStockCardModel::getLaporanPersediaan().
+            // 1. Tentukan Saldo Awal (carry forward dari bulan sebelumnya)
+            $saldo_awal = 0;
+            $prevPrice = null;
+            $prevTanggal = null;
+
+            // CUTOFF JULI 2026: Titik cutoff stok awal = 0 (Juni & Juli 2026)
+            if (!(($month == 6 || $month == 7) && $year == 2026)) {
+                $prevHistoryParams = [
+                    'id_barang'  => $id_barang_cur,
+                    'lot_no'     => $lot_no,
+                    'prev_year'  => $prevYear,
+                    'prev_month' => $prevMonth,
+                ];
+                $gudangPrevHClause = "";
+                if (!empty($idGudang)) {
+                    $prevHistoryParams['id_gudang'] = $idGudang;
+                    $gudangPrevHClause = "AND id_gudang = :id_gudang:";
+                }
+                if ($hasPackId) {
+                    $prevHistoryParams['pack_id'] = $pack_id_val;
+                }
+                $prevSql = "
+                    SELECT jumlah, price, tanggal
+                    FROM trans_barang_history
+                    WHERE id_barang = :id_barang:
+                      AND COALESCE(NULLIF(lot_no, ''), '-') = :lot_no:
+                      AND pack_id $pack_id_clause
+                      $gudangPrevHClause
+                      AND year = :prev_year:
+                      AND month = :prev_month:
+                    ORDER BY id DESC
+                    LIMIT 1
+                ";
+                $rowPrev = $this->db->query($prevSql, $prevHistoryParams)->getRow();
+                if (!empty($rowPrev)) {
+                    $saldo_awal = (float) $rowPrev->jumlah;
+                    $prevPrice = $rowPrev->price;
+                    $prevTanggal = $rowPrev->tanggal;
+                } else {
+                    // Fallback: Cari snapshot terakhir sebelum bulan ini (>= Juli 2026)
+                    $fallbackParams = [
+                        'id_barang' => $id_barang_cur,
+                        'lot_no'    => $lot_no,
+                        'cur_ym'    => ($year * 100 + $month),
+                    ];
+                    $gudangFallbackClause = "";
+                    if (!empty($idGudang)) {
+                        $fallbackParams['id_gudang'] = $idGudang;
+                        $gudangFallbackClause = "AND id_gudang = :id_gudang:";
+                    }
+                    if ($hasPackId) {
+                        $fallbackParams['pack_id'] = $pack_id_val;
+                    }
+                    $fallbackSql = "
+                        SELECT jumlah, price, tanggal
+                        FROM trans_barang_history
+                        WHERE id_barang = :id_barang:
+                          AND COALESCE(NULLIF(lot_no, ''), '-') = :lot_no:
+                          AND pack_id $pack_id_clause
+                          $gudangFallbackClause
+                          AND (year * 100 + month) < :cur_ym:
+                          AND (year * 100 + month) >= 202607
+                        ORDER BY year DESC, month DESC, id DESC
+                        LIMIT 1
+                    ";
+                    $rowFallback = $this->db->query($fallbackSql, $fallbackParams)->getRow();
+                    if (!empty($rowFallback)) {
+                        $saldo_awal = (float) $rowFallback->jumlah;
+                        $prevPrice = $rowFallback->price;
+                        $prevTanggal = $rowFallback->tanggal;
+                    }
+                }
+            }
+
+            // 2. Query transaksi mutasi di bulan ini
             $sql = "
                 SELECT
                     abx.id_barang,
                     COALESCE(NULLIF(abx.lot_no, ''), '-') AS lot_no,
                     abx.pack_id,
-
-                    -- Subquery ambil price terakhir yg tidak null s.d. akhir bulan yang
-                    -- direkap (bukan cuma di dalam bulan itu saja) - supaya kalau bulan ini
-                    -- tidak ada transaksi baru utk lot ini, harga tetap dibawa dari harga
-                    -- terakhir yang diketahui (mis. dari Receive Item bulan sebelumnya),
-                    -- bukan jadi NULL/kosong. Difilter juga dgn id_barang supaya tidak
-                    -- salah ambil punya barang lain yang lot_no-nya kebetulan sama (lot_no
-                    -- diketik manual di form Receive, tidak dijamin unik antar barang).
-                    --
-                    -- TAMBAHAN (2026-08-08): DIPRIORITASKAN transaksi 'BTM'/'REC' (Barang
-                    -- Masuk / Receive Item - sumber harga BELI asli), baru fallback ke
-                    -- jenis transaksi lain (Transfer/Keluar) kalau lot itu tidak pernah
-                    -- punya transaksi BTM/REC sama sekali. Ini menutup celah bug: harga
-                    -- yang salah ke-input di form Transfer/Keluar (misalnya 'ketuker' dgn
-                    -- barang lain) sebelumnya bisa ikut kebawa jadi 'harga terakhir' Lot
-                    -- itu di sini - lalu snapshot ini dipakai lagi utk prefill form
-                    -- Transfer berikutnya, jadi salahnya menyebar terus-menerus. Dengan
-                    -- prioritas ini, harga selalu mengacu ke transaksi pembelian aslinya.
                     COALESCE(
-                        -- Prioritas 1: Receive PO (trans_receive_detail) pada tanggal < next_cutoff
                         (
                             SELECT trd.price
                             FROM trans_receive_detail trd
@@ -1087,7 +1184,6 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                             ORDER BY trh.rec_date DESC, trh.id DESC
                             LIMIT 1
                         ),
-                        -- Prioritas 2: Transaksi pembelian / masuk BTM/REC pada tanggal < next_cutoff
                         (
                             SELECT abx2.price
                             FROM trans_barang abx2
@@ -1103,7 +1199,6 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                                 abx2.tanggal DESC
                             LIMIT 1
                         ),
-                        -- Prioritas 3: Fallback ke master ref_barang
                         (
                             SELECT rb.harga_satuan
                             FROM ref_barang rb
@@ -1111,9 +1206,6 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         ),
                         0
                     ) AS price,
-
-                    -- Subquery ambil tanggal transaksi terakhir s.d. akhir bulan yang
-                    -- direkap (carry-forward sama seperti price di atas).
                     (
                         SELECT abx3.tanggal
                         FROM trans_barang abx3
@@ -1125,29 +1217,18 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         ORDER BY abx3.tanggal DESC
                         LIMIT 1
                     ) AS tanggal,
-
                     COALESCE(SUM(
                         CASE
                             WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah
                             ELSE 0
                         END
                     ), 0) AS total_masuk,
-
                     COALESCE(SUM(
                         CASE
                             WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah
                             ELSE 0
                         END
-                    ), 0) AS total_keluar,
-
-                    COALESCE(SUM(
-                        CASE
-                            WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah
-                            WHEN abx.id_gudang_asal = :id_gudang: THEN -abx.jumlah
-                            ELSE 0
-                        END
-                    ), 0) AS total_jumlah
-
+                    ), 0) AS total_keluar
                 FROM (
                     SELECT * FROM (
                         SELECT
@@ -1168,14 +1249,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     ) t
                     WHERE rn = 1
                 ) abx
-
                 WHERE
                     EXTRACT(MONTH FROM abx.tanggal) = :month:
                     AND EXTRACT(YEAR FROM abx.tanggal) = :year:
                     AND abx.id_barang = :id_barang:
                     AND COALESCE(NULLIF(abx.lot_no, ''), '-') = :lot_no:
                     AND abx.pack_id $pack_id_clause
-
                 GROUP BY
                     abx.id_barang,
                     COALESCE(NULLIF(abx.lot_no, ''), '-'),
@@ -1195,87 +1274,47 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             }
 
             $data = $this->db->query($sql, $params)->getRow();
-            
-            $jumlah = 0;
-            
-            
-            if (isset($data)) {
-                for ($i=0; $i < 2; $i++) { 
-                    $saldo_awal = $stok_awal[$key];
-                    // CUTOFF JULI 2026: Titik cutoff stok awal = 0 (Juni & Juli 2026)
-                    if (($month == 6 || $month == 7) && $year == 2026 && $i == 0) {
-                        $saldo_awal = 0;
-                    }
-                    $jumlah = $data->total_jumlah + $saldo_awal;
-                    $masuk = $data->total_masuk;
-                    $keluar = $data->total_keluar;
-                    $bulan = $month;
-                    $tahun = $year;
-                    if (($i == 1)) {
-                        // CUTOFF JULI 2026: Jika bulan berikutnya adalah Juli 2026 (cutoff) atau sebelumnya, jangan bawa saldo
-                        if ($nextYear < 2026 || ($nextYear == 2026 && $nextMonth <= 7)) {
-                            continue;
-                        }
-                        $masuk = 0;
-                        $keluar = 0;
-                        $saldo_awal = $jumlah;
-                        $bulan = $nextMonth;
-                        $tahun = $nextYear;
-                    }
-                    $isi['id_barang'] = $data->id_barang;
-                    $isi['id_jenis_barang'] = !empty($idJenisBarang) ? $idJenisBarang : $id_jenis_barang;
-                    $isi['lot_no'] = !empty($lot_no) ? $lot_no : '-';
-                    $isi['pack_id'] = $pack_id[$key];
-                    $isi['stok_awal'] = $saldo_awal;
-                    $isi['masuk'] = round($masuk, 2);
-                    $isi['keluar'] = round($keluar, 2);
-                    $isi['month'] = $bulan;
-                    $isi['year'] = $tahun;
-                    $isi['jumlah'] = round($jumlah, 2);
-                    $isi['id_gudang'] = $idGudang;
-                    $isi['tanggal'] = $data->tanggal;
-                    $isi['price'] = $data->price;
-                    $builder_detail = $this->db->table("trans_barang_history abx");
-                    $builder_detail->where('abx.month', $bulan);
-                    $builder_detail->where('abx.year', $tahun);
-                    $builder_detail->where("COALESCE(NULLIF(abx.lot_no, ''), '-')", $lot_no);
-                    $builder_detail->where('abx.id_barang', $data->id_barang);
-                    // id_gudang WAJIB ikut di filter ini - tanpanya, baris histori gudang
-                    // LAIN dgn barang/lot/pack/bulan/tahun yg sama ikut kebaca "sudah ada"
-                    // lalu ke-UPDATE dgn data gudang ini (menimpa data gudang lain).
-                    $builder_detail->where('abx.id_gudang', $idGudang);
-                    if (!empty($pack_id[$key])) {
-                        $builder_detail->where('abx.pack_id', $pack_id[$key]);
-                    } else {
-                        $builder_detail->where('abx.pack_id IS NULL');
-                    }
-                    $builder_detail->select("*");
 
-                    $detail = $builder_detail->get()->getRow();
-                    if (empty($detail)) {
-                        $builder_detail_insert = $this->db->table("trans_barang_history");
-                        if ($builder_detail_insert->insert($isi) === false) {
-                            $error = $this->db->error();
-                            log_message('error', 'Insert trans_barang_history failed: ' . json_encode($error));
-                            return false;
-                        }
-                    }
-                    else {
-                        $builder_update = $this->db->table("trans_barang_history");
-                        $builder_update->where("month", $bulan);
-                        $builder_update->where("year", $tahun);
-                        $builder_update->where("COALESCE(NULLIF(lot_no, ''), '-')", $lot_no);
-                        $builder_update->where("id_barang", $data->id_barang);
-                        $builder_update->where("id_gudang", $idGudang);
-                        if (!empty($pack_id[$key])) {
-                            $builder_update->where("pack_id", $pack_id[$key]);
-                        } else {
-                            $builder_update->where("pack_id IS NULL");
-                        }
-                        $builder_update->update($isi);
-                    }
-                }
-                
+            if (!empty($data)) {
+                $masuk = (float) $data->total_masuk;
+                $keluar = (float) $data->total_keluar;
+                $price = $data->price;
+                $tanggal = $data->tanggal;
+            } else {
+                $masuk = 0;
+                $keluar = 0;
+                $price = !empty($prevPrice) ? $prevPrice : 0;
+                $tanggal = !empty($prevTanggal) ? $prevTanggal : "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
+            }
+
+            $jumlah = round($saldo_awal + $masuk - $keluar, 2);
+
+            // Skip jika benar-benar nol tanpa ada riwayat/mutasi apa pun
+            if ($saldo_awal == 0 && $masuk == 0 && $keluar == 0 && $jumlah == 0) {
+                continue;
+            }
+
+            $isi = [
+                'id_barang'       => $id_barang_cur,
+                'id_jenis_barang' => !empty($idJenisBarang) ? $idJenisBarang : $id_jenis_barang,
+                'lot_no'          => !empty($lot_no) ? $lot_no : '-',
+                'pack_id'         => $pack_id_val,
+                'stok_awal'       => $saldo_awal,
+                'masuk'           => round($masuk, 2),
+                'keluar'          => round($keluar, 2),
+                'month'           => $month,
+                'year'            => $year,
+                'jumlah'          => round($jumlah, 2),
+                'id_gudang'       => $idGudang,
+                'tanggal'         => $tanggal,
+                'price'           => $price,
+            ];
+
+            $builder_detail_insert = $this->db->table("trans_barang_history");
+            if ($builder_detail_insert->insert($isi) === false) {
+                $error = $this->db->error();
+                log_message('error', 'Insert trans_barang_history failed: ' . json_encode($error));
+                return false;
             }
         }
 

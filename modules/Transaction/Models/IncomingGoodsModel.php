@@ -182,6 +182,8 @@ class IncomingGoodsModel extends \App\Models\PrModel
         if (!empty($packId)) {
             $builder->where('pack_id', $packId);
         }
+        $builder->where('active', 1);
+        $builder->orderBy('qty', 'DESC');
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }

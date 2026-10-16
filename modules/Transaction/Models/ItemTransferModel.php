@@ -634,7 +634,7 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->_data;
     }
     
-    function trxInsertUpdateRecord($data, $id, $detail, $dataSO, $oldStatus = null)
+    function trxInsertUpdateRecord($data, $id, $detail, $dataSO, $oldStatus = null, $forceContinue = 0)
     {
         $this->db->transStart();
         try {
@@ -782,6 +782,57 @@ class ItemTransferModel extends \App\Models\PrModel
                     }
             }
             
+            // Validasi ketersediaan stok lot di Gudang Asal sebelum approve (jika belum dikonfirmasi lanjut oleh user)
+            if ($data['status'] == 1 && empty($forceContinue) && !empty($detail) && is_array($detail)) {
+                $mBarangMasukCheck = new IncomingGoodsModel();
+                $insufficientLots = [];
+                foreach ($detail as $rowCheck) {
+                    $chkIdBarang = !empty($rowCheck['id_barang']) ? (is_numeric($rowCheck['id_barang']) ? (int)$rowCheck['id_barang'] : decrypt($rowCheck['id_barang'])) : 0;
+                    $chkQty = (float)($rowCheck['qty'] ?? 0);
+                    if ($chkQty <= 0 || empty($chkIdBarang)) continue;
+
+                    $chkLotNo = trim((string)($rowCheck['lot_no'] ?? ''));
+                    $chkLot = null;
+                    if (!empty($rowCheck['lot_id'])) {
+                        $chkLot = $mBarangMasukCheck->getLotNo(null, null, $rowCheck['lot_id']);
+                    }
+                    if (empty($chkLot) && !empty($chkLotNo) && $chkLotNo !== '-') {
+                        $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang_asal'], !empty($rowCheck['pack_id']) ? $rowCheck['pack_id'] : null);
+                        if (empty($chkLot)) {
+                            $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang_asal']);
+                        }
+                    }
+
+                    if (empty($chkLot)) {
+                        $lotLabel = !empty($chkLotNo) ? $chkLotNo : '-';
+                        $insufficientLots[] = "• Lot {$lotLabel} (Tidak ditemukan di Gudang Asal, diminta: " . number_format($chkQty, 2) . ")";
+                    } else {
+                        $availQty = (float)$chkLot->qty;
+                        if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
+                            $altLot = $this->db->table($this->tblTrxLots)
+                                ->where('lot_no', $chkLot->lot_no)
+                                ->where('id_barang', $chkIdBarang)
+                                ->where('id_gudang', $data['id_gudang_asal'])
+                                ->where('active', 1)
+                                ->where('qty >=', $chkQty)
+                                ->orderBy('qty', 'DESC')
+                                ->get()->getRow();
+                            if (!empty($altLot)) {
+                                $availQty = (float)$altLot->qty;
+                            }
+                        }
+
+                        if ($availQty - $chkQty < -0.0001) {
+                            $insufficientLots[] = "• Lot {$chkLot->lot_no} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                        }
+                    }
+                }
+
+                if (!empty($insufficientLots)) {
+                    throw new \Exception("NEED_STOCK_CONFIRMATION: Terdapat stok lot yang tidak mencukupi di Gudang Asal:\n" . implode("\n", $insufficientLots));
+                }
+            }
+
             if(!empty($detail)){
                 foreach ($detail as $key => $rowData) {
                     if ($rowData['id_barang'] != "") {
@@ -1022,33 +1073,55 @@ class ItemTransferModel extends \App\Models\PrModel
 
                         if (empty($resLotNo)) {
                             $lotNama = !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-';
-                            throw new \Exception("Stok lot '{$lotNama}' tidak ditemukan di Gudang Asal untuk barang ini!");
-                        }
-                        // Smart fallback: Jika lot_id yang diikat stoknya kurang dari diminta,
-                        // cari apakah ada baris lot lain di gudang asal dengan nomor lot yang sama yang stoknya mencukupi
-                        if (!empty($resLotNo) && (float)$resLotNo->qty < (float)$rowData['qty'] && !empty($resLotNo->lot_no) && !empty($idBarang)) {
-                            $altLot = $this->db->table($this->tblTrxLots)
-                                ->where('lot_no', $resLotNo->lot_no)
-                                ->where('id_barang', $idBarang)
-                                ->where('id_gudang', $data['id_gudang_asal'])
-                                ->where('active', 1)
-                                ->where('qty >=', (float)$rowData['qty'])
-                                ->orderBy('qty', 'DESC')
-                                ->get()->getRow();
-                            if (!empty($altLot)) {
-                                $resLotNo = $altLot;
-                                if (!empty($rowData['id'])) {
-                                    $this->updateRecords($this->tblDet, ['lot_id' => $altLot->id], ['id' => $rowData['id']]);
+                            if (empty($forceContinue)) {
+                                throw new \Exception("NEED_STOCK_CONFIRMATION: Stok lot '{$lotNama}' tidak ditemukan di Gudang Asal untuk barang ini!");
+                            } else {
+                                $newLotId = $this->insertRecordGetid($this->tblTrxLots, [
+                                    "id_barang" => $idBarang,
+                                    "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
+                                    "tanggal" => $trxTanggal,
+                                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-',
+                                    "qty" => 0 - (float)$rowData['qty'],
+                                    "active" => 1,
+                                    "created_at" => date("Y-m-d H:i:s"),
+                                ]);
+                                $resLotNo = (object)[
+                                    "id" => $newLotId,
+                                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-',
+                                    "qty" => 0
+                                ];
+                                $idLots = $newLotId;
+                                $sisaLot = 0 - (float)$rowData['qty'];
+                            }
+                        } else {
+                            // Smart fallback: Jika lot_id yang diikat stoknya kurang dari diminta,
+                            // cari apakah ada baris lot lain di gudang asal dengan nomor lot yang sama yang stoknya mencukupi
+                            if (!empty($resLotNo) && (float)$resLotNo->qty < (float)$rowData['qty'] && !empty($resLotNo->lot_no) && !empty($idBarang)) {
+                                $altLot = $this->db->table($this->tblTrxLots)
+                                    ->where('lot_no', $resLotNo->lot_no)
+                                    ->where('id_barang', $idBarang)
+                                    ->where('id_gudang', $data['id_gudang_asal'])
+                                    ->where('active', 1)
+                                    ->where('qty >=', (float)$rowData['qty'])
+                                    ->orderBy('qty', 'DESC')
+                                    ->get()->getRow();
+                                if (!empty($altLot)) {
+                                    $resLotNo = $altLot;
+                                    if (!empty($rowData['id'])) {
+                                        $this->updateRecords($this->tblDet, ['lot_id' => $altLot->id], ['id' => $rowData['id']]);
+                                    }
                                 }
                             }
-                        }
 
-                        $idLots = $resLotNo->id;
-                        $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
-                        if ($sisaLot < -0.0001) {
-                            throw new \Exception("Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2));
+                            $idLots = $resLotNo->id;
+                            $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
+                            if ($sisaLot < -0.0001) {
+                                if (empty($forceContinue)) {
+                                    throw new \Exception("NEED_STOCK_CONFIRMATION: Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2));
+                                }
+                            }
+                            $this->updateRecords($this->tblTrxLots, array("qty" => $sisaLot), array("id" => $idLots));
                         }
-                        $this->updateRecords($this->tblTrxLots, array("qty" => $sisaLot), array("id" => $idLots));
     
                         $resData = $mBarangMasuk->getLastStokBarangBalances($idBarang, $data['id_gudang_asal'], $idLots, !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
     

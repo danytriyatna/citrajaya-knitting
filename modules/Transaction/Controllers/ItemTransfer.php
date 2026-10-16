@@ -860,8 +860,10 @@ class ItemTransfer extends BaseController
         }
     }
 
+    $force_continue = (int)$this->request->getPost('force_continue');
+
     try {
-      $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
+      $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus, $force_continue);
       if ($res) {
         $status = true;
         $msg = "Data berhasil disimpan!";
@@ -874,6 +876,15 @@ class ItemTransfer extends BaseController
     } catch (\Throwable $e) {
       $status = false;
       $msg = $e->getMessage();
+      if (strpos($msg, 'NEED_STOCK_CONFIRMATION:') !== false) {
+        $cleanMsg = trim(str_replace('NEED_STOCK_CONFIRMATION:', '', $msg));
+        return $this->response->setJSON([
+            'status' => false,
+            'need_confirmation' => true,
+            'title' => 'Peringatan: Stok Lot Tidak Mencukupi!',
+            'message' => $cleanMsg . "\n\nApakah Anda yakin ingin tetap melanjutkan transfer barang ini?"
+        ]);
+      }
     }
 
     $build_array['message'] = $msg;

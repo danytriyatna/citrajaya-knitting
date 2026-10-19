@@ -278,6 +278,7 @@ $(document).ready(function () {
         ajaxRequesting: function (url, params) {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
+            params.filter_trans = $("#filter_status").val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList.getPageSize();

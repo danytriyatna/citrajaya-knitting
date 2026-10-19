@@ -107,7 +107,7 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-3">
-              <div hidden class="form-group m-b-0 d-flex align-items-center">
+              <div class="form-group m-b-0 d-flex align-items-center">
                 <label class="control-label text-start text-md-end m-e-8" for="filter_status">Transaksi</label>
                 <select id="filter_status" name="filter_status" class="form-control custom-select select2">
                   <option value="0">All</option>
@@ -139,5 +139,5 @@
 <?= $this->endSection('content'); ?>
 
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/walkorder/index.js"></script>
+<script src="<?= base_url('script/app/transaction/walkorder/index.js?v=' . time()); ?>"></script>
 <?= $this->endSection('script'); ?>

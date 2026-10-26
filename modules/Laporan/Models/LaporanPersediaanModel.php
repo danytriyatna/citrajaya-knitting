@@ -536,7 +536,13 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             CAST(SUM(sub.stok_awal) AS DECIMAL(18,2)) AS saldo_awal
         FROM (
             SELECT
-                a.*,
+                a.id_barang,
+                a.id_jenis_barang,
+                a.lot_no,
+                a.tanggal,
+                a.price,
+                a.masuk,
+                a.keluar,
                 (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN 0 ELSE a.stok_awal END) AS stok_awal,
                 (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN (a.masuk - a.keluar) ELSE a.jumlah END) AS jumlah,
                 b.nama_barang,

@@ -1982,7 +1982,7 @@ class ItemTransfer extends BaseController
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A3:J3');
-        $sheet->setCellValue('A3', 'Periode Transfer: ' . $title);
+        $sheet->setCellValue('A3', 'Periode SO / Sample: ' . $title);
         $sheet->getStyle('A3')->getFont()->setName('Arial')->setSize(10)->setItalic(true);
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 

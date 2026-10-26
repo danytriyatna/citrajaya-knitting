@@ -2241,6 +2241,8 @@ class ItemTransferModel extends \App\Models\PrModel
         // Subquery T: Agregasi Transfer Barang per SO, Style, Color, Ukuran, CMT, Proses
         $subTrf = $db->table('trans_barang_trf_so_det tbtsd')
             ->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner')
+            ->join('trans_sales_order tso', 'tso.kode_sales_order = tbtsd.kode_sales_order', 'left')
+            ->join('trans_sample ts', 'ts.kode_sample = tbtsd.kode_sales_order', 'left')
             ->join('ref_operator ro', 'ro.id = tbth.id_cmt', 'left')
             ->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left')
             ->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'left')
@@ -2261,8 +2263,16 @@ class ItemTransferModel extends \App\Models\PrModel
             ])
             ->where('tbth.active', 1);
 
+        // Filter periode tanggal HANYA untuk pemilihan nomor SO / Sample yang tampil
         if (!empty($from_date) && !empty($to_date)) {
-            $subTrf->where("tbth.tanggal BETWEEN '{$from_date}' AND '{$to_date}'");
+            $subTrf->groupStart()
+                ->where('tso.tgl_transaksi >=', $from_date)
+                ->where('tso.tgl_transaksi <=', $to_date)
+            ->groupEnd()
+            ->orGroupStart()
+                ->where('ts.tgl_transaksi >=', $from_date)
+                ->where('ts.tgl_transaksi <=', $to_date)
+            ->groupEnd();
         }
 
         if (!empty($id_perusahaan) && $id_perusahaan !== 'all') {

@@ -1971,17 +1971,17 @@ class ItemTransfer extends BaseController
         $title = formatTanggalIndonesia($tanggal_sql_from) . " - " . formatTanggalIndonesia($tanggal_sql_to);
 
         // Header Dokumen
-        $sheet->mergeCells('A1:J1');
+        $sheet->mergeCells('A1:L1');
         $sheet->setCellValue('A1', 'LAPORAN SISA TRANSFER BARANG KE CMT (OUTSTANDING INVENTORY)');
         $sheet->getStyle('A1')->getFont()->setName('Arial')->setSize(14)->setBold(true);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        $sheet->mergeCells('A2:J2');
+        $sheet->mergeCells('A2:L2');
         $sheet->setCellValue('A2', 'PERUSAHAAN: ' . strtoupper($nama_perusahaan));
         $sheet->getStyle('A2')->getFont()->setName('Arial')->setSize(11)->setBold(true);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        $sheet->mergeCells('A3:J3');
+        $sheet->mergeCells('A3:L3');
         $sheet->setCellValue('A3', 'Periode SO / Sample: ' . $title);
         $sheet->getStyle('A3')->getFont()->setName('Arial')->setSize(10)->setItalic(true);
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -1994,10 +1994,12 @@ class ItemTransfer extends BaseController
             'D5' => 'STYLE',
             'E5' => 'WARNA',
             'F5' => 'UKURAN',
-            'G5' => 'QTY TRANSFER',
-            'H5' => 'QTY TERIMA (BTM)',
-            'I5' => 'QTY SISA',
-            'J5' => 'STATUS'
+            'G5' => 'QTY TRANSFER (NORMAL)',
+            'H5' => 'QTY REJECT',
+            'I5' => 'TOTAL TRANSFER',
+            'J5' => 'QTY TERIMA (BTM)',
+            'K5' => 'QTY SISA',
+            'L5' => 'STATUS'
         ];
 
         foreach ($headers as $cell => $text) {
@@ -2028,7 +2030,7 @@ class ItemTransfer extends BaseController
             ],
         ];
 
-        $sheet->getStyle('A5:J5')->applyFromArray($styleHeader);
+        $sheet->getStyle('A5:L5')->applyFromArray($styleHeader);
         $sheet->getRowDimension(5)->setRowHeight(28);
 
         // Lebar Kolom
@@ -2038,10 +2040,12 @@ class ItemTransfer extends BaseController
         $sheet->getColumnDimension('D')->setWidth(25);
         $sheet->getColumnDimension('E')->setWidth(35);
         $sheet->getColumnDimension('F')->setWidth(12);
-        $sheet->getColumnDimension('G')->setWidth(15);
-        $sheet->getColumnDimension('H')->setWidth(18);
-        $sheet->getColumnDimension('I')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(16);
+        $sheet->getColumnDimension('H')->setWidth(14);
+        $sheet->getColumnDimension('I')->setWidth(16);
         $sheet->getColumnDimension('J')->setWidth(18);
+        $sheet->getColumnDimension('K')->setWidth(15);
+        $sheet->getColumnDimension('L')->setWidth(18);
 
         $styleGroupHeader = [
             'font' => [
@@ -2156,18 +2160,21 @@ class ItemTransfer extends BaseController
                 $first = $items[0];
 
                 // Group Header Baris
-                $sheet->mergeCells("A{$rowIdx}:J{$rowIdx}");
+                $sheet->mergeCells("A{$rowIdx}:L{$rowIdx}");
                 $sheet->setCellValue("A{$rowIdx}", "CMT: " . strtoupper($first->nama_cmt) . "  |  PROSES: " . strtoupper($first->nama_proses) . "  |  PERUSAHAAN: " . $first->perusahaan);
-                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleGroupHeader);
+                $sheet->getStyle("A{$rowIdx}:L{$rowIdx}")->applyFromArray($styleGroupHeader);
                 $sheet->getRowDimension($rowIdx)->setRowHeight(24);
                 $rowIdx++;
 
                 $groupStart = $rowIdx;
                 $no = 1;
                 foreach ($items as $item) {
-                    $qtyTrf = (float)$item->qty_transfer;
-                    $qtyTrm = (float)$item->qty_terima;
-                    $qtySisa = $qtyTrf - $qtyTrm;
+                    $qtyTrfNormal = (float)($item->qty_transfer_normal ?? 0);
+                    $qtyReject = (float)($item->qty_reject ?? 0);
+                    $qtyTrm = (float)($item->qty_terima ?? 0);
+                    
+                    // Sisa murni dihitung dari QTY NORMAL dikurangi QTY TERIMA (tidak menghitung reject)
+                    $qtySisa = $qtyTrfNormal - $qtyTrm;
 
                     $statusStr = "TUNTAS";
                     if ($qtySisa > 0) {
@@ -2182,26 +2189,35 @@ class ItemTransfer extends BaseController
                     $sheet->setCellValue("D{$rowIdx}", $item->style);
                     $sheet->setCellValue("E{$rowIdx}", $item->color);
                     $sheet->setCellValue("F{$rowIdx}", $item->kode_ukuran);
-                    $sheet->setCellValue("G{$rowIdx}", $qtyTrf);
-                    $sheet->setCellValue("H{$rowIdx}", $qtyTrm);
-                    $sheet->setCellValue("I{$rowIdx}", "=G{$rowIdx}-H{$rowIdx}");
-                    $sheet->setCellValue("J{$rowIdx}", $statusStr);
+                    $sheet->setCellValue("G{$rowIdx}", $qtyTrfNormal);
+                    $sheet->setCellValue("H{$rowIdx}", $qtyReject);
+                    $sheet->setCellValue("I{$rowIdx}", "=G{$rowIdx}+H{$rowIdx}");
+                    $sheet->setCellValue("J{$rowIdx}", $qtyTrm);
+                    $sheet->setCellValue("K{$rowIdx}", "=G{$rowIdx}-J{$rowIdx}");
+                    $sheet->setCellValue("L{$rowIdx}", $statusStr);
 
-                    $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleBody);
+                    $sheet->getStyle("A{$rowIdx}:L{$rowIdx}")->applyFromArray($styleBody);
                     $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("F{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $sheet->getStyle("J{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("L{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle("G{$rowIdx}:K{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
                     $sheet->getRowDimension($rowIdx)->setRowHeight(20);
+
+                    // Highlight kolom Reject jika ada barang reject
+                    if ($qtyReject > 0) {
+                        $sheet->getStyle("H{$rowIdx}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                            ->getStartColor()->setARGB('FFFCE4D6'); // Soft light orange
+                        $sheet->getStyle("H{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FFC00000');
+                    }
 
                     // Highlight kolom sisa jika masih ada outstanding (> 0)
                     if ($qtySisa > 0) {
-                        $sheet->getStyle("I{$rowIdx}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        $sheet->getStyle("K{$rowIdx}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                             ->getStartColor()->setARGB('FFFFEB9C');
-                        $sheet->getStyle("I{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FF9C6500');
-                        $sheet->getStyle("J{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FFC00000');
+                        $sheet->getStyle("K{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FF9C6500');
+                        $sheet->getStyle("L{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FFC00000');
                     } elseif ($qtySisa == 0) {
-                        $sheet->getStyle("J{$rowIdx}")->getFont()->getColor()->setARGB('FF008000');
+                        $sheet->getStyle("L{$rowIdx}")->getFont()->getColor()->setARGB('FF008000');
                     }
 
                     $rowIdx++;
@@ -2214,10 +2230,12 @@ class ItemTransfer extends BaseController
                 $sheet->setCellValue("G{$rowIdx}", "=SUM(G{$groupStart}:G{$groupEnd})");
                 $sheet->setCellValue("H{$rowIdx}", "=SUM(H{$groupStart}:H{$groupEnd})");
                 $sheet->setCellValue("I{$rowIdx}", "=SUM(I{$groupStart}:I{$groupEnd})");
-                $sheet->setCellValue("J{$rowIdx}", "");
+                $sheet->setCellValue("J{$rowIdx}", "=SUM(J{$groupStart}:J{$groupEnd})");
+                $sheet->setCellValue("K{$rowIdx}", "=SUM(K{$groupStart}:K{$groupEnd})");
+                $sheet->setCellValue("L{$rowIdx}", "");
 
-                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleSubtotal);
-                $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("A{$rowIdx}:L{$rowIdx}")->applyFromArray($styleSubtotal);
+                $sheet->getStyle("G{$rowIdx}:K{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getRowDimension($rowIdx)->setRowHeight(22);
 
                 $grandSubtotals[] = $rowIdx;
@@ -2235,22 +2253,26 @@ class ItemTransfer extends BaseController
                 $formulaG = "=" . implode("+", array_map(fn($r) => "G{$r}", $grandSubtotals));
                 $formulaH = "=" . implode("+", array_map(fn($r) => "H{$r}", $grandSubtotals));
                 $formulaI = "=" . implode("+", array_map(fn($r) => "I{$r}", $grandSubtotals));
+                $formulaJ = "=" . implode("+", array_map(fn($r) => "J{$r}", $grandSubtotals));
+                $formulaK = "=" . implode("+", array_map(fn($r) => "K{$r}", $grandSubtotals));
 
                 $sheet->setCellValue("G{$rowIdx}", $formulaG);
                 $sheet->setCellValue("H{$rowIdx}", $formulaH);
                 $sheet->setCellValue("I{$rowIdx}", $formulaI);
-                $sheet->setCellValue("J{$rowIdx}", "");
+                $sheet->setCellValue("J{$rowIdx}", $formulaJ);
+                $sheet->setCellValue("K{$rowIdx}", $formulaK);
+                $sheet->setCellValue("L{$rowIdx}", "");
 
-                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleGrandTotal);
-                $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("A{$rowIdx}:L{$rowIdx}")->applyFromArray($styleGrandTotal);
+                $sheet->getStyle("G{$rowIdx}:K{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getRowDimension($rowIdx)->setRowHeight(24);
             }
         } else {
             // Jika tidak ada data
-            $sheet->mergeCells("A6:J6");
+            $sheet->mergeCells("A6:L6");
             $sheet->setCellValue("A6", "Tidak ada data transfer pada periode tanggal ini.");
             $sheet->getStyle("A6")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle("A6:J6")->applyFromArray($styleBody);
+            $sheet->getStyle("A6:L6")->applyFromArray($styleBody);
         }
 
         $sheet->freezePane('D6');

@@ -2259,7 +2259,9 @@ class ItemTransferModel extends \App\Models\PrModel
                 "COALESCE(tbtsd.style, '-') AS style",
                 "COALESCE(tbtsd.color, '-') AS color",
                 "COALESCE(tbtsd.kode_ukuran, '-') AS kode_ukuran",
-                "SUM(tbtsd.qty) AS qty_transfer"
+                "SUM(CASE WHEN tbtsd.is_reject = 0 OR tbtsd.is_reject IS NULL THEN tbtsd.qty ELSE 0 END) AS qty_transfer_normal",
+                "SUM(CASE WHEN tbtsd.is_reject = 1 THEN tbtsd.qty ELSE 0 END) AS qty_reject",
+                "SUM(tbtsd.qty) AS qty_transfer_total"
             ])
             ->where('tbth.active', 1);
 
@@ -2362,9 +2364,11 @@ class ItemTransferModel extends \App\Models\PrModel
                 t.style,
                 t.color,
                 t.kode_ukuran,
-                t.qty_transfer,
+                t.qty_transfer_normal,
+                t.qty_reject,
+                t.qty_transfer_total,
                 COALESCE(m.qty_terima, 0) AS qty_terima,
-                (t.qty_transfer - COALESCE(m.qty_terima, 0)) AS qty_sisa
+                (t.qty_transfer_normal - COALESCE(m.qty_terima, 0)) AS qty_sisa
             FROM ({$sqlTrf}) t
             LEFT JOIN ({$sqlBtm}) m 
                 ON m.id_cmt = t.id_cmt

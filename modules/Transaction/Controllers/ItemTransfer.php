@@ -1941,9 +1941,23 @@ class ItemTransfer extends BaseController
 
     public function print_excel_sisa_cmt($from_date, $to_date)
     {
-        $fileName = "Laporan Sisa Transfer Barang ke CMT.xlsx";
-
         $id_perusahaan = $this->request->getGet('id_perusahaan');
+
+        $nama_perusahaan = "Semua Perusahaan";
+        if (!empty($id_perusahaan) && $id_perusahaan !== 'all') {
+            if ($id_perusahaan == 2) {
+                $nama_perusahaan = "Citra Knitt";
+            } elseif ($id_perusahaan == 1) {
+                $nama_perusahaan = "PT Citra Jaya Knitting";
+            } else {
+                $corpRow = $this->mPerusahaan->getData($id_perusahaan);
+                if (!empty($corpRow) && !empty($corpRow->nama_perusahaan)) {
+                    $nama_perusahaan = $corpRow->nama_perusahaan;
+                }
+            }
+        }
+
+        $fileName = "Laporan Sisa Transfer CMT - " . $nama_perusahaan . ".xlsx";
 
         $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
         $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
@@ -1963,22 +1977,27 @@ class ItemTransfer extends BaseController
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A2:J2');
-        $sheet->setCellValue('A2', 'Periode Transfer: ' . $title);
-        $sheet->getStyle('A2')->getFont()->setName('Arial')->setSize(11)->setItalic(true);
+        $sheet->setCellValue('A2', 'PERUSAHAAN: ' . strtoupper($nama_perusahaan));
+        $sheet->getStyle('A2')->getFont()->setName('Arial')->setSize(11)->setBold(true);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        // Header Kolom Tabel
+        $sheet->mergeCells('A3:J3');
+        $sheet->setCellValue('A3', 'Periode Transfer: ' . $title);
+        $sheet->getStyle('A3')->getFont()->setName('Arial')->setSize(10)->setItalic(true);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Header Kolom Tabel di Row 5
         $headers = [
-            'A4' => 'NO',
-            'B4' => 'KODE SO / SAMPLE',
-            'C4' => 'CUSTOMER / BUYER',
-            'D4' => 'STYLE',
-            'E4' => 'WARNA',
-            'F4' => 'UKURAN',
-            'G4' => 'QTY TRANSFER',
-            'H4' => 'QTY TERIMA (BTM)',
-            'I4' => 'QTY SISA',
-            'J4' => 'STATUS'
+            'A5' => 'NO',
+            'B5' => 'KODE SO / SAMPLE',
+            'C5' => 'CUSTOMER / BUYER',
+            'D5' => 'STYLE',
+            'E5' => 'WARNA',
+            'F5' => 'UKURAN',
+            'G5' => 'QTY TRANSFER',
+            'H5' => 'QTY TERIMA (BTM)',
+            'I5' => 'QTY SISA',
+            'J5' => 'STATUS'
         ];
 
         foreach ($headers as $cell => $text) {
@@ -2009,8 +2028,8 @@ class ItemTransfer extends BaseController
             ],
         ];
 
-        $sheet->getStyle('A4:J4')->applyFromArray($styleHeader);
-        $sheet->getRowDimension(4)->setRowHeight(28);
+        $sheet->getStyle('A5:J5')->applyFromArray($styleHeader);
+        $sheet->getRowDimension(5)->setRowHeight(28);
 
         // Lebar Kolom
         $sheet->getColumnDimension('A')->setWidth(6);
@@ -2129,7 +2148,7 @@ class ItemTransfer extends BaseController
             }
         }
 
-        $rowIdx = 5;
+        $rowIdx = 6;
         $grandSubtotals = [];
 
         if (!empty($grouped)) {
@@ -2228,13 +2247,13 @@ class ItemTransfer extends BaseController
             }
         } else {
             // Jika tidak ada data
-            $sheet->mergeCells("A5:J5");
-            $sheet->setCellValue("A5", "Tidak ada data transfer pada periode tanggal ini.");
-            $sheet->getStyle("A5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle("A5:J5")->applyFromArray($styleBody);
+            $sheet->mergeCells("A6:J6");
+            $sheet->setCellValue("A6", "Tidak ada data transfer pada periode tanggal ini.");
+            $sheet->getStyle("A6")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("A6:J6")->applyFromArray($styleBody);
         }
 
-        $sheet->freezePane('D5');
+        $sheet->freezePane('D6');
 
         $writer = new Xlsx($sheets);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

@@ -2271,8 +2271,12 @@ class ItemTransferModel extends \App\Models\PrModel
                     ->where('tbth.id_perusahaan', 1)
                     ->orWhere('tbth.id_perusahaan IS NULL')
                 ->groupEnd();
+                $subTrf->where("tbth.kode_transaksi NOT LIKE 'TRFC%'");
             } else {
-                $subTrf->where('tbth.id_perusahaan', $id_perusahaan);
+                $subTrf->groupStart()
+                    ->where('tbth.id_perusahaan', $id_perusahaan)
+                    ->orWhere("tbth.kode_transaksi LIKE 'TRFC%'")
+                ->groupEnd();
             }
         }
 
@@ -2306,8 +2310,24 @@ class ItemTransferModel extends \App\Models\PrModel
                 "SUM(tbmp.qty) AS qty_terima"
             ])
             ->where('tbh.active', 1)
-            ->where("LEFT(tbh.kode_transaksi, 3) =", "BTM")
-            ->groupBy([
+            ->where("LEFT(tbh.kode_transaksi, 3) =", "BTM");
+
+        if (!empty($id_perusahaan) && $id_perusahaan !== 'all') {
+            if ($id_perusahaan == 1) {
+                $subBtm->groupStart()
+                    ->where('tbh.id_perusahaan', 1)
+                    ->orWhere('tbh.id_perusahaan IS NULL')
+                ->groupEnd();
+                $subBtm->where("LEFT(tbh.kode_transaksi, 4) !=", "BTMC");
+            } else {
+                $subBtm->groupStart()
+                    ->where('tbh.id_perusahaan', $id_perusahaan)
+                    ->orWhere("LEFT(tbh.kode_transaksi, 4) =", "BTMC")
+                ->groupEnd();
+            }
+        }
+
+        $subBtm->groupBy([
                 "COALESCE(tbh.id_cmt, 0)",
                 "COALESCE(tbh.id_proses, 0)",
                 "CASE WHEN (tbh.id_perusahaan = 2 OR LEFT(tbh.kode_transaksi, 4) = 'BTMC') THEN 2 ELSE 1 END",

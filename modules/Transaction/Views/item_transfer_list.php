@@ -120,5 +120,5 @@
 
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/transfer/index.js"></script>
+<script src="script/app/transaction/transfer/index.js?v=<?= time() ?>"></script>
 <?= $this->endSection('script'); ?>

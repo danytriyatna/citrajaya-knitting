@@ -1938,6 +1938,311 @@ class ItemTransfer extends BaseController
     $this->data['updated_at'] = "29 Agustus 2026";
     return view($this->views . '\vitem_transfer_guide', $this->data);
   }
+
+    public function print_excel_sisa_cmt($from_date, $to_date)
+    {
+        $fileName = "Laporan Sisa Transfer Barang ke CMT.xlsx";
+
+        $id_perusahaan = $this->request->getGet('id_perusahaan');
+
+        $tanggal_sql_from = date('Y-m-d', strtotime(str_replace('/', '-', $from_date)));
+        $tanggal_sql_to = date('Y-m-d', strtotime(str_replace('/', '-', $to_date)));
+
+        $results = $this->mRef->get_export_sisa_cmt($tanggal_sql_from, $tanggal_sql_to, $id_perusahaan);
+
+        $sheets = new Spreadsheet();
+        $sheet = $sheets->getActiveSheet();
+        $sheet->setTitle('Sisa Transfer CMT');
+
+        $title = formatTanggalIndonesia($tanggal_sql_from) . " - " . formatTanggalIndonesia($tanggal_sql_to);
+
+        // Header Dokumen
+        $sheet->mergeCells('A1:J1');
+        $sheet->setCellValue('A1', 'LAPORAN SISA TRANSFER BARANG KE CMT (OUTSTANDING INVENTORY)');
+        $sheet->getStyle('A1')->getFont()->setName('Arial')->setSize(14)->setBold(true);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:J2');
+        $sheet->setCellValue('A2', 'Periode Transfer: ' . $title);
+        $sheet->getStyle('A2')->getFont()->setName('Arial')->setSize(11)->setItalic(true);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Header Kolom Tabel
+        $headers = [
+            'A4' => 'NO',
+            'B4' => 'KODE SO / SAMPLE',
+            'C4' => 'CUSTOMER / BUYER',
+            'D4' => 'STYLE',
+            'E4' => 'WARNA',
+            'F4' => 'UKURAN',
+            'G4' => 'QTY TRANSFER',
+            'H4' => 'QTY TERIMA (BTM)',
+            'I4' => 'QTY SISA',
+            'J4' => 'STATUS'
+        ];
+
+        foreach ($headers as $cell => $text) {
+            $sheet->setCellValue($cell, $text);
+        }
+
+        $styleHeader = [
+            'font' => [
+                'name' => 'Arial',
+                'size' => 10,
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF1F497D'], // Navy corporate
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ];
+
+        $sheet->getStyle('A4:J4')->applyFromArray($styleHeader);
+        $sheet->getRowDimension(4)->setRowHeight(28);
+
+        // Lebar Kolom
+        $sheet->getColumnDimension('A')->setWidth(6);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(25);
+        $sheet->getColumnDimension('D')->setWidth(25);
+        $sheet->getColumnDimension('E')->setWidth(35);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(18);
+        $sheet->getColumnDimension('I')->setWidth(15);
+        $sheet->getColumnDimension('J')->setWidth(18);
+
+        $styleGroupHeader = [
+            'font' => [
+                'name' => 'Arial',
+                'size' => 11,
+                'bold' => true,
+                'color' => ['argb' => 'FF1F497D'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFD9E1F2'], // Ice blue accent
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFB4C6E7'],
+                ],
+            ],
+        ];
+
+        $styleBody = [
+            'font' => [
+                'name' => 'Arial',
+                'size' => 9.5,
+            ],
+            'alignment' => [
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFD9D9D9'],
+                ],
+            ],
+        ];
+
+        $styleSubtotal = [
+            'font' => [
+                'name' => 'Arial',
+                'size' => 10,
+                'bold' => true,
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFF2F2F2'], // Light gray
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF808080'],
+                ],
+            ],
+        ];
+
+        $styleGrandTotal = [
+            'font' => [
+                'name' => 'Arial',
+                'size' => 11,
+                'bold' => true,
+                'color' => ['argb' => 'FF000000'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFC5D9F1'], // Soft corporate blue
+            ],
+            'borders' => [
+                'top' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+                'bottom' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOUBLE,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+                'left' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+                'right' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ];
+
+        // Kelompokkan data per CMT & Proses
+        $grouped = [];
+        if (!empty($results)) {
+            foreach ($results as $r) {
+                $groupKey = ($r->nama_cmt ?? '-') . '||' . ($r->nama_proses ?? '-');
+                $grouped[$groupKey][] = $r;
+            }
+        }
+
+        $rowIdx = 5;
+        $grandSubtotals = [];
+
+        if (!empty($grouped)) {
+            foreach ($grouped as $groupKey => $items) {
+                $first = $items[0];
+
+                // Group Header Baris
+                $sheet->mergeCells("A{$rowIdx}:J{$rowIdx}");
+                $sheet->setCellValue("A{$rowIdx}", "CMT: " . strtoupper($first->nama_cmt) . "  |  PROSES: " . strtoupper($first->nama_proses) . "  |  PERUSAHAAN: " . $first->perusahaan);
+                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleGroupHeader);
+                $sheet->getRowDimension($rowIdx)->setRowHeight(24);
+                $rowIdx++;
+
+                $groupStart = $rowIdx;
+                $no = 1;
+                foreach ($items as $item) {
+                    $qtyTrf = (float)$item->qty_transfer;
+                    $qtyTrm = (float)$item->qty_terima;
+                    $qtySisa = $qtyTrf - $qtyTrm;
+
+                    $statusStr = "TUNTAS";
+                    if ($qtySisa > 0) {
+                        $statusStr = ($qtyTrm == 0) ? "BELUM TERIMA" : "SEBAGIAN";
+                    } elseif ($qtySisa < 0) {
+                        $statusStr = "LEBIH TERIMA";
+                    }
+
+                    $sheet->setCellValue("A{$rowIdx}", $no++);
+                    $sheet->setCellValue("B{$rowIdx}", $item->kode_sales_order);
+                    $sheet->setCellValue("C{$rowIdx}", $item->nama_konsumen);
+                    $sheet->setCellValue("D{$rowIdx}", $item->style);
+                    $sheet->setCellValue("E{$rowIdx}", $item->color);
+                    $sheet->setCellValue("F{$rowIdx}", $item->kode_ukuran);
+                    $sheet->setCellValue("G{$rowIdx}", $qtyTrf);
+                    $sheet->setCellValue("H{$rowIdx}", $qtyTrm);
+                    $sheet->setCellValue("I{$rowIdx}", "=G{$rowIdx}-H{$rowIdx}");
+                    $sheet->setCellValue("J{$rowIdx}", $statusStr);
+
+                    $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleBody);
+                    $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle("F{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle("J{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getRowDimension($rowIdx)->setRowHeight(20);
+
+                    // Highlight kolom sisa jika masih ada outstanding (> 0)
+                    if ($qtySisa > 0) {
+                        $sheet->getStyle("I{$rowIdx}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                            ->getStartColor()->setARGB('FFFFEB9C');
+                        $sheet->getStyle("I{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FF9C6500');
+                        $sheet->getStyle("J{$rowIdx}")->getFont()->setBold(true)->getColor()->setARGB('FFC00000');
+                    } elseif ($qtySisa == 0) {
+                        $sheet->getStyle("J{$rowIdx}")->getFont()->getColor()->setARGB('FF008000');
+                    }
+
+                    $rowIdx++;
+                }
+                $groupEnd = $rowIdx - 1;
+
+                // Baris Subtotal per CMT
+                $sheet->mergeCells("A{$rowIdx}:F{$rowIdx}");
+                $sheet->setCellValue("A{$rowIdx}", "SUBTOTAL " . strtoupper($first->nama_cmt));
+                $sheet->setCellValue("G{$rowIdx}", "=SUM(G{$groupStart}:G{$groupEnd})");
+                $sheet->setCellValue("H{$rowIdx}", "=SUM(H{$groupStart}:H{$groupEnd})");
+                $sheet->setCellValue("I{$rowIdx}", "=SUM(I{$groupStart}:I{$groupEnd})");
+                $sheet->setCellValue("J{$rowIdx}", "");
+
+                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleSubtotal);
+                $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getRowDimension($rowIdx)->setRowHeight(22);
+
+                $grandSubtotals[] = $rowIdx;
+                $rowIdx++;
+
+                // Spasi
+                $rowIdx++;
+            }
+
+            // Grand Total Keseluruhan
+            if (!empty($grandSubtotals)) {
+                $sheet->mergeCells("A{$rowIdx}:F{$rowIdx}");
+                $sheet->setCellValue("A{$rowIdx}", "GRAND TOTAL KESELURUHAN");
+
+                $formulaG = "=" . implode("+", array_map(fn($r) => "G{$r}", $grandSubtotals));
+                $formulaH = "=" . implode("+", array_map(fn($r) => "H{$r}", $grandSubtotals));
+                $formulaI = "=" . implode("+", array_map(fn($r) => "I{$r}", $grandSubtotals));
+
+                $sheet->setCellValue("G{$rowIdx}", $formulaG);
+                $sheet->setCellValue("H{$rowIdx}", $formulaH);
+                $sheet->setCellValue("I{$rowIdx}", $formulaI);
+                $sheet->setCellValue("J{$rowIdx}", "");
+
+                $sheet->getStyle("A{$rowIdx}:J{$rowIdx}")->applyFromArray($styleGrandTotal);
+                $sheet->getStyle("G{$rowIdx}:I{$rowIdx}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getRowDimension($rowIdx)->setRowHeight(24);
+            }
+        } else {
+            // Jika tidak ada data
+            $sheet->mergeCells("A5:J5");
+            $sheet->setCellValue("A5", "Tidak ada data transfer pada periode tanggal ini.");
+            $sheet->getStyle("A5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("A5:J5")->applyFromArray($styleBody);
+        }
+
+        $sheet->freezePane('D5');
+
+        $writer = new Xlsx($sheets);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+        ob_end_clean();
+        $writer->save('php://output');
+        exit;
+    }
+
 }
-
-

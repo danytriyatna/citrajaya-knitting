@@ -87,6 +87,7 @@
               <select id="export_type" class="form-control">
                 <option value="1" selected>Type: Monitoring</option>
                 <option value="2">Type: Transaksi</option>
+                <option value="3">Type: Sisa Transfer CMT</option>
               </select>
             </div>
 

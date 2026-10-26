@@ -2229,4 +2229,130 @@ class ItemTransferModel extends \App\Models\PrModel
         return $this->db->query($sql)->getResult();
     }
     
+
+    /**
+     * Mengambil data rekapitulasi transfer vs penerimaan (BTM) per CMT, Proses, SO, Style, Warna, Ukuran
+     * untuk monitoring sisa barang yang masih berada di CMT (Outstanding Inventory).
+     */
+    public function get_export_sisa_cmt($from_date = null, $to_date = null, $id_perusahaan = null)
+    {
+        $db = $this->db;
+
+        // Subquery T: Agregasi Transfer Barang per SO, Style, Color, Ukuran, CMT, Proses
+        $subTrf = $db->table('trans_barang_trf_so_det tbtsd')
+            ->join('trans_barang_trf_header tbth', 'tbth.id = tbtsd.id_header', 'inner')
+            ->join('ref_operator ro', 'ro.id = tbth.id_cmt', 'left')
+            ->join('_jenis_proses_produksi jp', 'jp.id = tbth.id_proses', 'left')
+            ->join('ref_konsumen rk', 'rk.id = tbtsd.id_konsumen', 'left')
+            ->join('ref_perusahaan rp', 'rp.id = tbth.id_perusahaan', 'left')
+            ->select([
+                "COALESCE(tbth.id_cmt, 0) AS id_cmt",
+                "COALESCE(ro.nama_operator, 'Tanpa CMT / Internal') AS nama_cmt",
+                "COALESCE(tbth.id_proses, 0) AS id_proses",
+                "COALESCE(jp.nama, '-') AS nama_proses",
+                "COALESCE(tbth.id_perusahaan, 1) AS id_perusahaan",
+                "COALESCE(rp.nama_perusahaan, CASE WHEN tbth.id_perusahaan = 2 THEN 'Citra Knitt' ELSE 'PT Citra Jaya Kniting' END) AS perusahaan",
+                "tbtsd.kode_sales_order",
+                "COALESCE(rk.nama, '-') AS nama_konsumen",
+                "COALESCE(tbtsd.style, '-') AS style",
+                "COALESCE(tbtsd.color, '-') AS color",
+                "COALESCE(tbtsd.kode_ukuran, '-') AS kode_ukuran",
+                "SUM(tbtsd.qty) AS qty_transfer"
+            ])
+            ->where('tbth.active', 1);
+
+        if (!empty($from_date) && !empty($to_date)) {
+            $subTrf->where("tbth.tanggal BETWEEN '{$from_date}' AND '{$to_date}'");
+        }
+
+        if (!empty($id_perusahaan) && $id_perusahaan !== 'all') {
+            if ($id_perusahaan == 1) {
+                $subTrf->groupStart()
+                    ->where('tbth.id_perusahaan', 1)
+                    ->orWhere('tbth.id_perusahaan IS NULL')
+                ->groupEnd();
+            } else {
+                $subTrf->where('tbth.id_perusahaan', $id_perusahaan);
+            }
+        }
+
+        $subTrf->groupBy([
+            "COALESCE(tbth.id_cmt, 0)",
+            "ro.nama_operator",
+            "COALESCE(tbth.id_proses, 0)",
+            "jp.nama",
+            "COALESCE(tbth.id_perusahaan, 1)",
+            "rp.nama_perusahaan",
+            "tbth.id_perusahaan",
+            "tbtsd.kode_sales_order",
+            "rk.nama",
+            "tbtsd.style",
+            "tbtsd.color",
+            "tbtsd.kode_ukuran"
+        ]);
+
+        $sqlTrf = $subTrf->getCompiledSelect(false);
+
+        // Subquery M: Agregasi Penerimaan (BTM) per SO, Color, Ukuran, CMT, Proses, Perusahaan
+        $subBtm = $db->table('trans_barang_masuk_produksi tbmp')
+            ->join('trans_barang_header tbh', 'tbh.id = tbmp.id_header', 'inner')
+            ->select([
+                "COALESCE(tbh.id_cmt, 0) AS id_cmt",
+                "COALESCE(tbh.id_proses, 0) AS id_proses",
+                "CASE WHEN (tbh.id_perusahaan = 2 OR LEFT(tbh.kode_transaksi, 4) = 'BTMC') THEN 2 ELSE 1 END AS id_perusahaan",
+                "tbmp.kode_sales_order",
+                "tbmp.color",
+                "tbmp.kode_ukuran",
+                "SUM(tbmp.qty) AS qty_terima"
+            ])
+            ->where('tbh.active', 1)
+            ->where("LEFT(tbh.kode_transaksi, 3) =", "BTM")
+            ->groupBy([
+                "COALESCE(tbh.id_cmt, 0)",
+                "COALESCE(tbh.id_proses, 0)",
+                "CASE WHEN (tbh.id_perusahaan = 2 OR LEFT(tbh.kode_transaksi, 4) = 'BTMC') THEN 2 ELSE 1 END",
+                "tbmp.kode_sales_order",
+                "tbmp.color",
+                "tbmp.kode_ukuran"
+            ]);
+
+        $sqlBtm = $subBtm->getCompiledSelect(false);
+
+        // Gabungkan t dan m
+        $finalQuery = "
+            SELECT 
+                t.id_cmt,
+                t.nama_cmt,
+                t.id_proses,
+                t.nama_proses,
+                t.id_perusahaan,
+                t.perusahaan,
+                t.kode_sales_order,
+                t.nama_konsumen,
+                t.style,
+                t.color,
+                t.kode_ukuran,
+                t.qty_transfer,
+                COALESCE(m.qty_terima, 0) AS qty_terima,
+                (t.qty_transfer - COALESCE(m.qty_terima, 0)) AS qty_sisa
+            FROM ({$sqlTrf}) t
+            LEFT JOIN ({$sqlBtm}) m 
+                ON m.id_cmt = t.id_cmt
+                AND m.id_proses = t.id_proses
+                AND m.id_perusahaan = t.id_perusahaan
+                AND m.kode_sales_order = t.kode_sales_order
+                AND m.color = t.color
+                AND m.kode_ukuran = t.kode_ukuran
+            ORDER BY 
+                t.nama_cmt ASC,
+                t.nama_proses ASC,
+                t.kode_sales_order ASC,
+                t.style ASC,
+                t.color ASC,
+                t.kode_ukuran ASC
+        ";
+
+        return $db->query($finalQuery)->getResult();
+    }
+
 }

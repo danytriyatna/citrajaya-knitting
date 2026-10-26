@@ -147,6 +147,9 @@ $(document).ready(function () {
             } else if (export_type == "2") {
                 // Jika Transaksi
                 url = "/trans/item-transfer/print_excel_trans/" + from_date + "/" + to_date + queryParams;
+            } else if (export_type == "3") {
+                // Jika Sisa Transfer CMT
+                url = "/trans/item-transfer/print_excel_sisa_cmt/" + from_date + "/" + to_date + queryParams;
             } else {
                 // Jaga-jaga jika tipe belum dipilih
                 Swal.fire({

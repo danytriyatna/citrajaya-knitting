@@ -1170,6 +1170,12 @@ class ItemTransferModel extends \App\Models\PrModel
                 }
             }
 
+            // Auto-sync real-time snapshot trans_barang_history saat dokumen di-Approve
+            if ($data['status'] == 1 && !empty($detail)) {
+                $mLaporanHist = new \Modules\Laporan\Models\LaporanPersediaanModel();
+                $mLaporanHist->syncLotsFromTransaction($detail, $trxTanggal, $data['id_gudang_asal'], $data['id_gudang_tujuan']);
+            }
+
             //  if ($data['status'] == 1 && !empty($id) ) {
 
             //     $trfData =  $this->getData($id);
@@ -1307,6 +1313,13 @@ class ItemTransferModel extends \App\Models\PrModel
                 $updateHeader['updated_by'] = $updatedBy;
             }
             $this->updateRecords($this->table, $updateHeader, ['id' => $id]);
+
+            // Auto-sync real-time snapshot trans_barang_history saat dokumen dibatalkan
+            $cancelDetails = $this->db->table($this->tblDet)->where('id_header', $id)->get()->getResultArray();
+            if (!empty($cancelDetails)) {
+                $mLaporanHist = new \Modules\Laporan\Models\LaporanPersediaanModel();
+                $mLaporanHist->syncLotsFromTransaction($cancelDetails, $header->tanggal, $header->id_gudang_asal, $header->id_gudang_tujuan);
+            }
 
             $this->db->transComplete();
 

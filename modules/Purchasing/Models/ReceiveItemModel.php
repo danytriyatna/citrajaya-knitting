@@ -348,6 +348,12 @@ class ReceiveItemModel extends \App\Models\PrModel
                 ];
                 $stokAkhir = !empty($lastStok) ? $lastStok->stok : 0;
                 $this->updateRecords($this->tblPoHeader, array("qty_payment" => $stokAkhir + $data['qty']), $arrParam);
+
+                // Auto-sync real-time snapshot trans_barang_history saat dokumen di-Approve
+                if (!empty($detail)) {
+                    $mLaporanHist = new \Modules\Laporan\Models\LaporanPersediaanModel();
+                    $mLaporanHist->syncLotsFromTransaction($detail, $data['rec_date'] ?? date('Y-m-d'), null, $data['id_gudang'] ?? null);
+                }
             }
 
             $this->db->transComplete();

@@ -1527,4 +1527,238 @@ class LaporanPersediaanModel extends \App\Models\PrModel
 
         return $this->_data;
     }
+
+    /**
+     * Sinkronisasi mikro snapshot trans_barang_history per (id_barang, lot_no, id_gudang, year, month, pack_id)
+     * Dijalankan otomatis saat transaksi Approve / Cancel Approve agar stok di Laporan Persediaan
+     * selalu real-time tanpa perlu klik tombol "Update Data".
+     */
+    public function syncSingleLotHistory($idBarang, $lotNo, $idGudang, $year, $month, $packId = null)
+    {
+        if (empty($idBarang) || empty($idGudang) || empty($year) || empty($month)) {
+            return false;
+        }
+
+        $lotNo = trim((string)$lotNo);
+        if (empty($lotNo) || $lotNo === '') $lotNo = '-';
+
+        $prevMonth = ($month == 1) ? 12 : $month - 1;
+        $prevYear  = ($month == 1) ? $year - 1 : $year;
+
+        $hasPackId = !empty($packId);
+        $packClause = $hasPackId ? "= :pack_id:" : "IS NULL";
+
+        // 1. Ambil Saldo Awal (dari bulan sebelumnya)
+        $saldoAwal = 0;
+        $prevPrice = null;
+        $prevTanggal = null;
+
+        // CUTOFF JULI 2026: Stok awal = 0 untuk Juni/Juli 2026
+        if (!(($month == 6 || $month == 7) && $year == 2026)) {
+            $prevParams = [
+                'id_barang'  => $idBarang,
+                'lot_no'     => $lotNo,
+                'id_gudang'  => $idGudang,
+                'prev_year'  => $prevYear,
+                'prev_month' => $prevMonth,
+            ];
+            if ($hasPackId) $prevParams['pack_id'] = $packId;
+
+            $qPrev = $this->db->query("
+                SELECT jumlah, price, tanggal
+                FROM trans_barang_history
+                WHERE id_barang = :id_barang:
+                  AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
+                  AND pack_id {$packClause}
+                  AND id_gudang = :id_gudang:
+                  AND year = :prev_year:
+                  AND month = :prev_month:
+                ORDER BY id DESC LIMIT 1
+            ", $prevParams)->getRow();
+
+            if (!empty($qPrev)) {
+                $saldoAwal = (float)$qPrev->jumlah;
+                $prevPrice = $qPrev->price;
+                $prevTanggal = $qPrev->tanggal;
+            } else {
+                // Fallback: cari snapshot terakhir sebelum bulan ini
+                $curYM = ($year * 100 + $month);
+                $fbParams = [
+                    'id_barang' => $idBarang,
+                    'lot_no'    => $lotNo,
+                    'id_gudang' => $idGudang,
+                    'cur_ym'    => $curYM,
+                ];
+                if ($hasPackId) $fbParams['pack_id'] = $packId;
+
+                $qFb = $this->db->query("
+                    SELECT jumlah, price, tanggal
+                    FROM trans_barang_history
+                    WHERE id_barang = :id_barang:
+                      AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
+                      AND pack_id {$packClause}
+                      AND id_gudang = :id_gudang:
+                      AND (year * 100 + month) < :cur_ym:
+                      AND (year * 100 + month) >= 202607
+                    ORDER BY year DESC, month DESC, id DESC LIMIT 1
+                ", $fbParams)->getRow();
+
+                if (!empty($qFb)) {
+                    $saldoAwal = (float)$qFb->jumlah;
+                    $prevPrice = $qFb->price;
+                    $prevTanggal = $qFb->tanggal;
+                }
+            }
+        }
+
+        // 2. Query total mutasi masuk & keluar di bulan ini dari trans_barang
+        $mutasiParams = [
+            'id_gudang_masuk'  => $idGudang,
+            'id_gudang_keluar' => $idGudang,
+            'id_barang'        => $idBarang,
+            'lot_no'           => $lotNo,
+            'month'            => $month,
+            'year'             => $year,
+        ];
+        if ($hasPackId) $mutasiParams['pack_id'] = $packId;
+
+        $qMutasi = $this->db->query("
+            SELECT 
+                COALESCE(SUM(CASE WHEN id_gudang_tujuan = :id_gudang_masuk: THEN jumlah ELSE 0 END), 0) AS total_masuk,
+                COALESCE(SUM(CASE WHEN id_gudang_asal = :id_gudang_keluar: THEN jumlah ELSE 0 END), 0) AS total_keluar,
+                MAX(tanggal) AS max_tanggal
+            FROM trans_barang
+            WHERE id_barang = :id_barang:
+              AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
+              AND pack_id {$packClause}
+              AND EXTRACT(MONTH FROM tanggal) = :month:
+              AND EXTRACT(YEAR FROM tanggal) = :year:
+              AND COALESCE(active, 1) = 1
+        ", $mutasiParams)->getRow();
+
+        $masuk = !empty($qMutasi) ? (float)$qMutasi->total_masuk : 0;
+        $keluar = !empty($qMutasi) ? (float)$qMutasi->total_keluar : 0;
+        $tanggal = !empty($qMutasi->max_tanggal) ? $qMutasi->max_tanggal : (!empty($prevTanggal) ? $prevTanggal : sprintf('%04d-%02d-01', $year, $month));
+        $saldoAkhir = round($saldoAwal + $masuk - $keluar, 2);
+
+        // Ambil harga otentik
+        $price = !empty($prevPrice) ? $prevPrice : 0;
+        if ($price <= 0) {
+            $qPrice = $this->db->query("
+                SELECT trd.price
+                FROM trans_receive_detail trd
+                JOIN trans_receive_header trh ON trh.id = trd.id_header
+                WHERE trd.id_barang = ?
+                  AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = ?
+                  AND trd.price > 0
+                  AND trd.active = 1
+                ORDER BY trh.id DESC LIMIT 1
+            ", [$idBarang, $lotNo])->getRow();
+            if (!empty($qPrice) && (float)$qPrice->price > 0) {
+                $price = (float)$qPrice->price;
+            } else {
+                $qBrg = $this->db->query("SELECT harga_satuan FROM ref_barang WHERE id = ?", [$idBarang])->getRow();
+                $price = !empty($qBrg) ? (float)$qBrg->harga_satuan : 0;
+            }
+        }
+
+        // Ambil id_jenis_barang
+        $qJb = $this->db->query("SELECT id_jenis_barang FROM ref_barang WHERE id = ?", [$idBarang])->getRow();
+        $idJenisBarang = !empty($qJb) ? (int)$qJb->id_jenis_barang : 0;
+
+        // Ambil lot_id dari trans_lots jika ada
+        $qLot = $this->db->query("
+            SELECT id FROM trans_lots
+            WHERE id_barang = ?
+              AND id_gudang = ?
+              AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = ?
+              AND active = 1
+            ORDER BY id DESC LIMIT 1
+        ", [$idBarang, $idGudang, $lotNo])->getRow();
+        $lotId = !empty($qLot) ? (int)$qLot->id : null;
+
+        // Hapus snapshot lama untuk kombinasi lot+gudang+bulan ini
+        $delParams = [
+            'id_barang' => $idBarang,
+            'id_gudang' => $idGudang,
+            'lot_no'    => $lotNo,
+            'year'      => $year,
+            'month'     => $month,
+        ];
+        if ($hasPackId) $delParams['pack_id'] = $packId;
+
+        $delSql = "
+            DELETE FROM trans_barang_history
+            WHERE id_barang = :id_barang:
+              AND id_gudang = :id_gudang:
+              AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
+              AND pack_id {$packClause}
+              AND year = :year:
+              AND month = :month:
+        ";
+        $this->db->query($delSql, $delParams);
+
+        // Insert snapshot baru jika ada pergerakan atau saldo
+        if (!($saldoAwal == 0 && $masuk == 0 && $keluar == 0 && $saldoAkhir == 0)) {
+            $this->db->table('trans_barang_history')->insert([
+                'id_barang'       => $idBarang,
+                'id_jenis_barang' => $idJenisBarang,
+                'lot_id'          => $lotId,
+                'lot_no'          => $lotNo,
+                'pack_id'         => !empty($packId) ? $packId : null,
+                'stok_awal'       => round($saldoAwal, 2),
+                'masuk'           => round($masuk, 2),
+                'keluar'          => round($keluar, 2),
+                'jumlah'          => round($saldoAkhir, 2),
+                'id_gudang'       => $idGudang,
+                'month'           => $month,
+                'year'            => $year,
+                'tanggal'         => $tanggal,
+                'price'           => $price,
+            ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Batch auto-sync mikro untuk seluruh baris barang dalam satu dokumen transaksi
+     */
+    public function syncLotsFromTransaction($items, $tanggal, $idGudangAsal = null, $idGudangTujuan = null)
+    {
+        if (empty($items) || !is_array($items)) {
+            return;
+        }
+
+        $tgl = !empty($tanggal) ? $tanggal : date('Y-m-d');
+        $year = (int) date('Y', strtotime($tgl));
+        $month = (int) date('m', strtotime($tgl));
+
+        // Hindari duplikasi sync untuk barang+lot+pack yang sama
+        $syncedKeys = [];
+
+        foreach ($items as $row) {
+            $idBarang = !empty($row['id_barang']) ? (is_numeric($row['id_barang']) ? (int)$row['id_barang'] : decrypt($row['id_barang'])) : 0;
+            if (empty($idBarang)) continue;
+
+            $lotNo = trim((string)($row['lot_no'] ?? '-'));
+            $packId = !empty($row['pack_id']) ? (int)$row['pack_id'] : null;
+
+            if (!empty($idGudangAsal)) {
+                $key = "{$idBarang}|{$lotNo}|{$packId}|{$idGudangAsal}|{$year}|{$month}";
+                if (!isset($syncedKeys[$key])) {
+                    $syncedKeys[$key] = true;
+                    $this->syncSingleLotHistory($idBarang, $lotNo, $idGudangAsal, $year, $month, $packId);
+                }
+            }
+
+            if (!empty($idGudangTujuan)) {
+                $key = "{$idBarang}|{$lotNo}|{$packId}|{$idGudangTujuan}|{$year}|{$month}";
+                if (!isset($syncedKeys[$key])) {
+                    $syncedKeys[$key] = true;
+                    $this->syncSingleLotHistory($idBarang, $lotNo, $idGudangTujuan, $year, $month, $packId);
+                }
+            }
+        }
+    }
 }

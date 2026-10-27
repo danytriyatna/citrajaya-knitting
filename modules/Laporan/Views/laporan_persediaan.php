@@ -150,5 +150,5 @@
 
 <?= $this->endSection('content'); ?>
 <?= $this->section('script'); ?>
-<script src="script/app/laporan/persediaan.js"></script>
+<script src="script/app/laporan/persediaan.js?v=<?= time() ?>"></script>
 <?= $this->endSection('script'); ?>

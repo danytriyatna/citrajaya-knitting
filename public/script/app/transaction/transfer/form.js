@@ -30,6 +30,7 @@ function isSelectedProsesRajut() {
     return (isRajut == 1 || isRajut === true || isRajut === '1' || selectProses.val() == 1);
 }
 let inpLotNo = $('#lot_no');
+inpLotNo.on('blur change', function() { $(this).val($.trim($(this).val())); });
 let inpPackId = $('#pack_id');
 let inpPackName = $('#pack_name');
 let inpIdLot = $('#id_lot');
@@ -378,7 +379,7 @@ dtListBarang.on("rowClick", function (e, row) {
     const qty = row._row.data.qty;
     const namaBarang = row._row.data.nama_barang.replace(/<[^>]*>/g, '');
     const namaSatuan = row._row.data.nama_satuan.replace(/<[^>]*>/g, '');
-    const lotNo = row._row.data.lot_no.replace(/<[^>]*>/g, '');
+    const lotNo = $.trim(row._row.data.lot_no.replace(/<[^>]*>/g, ''));
     const hargasatuan = row._row.data.harga_satuan;
     const packId = row._row.data.pack_id;
     // Sebelumnya cek pakai lot_id - ternyata lot_id di data ini hampir selalu
@@ -1320,7 +1321,7 @@ function openModalDetail(row = null) {
                 qty: inpQtyItem.val(),
                 price: price,
                 qty_exist: inpQtyExist.val(),
-                lot_no: inpLotNo.val(),
+                lot_no: $.trim(inpLotNo.val()),
                 lot_id: inpIdLot.val(),
                 nama_unit: inpUnit.val(),
                 keterangan: inpKeteranganDet.val(),
@@ -1339,7 +1340,7 @@ function openModalDetail(row = null) {
                 price: price,
                 qty: inpQtyItem.val(),
                 qty_exist: inpQtyExist.val(),
-                lot_no: inpLotNo.val(),
+                lot_no: $.trim(inpLotNo.val()),
                 lot_id: inpIdLot.val(),
                 nama_unit: inpUnit.val(),
                 keterangan: inpKeteranganDet.val(),

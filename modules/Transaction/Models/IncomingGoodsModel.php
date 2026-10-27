@@ -163,8 +163,8 @@ class IncomingGoodsModel extends \App\Models\PrModel
         $builder = $this->db->table("trans_lots");
         $builder->select("*");
         if (!empty($lotNo)) {
-
-            $builder->where('lot_no', $lotNo);
+            $trimmedLot = trim((string)$lotNo);
+            $builder->where('TRIM(lot_no)', $trimmedLot);
         }
         if (!empty($idBarang)) {
             $builder->where('id_barang', $idBarang);

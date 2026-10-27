@@ -205,7 +205,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                 $dataDetail = [
                     "id_barang" => $idBarang,
                     "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
-                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                    "lot_no" => !empty($rowData['lot_no']) ? trim($rowData['lot_no']) : null,
                     "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                     "id_header" => $id,
                     "qty" => round((float)$rowData['qty'], 2),
@@ -263,12 +263,13 @@ class ReceiveItemModel extends \App\Models\PrModel
                     // trans_lots.id) - salah slot, harusnya idGudang di slot ke-4. Sekarang
                     // dibetulkan, dan pack_id (slot ke-5) ikut dikirim supaya lot yang sama
                     // tapi pack beda dianggap baris trans_lots yang berbeda.
-                    $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $rowData['id_gudang'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
+                    $cleanLotNo = !empty($rowData['lot_no']) ? trim($rowData['lot_no']) : '-';
+                    $resLotNo = $mBarangMasuk->getLotNo($cleanLotNo, $idBarang, null, $rowData['id_gudang'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
                     $dataLots = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
                         "tanggal" => date("Y-m-d H:i:s"),
-                        "lot_no" => $rowData['lot_no'],
+                        "lot_no" => $cleanLotNo,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "qty" => round((float)$rowData['qty'], 2),
                         "active" => 1,
@@ -299,7 +300,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "tipe" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
-                        "lot_no" => $rowData['lot_no'],
+                        "lot_no" => $cleanLotNo,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                         "kode_transaksi" => $data['rec_no'],
@@ -310,7 +311,7 @@ class ReceiveItemModel extends \App\Models\PrModel
                         "id_gudang" => !empty($rowData['id_gudang']) ? $rowData['id_gudang'] : null,
                         "tanggal" => date("Y-m-d H:i:s"),
                         "lot_id" => $idLots,
-                        "lot_no" => $rowData['lot_no'],
+                        "lot_no" => $cleanLotNo,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "saldo_awal" => 0,
                         "saldo_akhir" => $rowData['qty'],

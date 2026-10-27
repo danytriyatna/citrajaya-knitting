@@ -834,7 +834,7 @@ class ItemTransfer extends BaseController
                     ->select('trd.price')
                     ->join('trans_receive_header trh', 'trh.id = trd.id_header')
                     ->where('trd.id_barang', $idBarang)
-                    ->where('trd.lot_no', $lotNo)
+                    ->where('TRIM(trd.lot_no)', $lotNo)
                     ->where('trd.price >', 0)
                     ->where('trd.active', 1)
                     ->orderBy('trh.id', 'DESC')

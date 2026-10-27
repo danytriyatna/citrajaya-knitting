@@ -810,7 +810,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         $availQty = (float)$chkLot->qty;
                         if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
                             $altLot = $this->db->table($this->tblTrxLots)
-                                ->where('lot_no', $chkLot->lot_no)
+                                ->where('TRIM(lot_no)', trim((string)$chkLot->lot_no))
                                 ->where('id_barang', $chkIdBarang)
                                 ->where('id_gudang', $data['id_gudang_asal'])
                                 ->where('active', 1)
@@ -857,7 +857,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             ->select('trd.price')
                             ->join('trans_receive_header trh', 'trh.id = trd.id_header')
                             ->where('trd.id_barang', $idBarang)
-                            ->where('trd.lot_no', $lotNoVal)
+                            ->where('TRIM(trd.lot_no)', $lotNoVal)
                             ->where('trd.price >', 0)
                             ->where('trd.active', 1)
                             ->orderBy('trh.id', 'DESC')
@@ -886,7 +886,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         if (empty($currLot) || (float)$currLot->qty < (float)$rowData['qty']) {
                             if (!empty($lotNoVal) && $lotNoVal !== '-' && !empty($idBarang)) {
                                 $betterLot = $this->db->table($this->tblTrxLots)
-                                    ->where('lot_no', $lotNoVal)
+                                    ->where('TRIM(lot_no)', $lotNoVal)
                                     ->where('id_barang', $idBarang)
                                     ->where('id_gudang', $data['id_gudang_asal'])
                                     ->where('active', 1)
@@ -901,7 +901,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         }
                     } else if (empty($resolvedLotId) && !empty($lotNoVal) && $lotNoVal !== '-' && !empty($idBarang)) {
                         $betterLot = $this->db->table($this->tblTrxLots)
-                            ->where('lot_no', $lotNoVal)
+                            ->where('TRIM(lot_no)', $lotNoVal)
                             ->where('id_barang', $idBarang)
                             ->where('id_gudang', $data['id_gudang_asal'])
                             ->where('active', 1)
@@ -926,7 +926,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
                     $dataDetail = [
                         "id_barang" => $idBarang,
-                        "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "lot_no" => !empty($rowData['lot_no']) ? trim($rowData['lot_no']) : null,
                         "kode_walkorder" => !empty($rowData['kode_walkorder']) ? $rowData['kode_walkorder'] : null,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "lot_id" => $resolvedLotId,
@@ -1098,7 +1098,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             // cari apakah ada baris lot lain di gudang asal dengan nomor lot yang sama yang stoknya mencukupi
                             if (!empty($resLotNo) && (float)$resLotNo->qty < (float)$rowData['qty'] && !empty($resLotNo->lot_no) && !empty($idBarang)) {
                                 $altLot = $this->db->table($this->tblTrxLots)
-                                    ->where('lot_no', $resLotNo->lot_no)
+                                    ->where('TRIM(lot_no)', trim((string)$resLotNo->lot_no))
                                     ->where('id_barang', $idBarang)
                                     ->where('id_gudang', $data['id_gudang_asal'])
                                     ->where('active', 1)

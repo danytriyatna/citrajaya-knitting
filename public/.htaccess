@@ -16,7 +16,8 @@ Options All -Indexes
 	RewriteCond %{REQUEST_URI} (.+)/$
 	RewriteRule ^ %1 [L,R=301]
 
-	# Force HTTPS (kecuali acme-challenge Let's Encrypt)
+	# Force HTTPS (hanya untuk nama domain, kecualikan IP address & acme-challenge Let's Encrypt)
+	RewriteCond %{HTTP_HOST} !^[0-9.:]+$
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

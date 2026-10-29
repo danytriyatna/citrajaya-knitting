@@ -23,8 +23,18 @@ class App extends BaseConfig
 	 *
 	 * @var string
 	 */
-	public $baseURL = 'http://127.0.0.1:8000/';
-	public array $allowedHostnames = [];
+	public $baseURL = 'https://citraknitt.com/';
+	public array $allowedHostnames = ['citraknitt.com', 'www.citraknitt.com', '103.102.153.192', 'localhost'];
+
+	public function __construct()
+	{
+		parent::__construct();
+
+		if (!empty($_SERVER['HTTP_HOST'])) {
+			$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+			$this->baseURL = $scheme . $_SERVER['HTTP_HOST'] . '/';
+		}
+	}
 
 	/**
 	 * --------------------------------------------------------------------------

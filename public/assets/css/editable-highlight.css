@@ -1,0 +1,27 @@
+/*
+ * Highlight kuning muda pada semua field pengisian/editable (permintaan
+ * user). Sengaja dibuat file CSS terpisah, BUKAN edit custom.min.css
+ * (file itu ada peringatan "JANGAN DIEDIT") - supaya tetap aman dari
+ * rebuild dan berlaku global di semua menu yang pakai template.php,
+ * cukup link file ini di app/Views/template.php.
+ *
+ * Field yang readonly/disabled/hidden/checkbox/radio/tombol sengaja
+ * dikecualikan supaya tetap terlihat beda dari field yang memang bisa
+ * diisi user.
+ */
+
+input.form-control:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([readonly]):not([disabled]),
+textarea.form-control:not([readonly]):not([disabled]),
+select.form-control:not([disabled]),
+select.form-select:not([disabled]) {
+  background-color: #fff9c4 !important;
+}
+
+/* Select2 mengganti tampilan <select> asli dengan markup sendiri, jadi
+   status disabled/enabled-nya perlu ditarget lewat class yang dia buat
+   sendiri (.select2-container--disabled), bukan lewat atribut disabled
+   pada <select> aslinya yang sudah disembunyikan. */
+.select2-container--default:not(.select2-container--disabled) .select2-selection--single,
+.select2-container--default:not(.select2-container--disabled) .select2-selection--multiple {
+  background-color: #fff9c4 !important;
+}

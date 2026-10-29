@@ -102,6 +102,7 @@ class BarangKeluarModel extends \App\Models\PrModel
         }
         if ($id == null or $id == "") {
             $builder->where('uk.active = 1');
+            $builder->where('uk.qty > 0');
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
                 $builder->Where('LOWER(abx.kode_barang) LIKE', strtolower("%{$filters[0]['value']}%"));
@@ -138,6 +139,7 @@ class BarangKeluarModel extends \App\Models\PrModel
         $builder->join($this->tblSatuan . " dbx", "abx.id_satuan = dbx.id", "inner");
         $builder->select("count(1) as _cnt");
         $builder->where('uk.active = 1');
+        $builder->where('uk.qty > 0');
         if (!empty($params['id_gudang'])) {
             $builder->where('uk.id_gudang', $params['id_gudang']);
         }

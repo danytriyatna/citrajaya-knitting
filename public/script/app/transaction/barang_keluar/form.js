@@ -1291,7 +1291,7 @@ function openModalDetail(row = null) {
 }
 
 
-function simpanData(status) {
+function simpanData(status, forceContinue = false) {
     $.ajax({
         type: 'POST',
         url: appUrl('trans/outgoing-goods/save'),
@@ -1306,7 +1306,8 @@ function simpanData(status) {
             keterangan: inpKeterangan.val(),
             no_ref_trf: inpNoRefTrf.val(),
             no_ref_wo: inpNoRefWO.val(),
-            status: status
+            status: status,
+            force_continue: forceContinue ? 1 : 0
         },
         dataType: "json",
         beforeSend: function () {
@@ -1331,6 +1332,22 @@ function simpanData(status) {
                 Swal.close();
                 window.location.href = 'trans/outgoing-goods'
 
+            } else if (response.need_confirmation == true) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.title || 'Peringatan: Stok Lot Tidak Mencukupi!',
+                    html: response.message ? response.message.replace(/\n/g, '<br>') : '',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fa fa-check"></i> Ya, Tetap Lanjutkan',
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonText: '<i class="fa fa-times"></i> Batal',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        simpanData(status, true);
+                    }
+                });
             } else {
                 Swal.fire({
                     text: response.message,

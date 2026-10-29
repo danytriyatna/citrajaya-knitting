@@ -199,12 +199,63 @@ class BarangKeluarModel extends \App\Models\PrModel
         return $kodejadi;
     }
 
-    function trxInsertUpdateRecord($data, $id, $detail)
+    function trxInsertUpdateRecord($data, $id, $detail, $forceContinue = 0)
     {
         $this->db->transStart();
         try {
             $nama = $data['nama'];
             unset($data['nama']);
+
+            // Validasi ketersediaan stok lot di Gudang sebelum approve (jika belum dikonfirmasi lanjut oleh user)
+            if ($data['status'] == 1 && empty($forceContinue) && !empty($detail) && is_array($detail)) {
+                $mBarangMasukCheck = new IncomingGoodsModel();
+                $insufficientLots = [];
+                foreach ($detail as $rowCheck) {
+                    $chkIdBarang = !empty($rowCheck['id_barang']) ? (is_numeric($rowCheck['id_barang']) ? (int)$rowCheck['id_barang'] : decrypt($rowCheck['id_barang'])) : 0;
+                    $chkQty = (float)($rowCheck['qty'] ?? 0);
+                    if ($chkQty <= 0) continue;
+
+                    $chkLotNo = trim((string)($rowCheck['lot_no'] ?? ''));
+                    $chkLot = null;
+                    if (!empty($rowCheck['lot_id'])) {
+                        $chkLot = $mBarangMasukCheck->getLotNo(null, null, $rowCheck['lot_id']);
+                    }
+                    if (empty($chkLot) && !empty($chkLotNo) && $chkLotNo !== '-') {
+                        $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang'], !empty($rowCheck['pack_id']) ? $rowCheck['pack_id'] : null);
+                        if (empty($chkLot)) {
+                            $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang']);
+                        }
+                    }
+
+                    if (empty($chkLot)) {
+                        $lotLabel = !empty($chkLotNo) ? $chkLotNo : '-';
+                        $insufficientLots[] = "• Lot {$lotLabel} (Tidak ditemukan di Gudang ini, diminta: " . number_format($chkQty, 2) . ")";
+                    } else {
+                        $availQty = (float)$chkLot->qty;
+                        if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
+                            $altLot = $this->db->table($this->tblTrxLots)
+                                ->where('TRIM(lot_no)', trim((string)$chkLot->lot_no))
+                                ->where('id_barang', $chkIdBarang)
+                                ->where('id_gudang', $data['id_gudang'])
+                                ->where('active', 1)
+                                ->where('qty >=', $chkQty)
+                                ->orderBy('qty', 'DESC')
+                                ->get()->getRow();
+                            if (!empty($altLot)) {
+                                $availQty = (float)$altLot->qty;
+                            }
+                        }
+
+                        if ($availQty - $chkQty < -0.0001) {
+                            $insufficientLots[] = "• Lot {$chkLot->lot_no} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                        }
+                    }
+                }
+
+                if (!empty($insufficientLots)) {
+                    throw new \Exception("NEED_STOCK_CONFIRMATION: Terdapat stok lot yang tidak mencukupi di Gudang:\n" . implode("\n", $insufficientLots));
+                }
+            }
 
             if (!empty($id)) {
                 $arrDelete =  [

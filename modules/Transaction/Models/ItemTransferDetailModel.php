@@ -30,7 +30,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join("trans_walkorder wo", "uk.kode_walkorder = wo.kode_walkorder", "left");
         $idGudang = !empty($params['id_gudang']) ? (int)$params['id_gudang'] : 0;
-        $builder->join($this->tblTrxLots . " gbx", "uk.lot_id = gbx.id AND gbx.id_gudang = {$idGudang}", "left");
+        $builder->join($this->tblTrxLots . " gbx", "( (TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(uk.lot_no) = TRIM(gbx.lot_no) AND uk.id_barang = gbx.id_barang) OR uk.lot_id = gbx.id ) AND gbx.id_gudang = {$idGudang}", "left");
         $builder->join($this->tblPack . " hbx", "uk.pack_id = hbx.id", "left");
         $builder->select("uk.id,COALESCE(gbx.id, uk.lot_id) as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
                           fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, 
@@ -505,7 +505,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         // Qty yang sudah terpakai di transaksi Barang Keluar LAIN (jenis_transaksi = 2)
         // untuk No. WO & Warehouse yang sama, per barang + lot + pack.
         $builderUsed = $this->db->table("trans_barang_detail tbd");
-        $builderUsed->select("tbd.id_barang, tbd.lot_id, tbd.pack_id, SUM(tbd.qty) as qty_pemakaian_sebelumnya");
+        $builderUsed->select("tbd.id_barang, tbd.lot_id, COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') as lot_no, tbd.pack_id, SUM(tbd.qty) as qty_pemakaian_sebelumnya");
         $builderUsed->join(
             "trans_barang_header tbh",
             "CAST(tbd.id_header AS INTEGER) = tbh.id",
@@ -519,22 +519,38 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         if (!empty($excludeHeaderId)) {
             $builderUsed->where("tbh.id !=", (int) $excludeHeaderId);
         }
-        $builderUsed->groupBy("tbd.id_barang, tbd.lot_id, tbd.pack_id");
+        $builderUsed->groupBy("tbd.id_barang, tbd.lot_id, COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-'), tbd.pack_id");
 
         $usedRows = $builderUsed->get()->getResult();
 
-        $usedMap = [];
+        $usedMapLotNo = [];
+        $usedMapLotId = [];
         foreach ($usedRows as $u) {
-            $key = $u->id_barang . '|' . $u->lot_id . '|' . $u->pack_id;
-            $usedMap[$key] = round((float) $u->qty_pemakaian_sebelumnya, 2);
+            $qtyUsed = round((float) $u->qty_pemakaian_sebelumnya, 2);
+            // Kunci utama: berbasis nomor lot fisik
+            $cleanLot = trim((string)$u->lot_no);
+            if ($cleanLot !== '' && $cleanLot !== '-') {
+                $keyLot = $u->id_barang . '|' . $cleanLot . '|' . $u->pack_id;
+                $usedMapLotNo[$keyLot] = ($usedMapLotNo[$keyLot] ?? 0) + $qtyUsed;
+            }
+            // Kunci fallback: berbasis lot_id lama
+            $keyId = $u->id_barang . '|' . $u->lot_id . '|' . $u->pack_id;
+            $usedMapLotId[$keyId] = ($usedMapLotId[$keyId] ?? 0) + $qtyUsed;
         }
 
         foreach ($results as $row) {
             $row->qty_terima = round((float) $row->qty_terima, 2);
             $row->qty_retur = round((float) $row->qty_retur, 2);
 
-            $key = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
-            $row->qty_pemakaian_sebelumnya = $usedMap[$key] ?? 0;
+            $cleanRowLot = trim((string)($row->lot_no ?? ''));
+            if ($cleanRowLot !== '' && $cleanRowLot !== '-') {
+                $keyLot = $row->id_barang . '|' . $cleanRowLot . '|' . $row->pack_id;
+                $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
+                $row->qty_pemakaian_sebelumnya = $usedMapLotNo[$keyLot] ?? ($usedMapLotId[$keyId] ?? 0);
+            } else {
+                $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
+                $row->qty_pemakaian_sebelumnya = $usedMapLotId[$keyId] ?? 0;
+            }
 
             $calcSisa = round($row->qty_terima - $row->qty_retur - $row->qty_pemakaian_sebelumnya, 2);
             $row->qty_sisa = max(0, $calcSisa);
@@ -613,7 +629,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 FROM trans_barang_trf_detail uk
                 INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
                 INNER JOIN ref_satuan fbx ON ebx.id_satuan = fbx.id
-                LEFT  JOIN trans_lots gbx ON uk.lot_id = gbx.id AND gbx.id_gudang = ?
+                LEFT  JOIN trans_lots gbx ON ( (TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(uk.lot_no) = TRIM(gbx.lot_no) AND uk.id_barang = gbx.id_barang) OR uk.lot_id = gbx.id ) AND gbx.id_gudang = ?
                 LEFT  JOIN ref_pack hbx ON uk.pack_id = hbx.id
                 WHERE uk.id_header = ?
                 AND uk.active = 1

@@ -275,9 +275,11 @@ class BarangMasukModel extends \App\Models\PrModel
                         $idBarang = is_numeric($rowData['id_barang']) ? (int)$rowData['id_barang'] : decrypt($rowData['id_barang']);
                     }
 
+                    $cleanLotNo = !empty($rowData['lot_no']) ? trim((string)$rowData['lot_no']) : null;
+
                     $dataDetail = [
                         "id_barang" => $idBarang,
-                        "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                        "lot_no" => $cleanLotNo,
                         "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "id_header" => $id,
@@ -342,12 +344,12 @@ class BarangMasukModel extends \App\Models\PrModel
                         // FIX (2026-08-08): sebelumnya id_gudang masuk ke parameter ke-3
                         // getLotNo() (idLotNo - filter berdasarkan ID baris trans_lots
                         // spesifik), bukan parameter ke-4 (idGudang) yang seharusnya.
-                        $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, null, $data['id_gudang']);
+                        $resLotNo = $mBarangMasuk->getLotNo($cleanLotNo, $idBarang, null, $data['id_gudang']);
                         $dataLots = [
                             "id_barang" => $idBarang,
                             "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,
                             "tanggal" => date("Y-m-d H:i:s"),
-                            "lot_no" => $rowData['lot_no'],
+                            "lot_no" => $cleanLotNo,
                             "qty" => $rowData['qty'],
                             "active" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
@@ -375,7 +377,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "tipe" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
-                            "lot_no" => $rowData['lot_no'],
+                            "lot_no" => $cleanLotNo,
                             "pack_id" => $rowData['pack_id'],
                             "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                             "kode_transaksi" => $data['kode_transaksi'],
@@ -386,7 +388,7 @@ class BarangMasukModel extends \App\Models\PrModel
                             "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,
                             "tanggal" => date("Y-m-d H:i:s"),
                             "lot_id" => $idLots,
-                            "lot_no" => $rowData['lot_no'],
+                            "lot_no" => $cleanLotNo,
                             "pack_id" => $rowData['pack_id'],
                             "saldo_awal" => 0,
                             "saldo_akhir" => $rowData['qty'],

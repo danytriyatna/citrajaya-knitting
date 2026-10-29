@@ -259,7 +259,7 @@ class BarangKeluarModel extends \App\Models\PrModel
 
                 $dataDetail = [
                     "id_barang" => $idBarang,
-                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : null,
+                    "lot_no" => ($lotNoVal !== '' && $lotNoVal !== '-') ? $lotNoVal : null,
                     "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                     "lot_id" => !empty($rowData['lot_id']) ? $rowData['lot_id'] : 0,
                     "id_header" => $id,

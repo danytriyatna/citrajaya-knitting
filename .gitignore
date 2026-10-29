@@ -147,3 +147,7 @@ documentation/build/
 /docker/apache/log/
 /docker/mysql/data
 /docker/postgresql/data
+
+# Scratch / Debugging Scripts
+scratch/
+*.sql.bak

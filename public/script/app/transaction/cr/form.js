@@ -267,8 +267,23 @@ $(document).ready(function () {
         // }
     }
 
+    let isSubmitting = false;
+
+    // on submit form guard
+    $("#fmain").on('submit', function (e) {
+        if ($(this).data('submitted') === true) {
+            e.preventDefault();
+            return false;
+        }
+        $(this).data('submitted', true);
+        isSubmitting = true;
+        $('#btn-save, #btn-approve, #btn-reject').prop('disabled', true);
+    });
+
     // on save
     $('#btn-save').on('click', function (e) {
+        if (isSubmitting) return false;
+
 		if(fmRekening.val() == null || fmRekening.val() == ""){
 			return Swal.fire({
 				text: "Tipe Pembayaran harus dipilih",
@@ -278,7 +293,7 @@ $(document).ready(function () {
 			});
 		}
 
-		else if(fmKonsumen.val() == null || fmRekening.val() == ""){
+		else if(fmKonsumen.val() == null || fmKonsumen.val() == ""){
 			return Swal.fire({
 				text: "Buyer harus dipilih",
 				icon: 'error',
@@ -286,6 +301,12 @@ $(document).ready(function () {
 				timer: 2000
 			});
 		}
+
+        isSubmitting = true;
+        let $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+        $('#btn-approve, #btn-reject').prop('disabled', true);
+
         setDataInputTable();
         $("#actionf").val('save');
         $("#fmain").submit();
@@ -293,7 +314,13 @@ $(document).ready(function () {
 
     // on approve
     $('#btn-approve').on('click', function (e) {
+        if (isSubmitting) return false;
         if (confirm('Anda yakin akan melakukan APPROVE ?')) {
+            isSubmitting = true;
+            let $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses...');
+            $('#btn-save, #btn-reject').prop('disabled', true);
+
             setDataInputTable();
             $("#actionf").val('approve');
             $("#fmain").submit();
@@ -302,7 +329,13 @@ $(document).ready(function () {
 
     // on reject
     $('#btn-reject').on('click', function (e) {
+        if (isSubmitting) return false;
         if (confirm('Anda yakin akan melakukan REJECT ?')) {
+            isSubmitting = true;
+            let $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses...');
+            $('#btn-save, #btn-approve').prop('disabled', true);
+
             $("#actionf").val('reject');
             $("#fmain").submit();
         }

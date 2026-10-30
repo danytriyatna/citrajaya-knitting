@@ -314,6 +314,27 @@ class CustomerReceipt extends BaseController
         $now = date("Y-m-d H:i:s");
         $user_id = $this->get_userid();
 
+        // Idempotency check: jika baru saja tersimpan CR aktif untuk invoice yang sama oleh user yang sama dalam 10 detik terakhir, cegah dobel submit
+        if (!empty($dataDet)) {
+            foreach ($dataDet as $r) {
+                if (!empty($r["bayar"])) {
+                    $chkInvId = (int)decrypt($r["id_invoice"]);
+                    $recentCr = $this->db->table('trans_customer_receipt_detail crd')
+                        ->join('trans_customer_receipt cr', 'cr.id = crd.id_cr')
+                        ->where('crd.id_invoice', $chkInvId)
+                        ->where('crd.active', 1)
+                        ->where('cr.active', 1)
+                        ->where('cr.created_by', (int)$user_id)
+                        ->where("cr.created_at >= NOW() - INTERVAL '10 seconds'")
+                        ->countAllResults();
+                    if ($recentCr > 0) {
+                        log_message('warning', "Duplicate CR submission prevented for invoice {$chkInvId} by user {$user_id}");
+                        return TRUE;
+                    }
+                }
+            }
+        }
+
         $this->db->transBegin();
         // dd($dataIn);
         $id = $this->mCr->insertRecordGetid($this->mCr->table, $dataIn);
@@ -483,19 +504,7 @@ class CustomerReceipt extends BaseController
     public function delete($id = NULL)
     {
         $this->deactived($id);
-        // if ($id != null && $id != "") {
-        //     $id = decrypt($id);
-        // }
-
-        // $id = (int) $id;
-
-        // $res = $this->asesmen->deleteRecord($this->asesmen->table, 'asesment_id', $id);
-        // if ($res) {
-        //     $this->session->setFlashdata('message', "Data berhasil dihapus !");
-        // } else {
-        //     $this->session->setFlashdata('err', "Data gagal dihapus !");
-        // }
-        return redirect()->to('/customer-receipt');
+        return redirect()->to('/trans/customer-receipt');
     }
 
     public function deactived($id)
@@ -514,6 +523,15 @@ class CustomerReceipt extends BaseController
         $dataIn['updated_by'] =  $user_id;
         $dataIn['updated_at'] = $now;
         $res = $this->mCr->updateRecord($this->mCr->table, $dataIn, 'id', $id);
+
+        // Pastikan detail di trans_customer_receipt_detail juga dinonaktifkan
+        $this->db->table($this->mCr->table2)
+            ->where('id_cr', $id)
+            ->update([
+                'active' => 0,
+                'updated_by' => $user_id,
+                'updated_at' => $now
+            ]);
 
         $params_det['id_cr'] = $id;
         $is_detail = $this->mCr->getDataDet(null, 0, 9999, 0, 0, $params_det);

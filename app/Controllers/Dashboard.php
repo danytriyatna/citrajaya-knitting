@@ -166,16 +166,17 @@ class Dashboard extends BaseController
             $key = $r->id_barang;
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [
-                    'id_barang'   => $r->id_barang,
-                    'kode_warna'  => !empty($r->color_code) ? $r->color_code : '-',
-                    'nama_barang' => $r->barang,
-                    'unit'        => $r->nama_satuan,
-                    'qty_awal'    => 0,
-                    'qty_masuk'   => 0,
-                    'qty_keluar'  => 0,
-                    'qty_wo'      => 0,
-                    'qty_akhir'   => 0,
-                    'harga'       => 0,
+                    'id_barang'    => $r->id_barang,
+                    'kode_warna'   => !empty($r->color_code) ? $r->color_code : '-',
+                    'nama_barang'  => $r->barang,
+                    'unit'         => $r->nama_satuan,
+                    'qty_awal'     => 0,
+                    'qty_masuk'    => 0,
+                    'qty_keluar'   => 0,
+                    'qty_akhir'    => 0,
+                    'qty_wo'       => 0,
+                    'qty_tersedia' => 0,
+                    'harga'        => 0,
                 ];
                 $hargaTanggal[$key] = null;
             }
@@ -204,12 +205,13 @@ class Dashboard extends BaseController
             $qtyWo = isset($bookedMap[$key]) ? $bookedMap[$key] : 0;
             $grouped[$key]['qty_wo'] = $qtyWo;
 
-            // Qty Akhir dikurangi Qty WO (menjadi pengurang Qty Akhir)
-            $qtyAkhirBersih = $row['qty_akhir'] - $qtyWo;
-            $grouped[$key]['qty_akhir'] = $qtyAkhirBersih;
+            // Qty Akhir tetap saldo fisik akhir (saldo_awal + masuk - keluar)
+            // Qty Tersedia = Qty Akhir (fisik) - Qty WO (Booked)
+            $qtyTersedia = $row['qty_akhir'] - $qtyWo;
+            $grouped[$key]['qty_tersedia'] = $qtyTersedia;
 
-            // Nilai = Qty Akhir Bersih x Harga representatif - dinolkan kalau Qty Akhir minus
-            $grouped[$key]['nilai'] = ($qtyAkhirBersih > 0) ? ($qtyAkhirBersih * $row['harga']) : 0;
+            // Nilai = Qty Tersedia x Harga representatif - dinolkan kalau Qty Tersedia minus
+            $grouped[$key]['nilai'] = ($qtyTersedia > 0) ? ($qtyTersedia * $row['harga']) : 0;
         }
 
         $data = array_values($grouped);
@@ -227,14 +229,15 @@ class Dashboard extends BaseController
         });
 
         return [
-            'status'       => true,
-            'data'         => $data,
-            'total_awal'   => array_sum(array_column($data, 'qty_awal')),
-            'total_masuk'  => array_sum(array_column($data, 'qty_masuk')),
-            'total_keluar' => array_sum(array_column($data, 'qty_keluar')),
-            'total_wo'     => array_sum(array_column($data, 'qty_wo')),
-            'total_akhir'  => array_sum(array_column($data, 'qty_akhir')),
-            'total_nilai'  => array_sum(array_column($data, 'nilai')),
+            'status'         => true,
+            'data'           => $data,
+            'total_awal'     => array_sum(array_column($data, 'qty_awal')),
+            'total_masuk'    => array_sum(array_column($data, 'qty_masuk')),
+            'total_keluar'   => array_sum(array_column($data, 'qty_keluar')),
+            'total_akhir'    => array_sum(array_column($data, 'qty_akhir')),
+            'total_wo'       => array_sum(array_column($data, 'qty_wo')),
+            'total_tersedia' => array_sum(array_column($data, 'qty_tersedia')),
+            'total_nilai'    => array_sum(array_column($data, 'nilai')),
         ];
     }
 

@@ -28,28 +28,36 @@ $(document).ready(function () {
         ],
         height: "420px", // tampilkan ~10 baris, sisanya scroll ke bawah (bukan paging)
         columns: [
-            { title: "KODE WARNA", field: "kode_warna", headerSort: false, width: "12%" },
-            { title: "NAMA BARANG", field: "nama_barang", headerSort: false, width: "20%" },
-            { title: "UNIT", field: "unit", headerSort: false, width: "6%" },
+            { title: "KODE WARNA", field: "kode_warna", headerSort: false, width: "11%" },
+            { title: "NAMA BARANG", field: "nama_barang", headerSort: false, width: "18%" },
+            { title: "UNIT", field: "unit", headerSort: false, width: "5%" },
             {
                 title: "QTY AWAL", field: "qty_awal", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
             },
             {
                 title: "QTY MASUK", field: "qty_masuk", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
             },
             {
                 title: "QTY KELUAR", field: "qty_keluar", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
-            },
-            {
-                title: "QTY WO", field: "qty_wo", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
             },
             {
                 title: "QTY AKHIR", field: "qty_akhir", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "8%", bottomCalc: "sum", formatter: function (cell) {
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: function (cell) {
+                    let val = parseFloat(cell.getValue() || 0);
+                    if (val < 0) cell.getElement().style.color = "#dc3545";
+                    return cellMoney2(cell);
+                }, bottomCalcFormatter: cellMoney2
+            },
+            {
+                title: "QTY WO", field: "qty_wo", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+            },
+            {
+                title: "QTY TERSEDIA", field: "qty_tersedia", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                sorter: "number", width: "7%", bottomCalc: "sum", formatter: function (cell) {
                     let val = parseFloat(cell.getValue() || 0);
                     if (val < 0) cell.getElement().style.color = "#dc3545";
                     return cellMoney2(cell);
@@ -57,14 +65,14 @@ $(document).ready(function () {
             },
             {
                 title: "HARGA", field: "harga", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "10%", formatter: cellRupiah
+                sorter: "number", width: "9%", formatter: cellRupiah
             },
             {
                 title: "NILAI", field: "nilai", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "10%", bottomCalc: "sum", formatter: cellRupiah, bottomCalcFormatter: cellRupiah
+                sorter: "number", width: "9%", bottomCalc: "sum", formatter: cellRupiah, bottomCalcFormatter: cellRupiah
             },
             {
-                title: "DETAIL", headerSort: false, hozAlign: "center", width: "8%",
+                title: "DETAIL", headerSort: false, hozAlign: "center", width: "6%",
                 formatter: function () {
                     return "<button type='button' class='btn btn-sm btn-outline-warning btn-persediaan-detail'>Detail</button>";
                 },

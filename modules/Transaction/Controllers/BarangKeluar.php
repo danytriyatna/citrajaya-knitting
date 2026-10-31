@@ -430,8 +430,7 @@ class BarangKeluar extends BaseController
         }
         // print_r($data);exit;
         try {
-            $forceContinue = (int)($this->request->getPost('force_continue') ?? 0);
-            $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $forceContinue);
+            $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail);
             if ($res) {
                 $status = true;
                 $msg = "Data berhasil disimpan!";
@@ -442,13 +441,22 @@ class BarangKeluar extends BaseController
             // selalu JSON valid, bukan halaman error 500.
             $status = false;
             $msg = $e->getMessage();
+            if (strpos($msg, 'STOCK_INSUFFICIENT_BLOCKED:') !== false) {
+                $cleanMsg = trim(str_replace('STOCK_INSUFFICIENT_BLOCKED:', '', $msg));
+                return $this->response->setJSON([
+                    'status' => false,
+                    'is_stock_insufficient' => true,
+                    'title' => 'Stok Lot Tidak Mencukupi!',
+                    'message' => $cleanMsg
+                ]);
+            }
             if (strpos($msg, 'NEED_STOCK_CONFIRMATION:') !== false) {
                 $cleanMsg = trim(str_replace('NEED_STOCK_CONFIRMATION:', '', $msg));
                 return $this->response->setJSON([
                     'status' => false,
-                    'need_confirmation' => true,
-                    'title' => 'Peringatan: Stok Lot Tidak Mencukupi!',
-                    'message' => $cleanMsg . "\n\nApakah Anda yakin ingin tetap melanjutkan pengeluaran barang ini?"
+                    'is_stock_insufficient' => true,
+                    'title' => 'Stok Lot Tidak Mencukupi!',
+                    'message' => $cleanMsg
                 ]);
             }
         }

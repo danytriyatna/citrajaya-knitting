@@ -206,8 +206,8 @@ class BarangKeluarModel extends \App\Models\PrModel
             $nama = $data['nama'];
             unset($data['nama']);
 
-            // Validasi ketersediaan stok lot di Gudang sebelum approve (jika belum dikonfirmasi lanjut oleh user)
-            if ($data['status'] == 1 && empty($forceContinue) && !empty($detail) && is_array($detail)) {
+            // Validasi ketersediaan stok lot di Gudang sebelum approve (HARUS MENCUKUPI, TIDAK BISA LANJUT JIKA KURANG)
+            if ($data['status'] == 1 && !empty($detail) && is_array($detail)) {
                 $mBarangMasukCheck = new IncomingGoodsModel();
                 $insufficientLots = [];
                 foreach ($detail as $rowCheck) {
@@ -253,7 +253,7 @@ class BarangKeluarModel extends \App\Models\PrModel
                 }
 
                 if (!empty($insufficientLots)) {
-                    throw new \Exception("NEED_STOCK_CONFIRMATION: Terdapat stok lot yang tidak mencukupi di Gudang:\n" . implode("\n", $insufficientLots));
+                    throw new \Exception("STOCK_INSUFFICIENT_BLOCKED: Terdapat stok lot yang tidak mencukupi di Gudang:\n" . implode("\n", $insufficientLots) . "\n\nPengeluaran barang tidak dapat dilanjutkan. Silakan cek mutasi barang atau riwayat kartu stok pada menu Laporan Persediaan terlebih dahulu.");
                 }
             }
 

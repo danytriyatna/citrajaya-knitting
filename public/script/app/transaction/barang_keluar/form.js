@@ -1291,7 +1291,7 @@ function openModalDetail(row = null) {
 }
 
 
-function simpanData(status, forceContinue = false) {
+function simpanData(status) {
     $.ajax({
         type: 'POST',
         url: appUrl('trans/outgoing-goods/save'),
@@ -1306,8 +1306,7 @@ function simpanData(status, forceContinue = false) {
             keterangan: inpKeterangan.val(),
             no_ref_trf: inpNoRefTrf.val(),
             no_ref_wo: inpNoRefWO.val(),
-            status: status,
-            force_continue: forceContinue ? 1 : 0
+            status: status
         },
         dataType: "json",
         beforeSend: function () {
@@ -1332,21 +1331,14 @@ function simpanData(status, forceContinue = false) {
                 Swal.close();
                 window.location.href = 'trans/outgoing-goods'
 
-            } else if (response.need_confirmation == true) {
+            } else if (response.is_stock_insufficient == true || response.need_confirmation == true) {
                 Swal.fire({
-                    icon: 'warning',
-                    title: response.title || 'Peringatan: Stok Lot Tidak Mencukupi!',
-                    html: response.message ? response.message.replace(/\n/g, '<br>') : '',
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="fa fa-check"></i> Ya, Tetap Lanjutkan',
-                    confirmButtonColor: '#f59e0b',
-                    cancelButtonText: '<i class="fa fa-times"></i> Batal',
-                    cancelButtonColor: '#6c757d',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        simpanData(status, true);
-                    }
+                    icon: 'error',
+                    title: response.title || 'Stok Lot Tidak Mencukupi!',
+                    html: response.message ? response.message.replace(/\n/g, '<br>') : 'Stok lot di gudang tidak mencukupi.',
+                    showCancelButton: false,
+                    confirmButtonText: '<i class="fa fa-check"></i> Mengerti',
+                    confirmButtonColor: '#dc3545'
                 });
             } else {
                 Swal.fire({

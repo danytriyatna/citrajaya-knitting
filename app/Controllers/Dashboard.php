@@ -246,6 +246,106 @@ class Dashboard extends BaseController
      * Ambil dari LaporanPersediaanModel::getLaporanPersediaan() (baris per transaksi utk seluruh
      * gudang+jenis+bulan+tahun tsb), lalu difilter di sini utk id_barang yang dipilih saja.
      */
+    /**
+     * Rincian daftar Work Order (WO) yang mem-booking benang tertentu (id_barang).
+     * Dipanggil saat user mengklik angka di kolom QTY WO card Ringkasan Persediaan.
+     */
+    public function persediaan_wo_detail()
+    {
+        $idBarang = $this->request->getGet('id_barang');
+        $bulan    = $this->request->getGet('bulan');
+        $tahun    = $this->request->getGet('tahun');
+
+        if (empty($idBarang)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'ID Barang tidak boleh kosong',
+                'data'    => [],
+            ]);
+        }
+
+        $startCutoff = '2026-06-01';
+        $nextMonthStart = sprintf('%04d-%02d-01', ($bulan == 12 ? $tahun + 1 : $tahun), ($bulan == 12 ? 1 : $bulan + 1));
+
+        $db = \Config\Database::connect();
+        $idBarangEsc = (int) $idBarang;
+
+        $sql = "
+            WITH wo_kebutuhan AS (
+                SELECT 
+                    wo.id as id_walkorder,
+                    wo.kode_walkorder,
+                    wo.tgl_transaksi,
+                    wo.ref_kode as no_so,
+                    COALESCE(k.nama, '-') as nama_customer,
+                    COALESCE(wo.keterangan_style, '-') as model,
+                    COALESCE(wo.qty, 0) as qty_wo_pcs,
+                    w.id_barang,
+                    SUM(w.total) as total_kebutuhan
+                FROM trans_walkorder wo
+                JOIN trans_walkorder_detail d ON d.id_walkorder = wo.id
+                JOIN trans_walkorder_warna w ON w.id_walkorder_detail = d.id
+                LEFT JOIN ref_konsumen k ON k.id = wo.id_konsumen
+                LEFT JOIN trans_sales_order so ON so.id = wo.ref_id AND wo.tipe_id = 2
+                WHERE wo.active = 1 
+                  AND d.active = 1 
+                  AND w.active = 1 
+                  AND w.id_barang = {$idBarangEsc}
+                  AND wo.tipe_id = 2
+                  AND wo.status = 2
+                  AND (so.id IS NULL OR (so.active = 1 AND so.status != 3))
+                  AND wo.tgl_transaksi >= '{$startCutoff}'
+                  AND wo.tgl_transaksi < '{$nextMonthStart}'
+                GROUP BY wo.id, wo.kode_walkorder, wo.tgl_transaksi, wo.ref_kode, k.nama, wo.keterangan_style, wo.qty, w.id_barang
+            ),
+            wo_transfer AS (
+                SELECT 
+                    d.kode_walkorder,
+                    d.id_barang,
+                    SUM(d.qty) as total_trf
+                FROM trans_barang_trf_detail d
+                JOIN trans_barang_trf_header h ON h.id = CAST(d.id_header AS INTEGER)
+                WHERE h.status = 1 AND h.active = 1 
+                  AND h.id_gudang_asal = 1
+                  AND d.id_barang = {$idBarangEsc}
+                  AND d.kode_walkorder IS NOT NULL AND d.kode_walkorder != ''
+                  AND h.tanggal >= '{$startCutoff}'
+                  AND h.tanggal < '{$nextMonthStart}'
+                GROUP BY d.kode_walkorder, d.id_barang
+            ),
+            booked_per_wo AS (
+                SELECT 
+                    wk.id_walkorder,
+                    wk.kode_walkorder,
+                    wk.tgl_transaksi,
+                    wk.no_so,
+                    wk.nama_customer,
+                    wk.model,
+                    wk.qty_wo_pcs,
+                    wk.id_barang,
+                    ROUND(wk.total_kebutuhan::numeric, 2) as total_kebutuhan,
+                    ROUND(COALESCE(wt.total_trf, 0)::numeric, 2) as total_trf,
+                    ROUND(GREATEST(0, wk.total_kebutuhan - COALESCE(wt.total_trf, 0))::numeric, 2) as booked_qty
+                FROM wo_kebutuhan wk
+                LEFT JOIN wo_transfer wt ON wt.kode_walkorder = wk.kode_walkorder AND wt.id_barang = wk.id_barang
+            )
+            SELECT *
+            FROM booked_per_wo
+            WHERE booked_qty > 0
+            ORDER BY tgl_transaksi DESC, kode_walkorder DESC
+        ";
+
+        $rows = $db->query($sql)->getResultArray();
+
+        return $this->response->setJSON([
+            'status'          => true,
+            'data'            => $rows,
+            'total_kebutuhan' => array_sum(array_column($rows, 'total_kebutuhan')),
+            'total_trf'       => array_sum(array_column($rows, 'total_trf')),
+            'total_booked'    => array_sum(array_column($rows, 'booked_qty')),
+        ]);
+    }
+
     public function persediaan_detail()
     {
         $idJenisBarang = $this->request->getGet('id_jenis_barang');

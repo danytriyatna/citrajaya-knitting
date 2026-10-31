@@ -53,7 +53,22 @@ $(document).ready(function () {
             },
             {
                 title: "QTY WO", field: "qty_wo", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "7%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+                sorter: "number", width: "7%", bottomCalc: "sum",
+                formatter: function (cell) {
+                    let val = parseFloat(cell.getValue() || 0);
+                    let formatted = cellMoney2(cell);
+                    if (val > 0) {
+                        return `<span class="text-primary text-decoration-underline fw-bold" style="cursor: pointer;" title="Klik untuk lihat daftar WO">${formatted}</span>`;
+                    }
+                    return formatted;
+                },
+                bottomCalcFormatter: cellMoney2,
+                cellClick: function (e, cell) {
+                    let val = parseFloat(cell.getValue() || 0);
+                    if (val > 0) {
+                        openModalWoDetail(cell.getRow().getData());
+                    }
+                }
             },
             {
                 title: "QTY TERSEDIA", field: "qty_tersedia", headerSort: false, hozAlign: "right", headerHozAlign: "right",
@@ -239,4 +254,95 @@ $(document).ready(function () {
 
     // load pertama kali sesuai default (Gudang Utama, Benang Rajut, bulan & tahun berjalan)
     loadPersediaanRingkasan();
+
+    // ==== Modal Pop-up Rincian Work Order (Booked Benang) ====
+    let dtModalWo = null;
+    let currentWoItemData = null;
+
+    function openModalWoDetail(rowData) {
+        currentWoItemData = rowData;
+        $("#txt-modal-wo-sub").text(rowData.kode_warna + " - " + rowData.nama_barang + " (" + rowData.unit + ")");
+        $("#txt-modal-wo-totalkebutuhan").text("0,00");
+        $("#txt-modal-wo-totaltrf").text("0,00");
+        $("#txt-modal-wo-totalbooked").text(parseFloat(rowData.qty_wo || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-persediaan-wo')).show();
+        } else {
+            $('#modal-persediaan-wo').modal('show');
+        }
+
+        $(".preloader").css("opacity", "0.7").show();
+        let baseUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '/');
+        $.ajax({
+            url: baseUrl + "dashboard/persediaan_wo_detail",
+            type: "GET",
+            dataType: "json",
+            data: {
+                id_barang: rowData.id_barang,
+                bulan: selBulan.val(),
+                tahun: selTahun.val()
+            },
+            success: function (res) {
+                $(".preloader").hide().css("opacity", "1");
+                if (!res.status) return;
+
+                $("#txt-modal-wo-totalkebutuhan").text(parseFloat(res.total_kebutuhan || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#txt-modal-wo-totaltrf").text(parseFloat(res.total_trf || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#txt-modal-wo-totalbooked").text(parseFloat(res.total_booked || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+                setTimeout(function () {
+                    if (dtModalWo) {
+                        dtModalWo.destroy();
+                    }
+                    dtModalWo = new Tabulator("#tbl-modal-wo-detail", {
+                        layout: "fitColumns",
+                        data: res.data || [],
+                        placeholder: "Tidak ada daftar WO aktif",
+                        locale: 'id',
+                        height: "380px",
+                        columns: [
+                            { title: "No.", formatter: "rownum", headerSort: false, hozAlign: "center", width: 45 },
+                            { title: "No. WO", field: "kode_walkorder", headerSort: false, width: 135 },
+                            { title: "Tanggal WO", field: "tgl_transaksi", headerSort: false, hozAlign: "center", width: 105 },
+                            { title: "No. SO", field: "no_so", headerSort: false, width: 130 },
+                            { title: "Buyer", field: "nama_customer", headerSort: false, width: 130 },
+                            { title: "Model / Style", field: "model", headerSort: false },
+                            { 
+                                title: "Qty Baju (Pcs)", field: "qty_wo_pcs", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                                width: 110, formatter: cellRupiah, bottomCalc: "sum", bottomCalcFormatter: cellRupiah
+                            },
+                            { 
+                                title: "Kebutuhan (Kg)", field: "total_kebutuhan", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                                width: 120, formatter: cellMoney2, bottomCalc: "sum", bottomCalcFormatter: cellMoney2
+                            },
+                            { 
+                                title: "Transfer CJK (Kg)", field: "total_trf", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                                width: 120, formatter: cellMoney2, bottomCalc: "sum", bottomCalcFormatter: cellMoney2
+                            },
+                            { 
+                                title: "Sisa Booked (Kg)", field: "booked_qty", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                                width: 130, formatter: function(cell) {
+                                    return `<span class="fw-bold text-primary">${cellMoney2(cell)}</span>`;
+                                }, bottomCalc: "sum", bottomCalcFormatter: cellMoney2
+                            }
+                        ]
+                    });
+                }, 150);
+            },
+            error: function () {
+                $(".preloader").hide().css("opacity", "1");
+                if (typeof toastr !== 'undefined') {
+                    toastr.error("Gagal memuat daftar WO", "Error", { positionClass: "toast-top-right" });
+                }
+            }
+        });
+    }
+
+    $("#btn-export-wo-detail").on("click", function () {
+        if (!dtModalWo) return;
+        let colorName = currentWoItemData ? (currentWoItemData.kode_warna || "WO").replace(/[^a-zA-Z0-9_-]/g, "_") : "WO";
+        dtModalWo.download("csv", "Daftar_WO_Booked_" + colorName + ".csv");
+    });
+
 });

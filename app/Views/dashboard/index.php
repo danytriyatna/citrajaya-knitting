@@ -561,6 +561,61 @@
   </div>
 <?= $this->endSection('content'); ?>
 
+<?= $this->section('modal') ?>
+<div id="modal-persediaan-wo" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <div>
+          <h5 class="modal-title f-w-700" id="txt-modal-wo-title">Rincian Work Order (Booked Benang)</h5>
+          <small class="text-muted" id="txt-modal-wo-sub">-</small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="row g-2 mb-3">
+          <div class="col-md-4">
+            <div class="card border mb-0">
+              <div class="card-body p-2 text-center">
+                <span class="text-muted small d-block">Total Kebutuhan WO</span>
+                <span class="fs-5 fw-bold text-dark" id="txt-modal-wo-totalkebutuhan">0,00</span> <small class="text-muted">kg</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border mb-0">
+              <div class="card-body p-2 text-center">
+                <span class="text-muted small d-block">Sudah Transfer (Gudang CJK)</span>
+                <span class="fs-5 fw-bold text-success" id="txt-modal-wo-totaltrf">0,00</span> <small class="text-muted">kg</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border border-warning mb-0 bg-warning-subtle">
+              <div class="card-body p-2 text-center">
+                <span class="text-muted small d-block">Sisa Booked (Memotong Stok)</span>
+                <span class="fs-5 fw-bold text-primary" id="txt-modal-wo-totalbooked">0,00</span> <small class="text-muted">kg</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <div id="tbl-modal-wo-detail"></div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between bg-light py-2">
+        <button type="button" class="btn btn-sm btn-outline-success" id="btn-export-wo-detail">
+          <i class="ti-download me-1"></i> Export CSV
+        </button>
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+<?= $this->endSection('modal') ?>
+
+
 <?= $this->section('script') ?>
 <script src="script/app/dashboard/index.js?v=<?= time(); ?>"></script>
 <script src="script/app/dashboard/persediaan.js?v=<?= time(); ?>"></script>

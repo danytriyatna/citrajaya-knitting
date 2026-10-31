@@ -50,6 +50,7 @@ $routes->get('/dashboard/list_grafik', 'Dashboard::lists_grafik',  ['filter' => 
 $routes->get('/dashboard/persediaan_ringkasan', 'Dashboard::persediaan_ringkasan',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/persediaan_update', 'Dashboard::persediaan_update',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 $routes->get('/dashboard/persediaan_detail', 'Dashboard::persediaan_detail',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
+$routes->get('/dashboard/persediaan_wo_detail', 'Dashboard::persediaan_wo_detail',  ['filter' => 'otorisasi:MOD_DASHBOARD']);
 
 $routes->post('api/login', 'API\Auth::login');
 

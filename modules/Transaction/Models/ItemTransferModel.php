@@ -782,8 +782,8 @@ class ItemTransferModel extends \App\Models\PrModel
                     }
             }
             
-            // Validasi ketersediaan stok lot di Gudang Asal sebelum approve (jika belum dikonfirmasi lanjut oleh user)
-            if ($data['status'] == 1 && empty($forceContinue) && !empty($detail) && is_array($detail)) {
+            // Validasi ketersediaan stok lot di Gudang Asal sebelum approve (HARUS MENCUKUPI, TIDAK BISA LANJUT JIKA KURANG)
+            if ($data['status'] == 1 && !empty($detail) && is_array($detail)) {
                 $mBarangMasukCheck = new IncomingGoodsModel();
                 $insufficientLots = [];
                 foreach ($detail as $rowCheck) {
@@ -829,7 +829,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 }
 
                 if (!empty($insufficientLots)) {
-                    throw new \Exception("NEED_STOCK_CONFIRMATION: Terdapat stok lot yang tidak mencukupi di Gudang Asal:\n" . implode("\n", $insufficientLots));
+                    throw new \Exception("STOCK_INSUFFICIENT_BLOCKED: Terdapat stok lot yang tidak mencukupi di Gudang Asal:\n" . implode("\n", $insufficientLots) . "\n\nTransfer barang tidak dapat dilanjutkan. Silakan cek mutasi barang atau riwayat kartu stok pada menu Laporan Persediaan terlebih dahulu.");
                 }
             }
 
@@ -1073,26 +1073,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
                         if (empty($resLotNo)) {
                             $lotNama = !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-';
-                            if (empty($forceContinue)) {
-                                throw new \Exception("NEED_STOCK_CONFIRMATION: Stok lot '{$lotNama}' tidak ditemukan di Gudang Asal untuk barang ini!");
-                            } else {
-                                $newLotId = $this->insertRecordGetid($this->tblTrxLots, [
-                                    "id_barang" => $idBarang,
-                                    "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
-                                    "tanggal" => $trxTanggal,
-                                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-',
-                                    "qty" => 0 - (float)$rowData['qty'],
-                                    "active" => 1,
-                                    "created_at" => date("Y-m-d H:i:s"),
-                                ]);
-                                $resLotNo = (object)[
-                                    "id" => $newLotId,
-                                    "lot_no" => !empty($rowData['lot_no']) ? $rowData['lot_no'] : '-',
-                                    "qty" => 0
-                                ];
-                                $idLots = $newLotId;
-                                $sisaLot = 0 - (float)$rowData['qty'];
-                            }
+                            throw new \Exception("STOCK_INSUFFICIENT_BLOCKED: Stok lot '{$lotNama}' tidak ditemukan di Gudang Asal untuk barang ini!\n\nTransfer barang tidak dapat dilanjutkan. Silakan cek mutasi barang atau riwayat kartu stok pada menu Laporan Persediaan terlebih dahulu.");
                         } else {
                             // Smart fallback: Jika lot_id yang diikat stoknya kurang dari diminta,
                             // cari apakah ada baris lot lain di gudang asal dengan nomor lot yang sama yang stoknya mencukupi
@@ -1116,9 +1097,7 @@ class ItemTransferModel extends \App\Models\PrModel
                             $idLots = $resLotNo->id;
                             $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
                             if ($sisaLot < -0.0001) {
-                                if (empty($forceContinue)) {
-                                    throw new \Exception("NEED_STOCK_CONFIRMATION: Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2));
-                                }
+                                throw new \Exception("STOCK_INSUFFICIENT_BLOCKED: Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2) . "\n\nTransfer barang tidak dapat dilanjutkan. Silakan cek mutasi barang atau riwayat kartu stok pada menu Laporan Persediaan terlebih dahulu.");
                             }
                             $this->updateRecords($this->tblTrxLots, array("qty" => $sisaLot), array("id" => $idLots));
                         }

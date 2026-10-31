@@ -863,7 +863,7 @@ class ItemTransfer extends BaseController
     $force_continue = (int)$this->request->getPost('force_continue');
 
     try {
-      $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus, $force_continue);
+      $res = $this->mRef->trxInsertUpdateRecord($dataHeader, $id, $dataDetail, $dataSO, $oldStatus);
       if ($res) {
         $status = true;
         $msg = "Data berhasil disimpan!";
@@ -876,13 +876,22 @@ class ItemTransfer extends BaseController
     } catch (\Throwable $e) {
       $status = false;
       $msg = $e->getMessage();
+      if (strpos($msg, 'STOCK_INSUFFICIENT_BLOCKED:') !== false) {
+        $cleanMsg = trim(str_replace('STOCK_INSUFFICIENT_BLOCKED:', '', $msg));
+        return $this->response->setJSON([
+            'status' => false,
+            'is_stock_insufficient' => true,
+            'title' => 'Stok Lot Tidak Mencukupi!',
+            'message' => $cleanMsg
+        ]);
+      }
       if (strpos($msg, 'NEED_STOCK_CONFIRMATION:') !== false) {
         $cleanMsg = trim(str_replace('NEED_STOCK_CONFIRMATION:', '', $msg));
         return $this->response->setJSON([
             'status' => false,
-            'need_confirmation' => true,
-            'title' => 'Peringatan: Stok Lot Tidak Mencukupi!',
-            'message' => $cleanMsg . "\n\nApakah Anda yakin ingin tetap melanjutkan transfer barang ini?"
+            'is_stock_insufficient' => true,
+            'title' => 'Stok Lot Tidak Mencukupi!',
+            'message' => $cleanMsg
         ]);
       }
     }

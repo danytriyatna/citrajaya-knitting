@@ -1950,7 +1950,7 @@ function simpanData(status, isPrint = false, forceContinue = 0) {
             status: status,
             ref_produksi: valProduksi,
             statusFrom: inpStatus.val(),
-            force_continue: forceContinue,
+            force_continue: 0,
 
         },
         dataType: "json",
@@ -1983,21 +1983,14 @@ function simpanData(status, isPrint = false, forceContinue = 0) {
                     window.location.href = 'trans/item-transfer';
                 }, isPrint ? 800 : 500);
 
-            } else if (response.need_confirmation == true) {
+            } else if (response.is_stock_insufficient == true || response.need_confirmation == true) {
                 Swal.fire({
-                    icon: 'warning',
-                    title: response.title || 'Peringatan Stok Kurang!',
-                    html: response.message ? response.message.replace(/\n/g, '<br>') : '',
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="fa fa-check"></i> Ya, Tetap Lanjutkan',
-                    confirmButtonColor: '#f59e0b',
-                    cancelButtonText: '<i class="fa fa-times"></i> Batal',
-                    cancelButtonColor: '#6c757d',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        simpanData(status, isPrint, 1);
-                    }
+                    icon: 'error',
+                    title: response.title || 'Stok Lot Tidak Mencukupi!',
+                    html: response.message ? response.message.replace(/\n/g, '<br>') : 'Stok lot di Gudang Asal tidak mencukupi.',
+                    showCancelButton: false,
+                    confirmButtonText: '<i class="fa fa-check"></i> Mengerti',
+                    confirmButtonColor: '#dc3545'
                 });
             } else {
                 Swal.fire({

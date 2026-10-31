@@ -111,7 +111,14 @@ class Dashboard extends BaseController
                 FROM trans_walkorder wo
                 JOIN trans_walkorder_detail d ON d.id_walkorder = wo.id
                 JOIN trans_walkorder_warna w ON w.id_walkorder_detail = d.id
-                WHERE wo.active = 1 AND w.active = 1 AND w.id_barang IS NOT NULL
+                LEFT JOIN trans_sales_order so ON so.id = wo.ref_id AND wo.tipe_id = 2
+                WHERE wo.active = 1 
+                  AND d.active = 1 
+                  AND w.active = 1 
+                  AND w.id_barang IS NOT NULL
+                  AND wo.tipe_id = 2
+                  AND wo.status = 2
+                  AND (so.id IS NULL OR (so.active = 1 AND so.status != 3))
                   AND wo.tgl_transaksi >= '$startCutoff'
                   AND wo.tgl_transaksi < '$nextMonthStart'
                 GROUP BY wo.id, wo.kode_walkorder, w.id_barang

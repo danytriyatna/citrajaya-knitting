@@ -308,7 +308,7 @@ class WorkOrder extends BaseController
     $params['id_walkorder'] = $id_walkorder_dec;
 
     // Ambil gudang produksi dari request atau dari header trans_walkorder
-    $woHeader = $this->mWalkorder->getRecord($this->mWalkorder->table, ['id' => $id_walkorder_dec]);
+    $woHeader = $this->mWalkorder->getData($id_walkorder_dec);
     $idGudang = $this->request->getPost('id_gudang');
     if (empty($idGudang) && !empty($woHeader) && !empty($woHeader->id_gudang)) {
       $idGudang = $woHeader->id_gudang;

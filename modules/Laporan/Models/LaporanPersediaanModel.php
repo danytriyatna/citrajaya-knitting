@@ -1102,8 +1102,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             $prevPrice = null;
             $prevTanggal = null;
 
-            // CUTOFF JULI 2026: Titik cutoff stok awal = 0 (Juni & Juli 2026)
-            if (!(($month == 6 || $month == 7) && $year == 2026)) {
+            // CUTOFF JUNI 2026: Titik cutoff stok awal = 0 (Juni 2026)
+            if (!($month == 6 && $year == 2026)) {
                 $prevHistoryParams = [
                     'id_barang'  => $id_barang_cur,
                     'lot_no'     => $lot_no,
@@ -1158,7 +1158,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                           AND pack_id $pack_id_clause
                           $gudangFallbackClause
                           AND (year * 100 + month) < :cur_ym:
-                          AND (year * 100 + month) >= 202607
+                          AND (year * 100 + month) >= 202606
                         ORDER BY year DESC, month DESC, id DESC
                         LIMIT 1
                     ";
@@ -1324,8 +1324,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             }
         }
 
-        // CUTOFF JULI 2026: Jika merekap bulan <= Juni 2026, hentikan carry forward ke Juli 2026
-        if ($nextYear < 2026 || ($nextYear == 2026 && $nextMonth <= 7)) {
+        // CUTOFF JUNI 2026: Jika merekap bulan <= Mei 2026, hentikan carry forward ke Juni 2026
+        if ($nextYear < 2026 || ($nextYear == 2026 && $nextMonth <= 6)) {
             return true;
         }
 
@@ -1388,8 +1388,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     function getDataPersediaanBarang($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $where = "WHERE 1=1 AND b.active = 1";
-        // CUTOFF JULI 2026: semua riwayat sebelum Juli 2026 tidak boleh masuk
-        $where .= " AND (a.year * 100 + a.month) >= 202607";
+        // CUTOFF JUNI 2026: semua riwayat sebelum Juni 2026 tidak boleh masuk
+        $where .= " AND (a.year * 100 + a.month) >= 202606";
 
         if (!empty($params['id_gudang'])) {
             $where .= " AND a.id_gudang = " . intval($params['id_gudang']);
@@ -1482,7 +1482,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     {
         $subQuery = $this->db->table('trans_barang_history')
         ->select("id_barang, MAX(year * 100 + month) as max_period")
-        ->where("(year * 100 + month) >= 202607")
+        ->where("(year * 100 + month) >= 202606")
         ->groupBy("id_barang");
         $builder = $this->db->table("trans_barang_history a");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
@@ -1495,8 +1495,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $builder->select("count(1) as _cnt");
         $builder->where('b.active = 1');
         $builder->where('a.jumlah > 0');
-        // CUTOFF JULI 2026: semua riwayat sebelum Juli 2026 tidak boleh masuk
-        $builder->where('(a.year * 100 + a.month) >= 202607');
+        // CUTOFF JUNI 2026: semua riwayat sebelum Juni 2026 tidak boleh masuk
+        $builder->where('(a.year * 100 + a.month) >= 202606');
 
         if (!empty($params['id_gudang'])) {
             $builder->where('a.id_gudang', $params['id_gudang']);
@@ -1553,8 +1553,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $prevPrice = null;
         $prevTanggal = null;
 
-        // CUTOFF JULI 2026: Stok awal = 0 untuk Juni/Juli 2026
-        if (!(($month == 6 || $month == 7) && $year == 2026)) {
+        // CUTOFF JUNI 2026: Stok awal = 0 untuk Juni 2026
+        if (!($month == 6 && $year == 2026)) {
             $prevParams = [
                 'id_barang'  => $idBarang,
                 'lot_no'     => $lotNo,
@@ -1599,7 +1599,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                       AND pack_id {$packClause}
                       AND id_gudang = :id_gudang:
                       AND (year * 100 + month) < :cur_ym:
-                      AND (year * 100 + month) >= 202607
+                      AND (year * 100 + month) >= 202606
                     ORDER BY year DESC, month DESC, id DESC LIMIT 1
                 ", $fbParams)->getRow();
 

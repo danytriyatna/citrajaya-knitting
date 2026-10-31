@@ -207,7 +207,7 @@ $(document).ready(function () {
                         let kg = g_nd / 1000;
                         let kg_loss = (kg * l) / 100;
                         let tot = kg + kg_loss;
-                        let kuota = parseFloat(item.kuota !== undefined ? item.kuota : (item.kuota_history || 0));
+                        let kuota = parseFloat(item.kuota_history !== undefined && item.kuota_history !== null ? item.kuota_history : (item.kuota || 0));
                         if (isNaN(kuota)) kuota = 0;
                         let kuota_tambah = kuota - tot;
                         return Object.assign({}, item, {
@@ -216,6 +216,7 @@ $(document).ready(function () {
                             loss: l,
                             kg_loss: kg_loss,
                             total: tot,
+                            kuota: kuota,
                             kuota_history: kuota,
                             kuota_tambah: kuota_tambah
                         });
@@ -287,6 +288,7 @@ $(document).ready(function () {
             params.start = params.size * (params.page - 1);
             params.length = params.size;
             params.woid = $("#dataid").val();
+            params.id_gudang = $("#select_gudang").val();
         },
         ajaxResponse: function (url, params, response) {
             let pageSize = dtList_detail1.getPageSize();
@@ -357,9 +359,11 @@ $(document).ready(function () {
                             val_loss = 5;
                             inpDetailLoss.val(5);
                         }
+                        let row_data = cell.getRow().getData();
                         let val_kg_loss = (val_kg * val_loss) / 100;
                         let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
-                        let val_kuota = 0;
+                        let val_kuota = parseFloat(row_data.kuota_history !== undefined && row_data.kuota_history !== null ? row_data.kuota_history : (row_data.kuota || 0));
+                        if (isNaN(val_kuota)) val_kuota = 0;
                         let val_kuota_tambah = val_kuota - val_total;
 
                         cell.getRow().update({ 
@@ -368,6 +372,7 @@ $(document).ready(function () {
                             kg_loss: val_kg_loss,
                             total: val_total,
                             kuota: val_kuota,
+                            kuota_history: val_kuota,
                             kuota_tambah: val_kuota_tambah,
                         });
 
@@ -448,7 +453,7 @@ $(document).ready(function () {
             let val_total = parseFloat(val_kg) + parseFloat(val_kg_loss);
             val_total = val_total > 0 ? val_total.toFixed(2) : 0
 
-            let val_kuota = parseFloat(rowData.kuota !== undefined ? rowData.kuota : (rowData.kuota_history || 0));
+            let val_kuota = parseFloat(rowData.kuota_history !== undefined && rowData.kuota_history !== null ? rowData.kuota_history : (rowData.kuota || 0));
             if (isNaN(val_kuota)) val_kuota = 0;
 
             let val_kuota_tambah = val_kuota - val_total;
@@ -457,6 +462,7 @@ $(document).ready(function () {
                 kg_loss: val_kg_loss,
                 total: val_total,
                 kuota: val_kuota,
+                kuota_history: val_kuota,
                 kuota_tambah: val_kuota_tambah,
             });
         });
@@ -706,6 +712,11 @@ $(document).ready(function () {
     }
 
     $("#select_gudang").val($("#select_gudang").attr('value')).trigger('change');
+    $("#select_gudang").on("change", function () {
+        if (typeof dtList_detail1 !== "undefined" && dtList_detail1 && dtList_detail1.getData().length > 0) {
+            dtList_detail1.setData();
+        }
+    });
 
 
 

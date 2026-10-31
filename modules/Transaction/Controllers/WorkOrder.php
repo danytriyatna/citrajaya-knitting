@@ -304,7 +304,19 @@ class WorkOrder extends BaseController
     $wo_id = $this->request->getPost('woid');
 
     $params = [];
-    $params['id_walkorder'] = decrypt($wo_id);
+    $id_walkorder_dec = decrypt($wo_id);
+    $params['id_walkorder'] = $id_walkorder_dec;
+
+    // Ambil gudang produksi dari request atau dari header trans_walkorder
+    $woHeader = $this->mWalkorder->getRecord($this->mWalkorder->table, ['id' => $id_walkorder_dec]);
+    $idGudang = $this->request->getPost('id_gudang');
+    if (empty($idGudang) && !empty($woHeader) && !empty($woHeader->id_gudang)) {
+      $idGudang = $woHeader->id_gudang;
+    }
+    if (empty($idGudang)) {
+      $idGudang = 1; // Default Gudang Utama jika belum dipilih
+    }
+    $params['id_gudang'] = $idGudang;
     
     $results = $this->mWalkorder->getData_detail(null, $start, $limit, $order, $filters, $params);
     $totalfiltered = $this->mWalkorder->getDataCnt_detail($filters, $params);
@@ -321,7 +333,9 @@ class WorkOrder extends BaseController
     foreach ($results as $row) {
       $id = encrypt($row->id);
 
+      $params_d = [];
       $params_d['id_walkorder_detail'] = $row->id;
+      $params_d['id_gudang'] = $idGudang;
       $data_detail = $this->mWalkorder->getData_warna(null, 0, 9999, null, null, $params_d);
 
       $curQty = (float)($row->qty ?? 0);
@@ -331,6 +345,7 @@ class WorkOrder extends BaseController
       $sum_kg = 0;
       $sum_kg_loss = 0;
       $sum_total = 0;
+      $sum_kuota = 0;
       $sum_kuota_tambah = 0;
       $row_loss = (!empty($row->loss) && (float)$row->loss > 0) ? (float)$row->loss : 5;
 
@@ -347,14 +362,19 @@ class WorkOrder extends BaseController
           $w_item->loss = $item_loss;
           $w_item->kg_loss = ($w_item->kg * $item_loss) / 100;
           $w_item->total = $w_item->kg + $w_item->kg_loss;
-          $w_item->kuota_history = (float)($w_item->kuota ?? 0);
-          $w_item->kuota_tambah = $w_item->kuota_history - $w_item->total;
+
+          // Baca stok on-hand riil dari snapshot history
+          $stok_on_hand = (float)($w_item->kuota_history ?? 0);
+          $w_item->kuota = $stok_on_hand;
+          $w_item->kuota_history = $stok_on_hand;
+          $w_item->kuota_tambah = $stok_on_hand - $w_item->total;
 
           $sum_gram += $item_gram;
           $sum_gram_nd += $w_item->gram_nd;
           $sum_kg += $w_item->kg;
           $sum_kg_loss += $w_item->kg_loss;
           $sum_total += $w_item->total;
+          $sum_kuota += $stok_on_hand;
           $sum_kuota_tambah += $w_item->kuota_tambah;
         }
         unset($w_item);
@@ -402,7 +422,7 @@ class WorkOrder extends BaseController
           "kg_loss" => !empty($data_detail) ? $sum_kg_loss : $row->kg_loss,
           "total"   => !empty($data_detail) ? $sum_total : $row->total,
           "loss"    => $row_loss,
-          "kuota"   => $row->total_kuota_history,
+          "kuota"   => !empty($data_detail) ? $sum_kuota : $row->total_kuota_history,
           "kuota_tambah"    => !empty($data_detail) ? $sum_kuota_tambah : $row->kuota_tambah,
           'details' => !empty($data_detail) ? $data_detail : []
         )

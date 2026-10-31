@@ -252,16 +252,22 @@ class WalkorderModel extends \App\Models\PrModel
         $builder = $this->db->table($this->table2 . " abx");
 
         // --- LOGIKA STOK HISTORY 8 BARANG ---
-        $id_gudang = !empty($params['id_gudang']) ? $params['id_gudang'] : null;
+        $id_gudang = !empty($params['id_gudang']) ? intval($params['id_gudang']) : null;
         $gudangFilter = !empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "";
 
         $sq = [];
         for ($i = 1; $i <= 8; $i++) {
             $sq[] = "COALESCE((
-                SELECT tbh.jumlah FROM trans_barang_history tbh 
-                WHERE tbh.id_barang = (CASE WHEN abx.tipe_id = 2 THEN tso.id_barang_$i ELSE ts.id_barang_$i END)
-                $gudangFilter 
-                ORDER BY tbh.year DESC, tbh.month DESC LIMIT 1
+                SELECT SUM(sub_h.jumlah)
+                FROM (
+                    SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'))
+                        tbh.jumlah
+                    FROM trans_barang_history tbh 
+                    WHERE tbh.id_barang = (CASE WHEN abx.tipe_id = 2 THEN tso.id_barang_$i ELSE ts.id_barang_$i END)
+                      $gudangFilter 
+                      AND (tbh.year * 100 + tbh.month) >= 202606
+                    ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC
+                ) sub_h
             ), 0)";
         }
         $totalHistoryQueryRaw = "(" . implode(" + ", $sq) . ")";
@@ -794,15 +800,21 @@ class WalkorderModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table5 . " abx");
 
-        $id_gudang = !empty($params['id_gudang']) ? $params['id_gudang'] : null;
+        $id_gudang = !empty($params['id_gudang']) ? intval($params['id_gudang']) : null;
+        $gudangHistFilter = !empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "";
 
+        // Query stok on-hand riil per item_id (id_barang) dari snapshot trans_barang_history terbaru (sejak cutoff Juni 2026)
         $subQtyOnHand = "COALESCE((
-            SELECT tbh.jumlah
-            FROM trans_barang_history tbh
-            WHERE tbh.id_barang = abx.id_barang
-            " . (!empty($id_gudang) ? "AND tbh.id_gudang = $id_gudang" : "") . "
-            ORDER BY tbh.year DESC, tbh.month DESC
-            LIMIT 1
+            SELECT SUM(sub_h.jumlah)
+            FROM (
+                SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'))
+                    tbh.jumlah
+                FROM trans_barang_history tbh
+                WHERE tbh.id_barang = COALESCE(abx.id_barang, (SELECT rb_w.id FROM ref_barang rb_w WHERE rb_w.id_warna = abx.id_warna AND rb_w.active = 1 LIMIT 1))
+                  {$gudangHistFilter}
+                  AND (tbh.year * 100 + tbh.month) >= 202606
+                ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC
+            ) sub_h
         ), 0) AS kuota_history";
 
         $builder->select(" 

@@ -186,6 +186,64 @@
     </div>
   </div>
 </div>
+<!-- MODAL DETAIL TRANSAKSI BAHAN (PENGIRIMAN / PENGEMBALIAN / PEMAKAIAN) -->
+<div id="modal-detail-transaksi-bahan" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-light py-2 px-3 border-bottom">
+        <h5 class="modal-title f-w-700 text-dark mb-0" id="mdl-trans-bahan-title">
+          <i class="fa fa-list-alt text-primary me-2"></i>Rincian Transaksi Bahan
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- HEADER INFO -->
+        <div class="row align-items-center mb-3">
+          <div class="col-sm-8">
+            <h6 class="f-w-800 mb-1 text-dark" id="mdl-trans-bahan-barang">-</h6>
+            <div class="d-flex flex-wrap align-items-center gap-1 f-s-12">
+              <span id="mdl-trans-bahan-wo" class="badge bg-secondary text-white px-2 py-1 fw-bold">WO: -</span>
+              <span id="mdl-trans-bahan-warna" class="badge bg-info text-white px-2 py-1 fw-bold">Warna: -</span>
+              <span id="mdl-trans-bahan-tipe" class="badge bg-primary text-white px-2 py-1 fw-bold">Tipe: -</span>
+            </div>
+          </div>
+          <div class="col-sm-4 text-sm-end mt-2 mt-sm-0">
+            <span class="badge px-3 py-2 fs-6 fw-bold" id="mdl-trans-bahan-badge-total" style="background-color: #0284c7;">Total: 0 Kg</span>
+          </div>
+        </div>
+
+        <!-- TABEL RINCIAN TRANSAKSI -->
+        <div class="table-responsive rounded border">
+          <table class="table table-sm table-bordered table-striped align-middle mb-0" id="tbl-mdl-trans-bahan">
+            <thead style="background-color: #1e293b !important; color: #ffffff !important;">
+              <tr class="text-nowrap" style="white-space: nowrap !important;">
+                <th class="text-center" style="width: 5%; background-color: #1e293b !important; color: #ffffff !important;">No</th>
+                <th style="width: 15%; background-color: #1e293b !important; color: #ffffff !important;">Tanggal</th>
+                <th style="width: 22%; background-color: #1e293b !important; color: #ffffff !important;">No. Transaksi</th>
+                <th id="th-mdl-trans-gudang" style="width: 25%; background-color: #1e293b !important; color: #ffffff !important;">Gudang</th>
+                <th style="width: 15%; background-color: #1e293b !important; color: #ffffff !important;">Lot</th>
+                <th class="text-end" style="width: 18%; background-color: #1e293b !important; color: #ffffff !important;">Qty (Kg)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-mdl-trans-bahan">
+              <tr><td colspan="6" class="text-center text-muted py-3">Memuat data...</td></tr>
+            </tbody>
+            <tfoot class="table-light fw-bold" style="border-top: 2px solid #1e293b;">
+              <tr>
+                <td colspan="5" class="text-end text-dark">TOTAL:</td>
+                <td class="text-end text-primary fw-bold" id="tfoot-mdl-trans-total">0.00 Kg</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <?= $this->endSection('modal') ?>
 
 <?= $this->section('content'); ?>

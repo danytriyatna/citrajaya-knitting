@@ -781,4 +781,138 @@ class Production extends BaseController
     $dompdf->stream('rec_item.pdf', ['Attachment' => true]);
     exit;
   }
+
+  public function detail_bahan_transaksi()
+  {
+    if (!$this->auth->loggedIn()) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Unauthorized']);
+    }
+
+    $idWoRaw  = $this->request->getPost('id_walkorder');
+    $idBarang = (int)$this->request->getPost('id_barang');
+    $tipe     = strtolower(trim((string)$this->request->getPost('tipe')));
+
+    $idWo = decrypt($idWoRaw);
+    if (empty($idWo) || !is_numeric($idWo)) {
+      $idWo = (int)$idWoRaw;
+    }
+
+    if (empty($idWo) || empty($idBarang) || empty($tipe)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Parameter tidak lengkap']);
+    }
+
+    $wo = $this->mWalkorder->getData($idWo);
+    if (!$wo) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Data Work Order tidak ditemukan']);
+    }
+
+    $barang = $this->db->table('ref_barang')->where('id', $idBarang)->get()->getRow();
+    $namaBarang = $barang ? $barang->nama_barang : '-';
+    $kodeWo = $wo->kode_walkorder;
+
+    $db = \Config\Database::connect();
+    $rows = [];
+    $title = '';
+
+    if ($tipe === 'pengiriman') {
+      $title = 'Rincian Pengiriman Benang (Gudang -> Rajut)';
+      $sql = "
+        SELECT 
+            tbth.tanggal,
+            tbth.kode_transaksi,
+            COALESCE(ga.nama_gudang, '-') as gudang_asal,
+            COALESCE(gt.nama_gudang, '-') as gudang_tujuan,
+            COALESCE(tbtd.lot_no, '-') as lot_no,
+            COALESCE(rp.pack_name, '-') as pack_name,
+            ROUND(tbtd.qty::numeric, 2) as qty,
+            COALESCE(tbth.keterangan, '-') as keterangan
+        FROM trans_barang_trf_detail tbtd
+        INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+        LEFT JOIN ref_gudang ga ON ga.id = tbth.id_gudang_asal
+        LEFT JOIN ref_gudang gt ON gt.id = tbth.id_gudang_tujuan
+        LEFT JOIN ref_pack rp ON rp.id = tbtd.pack_id
+        WHERE tbtd.kode_walkorder = ?
+          AND tbtd.id_barang = ?
+          AND tbth.id_gudang_asal = 1
+          AND tbth.active = 1
+        ORDER BY tbth.tanggal ASC, tbth.kode_transaksi ASC, tbtd.id ASC
+      ";
+      $rows = $db->query($sql, [$kodeWo, $idBarang])->getResultArray();
+    } elseif ($tipe === 'pengembalian') {
+      $title = 'Rincian Pengembalian Benang (Retur ke Gudang)';
+      $sql = "
+        SELECT 
+            tbth.tanggal,
+            tbth.kode_transaksi,
+            COALESCE(ga.nama_gudang, '-') as gudang_asal,
+            COALESCE(gt.nama_gudang, '-') as gudang_tujuan,
+            COALESCE(tbtd.lot_no, '-') as lot_no,
+            COALESCE(rp.pack_name, '-') as pack_name,
+            ROUND(tbtd.qty::numeric, 2) as qty,
+            COALESCE(tbth.keterangan, '-') as keterangan
+        FROM trans_barang_trf_detail tbtd
+        INNER JOIN trans_barang_trf_header tbth ON tbth.id = CAST(tbtd.id_header AS INTEGER)
+        LEFT JOIN ref_gudang ga ON ga.id = tbth.id_gudang_asal
+        LEFT JOIN ref_gudang gt ON gt.id = tbth.id_gudang_tujuan
+        LEFT JOIN ref_pack rp ON rp.id = tbtd.pack_id
+        WHERE tbtd.kode_walkorder = ?
+          AND tbtd.id_barang = ?
+          AND tbth.id_gudang_tujuan = 1
+          AND tbth.active = 1
+        ORDER BY tbth.tanggal ASC, tbth.kode_transaksi ASC, tbtd.id ASC
+      ";
+      $rows = $db->query($sql, [$kodeWo, $idBarang])->getResultArray();
+    } elseif ($tipe === 'pemakaian') {
+      $title = 'Rincian Pemakaian Bahan Baku (BTK Rajut)';
+      $sql = "
+        SELECT 
+            tbh.tanggal,
+            tbh.kode_transaksi,
+            COALESCE(g.nama_gudang, '-') as gudang,
+            COALESCE(tbd.lot_no, '-') as lot_no,
+            COALESCE(rp.pack_name, '-') as pack_name,
+            ROUND(tbd.qty::numeric, 2) as qty,
+            ROUND(COALESCE(tbd.price, 0)::numeric, 2) as harga,
+            ROUND((tbd.qty * COALESCE(tbd.price, 0))::numeric, 2) as subtotal,
+            COALESCE(tbh.keterangan, '-') as keterangan
+        FROM trans_barang_detail tbd
+        INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
+        LEFT JOIN ref_gudang g ON g.id = tbh.id_gudang
+        LEFT JOIN ref_pack rp ON rp.id = tbd.pack_id
+        WHERE tbh.no_ref_wo = ?
+          AND tbh.id_kategori = 5 
+          AND tbh.active = 1
+          AND tbd.id_barang = ?
+          AND tbd.qty > 0
+        ORDER BY tbh.tanggal ASC, tbh.kode_transaksi ASC, tbd.id ASC
+      ";
+      $rows = $db->query($sql, [$kodeWo, $idBarang])->getResultArray();
+    } else {
+      return $this->response->setJSON(['status' => false, 'message' => 'Tipe transaksi tidak valid']);
+    }
+
+    $totalQty = 0;
+    foreach ($rows as &$r) {
+      $totalQty += (float)$r['qty'];
+      if (!empty($r['tanggal'])) {
+        $r['tanggal_formatted'] = fdate_eng_to_ind($r['tanggal']);
+      } else {
+        $r['tanggal_formatted'] = '-';
+      }
+      $r['qty_formatted'] = number_format((float)$r['qty'], 2, ',', '.') . ' Kg';
+    }
+
+    return $this->response->setJSON([
+      'status'         => true,
+      'title'          => $title,
+      'tipe'           => $tipe,
+      'kode_walkorder' => $kodeWo,
+      'id_barang'      => $idBarang,
+      'nama_barang'    => $namaBarang,
+      'total_qty'      => round($totalQty, 2),
+      'total_qty_fmt'  => number_format($totalQty, 2, ',', '.') . ' Kg',
+      'total_trx'      => count($rows),
+      'data'           => $rows
+    ]);
+  }
 }

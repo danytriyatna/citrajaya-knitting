@@ -167,20 +167,30 @@ $(document).ready(function () {
                 headerSort: false, title: "Pengiriman<br>(QTY/KG)", field: "total_qty_trf", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+                    let val = parseFloat(cell.getValue() || 0);
+                    let row = cell.getRow().getData();
+                    if (val > 0) {
+                        return `<a href="javascript:void(0)" class="btn-show-trx-bahan text-primary fw-bold text-decoration-underline" data-tipe="pengiriman" data-id-barang="${row.id_barang}" data-warna="${row.kode_warna}" title="Klik untuk lihat rincian transaksi pengiriman">${val.toFixed(2)}</a>`;
+                    }
+                    return val.toFixed(2);
                 },
                 bottomCalcFormatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+                    return parseFloat(cell.getValue() || 0).toFixed(2);
                 }
             },
             {
                 headerSort: false, title: "Pengembalian<br>(QTY/KG)", field: "total_qty_kembali", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+                    let val = parseFloat(cell.getValue() || 0);
+                    let row = cell.getRow().getData();
+                    if (val > 0) {
+                        return `<a href="javascript:void(0)" class="btn-show-trx-bahan text-warning fw-bold text-decoration-underline" data-tipe="pengembalian" data-id-barang="${row.id_barang}" data-warna="${row.kode_warna}" title="Klik untuk lihat rincian transaksi pengembalian">${val.toFixed(2)}</a>`;
+                    }
+                    return val.toFixed(2);
                 },
                 bottomCalcFormatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+                    return parseFloat(cell.getValue() || 0).toFixed(2);
                 }
             },
             { headerSort: false, title: "LOT", field: "lot_no", hozAlign: "left", width: "12%", visible: false },
@@ -188,10 +198,15 @@ $(document).ready(function () {
                 headerSort: false, title: "Pemakaian<br>(QTY/KG)", field: "total_qty_pakai", hozAlign: "right", width: "16%", headerHozAlign: "right",
                 bottomCalc: "sum",
                 formatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ maksimal 2 desimal
+                    let val = parseFloat(cell.getValue() || 0);
+                    let row = cell.getRow().getData();
+                    if (val > 0) {
+                        return `<a href="javascript:void(0)" class="btn-show-trx-bahan text-success fw-bold text-decoration-underline" data-tipe="pemakaian" data-id-barang="${row.id_barang}" data-warna="${row.kode_warna}" title="Klik untuk lihat rincian transaksi pemakaian">${val.toFixed(2)}</a>`;
+                    }
+                    return val.toFixed(2);
                 },
                 bottomCalcFormatter: function (cell) {
-                    return parseFloat(cell.getValue() || 0).toFixed(2); // ✅ total bawah juga 2 desimal
+                    return parseFloat(cell.getValue() || 0).toFixed(2);
                 }
             },
             {
@@ -992,5 +1007,103 @@ $(document).ready(function () {
         }
     });
 
+
+
+    function showModalDetailTransaksiBahan(idWalkorder, idBarang, kodeWarna, tipe) {
+        if (!idWalkorder || !idBarang || !tipe) return;
+
+        let $modal = $('#modal-detail-transaksi-bahan');
+        let $tbody = $('#tbody-mdl-trans-bahan');
+        let $title = $('#mdl-trans-bahan-title');
+        let $lblBarang = $('#mdl-trans-bahan-barang');
+        let $lblWo = $('#mdl-trans-bahan-wo');
+        let $lblWarna = $('#mdl-trans-bahan-warna');
+        let $lblTipe = $('#mdl-trans-bahan-tipe');
+        let $badgeTotal = $('#mdl-trans-bahan-badge-total');
+        let $tfootTotal = $('#tfoot-mdl-trans-total');
+        let $thGudang = $('#th-mdl-trans-gudang');
+
+        let tipeLabel = tipe === 'pengiriman' ? 'Pengiriman (Kirim ke Rajut)' : (tipe === 'pengembalian' ? 'Pengembalian (Retur Benang)' : 'Pemakaian (BTK Rajut)');
+        let badgeColor = tipe === 'pengiriman' ? '#0284c7' : (tipe === 'pengembalian' ? '#d97706' : '#15803d');
+
+        $title.html(`<i class="fa fa-list-alt me-2" style="color: ${badgeColor};"></i>Rincian ${tipeLabel}`);
+        $lblBarang.text('Memuat rincian transaksi...');
+        $lblWo.text('WO: Memuat...');
+        $lblWarna.text(`Warna: ${kodeWarna || '-'}`);
+        $lblTipe.text(`Tipe: ${tipeLabel}`).css('background-color', badgeColor);
+        $badgeTotal.text('Total: 0 Kg').css('background-color', badgeColor);
+        $tfootTotal.text('0.00 Kg');
+        $tbody.html('<tr><td colspan="6" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin me-1"></i> Memuat data transaksi...</td></tr>');
+
+        if (tipe === 'pemakaian') {
+            $thGudang.text('Gudang / Kategori');
+        } else {
+            $thGudang.text('Gudang Asal -> Tujuan');
+        }
+
+        $modal.modal('show');
+
+        $.ajax({
+            url: baseUrl + '/trans/production/detail-bahan-transaksi',
+            type: 'POST',
+            data: {
+                id_walkorder: idWalkorder,
+                id_barang: idBarang,
+                tipe: tipe
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (!res.status || !res.data || res.data.length === 0) {
+                    $lblBarang.text(res.nama_barang || 'Barang');
+                    $lblWo.text(`WO: ${res.kode_walkorder || '-'}`);
+                    $tbody.html('<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data transaksi.</td></tr>');
+                    return;
+                }
+
+                $lblBarang.text(res.nama_barang);
+                $lblWo.text(`WO: ${res.kode_walkorder}`);
+                $badgeTotal.text(`Total: ${res.total_qty_fmt} (${res.total_trx} Trx)`);
+                $tfootTotal.text(res.total_qty_fmt);
+
+                let rowsHtml = '';
+                res.data.forEach(function(item, idx) {
+                    let gudangText = '';
+                    if (tipe === 'pemakaian') {
+                        gudangText = item.gudang || '-';
+                    } else {
+                        gudangText = `${item.gudang_asal} <i class="fa fa-arrow-right text-muted mx-1"></i> ${item.gudang_tujuan}`;
+                    }
+
+                    let ketText = item.keterangan && item.keterangan !== '-' ? `<br><small class="text-muted f-s-11"><em>Note: ${item.keterangan}</em></small>` : '';
+
+                    rowsHtml += `
+                        <tr>
+                            <td class="text-center">${idx + 1}</td>
+                            <td>${item.tanggal_formatted}</td>
+                            <td><span class="badge bg-light text-dark border fw-bold">${item.kode_transaksi}</span>${ketText}</td>
+                            <td>${gudangText}</td>
+                            <td><span class="badge bg-secondary text-white">${item.lot_no}</span></td>
+                            <td class="text-end fw-bold" style="color: ${badgeColor};">${item.qty_formatted}</td>
+                        </tr>
+                    `;
+                });
+
+                $tbody.html(rowsHtml);
+            },
+            error: function(xhr) {
+                $tbody.html('<tr><td colspan="6" class="text-center text-danger py-3">Gagal memuat data transaksi. Silakan coba lagi.</td></tr>');
+            }
+        });
+    }
+
+    $(document).on('click', '.btn-show-trx-bahan', function(e) {
+        e.preventDefault();
+        let tipe = $(this).data('tipe');
+        let idBarang = $(this).data('id-barang');
+        let kodeWarna = $(this).data('warna');
+        let idWalkorder = $('#id_walkorder').val();
+
+        showModalDetailTransaksiBahan(idWalkorder, idBarang, kodeWarna, tipe);
+    });
 
 });

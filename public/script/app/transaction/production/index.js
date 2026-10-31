@@ -17,12 +17,16 @@ $(document).ready(function () {
                     <span class="f-w-700 text-muted">`+data.status+`</span>`
 
          aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
-        }else{
+        } else if (data.status == 'Closed') {
+         status = `<i class="fa fa-lock text-dark m-e-6"></i>
+                   <span class="f-w-700 text-dark">Closed</span>`;
+
+         aksi = `<button type="button" class="btn btn-sm btn-secondary text-white" disabled><i class="fa fa-lock"></i> Closed</button>`;
+        } else {
          status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
-                    <span class="f-w-700 text-success">`+data.status+`</span>`
+                    <span class="f-w-700 text-success">Approved</span>`
 
-
-        aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
+         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>`;
         }
         
         let headerActionHtml = `<div class="d-flex align-items-center gap-1 my-1">${aksi}</div>`;

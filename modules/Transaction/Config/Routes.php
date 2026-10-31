@@ -54,6 +54,7 @@ $routes->group('trans/work-order', ['namespace' => 'Modules\Transaction\Controll
   $routes->post('list', 'WorkOrder::lists');
   $routes->post('list_warna', 'WorkOrder::lists_detail');
   $routes->get('form/(:any)', 'WorkOrder::form/$1');
+  $routes->post('set-status', 'WorkOrder::set_status');
   $routes->post('save-warna', 'WorkOrder::saveWarna');
   $routes->post('save-data', 'WorkOrder::save');
   $routes->get('print/(:any)', 'WorkOrder::print/$1');

@@ -80,6 +80,10 @@ class WorkOrder extends BaseController
       $params['tipe_id'] = $filter_trans;
     }
 
+    if (!empty($isApprove)) {
+      $params['status'] = 2; // Picker hanya menampilkan WO Approved
+    }
+
     // TAMBAHAN (2026-08-08, diperluas 2026-08-09): endpoint ini dipakai juga
     // sbg picker "Referensi Work Order" (mis. modal WO di form Barang
     // Keluar, dikirim dgn isApprove=true) - utk WO (baik tipe Sales Order
@@ -133,7 +137,7 @@ class WorkOrder extends BaseController
       // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
       //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
 
-      $status = $row->status == 1 ? "Draft" : "Approved";
+      $status = $row->status == 1 ? "Draft" : ($row->status == 3 ? "Closed" : "Approved");
       $tipe = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
       $qty = $row->qty;
@@ -932,5 +936,55 @@ class WorkOrder extends BaseController
     $this->data["data"] = $data;
     $this->data["fileName"] = $kodeQR;
     return view($this->views . '\vprint_kartu_produksi', $this->data);
+  }
+
+  public function set_status()
+  {
+    if (!$this->auth->loggedIn()) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Unauthorized']);
+    }
+    $idEnc = $this->request->getPost('id');
+    $newStatus = (int)$this->request->getPost('status');
+    $id = decrypt($idEnc);
+    if (empty($id)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'ID Work Order tidak valid']);
+    }
+
+    $wo = $this->mWalkorder->getData($id);
+    if (!$wo) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Data Work Order tidak ditemukan']);
+    }
+
+    if ((int)$wo->status === 1 && $newStatus === 3) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Work Order Draft tidak dapat langsung di-Close. Mohon Approve terlebih dahulu.']);
+    }
+
+    $this->db->transBegin();
+    try {
+      // 1. Update status Work Order
+      $this->mWalkorder->updateRecord($this->mWalkorder->table, ['status' => $newStatus], 'id', $id);
+
+      // 2. Update status Produksi yang berelasi (id_walkorder)
+      // Jika WO Closed (3) -> Produksi Closed (3); Jika WO Reopen (2) -> Produksi Aktif (1)
+      $prodStatus = ($newStatus === 3 ? 3 : 1);
+      $this->mProduksi->updateRecord($this->mProduksi->table, ['status' => $prodStatus], 'id_walkorder', $id);
+
+      $statusLabel = $newStatus === 3 ? 'Closed' : 'Approved (Open)';
+      $this->mcommon->setLog($this->auth->getUserId(), $this->MOD_ALIAS, $id, "Update Status WO ke {$statusLabel}");
+
+      if ($this->db->transStatus() === FALSE) {
+        $this->db->transRollback();
+        return $this->response->setJSON(['status' => false, 'message' => 'Gagal memperbarui status Work Order.']);
+      } else {
+        $this->db->transCommit();
+        return $this->response->setJSON([
+          'status' => true,
+          'message' => "Work Order {$wo->kode_walkorder} berhasil diubah status menjadi {$statusLabel}."
+        ]);
+      }
+    } catch (\Throwable $th) {
+      $this->db->transRollback();
+      return $this->response->setJSON(['status' => false, 'message' => 'Terjadi kesalahan: ' . $th->getMessage()]);
+    }
   }
 }

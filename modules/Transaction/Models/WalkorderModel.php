@@ -72,6 +72,10 @@ class WalkorderModel extends \App\Models\PrModel
                 $builder->where('abx.tipe_id', $params['tipe_id']);
             }
 
+            if (isset($params['status'])) {
+                $builder->where('abx.status', $params['status']);
+            }
+
             $this->applyHideSelesaiFilter($builder, $params);
 
             // if (!empty($params['id'])) {
@@ -124,6 +128,10 @@ class WalkorderModel extends \App\Models\PrModel
         // getData().
         if (!empty($params['tipe_id'])) {
             $builder->where('abx.tipe_id', $params['tipe_id']);
+        }
+
+        if (isset($params['status'])) {
+            $builder->where('abx.status', $params['status']);
         }
 
         $this->applyHideSelesaiFilter($builder, $params);
@@ -431,6 +439,10 @@ class WalkorderModel extends \App\Models\PrModel
 
             if (!empty($params['tipe_id'])) {
                 $builder->where('abx.tipe_id', $params['tipe_id']);
+            }
+
+            if (isset($params['status'])) {
+                $builder->where('abx.status', $params['status']);
             }
 
             if (!empty($order)) {

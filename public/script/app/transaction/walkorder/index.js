@@ -30,13 +30,19 @@ $(document).ready(function () {
 
          aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>
                 <button type="button" class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
-        }else{
+        } else if (data.status == 'Closed') {
+         status = `<i class="fa fa-lock text-dark m-e-6"></i>
+                   <span class="f-w-700 text-dark">Closed</span>`;
+
+         aksi = `<button type="button" class="btn btn-sm btn-outline-success open-wo" data-id="${data.id}" data-wo="${data.kode_walkorder}" title="Buka kembali Work Order"><i class="fa fa-unlock"></i> Buka WO</button>
+                <button type="button" class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+        } else {
          status = ` <i class="fa fa-check-circle text-success m-e-6"></i>
-                    <span class="f-w-700 text-success">`+data.status+`</span>`
+                    <span class="f-w-700 text-success">Approved</span>`
 
-
-        aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>
-                <button type="button"   class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
+         aksi = `<a href="${data.url_edit}" type="button" class="btn btn-sm btn-warning text-dark edit"> <i class="fa fa-edit"></i> Edit</a>
+                <button type="button" class="btn btn-sm btn-dark close-wo" data-id="${data.id}" data-wo="${data.kode_walkorder}" title="Tutup / Close Work Order"><i class="fa fa-lock"></i> Close WO</button>
+                <button type="button" class="btn btn-sm btn-info print" data-id="${data.id}"> <i class="fa fa-print"></i> Cetak</button>`;
         }
         
         // HTML Card Layout
@@ -108,6 +114,106 @@ $(document).ready(function () {
             document.querySelector(`.print[data-id='${data.id}']`).addEventListener('click', ()=>{
                 window.open(`${baseUrl}/trans/work-order/print/${data.id}`, "_blank");
             });
+
+            const closeWoEl = document.querySelector(`.close-wo[data-id='${data.id}']`);
+            if (closeWoEl) {
+                closeWoEl.addEventListener('click', () => {
+                    Swal.fire({
+                        title: `Tutup Work Order?`,
+                        html: `Apakah Anda yakin ingin menutup <b>${data.kode_walkorder}</b>?<br><small class="text-muted">Status Produksi terkait akan otomatis ditutup (Closed) dan booked benang di Ringkasan Persediaan akan dilepas.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#212529',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fa fa-lock"></i> Ya, Tutup WO!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `${baseUrl}/trans/work-order/set-status`,
+                                type: 'POST',
+                                data: { id: data.id, status: 3 },
+                                dataType: 'json',
+                                success: function (res) {
+                                    if (res.status) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: res.message,
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        dtList.setData();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal',
+                                            text: res.message
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan sistem'
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            const openWoEl = document.querySelector(`.open-wo[data-id='${data.id}']`);
+            if (openWoEl) {
+                openWoEl.addEventListener('click', () => {
+                    Swal.fire({
+                        title: `Buka Kembali Work Order?`,
+                        html: `Apakah Anda yakin ingin membuka kembali <b>${data.kode_walkorder}</b>?<br><small class="text-muted">Work Order dan Produksi terkait akan kembali berstatus Aktif.</small>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fa fa-unlock"></i> Ya, Buka WO!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `${baseUrl}/trans/work-order/set-status`,
+                                type: 'POST',
+                                data: { id: data.id, status: 2 },
+                                dataType: 'json',
+                                success: function (res) {
+                                    if (res.status) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: res.message,
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        dtList.setData();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal',
+                                            text: res.message
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan sistem'
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            }
             
             let isColumn = [
                 {headerSort: false,title:"No", field:"no",   width: "5%"},

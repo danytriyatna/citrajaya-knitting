@@ -122,7 +122,7 @@ class Production extends BaseController
       // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
       //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
 
-      $status = $row->status == 1 ? "Draft" : "Approved";
+      $status = $row->status == 3 ? "Closed" : ($row->status == 1 ? "Draft" : "Approved");
       $tipe = $row->tipe_id == 1 ? "Sample" : "Sales Order";
 
       $qty = $row->qty;

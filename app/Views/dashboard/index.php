@@ -516,7 +516,12 @@
                   </tr> -->
                   <tr>
                     <td class="p-s-24" id="label-pemakaian-row">- Pemakaian Barang dan Bahan</td>
-                    <td id="pemakaian" class="text-end">7.500.000,00</td>
+                    <td id="pemakaian" class="text-end">0,00</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td class="p-s-24">- Pemakaian Lainnya</td>
+                    <td id="pemakaian_lainnya" class="text-end">0,00</td>
                     <td></td>
                   </tr>
                   <tr>

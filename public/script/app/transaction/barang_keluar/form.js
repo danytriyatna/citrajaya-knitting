@@ -68,6 +68,14 @@ if (selectKategori.val() == 5) {
     divTotalPemakaian.removeClass("d-none")
 }
 
+if (selectKategori.val() == 16) {
+    divNamaVendor.addClass("d-none")
+    divWO.addClass("d-none")
+    divTransfer.addClass("d-none")
+    divBtnAdd.removeClass("d-none")
+    divTotalPemakaian.addClass("d-none")
+}
+
 if (inpStatus.val() == 0) {
     btnAdd.show()
     btnSimpan.show()
@@ -887,6 +895,16 @@ selectKategori.on("change", function (e) {
         inpNoRefTrf.val("")
         divBtnAdd.addClass("d-none")
         divTotalPemakaian.removeClass("d-none")
+    } else if (nilai == 16) {
+        divNamaVendor.addClass("d-none")
+        divWO.addClass("d-none")
+        divTransfer.addClass("d-none")
+        inpNoRefTrf.val("")
+        inpNoRefWO.val("")
+        divBtnAdd.removeClass("d-none")
+        divTotalPemakaian.addClass("d-none")
+        inpTotalPemakaian.val("")
+        inpBtmKg.val("")
     } else {
         divNamaVendor.addClass("d-none")
         divWO.addClass("d-none")

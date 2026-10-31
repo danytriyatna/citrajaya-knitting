@@ -205,7 +205,7 @@ class Rpt_laba_rugi extends BaseController
                 LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
                 LEFT JOIN ref_gudang rg ON rg.id = tbh.id_gudang
                 WHERE tbh.jenis_transaksi = 2
-                AND tbh.id_kategori = 5
+                AND tbh.id_kategori IN (5, 16)
                 AND tbh.status = 1
                 AND tbh.active = 1
                 AND tbh.tanggal >= '$btkStart'
@@ -463,7 +463,7 @@ class Rpt_laba_rugi extends BaseController
                 LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
                 LEFT JOIN ref_gudang rg ON rg.id = tbh.id_gudang
                 WHERE tbh.jenis_transaksi = 2
-                AND tbh.id_kategori = 5
+                AND tbh.id_kategori IN (5, 16)
                 AND tbh.status = 1
                 AND tbh.active = 1
                 AND tbh.tanggal >= '$btkStart'

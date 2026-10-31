@@ -945,6 +945,31 @@ class Mdashboard extends Model
         return $row ? (float)$row->grand_total : 0;
     }
 
+    function getDataPemakaianLainnya($month = null, $year = null)
+    {
+        $m = (int)$month;
+        $y = (int)$year;
+
+        $builder = $this->db->table("trans_barang_detail tbd");
+        $builder->select("SUM(COALESCE(tbd.qty, 0) * COALESCE(NULLIF(tbd.price, 0), rb.harga_satuan, 0)) AS grand_total");
+        $builder->join("trans_barang_header tbh", "CAST(tbd.id_header AS INTEGER) = tbh.id", "inner");
+        $builder->join("ref_barang rb", "rb.id = tbd.id_barang", "left");
+        $builder->where("tbh.jenis_transaksi", 2);
+        $builder->where("tbh.id_kategori", 16);
+        $builder->where("tbh.status", 1);
+        $builder->where("tbh.active", 1);
+
+        if (!empty($month)) {
+            $builder->where("EXTRACT(MONTH FROM tbh.tanggal) =", $m);
+        }
+        if (!empty($year)) {
+            $builder->where("EXTRACT(YEAR FROM tbh.tanggal) =", $y);
+        }
+
+        $row = $builder->get()->getRow();
+        return $row ? (float)$row->grand_total : 0;
+    }
+
     function getDataBiaya($month = null, $year = null)
     {
         $builder = $this->db->table('m_coa ax');
@@ -1070,7 +1095,7 @@ class Mdashboard extends Model
                 $builder->join("trans_barang_header tbh", "CAST(tbd.id_header AS INTEGER) = tbh.id", "inner");
                 $builder->join("ref_barang rb", "rb.id = tbd.id_barang", "left");
                 $builder->where("tbh.jenis_transaksi", 2);
-                $builder->where("tbh.id_kategori", 5);
+                $builder->whereIn("tbh.id_kategori", [5, 16]);
                 $builder->where("tbh.status", 1);
                 $builder->where("tbh.active", 1);
                 $builder->where("EXTRACT(MONTH FROM tbh.tanggal) =", $m);

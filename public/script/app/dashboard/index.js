@@ -526,7 +526,8 @@ $(document).ready(function () {
                 $('#penjualan').text(penjualan);     
                 $('#total_penjualan').text(penjualan); 
                 $('#pemakaian').text(pemakaian);      
-                $('#total_pemakaian').text(pemakaian); 
+                $('#pemakaian_lainnya').text(data.pemakaian_lainnya || '0,00');
+                $('#total_pemakaian').text(data.total_pemakaian || pemakaian); 
                 $('#laba_kotor').text(laba_kotor); 
                 $('#total_operasional').text(total_biaya); 
                 $('#laba_bersih').text(laba_bersih); 

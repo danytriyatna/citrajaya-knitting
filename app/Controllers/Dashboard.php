@@ -751,16 +751,27 @@ class Dashboard extends BaseController
         $format_penjualan = '' . number_format( $laba_kotor, 2, ',', '.');
 
         $Pemakaian = $this->mdashboard->getDataPemakaian($month, $year);
-            if (is_null($Pemakaian) || $Pemakaian == 0) {
-                $format_pemakaian = '0,00';  // Atau bisa gunakan format lain
-            } else {
-                $format_pemakaian = '' . number_format($Pemakaian, 2, ',', '.');
-                $laba_kotor -= $Pemakaian;
-            }
+        if (is_null($Pemakaian) || $Pemakaian == 0) {
+            $format_pemakaian = '0,00';
+        } else {
+            $format_pemakaian = '' . number_format($Pemakaian, 2, ',', '.');
+            $laba_kotor -= $Pemakaian;
+        }
 
-            if ($laba_kotor != 0) {
-                $format_laba_kotor = '' . number_format($laba_kotor, 2, ',', '.');
-            }
+        $pemakaianLainnya = $this->mdashboard->getDataPemakaianLainnya($month, $year);
+        if (is_null($pemakaianLainnya) || $pemakaianLainnya == 0) {
+            $format_pemakaian_lainnya = '0,00';
+        } else {
+            $format_pemakaian_lainnya = '' . number_format($pemakaianLainnya, 2, ',', '.');
+            $laba_kotor -= $pemakaianLainnya;
+        }
+
+        $total_pemakaian = (float)$Pemakaian + (float)$pemakaianLainnya;
+        $format_total_pemakaian = number_format($total_pemakaian, 2, ',', '.');
+
+        if ($laba_kotor != 0) {
+            $format_laba_kotor = '' . number_format($laba_kotor, 2, ',', '.');
+        }
 
         $biaya = $this->mdashboard->getDataBiaya($month, $year);
 
@@ -793,6 +804,8 @@ class Dashboard extends BaseController
         $build_array = array(
             "penjualan" => $format_penjualan,
             "pemakaian" => $format_pemakaian,
+            "pemakaian_lainnya" => $format_pemakaian_lainnya,
+            "total_pemakaian" => $format_total_pemakaian,
             "laba_kotor" => $format_laba_kotor,
             "biaya" => $biaya,
             "code" => $code,

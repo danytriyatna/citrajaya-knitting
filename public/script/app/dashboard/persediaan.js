@@ -41,11 +41,15 @@ $(document).ready(function () {
             },
             {
                 title: "QTY KELUAR", field: "qty_keluar", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "9%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
+            },
+            {
+                title: "QTY WO", field: "qty_wo", headerSort: false, hozAlign: "right", headerHozAlign: "right",
+                sorter: "number", width: "8%", bottomCalc: "sum", formatter: cellMoney2, bottomCalcFormatter: cellMoney2
             },
             {
                 title: "QTY AKHIR", field: "qty_akhir", headerSort: false, hozAlign: "right", headerHozAlign: "right",
-                sorter: "number", width: "9%", bottomCalc: "sum", formatter: function (cell) {
+                sorter: "number", width: "8%", bottomCalc: "sum", formatter: function (cell) {
                     let val = parseFloat(cell.getValue() || 0);
                     if (val < 0) cell.getElement().style.color = "#dc3545";
                     return cellMoney2(cell);

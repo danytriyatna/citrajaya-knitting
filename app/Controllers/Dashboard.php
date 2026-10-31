@@ -95,6 +95,64 @@ class Dashboard extends BaseController
     {
         $rows = $this->mLaporanPersediaan->getDataGudang($idJenisBarang, $idGudang, $tahun, $bulan);
 
+        // Ambil Booked Qty (QTY WO) per id_barang:
+        // Rumus: Kebutuhan WO dikurang transfer yang gudang kirimnya CJK/P1 (id_gudang_asal = 1)
+        $startCutoff = '2026-06-01';
+        $nextMonthStart = sprintf('%04d-%02d-01', ($bulan == 12 ? $tahun + 1 : $tahun), ($bulan == 12 ? 1 : $bulan + 1));
+
+        $db = \Config\Database::connect();
+        $sqlBooked = "
+            WITH wo_kebutuhan AS (
+                SELECT 
+                    wo.id as id_walkorder,
+                    wo.kode_walkorder,
+                    w.id_barang,
+                    SUM(w.total) as total_kebutuhan
+                FROM trans_walkorder wo
+                JOIN trans_walkorder_detail d ON d.id_walkorder = wo.id
+                JOIN trans_walkorder_warna w ON w.id_walkorder_detail = d.id
+                WHERE wo.active = 1 AND w.active = 1 AND w.id_barang IS NOT NULL
+                  AND wo.tgl_transaksi >= '$startCutoff'
+                  AND wo.tgl_transaksi < '$nextMonthStart'
+                GROUP BY wo.id, wo.kode_walkorder, w.id_barang
+            ),
+            wo_transfer AS (
+                SELECT 
+                    d.kode_walkorder,
+                    d.id_barang,
+                    SUM(d.qty) as total_trf
+                FROM trans_barang_trf_detail d
+                JOIN trans_barang_trf_header h ON h.id = CAST(d.id_header AS INTEGER)
+                WHERE h.status = 1 AND h.active = 1 
+                  AND h.id_gudang_asal = 1
+                  AND d.kode_walkorder IS NOT NULL AND d.kode_walkorder != ''
+                  AND h.tanggal >= '$startCutoff'
+                  AND h.tanggal < '$nextMonthStart'
+                GROUP BY d.kode_walkorder, d.id_barang
+            ),
+            booked_per_wo AS (
+                SELECT 
+                    wk.id_walkorder,
+                    wk.kode_walkorder,
+                    wk.id_barang,
+                    wk.total_kebutuhan,
+                    COALESCE(wt.total_trf, 0) as total_trf,
+                    GREATEST(0, wk.total_kebutuhan - COALESCE(wt.total_trf, 0)) as booked_qty
+                FROM wo_kebutuhan wk
+                LEFT JOIN wo_transfer wt ON wt.kode_walkorder = wk.kode_walkorder AND wt.id_barang = wk.id_barang
+            )
+            SELECT 
+                id_barang,
+                ROUND(SUM(booked_qty)::numeric, 2) as total_booked
+            FROM booked_per_wo
+            GROUP BY id_barang
+        ";
+        $bookedRows = $db->query($sqlBooked)->getResultArray();
+        $bookedMap = [];
+        foreach ($bookedRows as $bRow) {
+            $bookedMap[$bRow['id_barang']] = (float)$bRow['total_booked'];
+        }
+
         $grouped = [];
         $hargaTanggal = []; // tracker terpisah (bukan bagian output) - lot dgn tanggal transaksi terakhir yg dipakai sbg harga representatif per barang
         foreach ($rows as $r) {
@@ -108,6 +166,7 @@ class Dashboard extends BaseController
                     'qty_awal'    => 0,
                     'qty_masuk'   => 0,
                     'qty_keluar'  => 0,
+                    'qty_wo'      => 0,
                     'qty_akhir'   => 0,
                     'harga'       => 0,
                 ];
@@ -126,7 +185,7 @@ class Dashboard extends BaseController
             $grouped[$key]['qty_akhir']  += (float) $r->saldo_akhir;
 
             // Harga representatif per barang - satu barang bisa punya banyak Lot dgn
-            // harga beda-beda (beda batch beli), jadi dipilih harga dari Lot dgn
+            // harga beda-beda (beda batch beli), dipilih harga dari Lot dgn
             // tanggal transaksi PALING BARU (bukan dijumlahkan, harga bukan qty).
             if (!empty($r->price) && (empty($hargaTanggal[$key]) || strtotime($r->tanggal) >= strtotime($hargaTanggal[$key]))) {
                 $hargaTanggal[$key] = $r->tanggal;
@@ -135,9 +194,15 @@ class Dashboard extends BaseController
         }
 
         foreach ($grouped as $key => $row) {
-            // Nilai = Qty Akhir x Harga representatif - dinolkan kalau Qty Akhir minus,
-            // sama seperti konvensi kolom Nilai di modal Detail Stock Card.
-            $grouped[$key]['nilai'] = ($row['qty_akhir'] > 0) ? ($row['qty_akhir'] * $row['harga']) : 0;
+            $qtyWo = isset($bookedMap[$key]) ? $bookedMap[$key] : 0;
+            $grouped[$key]['qty_wo'] = $qtyWo;
+
+            // Qty Akhir dikurangi Qty WO (menjadi pengurang Qty Akhir)
+            $qtyAkhirBersih = $row['qty_akhir'] - $qtyWo;
+            $grouped[$key]['qty_akhir'] = $qtyAkhirBersih;
+
+            // Nilai = Qty Akhir Bersih x Harga representatif - dinolkan kalau Qty Akhir minus
+            $grouped[$key]['nilai'] = ($qtyAkhirBersih > 0) ? ($qtyAkhirBersih * $row['harga']) : 0;
         }
 
         $data = array_values($grouped);
@@ -160,6 +225,7 @@ class Dashboard extends BaseController
             'total_awal'   => array_sum(array_column($data, 'qty_awal')),
             'total_masuk'  => array_sum(array_column($data, 'qty_masuk')),
             'total_keluar' => array_sum(array_column($data, 'qty_keluar')),
+            'total_wo'     => array_sum(array_column($data, 'qty_wo')),
             'total_akhir'  => array_sum(array_column($data, 'qty_akhir')),
             'total_nilai'  => array_sum(array_column($data, 'nilai')),
         ];

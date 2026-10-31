@@ -944,6 +944,34 @@ class DeliveryOrder extends BaseController
       
       $data['detail_produksi']  = $dataProd;
 
+      // Sediakan daftar flat item warna & ukuran valid untuk SO/WO ini (dipakai untuk validasi scan barcode & autocomplete)
+      $paramsItem = [
+          'id_walkorder' => $id_walkorder,
+          'last_proses'  => 1
+      ];
+      $itemsProduk = $this->mWalkorder->getListProduksiUkuran($paramsItem);
+      $data['items_produk'] = [];
+      if (!empty($itemsProduk)) {
+        foreach ($itemsProduk as $r) {
+          $data['items_produk'][] = [
+            "id_walkorder"   => $r->id_walkorder,
+            "ref_detail_id"  => $r->ref_detail_id,
+            "id_ukuran"      => $r->id_ukuran,
+            "id_warna_1"     => $r->id_warna_1,
+            "id_warna_2"     => $r->id_warna_2,
+            "id_warna_3"     => $r->id_warna_3,
+            "qty"            => $r->qty_prod,
+            "qty_prod"       => 0,
+            "kata_kunci"     => "(" . $r->kode_warna . ") " . $r->kode_ukuran,
+            "kode_warna"     => $r->kode_warna,
+            "kode_ukuran"    => $r->kode_ukuran,
+            "key_ukuran"     => $r->key_ukuran,
+            "kode_walkorder" => !empty($dtWalkorder) ? $dtWalkorder->kode_walkorder : '',
+            "ref_kode"       => !empty($dtWalkorder) ? $dtWalkorder->ref_kode : '',
+          ];
+        }
+      }
+
       $status = true;
       $msg    = "Berhasil mengambil data produksi !";
     }

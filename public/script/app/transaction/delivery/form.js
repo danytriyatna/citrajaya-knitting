@@ -376,6 +376,9 @@ $(document).ready(function () {
                     inpProduksi.val(isProd.id).trigger("change");
                     inpWo.val(isProd.id_walkorder).trigger("change");
 
+                    // Simpan daftar item valid dari SO/WO ini untuk validasi scan
+                    window.availableDOItems = response.data.items_produk || [];
+
                     setColumn(data.detail_produksi, data.data_ukuran);
                 } else {
                     Swal.fire({
@@ -534,143 +537,253 @@ $(document).ready(function () {
         }
     });
 
-    // ==== QR SCAN (konsep sama seperti fungsi scan QR di menu Barang Masuk) ====
-    // Kode QR yang dicetak dari Work Order berisi string gabungan dipisah ";":
-    //   [0] kode_walkorder/kode_sample, [1] key_ukuran, [2] warna_1, [3] qty,
-    //   [4] warna_2 (opsional), [5] warna_3 (opsional), [terakhir] tgl_scan(tipe_print)
-    // Beda dengan flow search/autocomplete di atas (yang bisa menambah baris baru via
-    // addItem()): scan HANYA boleh mengisi/menambah kolom QTY pada baris yang SUDAH ADA
-    // di tabel bawah (dt-list-detail). Kalau barang yang discan tidak cocok dengan
-    // satupun baris di tabel bawah, tampilkan notifikasi & jangan ubah apapun.
+    // Helper: Pastikan daftar item valid dari SO/WO ini selalu tersedia di memori
+    window.availableDOItems = [];
+
+    function ensureAvailableDOItems(callback) {
+        if (window.availableDOItems && window.availableDOItems.length > 0) {
+            if (callback) callback(window.availableDOItems);
+            return;
+        }
+        let woId = inpWo.val();
+        if (!woId) {
+            if (callback) callback([]);
+            return;
+        }
+        $.ajax({
+            url: "/trans/delivery-order/cari_produk",
+            dataType: "json",
+            type: "POST",
+            data: {
+                id_walkorder: woId,
+                kata_kunci: ""
+            },
+            success: function (res) {
+                window.availableDOItems = (res && res.data) ? res.data : [];
+                if (callback) callback(window.availableDOItems);
+            },
+            error: function () {
+                if (callback) callback([]);
+            }
+        });
+    }
+
+    // ==== QR / BARCODE SCAN SYSTEM (Tervalidasi ketat sesuai SO terpilih) ====
     $("#text_barcode").on("keypress", function (e) {
         let key = e.which;
         if (key !== 13) return; // hanya proses saat Enter (akhir dari 1x scan)
         e.preventDefault();
 
-        let kataKunci = $("#text_barcode").val();
-        if (!kataKunci || kataKunci.trim() === "") return;
+        let kataKunci = ($("#text_barcode").val() || "").trim();
+        if (!kataKunci) return;
 
-        let arrKunci = kataKunci.split(";");
-        let keyUkuranScan = (arrKunci[1] || "").trim().toLowerCase();
-        let qtyScan = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
-        if (isNaN(qtyScan) || qtyScan <= 0) qtyScan = 1;
-
-        // Kumpulkan semua komponen warna hasil scan (index 2, 4, 5)
-        let warnaScan = [arrKunci[2], arrKunci[4], arrKunci[5]]
-            .filter(function (w) { return w != undefined && w.trim() !== ""; })
-            .map(function (w) { return w.trim().toLowerCase(); });
-
-        if (warnaScan.length === 0 || keyUkuranScan === "") {
-            Swal.fire({ text: "Scan tidak valid / kosong!", icon: 'warning', showConfirmButton: false, timer: 2000 });
+        let curWoId = inpWo.val();
+        if (!curWoId || dtListDetail.getData().length === 0) {
+            Swal.fire({
+                text: "Silakan pilih Buyer dan No. Ref SO terlebih dahulu!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2500
+            });
             $("#text_barcode").val("");
             return;
         }
 
-        let dataTable = dtListProduksi.getData();
-        let idxMatch = dataTable.findIndex(function (row) {
-            let rowUkuran = (row.key_ukuran || "").toString().trim().toLowerCase();
-            if (rowUkuran !== keyUkuranScan) return false;
+        ensureAvailableDOItems(function (items) {
+            if (!items || items.length === 0) {
+                Swal.fire({
+                    text: "Daftar produk untuk Sales Order ini tidak ditemukan!",
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                $("#text_barcode").val("");
+                return;
+            }
 
-            let rowWarna = (row.kode_warna || "").toString().toLowerCase();
-            // semua komponen warna hasil scan harus ditemukan di dalam kode_warna baris ini
-            return warnaScan.every(function (w) { return rowWarna.indexOf(w) !== -1; });
+            let isQR = kataKunci.indexOf(";") !== -1;
+            let matchedItem = null;
+            let qtyScan = 1;
+
+            if (isQR) {
+                let arrKunci = kataKunci.split(";");
+                let targetRef = (arrKunci[0] || "").trim().toLowerCase();
+                let keyUkuranScan = (arrKunci[1] || "").trim().toLowerCase();
+                qtyScan = arrKunci[3] ? parseFloat(arrKunci[3]) : 1;
+                if (isNaN(qtyScan) || qtyScan <= 0) qtyScan = 1;
+
+                let isTimestampToken = function (str) {
+                    if (!str) return false;
+                    let s = str.toString().trim();
+                    return /\d{4}\s+\d{2}\s+\d{2}/.test(s) ||
+                           /\d{4}-\d{2}-\d{2}/.test(s) ||
+                           /\d{2}-\d{2}-\d{2}-\d+/.test(s) ||
+                           /\(\d+\)$/.test(s);
+                };
+
+                let warnaScan = [];
+                for (let i = 2; i < arrKunci.length; i++) {
+                    if (i === 3) continue; // index 3 adalah qty
+                    let tok = (arrKunci[i] || "").trim();
+                    if (tok !== "" && tok !== "-" && !isTimestampToken(tok)) {
+                        warnaScan.push(tok.toLowerCase());
+                    }
+                }
+
+                // Validasi: Cek apakah No. WO / SO pada QR cocok dengan SO saat ini
+                let curRefSO = (inpRefSO.val() || "").trim().toLowerCase();
+                let curRefNi = (inpRefNi.val() || "").trim().toLowerCase();
+                if (targetRef !== "" && (targetRef.startsWith("wrd") || targetRef.startsWith("sod") || targetRef.startsWith("prd"))) {
+                    let refMatches = (targetRef === curRefSO || targetRef === curRefNi || 
+                                      items.some(function (it) {
+                                          return (it.kode_walkorder || "").toLowerCase() === targetRef || (it.ref_kode || "").toLowerCase() === targetRef;
+                                      }));
+                    if (!refMatches) {
+                        Swal.fire({
+                            text: "Barang yang discan berasal dari SO/WO lain (" + arrKunci[0] + ")!",
+                            icon: 'error',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        $("#text_barcode").val("");
+                        return;
+                    }
+                }
+
+                // Cari kecocokan di items SO ini
+                matchedItem = items.find(function (item) {
+                    let itemUkuranKey = (item.key_ukuran || "").toString().trim().toLowerCase();
+                    let itemUkuranKode = (item.kode_ukuran || "").toString().trim().toLowerCase();
+                    let sizeMatch = (itemUkuranKey === keyUkuranScan || itemUkuranKode === keyUkuranScan);
+                    if (!sizeMatch) return false;
+
+                    let itemWarna = (item.kode_warna || "").toString().toLowerCase();
+                    if (warnaScan.length === 0) return true;
+                    return warnaScan.every(function (w) {
+                        return itemWarna.indexOf(w) !== -1;
+                    });
+                });
+            } else {
+                // Scan barcode polos / kode produk
+                let term = kataKunci.toLowerCase();
+                matchedItem = items.find(function (item) {
+                    let kw = (item.kata_kunci || "").toString().toLowerCase();
+                    let kwarna = (item.kode_warna || "").toString().toLowerCase();
+                    let kukur = (item.kode_ukuran || "").toString().toLowerCase();
+                    return kw.indexOf(term) !== -1 || kwarna.indexOf(term) !== -1 || kukur === term;
+                });
+            }
+
+            if (!matchedItem) {
+                Swal.fire({
+                    text: "Barang yang discan tidak terdaftar dalam Sales Order ini!",
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            } else {
+                let success = addItem(matchedItem, qtyScan);
+                if (success) {
+                    toastr.success("Berhasil discan: " + matchedItem.kode_warna + " (" + matchedItem.kode_ukuran + ") +" + qtyScan, "OK", {
+                        timeOut: 2000,
+                        positionClass: "toast-top-right"
+                    });
+                }
+            }
+
+            $("#text_barcode").val("");
         });
-
-        if (idxMatch === -1) {
-            Swal.fire({ text: "Barang yang discan tidak ditemukan pada daftar!", icon: 'error', showConfirmButton: false, timer: 2000 });
-        } else {
-            dataTable[idxMatch].qty = parseFloat(dataTable[idxMatch].qty || 0) + qtyScan;
-            dtListProduksi.replaceData(dataTable);
-        }
-
-        $("#text_barcode").val("");
     });
 
-    function addItem(data) {
+    function addItem(data, scanQty = 1) {
+        let addAmount = parseFloat(scanQty) || 1;
         let dataTable = dtListProduksi.getData();
-
         let dataOrder = dtListDetail.getData();
+
         let objIndex = dataTable.findIndex(obj => obj.id_ukuran == (data.id_ukuran) && obj.kode_warna == (data.kode_warna) && obj.kode_ukuran == (data.kode_ukuran));
         let ix_order = dataOrder.findIndex(obj => obj.ref_detail_id == (data.ref_detail_id));
-        // let ktQty     = isQty.findIndex(obj => obj.kategori_id == (data.kategori_id));
-        // let ktQtyO    = isQtyO.findIndex(obj => parseInt(obj.sl_order_det_id) === parseInt(isSlc.val()));
-
 
         if (dataOrder.length > 0) {
             if (dataOrder[ix_order] == undefined) {
-                alert("Warna tidak ada dalam list produksi !");
+                Swal.fire({
+                    text: "Item atau Warna tersebut tidak terdaftar dalam Sales Order ini!",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
                 return false;
             }
-        }
 
-        data.seq = dataTable.length + 1;
-        // if(data.qty > dataOrder[ix_order].qty_prod){
-        if (dataTable[objIndex] == undefined) {
-            // data.sl_order_det_id = isSlc.val();//get_sl_orderID(dataTable, dataOrder, ix_order, data.kategori_id);
-            if (dataOrder.length > 0) {
-                let qty_order = dataOrder[ix_order].qty;
-                let qty_orderO = dataOrder[ix_order].qty_prod;
-                data.qty = data.qty_prod + 1;
-                if (qty_orderO < qty_order) {
-                    dataTable.push(data);
-                    addkuota(data.ref_detail_id, false, data);
-                    // $("#modal-list-item").modal("hide");
-                } else {
-                    alert("Jumlah Order item tersebut sudah terpenuhi !");
-                }
+            let qty_order = parseFloat(dataOrder[ix_order].qty) || 0;
+            let qty_orderO = parseFloat(dataOrder[ix_order].qty_prod) || 0;
+
+            if ((qty_orderO + addAmount) > (qty_order + 0.001)) {
+                Swal.fire({
+                    text: "Jumlah Delivery Order untuk item tersebut sudah terpenuhi! (Pesanan: " + qty_order + ", Terpenuhi: " + qty_orderO + ")",
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                return false;
             }
-            // else{
-            // 	dataTable.push(data);
-            // 	$("#modal-list-item").modal("hide");
-            // }
 
+            if (dataTable[objIndex] == undefined) {
+                let newItem = Object.assign({}, data);
+                newItem.seq = dataTable.length + 1;
+                newItem.qty = addAmount;
+                dataTable.push(newItem);
+                addkuota(newItem.ref_detail_id, false, newItem, addAmount);
+            } else {
+                dataTable[objIndex].qty = parseFloat(dataTable[objIndex].qty || 0) + addAmount;
+                addkuota(dataTable[objIndex].ref_detail_id, false, dataTable[objIndex], addAmount);
+            }
+
+            dtListProduksi.replaceData(dataTable);
+            $("#text_barcode").val("");
+            return true;
         } else {
-            // alert("Warna ukuran sudah ada di list !");
-            // dataTable[objIndex].qty = dataTable[objIndex].qty + 1; 
-            // addkuota(data.ref_detail_id, false);
-
-            if (dataOrder.length > 0) {
-                let qty_order = dataOrder[ix_order].qty;
-                let qty_orderO = dataOrder[ix_order].qty_prod;
-                data.qty = data.qty_prod + 1;
-                if (qty_orderO < qty_order) {
-                    dataTable[objIndex].qty = parseFloat(dataTable[objIndex].qty) + 1;
-                    addkuota(data.ref_detail_id, false, data);
-                    // $("#modal-list-item").modal("hide");
-                } else {
-                    alert("Jumlah Order item tersebut sudah terpenuhi !");
-                }
-            }
+            Swal.fire({
+                text: "Silakan pilih Buyer dan No. Ref SO terlebih dahulu!",
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2500
+            });
+            return false;
         }
-        // }else{
-        //     alert("Jumlah Order item tersebut sudah terpenuhi !");
-        // }
-
-        dtListProduksi.replaceData(dataTable);
-        $("#text_barcode").val("");
     }
 
-    function addkuota(ref_detail_id, hapus, dataProd) {
-        seq = parseInt(ref_detail_id);
+    function addkuota(ref_detail_id, hapus, dataProd, addAmount = 1) {
+        let seq = parseInt(ref_detail_id);
         let tblDetail = dtListDetail.getData();
         let objIndex = tblDetail.findIndex(obj => parseInt(obj.ref_detail_id) === seq);
-        let arrData = tblDetail[objIndex];
+        if (objIndex < 0) return;
+
         let tblDetailcol = dtListDetail.getColumnDefinitions();
-        let refUkuran = dataProd.key_ukuran + "_key".toLowerCase();
+        let refUkuran = ((dataProd.key_ukuran || '') + "_key").toLowerCase();
         if (refUkuran == "all_key") {
-            refUkuran = "all__key"
+            refUkuran = "all__key";
         }
         let colDef = tblDetailcol.find(col => col.field == refUkuran);
-        let colDefField = colDef.field;
+        let colDefField = colDef ? colDef.field : null;
 
-        if (objIndex >= 0) {
-            if (hapus) {
-                tblDetail[objIndex].qty_remain = parseInt(tblDetail[objIndex].qty);
-                tblDetail[objIndex].qty_prod = 0;
-            } else {
-                tblDetail[objIndex].qty_prod = parseInt(tblDetail[objIndex].qty_prod) + 1;
-                tblDetail[objIndex].qty_remain = parseInt(tblDetail[objIndex].qty_remain) - 1;
-                tblDetail[objIndex][colDefField] = parseInt(dataProd.qty);
+        let amount = parseFloat(addAmount) || 1;
+
+        if (hapus) {
+            tblDetail[objIndex].qty_remain = parseFloat(tblDetail[objIndex].qty) || 0;
+            tblDetail[objIndex].qty_prod = 0;
+            if (colDefField) tblDetail[objIndex][colDefField] = 0;
+        } else {
+            let curProd = parseFloat(tblDetail[objIndex].qty_prod) || 0;
+            let curQty = parseFloat(tblDetail[objIndex].qty) || 0;
+
+            let newProd = curProd + amount;
+            let newRemain = Math.max(0, curQty - newProd);
+
+            tblDetail[objIndex].qty_prod = newProd;
+            tblDetail[objIndex].qty_remain = newRemain;
+            if (colDefField) {
+                let curColVal = parseFloat(tblDetail[objIndex][colDefField]) || 0;
+                tblDetail[objIndex][colDefField] = curColVal + amount;
             }
         }
 

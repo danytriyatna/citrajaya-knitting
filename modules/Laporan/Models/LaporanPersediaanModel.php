@@ -1388,8 +1388,9 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     function getDataPersediaanBarang($id = null, $offset = null, $limit = null, $order = null, $filters = null, $params = null)
     {
         $where = "WHERE 1=1 AND b.active = 1";
-        // CUTOFF JUNI 2026: semua riwayat sebelum Juni 2026 tidak boleh masuk
-        $where .= " AND (a.year * 100 + a.month) >= 202606";
+        // CUTOFF JUNI 2026 s.d. Bulan Berjalan: riwayat sebelum Juni 2026 atau bulan masa depan tidak boleh masuk
+        $currentYM = (int)date('Ym');
+        $where .= " AND (a.year * 100 + a.month) >= 202606 AND (a.year * 100 + a.month) <= {$currentYM}";
 
         if (!empty($params['id_gudang'])) {
             $where .= " AND a.id_gudang = " . intval($params['id_gudang']);
@@ -1480,9 +1481,11 @@ class LaporanPersediaanModel extends \App\Models\PrModel
 
     function getDataPersediaanBarangCnt($filters = null, $params = null)
     {
+        $currentYM = (int)date('Ym');
         $subQuery = $this->db->table('trans_barang_history')
         ->select("id_barang, MAX(year * 100 + month) as max_period")
         ->where("(year * 100 + month) >= 202606")
+        ->where("(year * 100 + month) <= {$currentYM}")
         ->groupBy("id_barang");
         $builder = $this->db->table("trans_barang_history a");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
@@ -1495,8 +1498,9 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $builder->select("count(1) as _cnt");
         $builder->where('b.active = 1');
         $builder->where('a.jumlah > 0');
-        // CUTOFF JUNI 2026: semua riwayat sebelum Juni 2026 tidak boleh masuk
+        // CUTOFF JUNI 2026 s.d. Bulan Berjalan: riwayat sebelum Juni 2026 atau bulan masa depan tidak boleh masuk
         $builder->where('(a.year * 100 + a.month) >= 202606');
+        $builder->where("(a.year * 100 + a.month) <= {$currentYM}");
 
         if (!empty($params['id_gudang'])) {
             $builder->where('a.id_gudang', $params['id_gudang']);

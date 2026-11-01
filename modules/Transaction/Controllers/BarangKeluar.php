@@ -306,6 +306,15 @@ class BarangKeluar extends BaseController
         $status = false;
         $id = $this->request->getPost('id');
         $tanggal = $this->request->getPost('tanggal');
+        if (!empty($tanggal)) {
+            $parsedTgl = date('Y-m-d', strtotime(str_replace('/', '-', $tanggal)));
+            if ($parsedTgl > date('Y-m-d')) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'msg'    => 'Tanggal transaksi tidak boleh melebihi hari ini (' . date('d F Y') . ')!'
+                ]);
+            }
+        }
         $statusData = $this->request->getPost('status');
         $id_gudang = $this->request->getPost('id_gudang');
         $id_vendor = $this->request->getPost('id_vendor');

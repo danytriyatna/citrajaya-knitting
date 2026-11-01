@@ -386,23 +386,50 @@ ckeditorInit.forEach(el => {
 })
 
 
-// DATEPICKER INIT
+// DATEPICKER INIT (Kunci maksimal hari ini untuk seluruh tanggal transaksi, kecuali field proyeksi/jatuh tempo)
+function isFutureDateAllowed($el) {
+  if ($el.hasClass('allow-future')) return true;
+  var id = ($el.attr('id') || '').toLowerCase();
+  var name = ($el.attr('name') || '').toLowerCase();
+  var futurePatterns = ['deadline', 'exp', 'tempo', 'expected', 'filter_end', 'filter_to', 'date_to'];
+  for (var i = 0; i < futurePatterns.length; i++) {
+    if (id.indexOf(futurePatterns[i]) !== -1 || name.indexOf(futurePatterns[i]) !== -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const datepickerInit = document.getElementsByClassName("datepicker");
 if(datepickerInit != null) {
-  $('.datepicker').datepicker({
-    format: "dd MM yyyy",
-    language: "id",
-    autoclose: true,
-    clearBtn: true         // Menambahkan tombol "Clear"
+  $('.datepicker').each(function() {
+    var $this = $(this);
+    var opts = {
+      format: "dd MM yyyy",
+      language: "id",
+      autoclose: true,
+      clearBtn: true         // Menambahkan tombol "Clear"
+    };
+    if (!isFutureDateAllowed($this)) {
+      opts.endDate = new Date();
+    }
+    $this.datepicker(opts);
   });
 }
 
 const datepickerxInit = document.getElementsByClassName("datepickerx");
 if(datepickerxInit != null) {
-  $('.datepickerx').datepicker({
-    format: "dd-mm-yyyy",
-    language: "id",
-    autoclose: true
+  $('.datepickerx').each(function() {
+    var $this = $(this);
+    var opts = {
+      format: "dd-mm-yyyy",
+      language: "id",
+      autoclose: true
+    };
+    if (!isFutureDateAllowed($this)) {
+      opts.endDate = new Date();
+    }
+    $this.datepicker(opts);
   });
 }
 

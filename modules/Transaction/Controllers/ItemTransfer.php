@@ -732,6 +732,14 @@ class ItemTransfer extends BaseController
     $status = false;
     $id = $this->request->getPost('id');
     $tanggal = $this->request->getPost('tanggal');
+    if (!empty($tanggal)) {
+        $parsedTgl = date('Y-m-d', strtotime(str_replace('/', '-', $tanggal)));
+        if ($parsedTgl > date('Y-m-d')) {
+            $build_array['message'] = 'Tanggal transfer tidak boleh melebihi hari ini (' . date('d F Y') . ')!';
+            $build_array['status'] = false;
+            return $this->response->setJSON($build_array);
+        }
+    }
     $statusData = $this->request->getPost('status');
     $oldStatus = $this->request->getPost('statusFrom') ? $this->request->getPost('statusFrom') : 0;
     $id_gudang_asal = $this->request->getPost('id_gudang_asal');

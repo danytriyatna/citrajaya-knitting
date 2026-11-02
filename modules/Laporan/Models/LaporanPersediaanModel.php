@@ -1329,6 +1329,12 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             return true;
         }
 
+        // ANTI-FUTURE MONTH: Jangan pernah carry forward ke bulan masa depan yang belum berjalan
+        $currentYM = (int)date('Ym');
+        if (($nextYear * 100 + $nextMonth) > $currentYM) {
+            return true;
+        }
+
         $resData = $this->getDataGudang($idJenisBarang, $idGudang, $year, $month);
         foreach ($resData as $key => $value) {
 

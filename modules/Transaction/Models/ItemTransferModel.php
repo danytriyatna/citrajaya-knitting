@@ -833,6 +833,7 @@ class ItemTransferModel extends \App\Models\PrModel
                         // 2. Barang NON-LOT (lot_no '-' atau kosong): Validasi stok fisik di Gudang Asal dari trans_barang_history (sesuai Kartu Stok Persediaan)
                         $availStock = 0.0;
                         $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
+                        $currentYM = (int)date('Ym');
 
                         if (!empty($chkPackId)) {
                             $histRow = $this->db->query("
@@ -842,6 +843,7 @@ class ItemTransferModel extends \App\Models\PrModel
                                   AND tbh.id_gudang = ?
                                   AND tbh.pack_id = ?
                                   AND (tbh.year * 100 + tbh.month) >= 202606
+                                  AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                 ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                 LIMIT 1
                             ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId])->getRow();
@@ -858,6 +860,7 @@ class ItemTransferModel extends \App\Models\PrModel
                                         WHERE tbh.id_barang = ?
                                           AND tbh.id_gudang = ?
                                           AND (tbh.year * 100 + tbh.month) >= 202606
+                                          AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                         ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                     ) sub_h
                                 ", [$chkIdBarang, (int)$data['id_gudang_asal']])->getRow();
@@ -873,6 +876,7 @@ class ItemTransferModel extends \App\Models\PrModel
                                     WHERE tbh.id_barang = ?
                                       AND tbh.id_gudang = ?
                                       AND (tbh.year * 100 + tbh.month) >= 202606
+                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                     ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                 ) sub_h
                             ", [$chkIdBarang, (int)$data['id_gudang_asal']])->getRow();

@@ -87,6 +87,17 @@
     const BASE_URL = '<?= base_url(); ?>';
   </script>
   <script src="assets/node_modules/jquery/dist/jquery.min.js"></script>
+  <script>
+    if (typeof jQuery !== 'undefined') {
+      jQuery.ajaxSetup({
+        cache: false,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+    }
+  </script>
   <script src="assets/js/bootstrap.bundle.min.js"></script>
   <!-- Tabulator - https://tabulator.info/docs/5.4 -->
   <script src="assets/node_modules/tabulator-tables/dist/js/tabulator.min.js"></script>

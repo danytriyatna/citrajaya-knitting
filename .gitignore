@@ -151,3 +151,10 @@ documentation/build/
 # Scratch / Debugging Scripts
 scratch/
 *.sql.bak
+
+# Database snapshots
+*.dump
+sql/backup_*.dump
+*.sql
+!sql/*.sql
+*.xlsx

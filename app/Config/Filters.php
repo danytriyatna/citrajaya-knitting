@@ -21,7 +21,8 @@ class Filters extends BaseConfig
 		'honeypot' => Honeypot::class,
 		'admin-auth' => \App\Filters\AdminAuthFilter::class,
 		'JWTAuth'  => \App\Filters\JWTAuthFilter::class,
-		'otorisasi'  => \App\Filters\OtorisasiFilter::class
+		'otorisasi'  => \App\Filters\OtorisasiFilter::class,
+		'nocache'    => \App\Filters\NoCacheFilter::class
 	];
 
 	/**
@@ -37,6 +38,7 @@ class Filters extends BaseConfig
 		],
 		'after'  => [
 			'toolbar',
+			'nocache',
 			// 'honeypot',
 		],
 	];

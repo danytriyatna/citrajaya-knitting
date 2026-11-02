@@ -35,6 +35,18 @@
 // APP PREFIX
 const appPrefix = "ci4PR";
 
+// ZERO-CACHE GLOBAL AJAX SETUP
+// Memastikan semua request AJAX (jQuery & Tabulator) tidak pernah disimpan di cache browser pengguna.
+if (typeof jQuery !== 'undefined') {
+  jQuery.ajaxSetup({
+    cache: false,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache'
+    }
+  });
+}
+
 
 // ILOADER INIT
 const iLoaderTarget = document.querySelector(".preloader.iloader.d-none");

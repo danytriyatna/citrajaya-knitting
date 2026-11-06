@@ -232,7 +232,44 @@ class BarangKeluarModel extends \App\Models\PrModel
                         }
 
                         if (empty($chkLot)) {
-                            $insufficientLots[] = "• Lot {$chkLotNo} (Tidak ditemukan di Gudang ini, diminta: " . number_format($chkQty, 2) . ")";
+                            // Cek fallback ke kartu stok trans_barang_history berdasarkan lot dan pack
+                            $cleanLot = $chkLotNo;
+                            $currentYM = (int)date('Ym');
+                            $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
+                            $histCheck = null;
+                            if (!empty($chkPackId)) {
+                                $histCheck = $this->db->query("
+                                    SELECT tbh.jumlah
+                                    FROM trans_barang_history tbh
+                                    WHERE tbh.id_barang = ?
+                                      AND tbh.id_gudang = ?
+                                      AND tbh.pack_id = ?
+                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                      AND (tbh.year * 100 + tbh.month) >= 202606
+                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                    LIMIT 1
+                                ", [$chkIdBarang, (int)$data['id_gudang'], $chkPackId, $cleanLot])->getRow();
+                            }
+                            if (empty($histCheck)) {
+                                $histCheck = $this->db->query("
+                                    SELECT tbh.jumlah
+                                    FROM trans_barang_history tbh
+                                    WHERE tbh.id_barang = ?
+                                      AND tbh.id_gudang = ?
+                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                      AND (tbh.year * 100 + tbh.month) >= 202606
+                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                    LIMIT 1
+                                ", [$chkIdBarang, (int)$data['id_gudang'], $cleanLot])->getRow();
+                            }
+
+                            if (!empty($histCheck) && ((float)$histCheck->jumlah - $chkQty >= -0.0001)) {
+                                $availQty = (float)$histCheck->jumlah;
+                            } else {
+                                $insufficientLots[] = "• Lot {$chkLotNo} (Tidak ditemukan di Gudang ini, diminta: " . number_format($chkQty, 2) . ")";
+                            }
                         } else {
                             $availQty = (float)$chkLot->qty;
                             if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
@@ -249,8 +286,45 @@ class BarangKeluarModel extends \App\Models\PrModel
                                 }
                             }
 
+                            // Fallback verifikasi ke trans_barang_history jika di trans_lots kurang
                             if ($availQty - $chkQty < -0.0001) {
-                                $insufficientLots[] = "• Lot {$chkLot->lot_no} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                                $cleanLot = trim((string)$chkLot->lot_no);
+                                $currentYM = (int)date('Ym');
+                                $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
+                                $histCheck = null;
+                                if (!empty($chkPackId)) {
+                                    $histCheck = $this->db->query("
+                                        SELECT tbh.jumlah
+                                        FROM trans_barang_history tbh
+                                        WHERE tbh.id_barang = ?
+                                          AND tbh.id_gudang = ?
+                                          AND tbh.pack_id = ?
+                                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                          AND (tbh.year * 100 + tbh.month) >= 202606
+                                          AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                        ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                        LIMIT 1
+                                    ", [$chkIdBarang, (int)$data['id_gudang'], $chkPackId, $cleanLot])->getRow();
+                                }
+                                if (empty($histCheck)) {
+                                    $histCheck = $this->db->query("
+                                        SELECT tbh.jumlah
+                                        FROM trans_barang_history tbh
+                                        WHERE tbh.id_barang = ?
+                                          AND tbh.id_gudang = ?
+                                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                          AND (tbh.year * 100 + tbh.month) >= 202606
+                                          AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                        ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                        LIMIT 1
+                                    ", [$chkIdBarang, (int)$data['id_gudang'], $cleanLot])->getRow();
+                                }
+
+                                if (!empty($histCheck) && ((float)$histCheck->jumlah - $chkQty >= -0.0001)) {
+                                    $availQty = (float)$histCheck->jumlah;
+                                } else {
+                                    $insufficientLots[] = "• Lot {$chkLot->lot_no} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                                }
                             }
                         }
                     } else {
@@ -258,6 +332,8 @@ class BarangKeluarModel extends \App\Models\PrModel
                         $availStock = 0.0;
                         $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
                         $currentYM = (int)date('Ym');
+                        $cleanLot = trim((string)($rowCheck['lot_no'] ?? ''));
+                        if ($cleanLot === '') $cleanLot = '-';
 
                         if (!empty($chkPackId)) {
                             $histRow = $this->db->query("
@@ -266,11 +342,12 @@ class BarangKeluarModel extends \App\Models\PrModel
                                 WHERE tbh.id_barang = ?
                                   AND tbh.id_gudang = ?
                                   AND tbh.pack_id = ?
+                                  AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
                                   AND (tbh.year * 100 + tbh.month) >= 202606
                                   AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                 ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                 LIMIT 1
-                            ", [$chkIdBarang, (int)$data['id_gudang'], $chkPackId])->getRow();
+                            ", [$chkIdBarang, (int)$data['id_gudang'], $chkPackId, $cleanLot])->getRow();
 
                             if (!empty($histRow) && isset($histRow->jumlah)) {
                                 $availStock = (float)$histRow->jumlah;
@@ -283,11 +360,12 @@ class BarangKeluarModel extends \App\Models\PrModel
                                         FROM trans_barang_history tbh
                                         WHERE tbh.id_barang = ?
                                           AND tbh.id_gudang = ?
+                                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
                                           AND (tbh.year * 100 + tbh.month) >= 202606
                                           AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                         ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                     ) sub_h
-                                ", [$chkIdBarang, (int)$data['id_gudang']])->getRow();
+                                ", [$chkIdBarang, (int)$data['id_gudang'], $cleanLot])->getRow();
                                 $availStock = !empty($totRow->total_stok) ? (float)$totRow->total_stok : 0.0;
                             }
                         } else {
@@ -299,11 +377,12 @@ class BarangKeluarModel extends \App\Models\PrModel
                                     FROM trans_barang_history tbh
                                     WHERE tbh.id_barang = ?
                                       AND tbh.id_gudang = ?
+                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
                                       AND (tbh.year * 100 + tbh.month) >= 202606
                                       AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                     ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                 ) sub_h
-                            ", [$chkIdBarang, (int)$data['id_gudang']])->getRow();
+                            ", [$chkIdBarang, (int)$data['id_gudang'], $cleanLot])->getRow();
                             $availStock = !empty($totRow->total_stok) ? (float)$totRow->total_stok : 0.0;
                         }
 

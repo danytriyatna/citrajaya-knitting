@@ -1449,7 +1449,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             INNER JOIN ref_jenis_barang d   ON b.id_jenis_barang = d.id
             left JOIN ref_pack e            ON a.pack_id = e.id
             {$where}
-            ORDER BY a.id_barang, a.pack_id, COALESCE(NULLIF(a.lot_no, ''), '-'), (a.year * 100 + a.month) DESC
+            ORDER BY a.id_barang, a.pack_id, COALESCE(NULLIF(a.lot_no, ''), '-'), (a.year * 100 + a.month) DESC, a.id DESC
         ";
 
         if ($id == null || $id == "") {

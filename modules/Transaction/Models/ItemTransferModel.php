@@ -807,46 +807,8 @@ class ItemTransferModel extends \App\Models\PrModel
                             }
                         }
 
-                        if (empty($chkLot)) {
-                            // Cek fallback ke kartu stok trans_barang_history berdasarkan lot dan pack
-                            $cleanLot = $chkLotNo;
-                            $currentYM = (int)date('Ym');
-                            $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
-                            $histCheck = null;
-                            if (!empty($chkPackId)) {
-                                $histCheck = $this->db->query("
-                                    SELECT tbh.jumlah
-                                    FROM trans_barang_history tbh
-                                    WHERE tbh.id_barang = ?
-                                      AND tbh.id_gudang = ?
-                                      AND tbh.pack_id = ?
-                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
-                                      AND (tbh.year * 100 + tbh.month) >= 202606
-                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
-                                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
-                                    LIMIT 1
-                                ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId, $cleanLot])->getRow();
-                            }
-                            if (empty($histCheck)) {
-                                $histCheck = $this->db->query("
-                                    SELECT tbh.jumlah
-                                    FROM trans_barang_history tbh
-                                    WHERE tbh.id_barang = ?
-                                      AND tbh.id_gudang = ?
-                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
-                                      AND (tbh.year * 100 + tbh.month) >= 202606
-                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
-                                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
-                                    LIMIT 1
-                                ", [$chkIdBarang, (int)$data['id_gudang_asal'], $cleanLot])->getRow();
-                            }
-
-                            if (!empty($histCheck) && ((float)$histCheck->jumlah - $chkQty >= -0.0001)) {
-                                $availQty = (float)$histCheck->jumlah;
-                            } else {
-                                $insufficientLots[] = "• Lot {$chkLotNo} (Tidak ditemukan di Gudang Asal, diminta: " . number_format($chkQty, 2) . ")";
-                            }
-                        } else {
+                        $availQty = 0.0;
+                        if (!empty($chkLot)) {
                             $availQty = (float)$chkLot->qty;
                             if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
                                 $altLot = $this->db->table($this->tblTrxLots)
@@ -861,74 +823,37 @@ class ItemTransferModel extends \App\Models\PrModel
                                     $availQty = (float)$altLot->qty;
                                 }
                             }
+                        }
 
-                            // Fallback verifikasi ke trans_barang_history jika di trans_lots kurang
-                            if ($availQty - $chkQty < -0.0001) {
-                                $cleanLot = trim((string)$chkLot->lot_no);
-                                $currentYM = (int)date('Ym');
-                                $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
-                                $histCheck = null;
-                                if (!empty($chkPackId)) {
-                                    $histCheck = $this->db->query("
-                                        SELECT tbh.jumlah
-                                        FROM trans_barang_history tbh
-                                        WHERE tbh.id_barang = ?
-                                          AND tbh.id_gudang = ?
-                                          AND tbh.pack_id = ?
-                                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
-                                          AND (tbh.year * 100 + tbh.month) >= 202606
-                                          AND (tbh.year * 100 + tbh.month) <= {$currentYM}
-                                        ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
-                                        LIMIT 1
-                                    ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId, $cleanLot])->getRow();
-                                }
-                                if (empty($histCheck)) {
-                                    $histCheck = $this->db->query("
-                                        SELECT tbh.jumlah
-                                        FROM trans_barang_history tbh
-                                        WHERE tbh.id_barang = ?
-                                          AND tbh.id_gudang = ?
-                                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
-                                          AND (tbh.year * 100 + tbh.month) >= 202606
-                                          AND (tbh.year * 100 + tbh.month) <= {$currentYM}
-                                        ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
-                                        LIMIT 1
-                                    ", [$chkIdBarang, (int)$data['id_gudang_asal'], $cleanLot])->getRow();
-                                }
+                        // Fallback verifikasi ke trans_barang_history jika di trans_lots kurang
+                        if ($availQty - $chkQty < -0.0001) {
+                            $cleanLot = $chkLotNo;
+                            $currentYM = (int)date('Ym');
+                            $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
+                            $histQty = 0.0;
 
-                                if (!empty($histCheck) && ((float)$histCheck->jumlah - $chkQty >= -0.0001)) {
-                                    $availQty = (float)$histCheck->jumlah;
-                                } else {
-                                    $insufficientLots[] = "• Lot {$chkLot->lot_no} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                            if (!empty($chkPackId)) {
+                                $histCheck = $this->db->query("
+                                    SELECT tbh.jumlah
+                                    FROM trans_barang_history tbh
+                                    WHERE tbh.id_barang = ?
+                                      AND tbh.id_gudang = ?
+                                      AND tbh.pack_id = ?
+                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                      AND (tbh.year * 100 + tbh.month) >= 202606
+                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                    LIMIT 1
+                                ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId, $cleanLot])->getRow();
+
+                                if (!empty($histCheck) && isset($histCheck->jumlah)) {
+                                    $histQty = (float)$histCheck->jumlah;
                                 }
                             }
-                        }
-                    } else {
-                        // 2. Barang NON-LOT (lot_no '-' atau kosong): Validasi stok fisik di Gudang Asal dari trans_barang_history (sesuai Kartu Stok Persediaan)
-                        $availStock = 0.0;
-                        $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
-                        $currentYM = (int)date('Ym');
-                        $cleanLot = trim((string)($rowCheck['lot_no'] ?? ''));
-                        if ($cleanLot === '') $cleanLot = '-';
 
-                        if (!empty($chkPackId)) {
-                            $histRow = $this->db->query("
-                                SELECT tbh.jumlah
-                                FROM trans_barang_history tbh
-                                WHERE tbh.id_barang = ?
-                                  AND tbh.id_gudang = ?
-                                  AND tbh.pack_id = ?
-                                  AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
-                                  AND (tbh.year * 100 + tbh.month) >= 202606
-                                  AND (tbh.year * 100 + tbh.month) <= {$currentYM}
-                                ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
-                                LIMIT 1
-                            ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId, $cleanLot])->getRow();
-
-                            if (!empty($histRow) && isset($histRow->jumlah)) {
-                                $availStock = (float)$histRow->jumlah;
-                            } else {
-                                $totRow = $this->db->query("
+                            // Jika pack spesifik kurang, akumulasikan total lot tersebut dari semua pack di gudang asal
+                            if ($histQty - $chkQty < -0.0001) {
+                                $totLotRow = $this->db->query("
                                     SELECT SUM(sub_h.jumlah) as total_stok
                                     FROM (
                                         SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'))
@@ -942,9 +867,49 @@ class ItemTransferModel extends \App\Models\PrModel
                                         ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                     ) sub_h
                                 ", [$chkIdBarang, (int)$data['id_gudang_asal'], $cleanLot])->getRow();
-                                $availStock = !empty($totRow->total_stok) ? (float)$totRow->total_stok : 0.0;
+
+                                if (!empty($totLotRow) && isset($totLotRow->total_stok) && (float)$totLotRow->total_stok > $histQty) {
+                                    $histQty = (float)$totLotRow->total_stok;
+                                }
                             }
-                        } else {
+
+                            if ($histQty > $availQty) {
+                                $availQty = $histQty;
+                            }
+
+                            if ($availQty - $chkQty < -0.0001) {
+                                $insufficientLots[] = "• Lot {$chkLotNo} (Tersedia: " . number_format($availQty, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
+                            }
+                        }
+                    } else {
+                        // 2. Barang NON-LOT (lot_no '-' atau kosong): Validasi stok fisik di Gudang Asal dari trans_barang_history
+                        $availStock = 0.0;
+                        $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
+                        $currentYM = (int)date('Ym');
+
+                        // Cek saldo pack spesifik jika dipilih
+                        if (!empty($chkPackId)) {
+                            $histRow = $this->db->query("
+                                SELECT tbh.jumlah
+                                FROM trans_barang_history tbh
+                                WHERE tbh.id_barang = ?
+                                  AND tbh.id_gudang = ?
+                                  AND tbh.pack_id = ?
+                                  AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = '-'
+                                  AND (tbh.year * 100 + tbh.month) >= 202606
+                                  AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                LIMIT 1
+                            ", [$chkIdBarang, (int)$data['id_gudang_asal'], $chkPackId])->getRow();
+
+                            if (!empty($histRow) && isset($histRow->jumlah)) {
+                                $availStock = (float)$histRow->jumlah;
+                            }
+                        }
+
+                        // Jika pack spesifik tidak mencukupi atau tidak dipilih:
+                        // Akumulasikan total saldo seluruh pack non-lot ('-') di gudang asal
+                        if ($availStock - $chkQty < -0.0001) {
                             $totRow = $this->db->query("
                                 SELECT SUM(sub_h.jumlah) as total_stok
                                 FROM (
@@ -953,13 +918,39 @@ class ItemTransferModel extends \App\Models\PrModel
                                     FROM trans_barang_history tbh
                                     WHERE tbh.id_barang = ?
                                       AND tbh.id_gudang = ?
-                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = ?
+                                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = '-'
                                       AND (tbh.year * 100 + tbh.month) >= 202606
                                       AND (tbh.year * 100 + tbh.month) <= {$currentYM}
                                     ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
                                 ) sub_h
-                            ", [$chkIdBarang, (int)$data['id_gudang_asal'], $cleanLot])->getRow();
-                            $availStock = !empty($totRow->total_stok) ? (float)$totRow->total_stok : 0.0;
+                            ", [$chkIdBarang, (int)$data['id_gudang_asal']])->getRow();
+
+                            $totalNonLot = !empty($totRow->total_stok) ? (float)$totRow->total_stok : 0.0;
+                            if ($totalNonLot > $availStock) {
+                                $availStock = $totalNonLot;
+                            }
+                        }
+
+                        // Jika saldo non-lot murni masih kurang, periksa total akumulasi fisik barang tersebut di gudang asal
+                        if ($availStock - $chkQty < -0.0001) {
+                            $totAllRow = $this->db->query("
+                                SELECT SUM(sub_h.jumlah) as total_stok
+                                FROM (
+                                    SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'))
+                                        tbh.jumlah
+                                    FROM trans_barang_history tbh
+                                    WHERE tbh.id_barang = ?
+                                      AND tbh.id_gudang = ?
+                                      AND (tbh.year * 100 + tbh.month) >= 202606
+                                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                                    ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(tbh.lot_no, ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                                ) sub_h
+                            ", [$chkIdBarang, (int)$data['id_gudang_asal']])->getRow();
+
+                            $totalAll = !empty($totAllRow->total_stok) ? (float)$totAllRow->total_stok : 0.0;
+                            if ($totalAll > $availStock) {
+                                $availStock = $totalAll;
+                            }
                         }
 
                         if ($availStock - $chkQty < -0.0001) {

@@ -214,6 +214,43 @@ class Dashboard extends BaseController
             $grouped[$key]['nilai'] = ($qtyTersedia > 0) ? ($qtyTersedia * $row['harga']) : 0;
         }
 
+        // TAMBAHAN: Tampilkan barang yang memiliki kebutuhan di WO aktif tapi belum memiliki saldo fisik di gudang ini (khusus Gudang Utama / default)
+        if (empty($idGudang) || (int)$idGudang === 1) {
+            foreach ($bookedMap as $woBarangId => $totalBooked) {
+                if (!isset($grouped[$woBarangId]) && $totalBooked > 0) {
+                    $itemInfo = $db->table('ref_barang b')
+                        ->select("b.id, b.nama_barang, b.kode_barang, b.id_jenis_barang, w.keterangan as color_code, rs.nama_satuan, b.harga_satuan")
+                        ->join("ref_warna w", "b.id_warna = w.id", "left")
+                        ->join("ref_satuan rs", "b.id_satuan = rs.id", "left")
+                        ->where("b.id", $woBarangId)
+                        ->where("b.active", 1)
+                        ->get()->getRow();
+
+                    if (!empty($itemInfo)) {
+                        // Jika ada filter jenis barang, cocokkan id_jenis_barang
+                        if (!empty($idJenisBarang) && (int)$itemInfo->id_jenis_barang !== (int)$idJenisBarang) {
+                            continue;
+                        }
+
+                        $grouped[$woBarangId] = [
+                            'id_barang'    => (int)$itemInfo->id,
+                            'kode_warna'   => !empty($itemInfo->color_code) ? $itemInfo->color_code : '-',
+                            'nama_barang'  => trim($itemInfo->kode_barang . ' ' . $itemInfo->nama_barang),
+                            'unit'         => !empty($itemInfo->nama_satuan) ? $itemInfo->nama_satuan : 'KG',
+                            'qty_awal'     => 0,
+                            'qty_masuk'    => 0,
+                            'qty_keluar'   => 0,
+                            'qty_akhir'    => 0,
+                            'qty_wo'       => $totalBooked,
+                            'qty_tersedia' => 0 - $totalBooked, // Minus (Defisit)
+                            'harga'        => !empty($itemInfo->harga_satuan) ? (float)$itemInfo->harga_satuan : 0,
+                            'nilai'        => 0,
+                        ];
+                    }
+                }
+            }
+        }
+
         $data = array_values($grouped);
 
         if (!empty($search)) {
@@ -225,7 +262,10 @@ class Dashboard extends BaseController
         }
 
         usort($data, function ($a, $b) {
-            return $b['qty_keluar'] <=> $a['qty_keluar'];
+            if ($b['qty_keluar'] != $a['qty_keluar']) {
+                return $b['qty_keluar'] <=> $a['qty_keluar'];
+            }
+            return $b['qty_wo'] <=> $a['qty_wo'];
         });
 
         return [

@@ -799,6 +799,10 @@ class ItemTransferModel extends \App\Models\PrModel
                         $chkLot = null;
                         if (!empty($rowCheck['lot_id'])) {
                             $chkLot = $mBarangMasukCheck->getLotNo(null, null, $rowCheck['lot_id']);
+                            // Pastikan lot_id memang milik gudang asal transaksi
+                            if (!empty($chkLot) && isset($chkLot->id_gudang) && (int)$chkLot->id_gudang !== (int)$data['id_gudang_asal']) {
+                                $chkLot = null;
+                            }
                         }
                         if (empty($chkLot)) {
                             $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang_asal'], !empty($rowCheck['pack_id']) ? $rowCheck['pack_id'] : null);

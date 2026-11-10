@@ -418,6 +418,7 @@ class WalkorderModel extends \App\Models\PrModel
 
         if ($id == null or $id == "") {
             $builder->where('abx.active = 1');
+            $builder->where('abx.qty >', 0);
 
             if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
                 $builder->groupStart();
@@ -481,6 +482,11 @@ class WalkorderModel extends \App\Models\PrModel
         $builder->join("ref_warna rw1", "rw1.id = ts.id_warna_1", "left");
 
         $builder->where('abx.active = 1');
+        $builder->where('abx.qty >', 0);
+
+        if (!empty($params['id_walkorder'])) {
+            $builder->where('abx.id_walkorder', $params['id_walkorder']);
+        }
 
         if (!empty($filters) && is_array($filters) && count($filters) >= 1) {
             $builder->groupStart();
@@ -1059,6 +1065,9 @@ class WalkorderModel extends \App\Models\PrModel
         $builder->join("trans_walkorder wo",           "wo.id = wodet.id_walkorder",          "inner");
 
         $builder->where('wo.id', $id);
+        $builder->where('wodet.active', 1);
+        $builder->where('abx.active', 1);
+        $builder->where('wodet.qty >', 0);
         $builder->groupBy('abx.id_warna, abx.id_barang, rb.nama_barang, rb.keterangan, rw.kode_warna, rw.keterangan');
 
         $this->_data = $builder->get()->getResult();
@@ -1192,6 +1201,9 @@ class WalkorderModel extends \App\Models\PrModel
     $builder->join($lotSubquery, "lot.id_barang = abx.id_barang", "left", false);
 
     $builder->where('wo.id', $id);
+    $builder->where('wodet.active', 1);
+    $builder->where('abx.active', 1);
+    $builder->where('wodet.qty >', 0);
 
     // 🌟 lot.lot_no ikut masuk GROUP BY supaya row pecah per lot_no
     $builder->groupBy('abx.id_warna, abx.id_barang, lot.lot_no, rb.nama_barang, rb.keterangan, rw.kode_warna, rw.keterangan');

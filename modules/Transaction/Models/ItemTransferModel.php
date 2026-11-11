@@ -1201,9 +1201,14 @@ class ItemTransferModel extends \App\Models\PrModel
                         $hasLotNo = $lotNoValue !== '' && $lotNoValue !== '-';
 
                         $idLots = null;
+                        $sisaLot = null;
                         $resLotNo = null;
                         if (!empty($rowData['lot_id'])) {
                             $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
+                            // Pastikan lot_id milik gudang asal transaksi (bukan gudang lain)
+                            if (!empty($resLotNo) && isset($resLotNo->id_gudang) && (int)$resLotNo->id_gudang !== (int)$data['id_gudang_asal']) {
+                                $resLotNo = null;
+                            }
                         }
                         if (empty($resLotNo) && $hasLotNo && !empty($idBarang)) {
                             $resLotNo = $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang_asal'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
@@ -1266,6 +1271,10 @@ class ItemTransferModel extends \App\Models\PrModel
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
                         $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
+
+                        // Saldo akhir SELALU dihitung live dari database (trans_lots / saldo_akhir terbaru),
+                        // BUKAN dari $rowData['qty_exist'] input frontend yang bisa basi saat Draft lama dibuka.
+                        $liveStock = ($sisaLot !== null) ? $sisaLot : ((float)($resData->saldo_akhir ?? 0) - (float)$rowData['qty']);
                         $arrStockBalances = [
                             "id_barang" => $idBarang,
                             "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
@@ -1274,13 +1283,12 @@ class ItemTransferModel extends \App\Models\PrModel
                             "lot_no" => $rowData['lot_no'],
                             "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "saldo_awal" => 0,
-                            "saldo_akhir" => $rowData['qty'],
+                            "saldo_akhir" => $liveStock,
                             "active" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                         ];
                         if (!empty($resData)) {
-                            $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData['qty'] : 0;
-                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $stock), array("id" => $resData->id));
+                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $liveStock), array("id" => $resData->id));
                         } else {
                             $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
                         }

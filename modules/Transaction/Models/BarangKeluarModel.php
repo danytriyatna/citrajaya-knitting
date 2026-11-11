@@ -522,6 +522,7 @@ class BarangKeluarModel extends \App\Models\PrModel
                     $qtyKeluar = (float)($rowData['qty'] ?? 0);
 
                     $idLots = null;
+                    $sisaLot = null;
                     $resLotNo = $hasLotNo ? $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang']) : null;
                     // $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     if (!empty($resLotNo)) {
@@ -533,13 +534,14 @@ class BarangKeluarModel extends \App\Models\PrModel
                     } elseif ($hasLotNo) {
                         // Jika qty = 0 (baris catatan/kosong), lewati tanpa melempar error
                         if ($qtyKeluar > 0) {
+                            $sisaLot = -$qtyKeluar;
                             // Jika Lot No diisi tapi belum tercatat di gudang ini, buatkan lot baru
                             // dengan saldo negatif agar id_lots tetap valid dan ledger kartu stok utuh
                             $newLotData = [
                                 "id_barang"   => $idBarang,
                                 "lot_no"      => $lotNoValue,
                                 "id_gudang"   => $data['id_gudang'],
-                                "qty"         => -$qtyKeluar,
+                                "qty"         => $sisaLot,
                                 "tanggal"     => date("Y-m-d"),
                                 "active"      => 1,
                                 "created_at"  => date("Y-m-d H:i:s"),
@@ -571,6 +573,10 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "kode_transaksi" => $data['kode_transaksi'],
                     ];
                     $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+
+                    // Saldo akhir SELALU dihitung secara live dari database (trans_lots / saldo_akhir terbaru),
+                    // BUKAN dari $rowData['qty_exist'] input frontend yang bisa basi jika ada transaksi lain di sela Draft.
+                    $liveStock = ($sisaLot !== null) ? $sisaLot : ((float)($resData->saldo_akhir ?? 0) - $qtyKeluar);
                     $arrStockBalances = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,
@@ -579,13 +585,12 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "lot_no" => $rowData['lot_no'],
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "saldo_awal" => 0,
-                        "saldo_akhir" => $rowData['qty'],
+                        "saldo_akhir" => $liveStock,
                         "active" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                     ];
                     if (!empty($resData)) {
-                        $stock = !empty($rowData['qty_exist']) ? $rowData['qty_exist'] - $rowData['qty'] : 0;
-                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $stock), array("id" => $resData->id));
+                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $liveStock), array("id" => $resData->id));
                     } else {
                         $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
                     }

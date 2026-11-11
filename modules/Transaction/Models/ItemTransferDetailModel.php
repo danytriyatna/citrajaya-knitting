@@ -30,11 +30,13 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->join($this->tblSatuan . " fbx", "ebx.id_satuan = fbx.id", "inner");
         $builder->join("trans_walkorder wo", "uk.kode_walkorder = wo.kode_walkorder", "left");
         $idGudang = !empty($params['id_gudang']) ? (int)$params['id_gudang'] : 0;
-        $builder->join($this->tblTrxLots . " gbx", "( (TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(uk.lot_no) = TRIM(gbx.lot_no) AND uk.id_barang = gbx.id_barang) OR uk.lot_id = gbx.id ) AND gbx.id_gudang = {$idGudang}", "left");
         $builder->join($this->tblPack . " hbx", "uk.pack_id = hbx.id", "left");
-        $builder->select("uk.id,COALESCE(gbx.id, uk.lot_id) as lot_id,uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
+        $builder->select("uk.id,
+                          COALESCE((SELECT tl.id FROM trans_lots tl WHERE tl.id_barang = uk.id_barang AND tl.id_gudang = {$idGudang} AND tl.active = 1 AND ((TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(tl.lot_no) = TRIM(uk.lot_no)) OR tl.id = uk.lot_id) ORDER BY tl.qty DESC, tl.id DESC LIMIT 1), uk.lot_id) as lot_id,
+                          uk.id_header,uk.qty,uk.lot_no, uk.id_barang,
                           fbx.nama_satuan as nama_unit, ebx.kode_barang, ebx.nama_barang, 
-                          uk.price, uk.keterangan, hbx.pack_name, uk.pack_id,wo.kode_walkorder,wo.id as id_wo");
+                          uk.price, uk.keterangan, hbx.pack_name, uk.pack_id,wo.kode_walkorder,wo.id as id_wo,
+                          COALESCE((SELECT SUM(tl.qty) FROM trans_lots tl WHERE tl.id_barang = uk.id_barang AND tl.id_gudang = {$idGudang} AND tl.active = 1 AND ((TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(tl.lot_no) = TRIM(uk.lot_no)) OR tl.id = uk.lot_id)), 0) as qty_exist", false);
 
         if (!empty($params['id_header'])) {
             $builder->where('uk.id_header', (string)$params['id_header']);

@@ -872,13 +872,13 @@ class ProductionModel extends \App\Models\PrModel
         $targetGram = $woRow ? (float)$woRow->target_gram : 0;
         $targetKg   = $woRow ? (float)$woRow->target_kg_total : 0;
 
-        // 2. Benang Terpakai / Keluar (BTK Pemakaian id_kategori = 5)
+        // 2. Benang Terpakai / Keluar (BTK Pemakaian id_kategori = 5, hanya yang sudah Approved status = 1)
         $qBtk = $this->db->query("
             SELECT COALESCE(SUM(tbd.qty), 0) as benang_keluar,
                    COALESCE(SUM(tbd.qty_sisa), 0) as benang_sisa
             FROM trans_barang_detail tbd
             INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
-            WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+            WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1 AND tbh.status = 1
         ", [$kodeWo]);
         $btkRow = $qBtk ? $qBtk->getRow() : null;
 

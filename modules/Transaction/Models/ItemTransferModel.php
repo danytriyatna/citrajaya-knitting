@@ -1270,11 +1270,23 @@ class ItemTransferModel extends \App\Models\PrModel
                             "price" => !empty($rowData['price']) ? (int) preg_replace('/[^0-9]/', '', $rowData['price']) : 0,
                             "kode_transaksi" => $data['kode_transaksi'],
                         ];
-                        $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
+                        $insTrxId = $this->insertRecordGetid($this->tblTrxBarang, $dataBarangAsal);
+                        if ($insTrxId === false) {
+                            throw new \Exception("Gagal mencatat mutasi keluar ke ledger persediaan.");
+                        }
 
-                        // Saldo akhir SELALU dihitung live dari database (trans_lots / saldo_akhir terbaru),
-                        // BUKAN dari $rowData['qty_exist'] input frontend yang bisa basi saat Draft lama dibuka.
-                        $liveStock = ($sisaLot !== null) ? $sisaLot : ((float)($resData->saldo_akhir ?? 0) - (float)$rowData['qty']);
+                        // Saldo akhir SELALU dihitung live dari database (trans_lots untuk ber-LOT,
+                        // trans_barang_history + trans_barang untuk non-LOT), dan di-clamp >= 0 agar
+                        // tidak melanggar constraint chk_trans_barang_balances_non_negative.
+                        $liveStock = ($sisaLot !== null)
+                            ? $sisaLot
+                            : $mBarangMasuk->getLiveNonLotBalance(
+                                $idBarang,
+                                $data['id_gudang_asal'],
+                                !empty($rowData['pack_id']) ? (int)$rowData['pack_id'] : null,
+                                $trxTanggal
+                            );
+                        $saldoBalance = max(0.0, round((float)$liveStock, 2));
                         $arrStockBalances = [
                             "id_barang" => $idBarang,
                             "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,
@@ -1283,14 +1295,17 @@ class ItemTransferModel extends \App\Models\PrModel
                             "lot_no" => $rowData['lot_no'],
                             "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                             "saldo_awal" => 0,
-                            "saldo_akhir" => $liveStock,
+                            "saldo_akhir" => $saldoBalance,
                             "active" => 1,
                             "created_at" =>  date("Y-m-d H:i:s"),
                         ];
                         if (!empty($resData)) {
-                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $liveStock), array("id" => $resData->id));
+                            $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $saldoBalance), array("id" => $resData->id));
                         } else {
-                            $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                            $insBalId = $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                            if ($insBalId === false) {
+                                throw new \Exception("Gagal mencatat saldo akhir persediaan ke database.");
+                            }
                         }
 
 
@@ -1334,7 +1349,7 @@ class ItemTransferModel extends \App\Models\PrModel
 
                 throw new \Exception("Transaction failed");
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->db->transRollback();
             throw $e;
         }
@@ -1458,7 +1473,7 @@ class ItemTransferModel extends \App\Models\PrModel
             } else {
                 throw new \Exception("Transaction failed");
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->db->transRollback();
             throw $e;
         }

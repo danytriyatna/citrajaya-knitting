@@ -147,13 +147,172 @@ class IncomingGoodsModel extends \App\Models\PrModel
         $builder->select("*");
         $builder->where('id_barang', $idBarang);
         $builder->where('id_gudang', $idGudang);
-        $builder->where('lot_id', $lotId);
+        if ($lotId === null || $lotId === '') {
+            $builder->where('lot_id IS NULL', null, false);
+        } else {
+            $builder->where('lot_id', $lotId);
+        }
         if (!empty($pack_id)) {
             $builder->where('pack_id', $pack_id);
         }
         $builder->where('tanggal', date("Y-m-d"));
+        $builder->orderBy('id', 'DESC');
         $this->_data = $builder->get()->getRow();
         return $this->_data;
+    }
+
+    /**
+     * Hitung saldo akhir live untuk barang non-lot ('-' / kosong) berdasarkan
+     * snapshot trans_barang_history bulan sebelumnya ditambah mutasi trans_barang
+     * terkini (termasuk baris yang baru saja di-insert dalam transaksi aktif).
+     */
+    public function getLiveNonLotBalance($idBarang, $idGudang, $packId = null, $trxDate = null)
+    {
+        if (empty($idBarang) || empty($idGudang)) {
+            return 0.0;
+        }
+
+        $curYM = (int) date('Ym');
+        $trxYM = !empty($trxDate) ? (int) date('Ym', strtotime($trxDate)) : $curYM;
+        $minYM = min($curYM, $trxYM);
+        $maxYM = max($curYM, $trxYM);
+
+        $calcLive = function ($packFilter, $allLots = false) use ($idBarang, $idGudang, $minYM, $maxYM) {
+            $lotHistCond = $allLots ? '' : "AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = '-'";
+            $lotTrxCond  = $allLots ? '' : "AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = '-'";
+
+            $baseYM = 202605;
+            $baseSaldo = 0.0;
+
+            if ($packFilter === 'all') {
+                // Hitung per-pack secara akurat jika semua pack digabung agar batas ym per-pack tidak miring
+                $packRows = $this->db->query("
+                    SELECT DISTINCT ON (COALESCE(tbh.pack_id, 0), COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'))
+                        tbh.pack_id,
+                        COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') AS lot_key,
+                        (tbh.year * 100 + tbh.month) AS ym,
+                        tbh.jumlah
+                    FROM trans_barang_history tbh
+                    WHERE tbh.id_barang = ?
+                      AND tbh.id_gudang = ?
+                      {$lotHistCond}
+                      AND (tbh.year * 100 + tbh.month) >= 202606
+                      AND (tbh.year * 100 + tbh.month) < ?
+                    ORDER BY COALESCE(tbh.pack_id, 0), COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'), tbh.year DESC, tbh.month DESC, tbh.id DESC
+                ", [(int) $idBarang, (int) $idGudang, $minYM])->getResult();
+
+                if (empty($packRows)) {
+                    $mutRow = $this->db->query("
+                        SELECT
+                            COALESCE(SUM(CASE WHEN id_gudang_tujuan = ? THEN jumlah ELSE 0 END), 0) AS masuk,
+                            COALESCE(SUM(CASE WHEN id_gudang_asal = ? THEN jumlah ELSE 0 END), 0) AS keluar
+                        FROM trans_barang
+                        WHERE id_barang = ?
+                          {$lotTrxCond}
+                          AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) >= 202606
+                          AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) <= ?
+                          AND COALESCE(active, 1) = 1
+                    ", [(int) $idGudang, (int) $idGudang, (int) $idBarang, $maxYM])->getRow();
+                    return (float) ($mutRow->masuk ?? 0) - (float) ($mutRow->keluar ?? 0);
+                }
+
+                $sumTotal = 0.0;
+                $coveredKeys = [];
+                foreach ($packRows as $pr) {
+                    $pClause = ($pr->pack_id !== null) ? "= " . (int) $pr->pack_id : "IS NULL";
+                    $lotEq = $this->db->escape($pr->lot_key);
+                    $coveredKeys[] = ($pr->pack_id ?? 'NULL') . '|' . $pr->lot_key;
+                    $mutPack = $this->db->query("
+                        SELECT
+                            COALESCE(SUM(CASE WHEN id_gudang_tujuan = ? THEN jumlah ELSE 0 END), 0) AS masuk,
+                            COALESCE(SUM(CASE WHEN id_gudang_asal = ? THEN jumlah ELSE 0 END), 0) AS keluar
+                        FROM trans_barang
+                        WHERE id_barang = ?
+                          AND pack_id {$pClause}
+                          AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = {$lotEq}
+                          AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) > ?
+                          AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) <= ?
+                          AND COALESCE(active, 1) = 1
+                    ", [(int) $idGudang, (int) $idGudang, (int) $idBarang, (int) $pr->ym, $maxYM])->getRow();
+                    $sumTotal += (float) $pr->jumlah + (float) ($mutPack->masuk ?? 0) - (float) ($mutPack->keluar ?? 0);
+                }
+
+                // Tambahkan mutasi pack/lot baru yang belum punya snapshot history < minYM
+                $extraRows = $this->db->query("
+                    SELECT
+                        pack_id,
+                        COALESCE(NULLIF(TRIM(lot_no), ''), '-') AS lot_key,
+                        COALESCE(SUM(CASE WHEN id_gudang_tujuan = ? THEN jumlah ELSE 0 END), 0) -
+                        COALESCE(SUM(CASE WHEN id_gudang_asal = ? THEN jumlah ELSE 0 END), 0) AS net_qty
+                    FROM trans_barang
+                    WHERE id_barang = ?
+                      {$lotTrxCond}
+                      AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) >= 202606
+                      AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) <= ?
+                      AND COALESCE(active, 1) = 1
+                    GROUP BY pack_id, COALESCE(NULLIF(TRIM(lot_no), ''), '-')
+                ", [(int) $idGudang, (int) $idGudang, (int) $idBarang, $maxYM])->getResult();
+
+                $coveredSet = array_flip($coveredKeys);
+                foreach ($extraRows as $er) {
+                    $k = ($er->pack_id ?? 'NULL') . '|' . $er->lot_key;
+                    if (!isset($coveredSet[$k])) {
+                        $sumTotal += (float) $er->net_qty;
+                    }
+                }
+                return $sumTotal;
+            }
+
+            $packClause = !empty($packFilter) ? "= " . (int) $packFilter : "IS NULL";
+            $prevRow = $this->db->query("
+                SELECT (tbh.year * 100 + tbh.month) AS ym, tbh.jumlah
+                FROM trans_barang_history tbh
+                WHERE tbh.id_barang = ?
+                  AND tbh.id_gudang = ?
+                  AND tbh.pack_id {$packClause}
+                  {$lotHistCond}
+                  AND (tbh.year * 100 + tbh.month) >= 202606
+                  AND (tbh.year * 100 + tbh.month) < ?
+                ORDER BY tbh.year DESC, tbh.month DESC, tbh.id DESC
+                LIMIT 1
+            ", [(int) $idBarang, (int) $idGudang, $minYM])->getRow();
+
+            if (!empty($prevRow)) {
+                $baseYM = (int) $prevRow->ym;
+                $baseSaldo = (float) $prevRow->jumlah;
+            }
+
+            $mutRow = $this->db->query("
+                SELECT
+                    COALESCE(SUM(CASE WHEN id_gudang_tujuan = ? THEN jumlah ELSE 0 END), 0) AS masuk,
+                    COALESCE(SUM(CASE WHEN id_gudang_asal = ? THEN jumlah ELSE 0 END), 0) AS keluar
+                FROM trans_barang
+                WHERE id_barang = ?
+                  AND pack_id {$packClause}
+                  {$lotTrxCond}
+                  AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) > ?
+                  AND (EXTRACT(YEAR FROM tanggal)::int * 100 + EXTRACT(MONTH FROM tanggal)::int) <= ?
+                  AND COALESCE(active, 1) = 1
+            ", [(int) $idGudang, (int) $idGudang, (int) $idBarang, $baseYM, $maxYM])->getRow();
+
+            return $baseSaldo + (float) ($mutRow->masuk ?? 0) - (float) ($mutRow->keluar ?? 0);
+        };
+
+        $saldo = $calcLive($packId, false);
+        if ($saldo < 0) {
+            $allNonLot = $calcLive('all', false);
+            if ($allNonLot > $saldo) {
+                $saldo = $allNonLot;
+            }
+        }
+        if ($saldo < 0) {
+            $allItem = $calcLive('all', true);
+            if ($allItem > $saldo) {
+                $saldo = $allItem;
+            }
+        }
+
+        return round($saldo, 2);
     }
     function getLotNo($lotNo = null, $idBarang = null, $idLotNo = null, $idGudang = null, $packId = null)
     {

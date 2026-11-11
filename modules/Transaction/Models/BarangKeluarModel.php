@@ -572,11 +572,23 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "price" => !empty($rowData['price']) ? $rowData['price'] : null,
                         "kode_transaksi" => $data['kode_transaksi'],
                     ];
-                    $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+                    $insTrxId = $this->insertRecordGetid($this->tblTrxBarang, $dataBarang);
+                    if ($insTrxId === false) {
+                        throw new \Exception("Gagal mencatat mutasi barang keluar ke ledger persediaan.");
+                    }
 
-                    // Saldo akhir SELALU dihitung secara live dari database (trans_lots / saldo_akhir terbaru),
-                    // BUKAN dari $rowData['qty_exist'] input frontend yang bisa basi jika ada transaksi lain di sela Draft.
-                    $liveStock = ($sisaLot !== null) ? $sisaLot : ((float)($resData->saldo_akhir ?? 0) - $qtyKeluar);
+                    // Saldo akhir SELALU dihitung live dari database (trans_lots untuk ber-LOT,
+                    // trans_barang_history + trans_barang untuk non-LOT), dan di-clamp >= 0 agar
+                    // tidak melanggar constraint chk_trans_barang_balances_non_negative saat stok minus.
+                    $liveStock = ($sisaLot !== null)
+                        ? $sisaLot
+                        : $mBarangMasuk->getLiveNonLotBalance(
+                            $idBarang,
+                            $data['id_gudang'],
+                            !empty($rowData['pack_id']) ? (int)$rowData['pack_id'] : null,
+                            $data['tanggal'] ?? null
+                        );
+                    $saldoBalance = max(0.0, round((float)$liveStock, 2));
                     $arrStockBalances = [
                         "id_barang" => $idBarang,
                         "id_gudang" => !empty($data['id_gudang']) ? $data['id_gudang'] : null,
@@ -585,14 +597,17 @@ class BarangKeluarModel extends \App\Models\PrModel
                         "lot_no" => $rowData['lot_no'],
                         "pack_id" => !empty($rowData['pack_id']) ? $rowData['pack_id'] : null,
                         "saldo_awal" => 0,
-                        "saldo_akhir" => $liveStock,
+                        "saldo_akhir" => $saldoBalance,
                         "active" => 1,
                         "created_at" =>  date("Y-m-d H:i:s"),
                     ];
                     if (!empty($resData)) {
-                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $liveStock), array("id" => $resData->id));
+                        $this->updateRecords($this->tblTrxBalances, array("saldo_akhir" => $saldoBalance), array("id" => $resData->id));
                     } else {
-                        $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                        $insBalId = $this->insertRecordGetid($this->tblTrxBalances, $arrStockBalances);
+                        if ($insBalId === false) {
+                            throw new \Exception("Gagal mencatat saldo akhir barang keluar ke database.");
+                        }
                     }
                 }
             }

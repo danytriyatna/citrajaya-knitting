@@ -468,18 +468,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             cbx.nama_barang,
             sbx.nama_satuan as nama_unit,
             hbx.pack_name,
-            -- Smart Price Resolution:
-            -- 1. Prioritaskan harga beli PO asli (trans_receive_detail) berdasarkan id_barang + lot_no
-            -- 2. Jika tidak ada, ambil harga dari riwayat stok (trans_barang_history)
-            -- 3. Jika tidak ada, ambil harga transfer terbaru (abx.price)
-            -- 4. Fallback terakhir ke harga master barang (cbx.harga_satuan)
-            COALESCE(
-                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
-                (SELECT tbh.price FROM trans_barang_history tbh WHERE tbh.id_barang = abx.id_barang AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') AND tbh.price > 0 ORDER BY (tbh.year * 100 + tbh.month) DESC LIMIT 1),
-                (ARRAY_AGG(abx.price ORDER BY abx.id DESC) FILTER (WHERE abx.price > 0))[1],
-                cbx.harga_satuan,
-                0
-            ) as price,
+            (ARRAY_AGG(abx.price ORDER BY abx.id DESC) FILTER (WHERE abx.price > 0))[1] as trf_price,
+            cbx.harga_satuan,
             SUM(CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN abx.qty ELSE 0 END) as qty_terima,
             SUM(CASE WHEN trfhead.id_gudang_asal = {$idGudang} THEN abx.qty ELSE 0 END) as qty_retur
         ", false);
@@ -496,9 +486,36 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->where("trfhead.status", 1);
         $builder->where("trfhead.deleted_at IS NULL");
         $builder->groupBy("abx.id_barang, COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-'), abx.pack_id, abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, hbx.pack_name, cbx.harga_satuan");
-        $builder->orderBy("cbx.kode_barang", "ASC");
 
-        $results = $builder->get()->getResult();
+        $subSql = $builder->getCompiledSelect();
+
+        // Smart Price Resolution dijalankan di outer query agar agg.lot_no sudah menjadi
+        // kolom hasil GROUP BY (menghindari error PostgreSQL: subquery uses ungrouped column "abx.lot_no").
+        $outerSql = "
+            SELECT
+                agg.id_barang,
+                agg.lot_id,
+                agg.lot_no,
+                agg.pack_id,
+                agg.kode_walkorder,
+                agg.kode_barang,
+                agg.nama_barang,
+                agg.nama_unit,
+                agg.pack_name,
+                COALESCE(
+                    (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = agg.id_barang AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = agg.lot_no AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
+                    (SELECT tbh.price FROM trans_barang_history tbh WHERE tbh.id_barang = agg.id_barang AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = agg.lot_no AND tbh.price > 0 ORDER BY (tbh.year * 100 + tbh.month) DESC LIMIT 1),
+                    agg.trf_price,
+                    agg.harga_satuan,
+                    0
+                ) as price,
+                agg.qty_terima,
+                agg.qty_retur
+            FROM ({$subSql}) agg
+            ORDER BY agg.kode_barang ASC
+        ";
+
+        $results = $this->db->query($outerSql)->getResult();
 
         if (empty($results)) {
             return $results;

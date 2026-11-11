@@ -408,7 +408,24 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
         { title: "ITEM DESCRIPTION", field: "nama_barang", hozAlign: "left", headerHozAlign: "left", width: "15%" },
         { title: "QTY TERIMA", field: "qty_terima", hozAlign: "right", headerHozAlign: "right", width: "8%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
         { title: "QTY RETUR", field: "qty_retur", hozAlign: "right", headerHozAlign: "right", width: "8%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
-        { title: "PEMAKAIAN SEBELUMNYA", field: "qty_pemakaian_sebelumnya", hozAlign: "right", headerHozAlign: "right", width: "10%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        { title: "PEMAKAIAN SEBELUMNYA", field: "qty_pemakaian_sebelumnya", hozAlign: "right", headerHozAlign: "right", width: "9%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        {
+            title: "STOK GUDANG", field: "stok_gudang", hozAlign: "right", headerHozAlign: "right", width: "8%",
+            formatter: function (cell) {
+                let row = cell.getRow().getData();
+                let val = cell.getValue();
+                if (val === undefined || val === null || val === '') return '-';
+                let stok = parseFloat(val) || 0;
+                let qty = parseFloat(row.qty) || 0;
+                if (inpStatus.val() == 0 && qty > stok + 0.0001) {
+                    cell.getElement().style.color = "#dc3545";
+                    cell.getElement().style.fontWeight = "bold";
+                    return stok.toFixed(2) + ' <i class="fa fa-exclamation-triangle" title="Qty melebihi stok gudang!"></i>';
+                }
+                return stok.toFixed(2);
+            },
+            bottomCalc: "sum", bottomCalcParams: { precision: 2 }
+        },
         {
             title: "QTY SISA", field: "qty_sisa", hozAlign: "right", headerHozAlign: "right", width: "7%",
             formatter: function (cell) {
@@ -418,7 +435,22 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             },
             bottomCalc: "sum", bottomCalcParams: { precision: 2 }
         },
-        { title: "QTY", field: "qty", hozAlign: "right", headerHozAlign: "right", width: "7%", bottomCalc: "sum", bottomCalcParams: { precision: 2 } },
+        {
+            title: "QTY", field: "qty", hozAlign: "right", headerHozAlign: "right", width: "7%",
+            formatter: function (cell) {
+                let row = cell.getRow().getData();
+                let qty = parseFloat(cell.getValue()) || 0;
+                if (inpStatus.val() == 0 && row.stok_gudang !== undefined && row.stok_gudang !== null && row.stok_gudang !== '') {
+                    let stok = parseFloat(row.stok_gudang) || 0;
+                    if (qty > stok + 0.0001) {
+                        cell.getElement().style.color = "#dc3545";
+                        cell.getElement().style.fontWeight = "bold";
+                    }
+                }
+                return qty.toFixed(2);
+            },
+            bottomCalc: "sum", bottomCalcParams: { precision: 2 }
+        },
         { title: "UNIT", field: "nama_unit", hozAlign: "left", headerHozAlign: "left", width: "6%" },
         {
             title: "PRICE", field: "price", formatter: "money",
@@ -447,6 +479,19 @@ if (detailData.length > 0) {
                     }, 0);
                     if (totalPemakaianAwal > 0 && (!inpTotalPemakaian.val() || inpTotalPemakaian.val() == '')) {
                         inpTotalPemakaian.val(totalPemakaianAwal.toFixed(2));
+                    }
+                    if (inpStatus.val() == 0) {
+                        let overRows = isdata.filter(function (r) {
+                            if (r.stok_gudang === undefined || r.stok_gudang === null || r.stok_gudang === '') return false;
+                            return (parseFloat(r.qty) || 0) > (parseFloat(r.stok_gudang) || 0) + 0.0001;
+                        });
+                        if (overRows.length > 0 && typeof toastr !== 'undefined') {
+                            toastr.warning(
+                                overRows.length + ' baris pada Draft memiliki Qty melebihi Stok Gudang terbaru (ditandai merah). Silakan sesuaikan Qty sebelum Approve.',
+                                "Perhatian Stok Draft",
+                                { positionClass: "toast-top-right", timeOut: 7000 }
+                            );
+                        }
                     }
                 }
             });
@@ -743,28 +788,65 @@ function recalcAlokasiPemakaian() {
         return;
     }
 
-    let sisaArr = rows.map(function (r) {
-        return parseFloat(r.qty_sisa) || 0;
+    // Batas maksimal tiap baris = min(qty_sisa, stok_gudang) agar alokasi tidak pernah menabrak stok riil gudang
+    let maxArr = rows.map(function (r) {
+        let sisa = parseFloat(r.qty_sisa) || 0;
+        if (r.stok_gudang !== undefined && r.stok_gudang !== null && r.stok_gudang !== '') {
+            let stok = parseFloat(r.stok_gudang) || 0;
+            sisa = Math.min(sisa, stok);
+        }
+        return sisa > 0 ? sisa : 0;
     });
 
-    let totalSisa = sisaArr.reduce(function (sum, sisa) {
-        return sisa > 0 ? sum + sisa : sum;
+    let totalCapacity = maxArr.reduce(function (sum, cap) {
+        return sum + cap;
     }, 0);
 
-    if (totalSisa > 0 && totalPemakaian > totalSisa) {
-        toastr.warning('Total Pemakaian Barang (' + totalPemakaian + ') melebihi total Qty Sisa yang tersedia (' + totalSisa + ')', "Warning", {
+    if (totalCapacity > 0 && totalPemakaian > totalCapacity + 0.01) {
+        toastr.warning('Total Pemakaian Barang (' + totalPemakaian.toFixed(2) + ') melebihi total stok tersedia yang bisa dialokasikan (' + totalCapacity.toFixed(2) + ')', "Warning", {
             positionClass: "toast-top-right"
         });
     }
 
-    rows.forEach(function (r, idx) {
-        let sisa = sisaArr[idx];
-        let alokasi = 0;
-        if (sisa > 0 && totalSisa > 0) {
-            alokasi = totalPemakaian * (sisa / totalSisa);
-            alokasi = Math.round(alokasi * 100) / 100;
+    // Water-filling allocation: bagi proporsional sesuai sisa kapasitas, di-cap agar tiap baris <= maxArr[idx]
+    let remaining = Math.min(totalPemakaian, totalCapacity);
+    let alloc = new Array(rows.length).fill(0);
+    let activeIndices = [];
+    for (let i = 0; i < rows.length; i++) {
+        if (maxArr[i] > 0) activeIndices.push(i);
+    }
+
+    let iter = 0;
+    while (remaining > 0.005 && activeIndices.length > 0 && iter < 10) {
+        iter++;
+        let availSum = activeIndices.reduce(function (acc, i) {
+            return acc + (maxArr[i] - alloc[i]);
+        }, 0);
+        if (availSum <= 0.0001) break;
+
+        let nextActive = [];
+        let distributedThisRound = 0;
+        for (let i of activeIndices) {
+            let room = maxArr[i] - alloc[i];
+            let share = remaining * (room / availSum);
+            share = Math.round(share * 100) / 100;
+            if (share >= room) {
+                alloc[i] = maxArr[i];
+                distributedThisRound += room;
+            } else {
+                alloc[i] = Math.round((alloc[i] + share) * 100) / 100;
+                distributedThisRound += share;
+                nextActive.push(i);
+            }
         }
-        r.qty = alokasi;
+        remaining = Math.max(0, Math.round((remaining - distributedThisRound) * 100) / 100);
+        if (distributedThisRound <= 0.001) break;
+        activeIndices = nextActive;
+    }
+
+    rows.forEach(function (r, idx) {
+        r.qty_sisa = maxArr[idx];
+        r.qty = alloc[idx];
     });
 
     dtListDetail.setData(rows);

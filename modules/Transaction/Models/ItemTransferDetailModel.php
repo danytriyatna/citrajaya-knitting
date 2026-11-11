@@ -458,8 +458,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         $builder->select("
             abx.id_barang,
-            abx.lot_id,
-            abx.lot_no,
+            (ARRAY_AGG(abx.lot_id ORDER BY CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN 0 ELSE 1 END, abx.id DESC))[1] as lot_id,
+            COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') as lot_no,
             abx.pack_id,
             abx.kode_walkorder,
             cbx.kode_barang,
@@ -472,8 +472,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             -- 3. Jika tidak ada, ambil harga transfer terbaru (abx.price)
             -- 4. Fallback terakhir ke harga master barang (cbx.harga_satuan)
             COALESCE(
-                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND trd.lot_no = abx.lot_no AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
-                (SELECT tbh.price FROM trans_barang_history tbh WHERE tbh.id_barang = abx.id_barang AND tbh.lot_no = abx.lot_no AND tbh.price > 0 ORDER BY (tbh.year * 100 + tbh.month) DESC LIMIT 1),
+                (SELECT trd.price FROM trans_receive_detail trd JOIN trans_receive_header trh ON trh.id = trd.id_header WHERE trd.id_barang = abx.id_barang AND COALESCE(NULLIF(TRIM(trd.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') AND trd.price > 0 AND trd.active = 1 ORDER BY trh.id DESC LIMIT 1),
+                (SELECT tbh.price FROM trans_barang_history tbh WHERE tbh.id_barang = abx.id_barang AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') AND tbh.price > 0 ORDER BY (tbh.year * 100 + tbh.month) DESC LIMIT 1),
                 (ARRAY_AGG(abx.price ORDER BY abx.id DESC) FILTER (WHERE abx.price > 0))[1],
                 cbx.harga_satuan,
                 0
@@ -493,7 +493,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->where("abx.active", 1);
         $builder->where("trfhead.status", 1);
         $builder->where("trfhead.deleted_at IS NULL");
-        $builder->groupBy("abx.id_barang, abx.lot_id, abx.lot_no, abx.pack_id, abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, hbx.pack_name, cbx.harga_satuan");
+        $builder->groupBy("abx.id_barang, COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-'), abx.pack_id, abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, hbx.pack_name, cbx.harga_satuan");
         $builder->orderBy("cbx.kode_barang", "ASC");
 
         $results = $builder->get()->getResult();
@@ -538,22 +538,89 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             $usedMapLotId[$keyId] = ($usedMapLotId[$keyId] ?? 0) + $qtyUsed;
         }
 
+        // Ambil stok fisik riil per barang & lot di Gudang transaksi ($idGudang) secara batch (zero N+1)
+        $barangIds = array_values(array_unique(array_filter(array_map(function ($r) {
+            return (int)($r->id_barang ?? 0);
+        }, $results))));
+
+        $lotMap = [];
+        $histMapByLot = [];
+        $histMapTotalByBarang = [];
+
+        if (!empty($barangIds) && $idGudang > 0) {
+            // 1. Batch query dari trans_lots aktif di gudang terkait
+            $lotRows = $this->db->table("trans_lots")
+                ->select("id_barang, COALESCE(NULLIF(TRIM(lot_no), ''), '-') as lot_no, SUM(qty) as lot_qty")
+                ->where("id_gudang", $idGudang)
+                ->where("active", 1)
+                ->whereIn("id_barang", $barangIds)
+                ->groupBy("id_barang, COALESCE(NULLIF(TRIM(lot_no), ''), '-')")
+                ->get()->getResult();
+
+            foreach ($lotRows as $lr) {
+                $lKey = $lr->id_barang . '|' . trim((string)$lr->lot_no);
+                $lotMap[$lKey] = (float)$lr->lot_qty;
+            }
+
+            // 2. Batch query dari kartu stok trans_barang_history (sinkron dgn BarangKeluarModel::save)
+            $currentYM = (int)date('Ym');
+            $inList = implode(',', array_map('intval', $barangIds));
+            $histRows = $this->db->query("
+                SELECT sub_h.id_barang, sub_h.lot_no, SUM(sub_h.jumlah) as hist_qty
+                FROM (
+                    SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'))
+                        tbh.id_barang,
+                        COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') as lot_no,
+                        tbh.jumlah
+                    FROM trans_barang_history tbh
+                    WHERE tbh.id_gudang = ?
+                      AND tbh.id_barang IN ({$inList})
+                      AND (tbh.year * 100 + tbh.month) >= 202606
+                      AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                    ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                ) sub_h
+                GROUP BY sub_h.id_barang, sub_h.lot_no
+            ", [$idGudang])->getResult();
+
+            foreach ($histRows as $hr) {
+                $hKey = $hr->id_barang . '|' . trim((string)$hr->lot_no);
+                $hQty = (float)$hr->hist_qty;
+                $histMapByLot[$hKey] = $hQty;
+                $histMapTotalByBarang[$hr->id_barang] = ($histMapTotalByBarang[$hr->id_barang] ?? 0.0) + $hQty;
+            }
+        }
+
         foreach ($results as $row) {
             $row->qty_terima = round((float) $row->qty_terima, 2);
             $row->qty_retur = round((float) $row->qty_retur, 2);
 
             $cleanRowLot = trim((string)($row->lot_no ?? ''));
-            if ($cleanRowLot !== '' && $cleanRowLot !== '-') {
+            $hasLot = $cleanRowLot !== '' && $cleanRowLot !== '-';
+            if ($hasLot) {
                 $keyLot = $row->id_barang . '|' . $cleanRowLot . '|' . $row->pack_id;
                 $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
                 $row->qty_pemakaian_sebelumnya = $usedMapLotNo[$keyLot] ?? ($usedMapLotId[$keyId] ?? 0);
+
+                $lKey = $row->id_barang . '|' . $cleanRowLot;
+                $stokLot = $lotMap[$lKey] ?? 0.0;
+                $stokHist = $histMapByLot[$lKey] ?? 0.0;
+                $stokGudang = round(max(0.0, max($stokLot, $stokHist)), 2);
             } else {
                 $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
                 $row->qty_pemakaian_sebelumnya = $usedMapLotId[$keyId] ?? 0;
+
+                $stokNonLot = $histMapByLot[$row->id_barang . '|-'] ?? 0.0;
+                $stokAll = $histMapTotalByBarang[$row->id_barang] ?? 0.0;
+                $stokGudang = round(max(0.0, max($stokNonLot, $stokAll)), 2);
             }
 
             $calcSisa = round($row->qty_terima - $row->qty_retur - $row->qty_pemakaian_sebelumnya, 2);
-            $row->qty_sisa = max(0, $calcSisa);
+            $sisaWo = max(0, $calcSisa);
+
+            // Auto-cap qty_sisa dengan stok fisik riil di gudang agar tidak melebihi saldo yang tersedia
+            $row->stok_gudang = $stokGudang;
+            $row->qty_sisa_wo = $sisaWo;
+            $row->qty_sisa = ($idGudang > 0) ? min($sisaWo, $stokGudang) : $sisaWo;
             $row->qty = 0;
             $row->qty_exist = $row->qty_sisa;
         }

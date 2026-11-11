@@ -225,25 +225,64 @@ class BarangKeluar extends BaseController
 
             $resDataDetail = $this->mRefDet->getData(null, 0, 99999, $sort, params: array("id_header" => $id, "isReceive" => false, "id_gudang" => $resData->id_gudang));
             if (!empty($resDataDetail) && is_array($resDataDetail)) {
-                $woSisaMap = [];
+                $woMapExact = [];
+                $woMapByLotNo = [];
                 if (!empty($resData->no_ref_wo)) {
                     $woDataRows = $this->mRefDetSO->getDataByWalkorder($resData->no_ref_wo, $resData->id_gudang, $id);
                     if (!empty($woDataRows)) {
                         foreach ($woDataRows as $wRow) {
-                            $key = $wRow->id_barang . '|' . $wRow->lot_id . '|' . $wRow->pack_id;
-                            $woSisaMap[$key] = (float) $wRow->qty_sisa;
+                            $keyExact = $wRow->id_barang . '|' . $wRow->lot_id . '|' . $wRow->pack_id;
+                            $woMapExact[$keyExact] = $wRow;
+
+                            $cleanLot = trim((string)($wRow->lot_no ?? ''));
+                            if ($cleanLot === '') $cleanLot = '-';
+                            $keyLot = $wRow->id_barang . '|' . $cleanLot . '|' . $wRow->pack_id;
+                            $woMapByLotNo[$keyLot] = $wRow;
                         }
                     }
                 }
 
-                foreach ($resDataDetail as &$rowData) {
-                    if ($rowData->qty_sisa === null || $rowData->qty_sisa === '') {
-                        $key = $rowData->id_barang . '|' . $rowData->lot_id . '|' . $rowData->pack_id;
-                        if (isset($woSisaMap[$key])) {
-                            $rowData->qty_sisa = $woSisaMap[$key];
+                $isDraft = ((int)($resData->status ?? 0) === 0);
+                if ($isDraft && !empty($resData->no_ref_wo)) {
+                    // Gabungkan baris duplikat (misal sisa pemisahan Terima vs Retur lama) berdasarkan (id_barang, lot_no, pack_id) saat Draft
+                    $mergedDetail = [];
+                    foreach ($resDataDetail as $rowData) {
+                        $cleanLot = trim((string)($rowData->lot_no ?? ''));
+                        if ($cleanLot === '') $cleanLot = '-';
+                        $mergeKey = $rowData->id_barang . '|' . $cleanLot . '|' . $rowData->pack_id;
+
+                        if (!isset($mergedDetail[$mergeKey])) {
+                            $mergedDetail[$mergeKey] = $rowData;
+                            $mergedDetail[$mergeKey]->qty = (float)($rowData->qty ?? 0);
                         } else {
-                            $rowData->qty_sisa = $rowData->qty;
+                            $mergedDetail[$mergeKey]->qty += (float)($rowData->qty ?? 0);
                         }
+                    }
+                    $resDataDetail = array_values($mergedDetail);
+                }
+
+                foreach ($resDataDetail as &$rowData) {
+                    $keyExact = $rowData->id_barang . '|' . $rowData->lot_id . '|' . $rowData->pack_id;
+                    $cleanLot = trim((string)($rowData->lot_no ?? ''));
+                    if ($cleanLot === '') $cleanLot = '-';
+                    $keyLot = $rowData->id_barang . '|' . $cleanLot . '|' . $rowData->pack_id;
+
+                    $matchedWo = $woMapExact[$keyExact] ?? ($woMapByLotNo[$keyLot] ?? null);
+
+                    if ($matchedWo !== null) {
+                        $rowData->stok_gudang = $matchedWo->stok_gudang ?? null;
+                        if ($isDraft) {
+                            // Live refresh saat masih Draft supaya retur / pemakaian terbaru selalu sinkron
+                            $rowData->qty_terima = $matchedWo->qty_terima;
+                            $rowData->qty_retur = $matchedWo->qty_retur;
+                            $rowData->qty_pemakaian_sebelumnya = $matchedWo->qty_pemakaian_sebelumnya;
+                            $rowData->qty_sisa = $matchedWo->qty_sisa;
+                            $rowData->qty_exist = $matchedWo->qty_sisa;
+                        } elseif ($rowData->qty_sisa === null || $rowData->qty_sisa === '') {
+                            $rowData->qty_sisa = $matchedWo->qty_sisa;
+                        }
+                    } elseif ($rowData->qty_sisa === null || $rowData->qty_sisa === '') {
+                        $rowData->qty_sisa = $rowData->qty;
                     }
                 }
                 unset($rowData);

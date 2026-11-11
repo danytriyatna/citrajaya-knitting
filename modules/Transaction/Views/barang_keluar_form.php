@@ -405,5 +405,5 @@
 
 <?= $this->endSection('content'); ?>]
 <?= $this->section('script'); ?>
-<script src="script/app/transaction/barang_keluar/form.js"></script>
+<script src="script/app/transaction/barang_keluar/form.js?v=<?= @filemtime(FCPATH . 'script/app/transaction/barang_keluar/form.js') ?: time() ?>"></script>
 <?= $this->endSection('script'); ?>

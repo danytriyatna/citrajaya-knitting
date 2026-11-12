@@ -451,7 +451,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
     {
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
-        $builder->select("a.*, b.nama_barang, c.nama_jenis_barang, a.pack_id, COALESCE(rp.pack_name, '-') as pack_name, COALESCE(NULLIF(a.lot_no, ''), '-') as lot_no, b.kode_barang || ' ' || b.nama_barang as barang, 
+        $builder->select("a.*, b.nama_barang, b.kode_barang, c.nama_jenis_barang, a.pack_id, COALESCE(rp.pack_name, '-') as pack_name, COALESCE(NULLIF(a.lot_no, ''), '-') as lot_no, b.kode_barang || ' ' || b.nama_barang as barang, 
                             CAST(CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN (a.masuk - a.keluar) ELSE a.jumlah END AS DECIMAL(18,2)) as saldo_akhir,
                             CAST(CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN 0 ELSE a.stok_awal END AS DECIMAL(18,2)) as saldo_awal,
                             w.keterangan as color_code, rs.nama_satuan");
@@ -484,6 +484,15 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         if (!empty($params['lot_id'])) {
             $builder->where("a.lot_id", $params['lot_id']);
         }
+        if (!empty($params['kode_walkorder'])) {
+            $builder->where("b.id IN (
+                SELECT tww.id_barang
+                FROM trans_walkorder_warna tww
+                INNER JOIN trans_walkorder_detail twd ON tww.id_walkorder_detail = twd.id
+                INNER JOIN trans_walkorder tw on twd.id_walkorder = tw.id
+                WHERE tw.kode_walkorder = " . $this->db->escape($params['kode_walkorder']) . "
+            )");
+        }
         if (!empty($params['search'])) {
             $builder->groupStart();
             $builder->Where('LOWER(b.nama_barang) LIKE', strtolower("%{$params['search']}%"));
@@ -499,6 +508,48 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         
         $this->_data = $builder->get()->getResult();
         return $this->_data;
+    }
+
+    public function groupByLotPack($resData)
+    {
+        if (empty($resData)) {
+            return $resData;
+        }
+
+        $grouped = [];
+        $order = [];
+        foreach ($resData as $row) {
+            $key = $row->id_barang . '|' . $row->lot_no . '|' . (!empty($row->pack_id) ? $row->pack_id : '');
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = clone $row;
+                $grouped[$key]->masuk = 0;
+                $grouped[$key]->keluar = 0;
+                $grouped[$key]->saldo_awal = (float) $row->saldo_awal;
+                $order[] = $key;
+            }
+            $grouped[$key]->masuk += (float) $row->masuk;
+            $grouped[$key]->keluar += (float) $row->keluar;
+            $grouped[$key]->tanggal = $row->tanggal;
+            $grouped[$key]->price = $row->price;
+        }
+
+        $result = [];
+        foreach ($order as $key) {
+            $g = $grouped[$key];
+            $g->saldo_akhir = $g->saldo_awal + $g->masuk - $g->keluar;
+
+            $semuaNol = round((float) $g->saldo_awal, 2) === 0.0
+                && round((float) $g->masuk, 2) === 0.0
+                && round((float) $g->keluar, 2) === 0.0
+                && round((float) $g->saldo_akhir, 2) === 0.0;
+            if ($semuaNol) {
+                continue;
+            }
+
+            $result[] = $g;
+        }
+
+        return $result;
     }
 
     function getDataGudangPrint($idJenisBarang = null, $idGudang = null, $year = null, $month = null, $params = null)

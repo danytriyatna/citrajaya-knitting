@@ -227,6 +227,9 @@ class BarangKeluarModel extends \App\Models\PrModel
                             if (!empty($chkLot) && isset($chkLot->id_gudang) && (int)$chkLot->id_gudang !== (int)$data['id_gudang']) {
                                 $chkLot = null;
                             }
+                            if (!empty($chkLot) && !empty($rowCheck['pack_id']) && !empty($chkLot->pack_id) && (int)$chkLot->pack_id !== (int)$rowCheck['pack_id']) {
+                                $chkLot = null;
+                            }
                         }
                         if (empty($chkLot)) {
                             $chkLot = $mBarangMasukCheck->getLotNo($chkLotNo, $chkIdBarang, null, $data['id_gudang'], !empty($rowCheck['pack_id']) ? $rowCheck['pack_id'] : null);
@@ -239,12 +242,15 @@ class BarangKeluarModel extends \App\Models\PrModel
                         if (!empty($chkLot)) {
                             $availQty = (float)$chkLot->qty;
                             if ($availQty < $chkQty && !empty($chkLot->lot_no)) {
-                                $altLot = $this->db->table($this->tblTrxLots)
+                                $altLotBuilder = $this->db->table($this->tblTrxLots)
                                     ->where('TRIM(lot_no)', trim((string)$chkLot->lot_no))
                                     ->where('id_barang', $chkIdBarang)
                                     ->where('id_gudang', $data['id_gudang'])
-                                    ->where('active', 1)
-                                    ->where('qty >=', $chkQty)
+                                    ->where('active', 1);
+                                if (!empty($rowCheck['pack_id'])) {
+                                    $altLotBuilder->where('pack_id', (int)$rowCheck['pack_id']);
+                                }
+                                $altLot = $altLotBuilder->where('qty >=', $chkQty)
                                     ->orderBy('qty', 'DESC')
                                     ->get()->getRow();
                                 if (!empty($altLot)) {
@@ -523,7 +529,22 @@ class BarangKeluarModel extends \App\Models\PrModel
 
                     $idLots = null;
                     $sisaLot = null;
-                    $resLotNo = $hasLotNo ? $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang']) : null;
+                    $resLotNo = null;
+                    if (!empty($rowData['lot_id'])) {
+                        $resLotNo = $mBarangMasuk->getLotNo(null, null, $rowData['lot_id']);
+                        if (!empty($resLotNo) && isset($resLotNo->id_gudang) && (int)$resLotNo->id_gudang !== (int)$data['id_gudang']) {
+                            $resLotNo = null;
+                        }
+                        if (!empty($resLotNo) && !empty($rowData['pack_id']) && !empty($resLotNo->pack_id) && (int)$resLotNo->pack_id !== (int)$rowData['pack_id']) {
+                            $resLotNo = null;
+                        }
+                    }
+                    if (empty($resLotNo) && $hasLotNo) {
+                        $resLotNo = $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
+                        if (empty($resLotNo)) {
+                            $resLotNo = $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang']);
+                        }
+                    }
                     // $resLotNo = $mBarangMasuk->getLotNo($rowData['lot_no'], $idBarang, $data['id_gudang']);
                     if (!empty($resLotNo)) {
                         $idLots = $resLotNo->id;

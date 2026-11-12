@@ -1020,29 +1020,44 @@ class ItemTransferModel extends \App\Models\PrModel
                     $resolvedLotId = !empty($rowData['lot_id']) ? (int)$rowData['lot_id'] : 0;
                     if (!empty($resolvedLotId)) {
                         $currLot = $this->db->table($this->tblTrxLots)->where('id', $resolvedLotId)->get()->getRow();
-                        if (empty($currLot) || (float)$currLot->qty < (float)$rowData['qty']) {
+                        $packMismatch = (!empty($rowData['pack_id']) && !empty($currLot) && !empty($currLot->pack_id) && (int)$currLot->pack_id !== (int)$rowData['pack_id']);
+                        if (empty($currLot) || (float)$currLot->qty < (float)$rowData['qty'] || $packMismatch) {
                             if (!empty($lotNoVal) && $lotNoVal !== '-' && !empty($idBarang)) {
-                                $betterLot = $this->db->table($this->tblTrxLots)
+                                $betterLotQuery = $this->db->table($this->tblTrxLots)
                                     ->where('TRIM(lot_no)', $lotNoVal)
                                     ->where('id_barang', $idBarang)
                                     ->where('id_gudang', $data['id_gudang_asal'])
-                                    ->where('active', 1)
-                                    ->where('qty >=', (float)$rowData['qty'])
+                                    ->where('active', 1);
+                                if (!empty($rowData['pack_id'])) {
+                                    $betterLotQuery->where('pack_id', (int)$rowData['pack_id']);
+                                }
+                                $betterLot = $betterLotQuery->where('qty >=', (float)$rowData['qty'])
                                     ->orderBy('qty', 'DESC')
                                     ->get()->getRow();
                                 if (!empty($betterLot)) {
                                     $resolvedLotId = (int)$betterLot->id;
                                     $rowData['lot_id'] = $resolvedLotId;
+                                } else if (!empty($rowData['pack_id'])) {
+                                    // Jika tidak ada yang qty >= diminta, cari lot persis pack tersebut
+                                    $mBarangMasukTmp = new IncomingGoodsModel();
+                                    $foundLot = $mBarangMasukTmp->getLotNo($lotNoVal, $idBarang, null, $data['id_gudang_asal'], $rowData['pack_id']);
+                                    if (!empty($foundLot)) {
+                                        $resolvedLotId = (int)$foundLot->id;
+                                        $rowData['lot_id'] = $resolvedLotId;
+                                    }
                                 }
                             }
                         }
                     } else if (empty($resolvedLotId) && !empty($lotNoVal) && $lotNoVal !== '-' && !empty($idBarang)) {
-                        $betterLot = $this->db->table($this->tblTrxLots)
+                        $betterLotQuery = $this->db->table($this->tblTrxLots)
                             ->where('TRIM(lot_no)', $lotNoVal)
                             ->where('id_barang', $idBarang)
                             ->where('id_gudang', $data['id_gudang_asal'])
-                            ->where('active', 1)
-                            ->where('qty >=', (float)$rowData['qty'])
+                            ->where('active', 1);
+                        if (!empty($rowData['pack_id'])) {
+                            $betterLotQuery->where('pack_id', (int)$rowData['pack_id']);
+                        }
+                        $betterLot = $betterLotQuery->where('qty >=', (float)$rowData['qty'])
                             ->orderBy('qty', 'DESC')
                             ->get()->getRow();
                         if (!empty($betterLot)) {
@@ -1209,6 +1224,10 @@ class ItemTransferModel extends \App\Models\PrModel
                             if (!empty($resLotNo) && isset($resLotNo->id_gudang) && (int)$resLotNo->id_gudang !== (int)$data['id_gudang_asal']) {
                                 $resLotNo = null;
                             }
+                            // PERBAIKAN: Jika baris transaksi memiliki pack_id spesifik, pastikan lot_id ini cocok dengan pack_id tersebut
+                            if (!empty($resLotNo) && !empty($rowData['pack_id']) && !empty($resLotNo->pack_id) && (int)$resLotNo->pack_id !== (int)$rowData['pack_id']) {
+                                $resLotNo = null;
+                            }
                         }
                         if (empty($resLotNo) && $hasLotNo && !empty($idBarang)) {
                             $resLotNo = $mBarangMasuk->getLotNo($lotNoValue, $idBarang, null, $data['id_gudang_asal'], !empty($rowData['pack_id']) ? $rowData['pack_id'] : null);
@@ -1225,12 +1244,15 @@ class ItemTransferModel extends \App\Models\PrModel
                                 // Smart fallback: Jika lot_id yang diikat stoknya kurang dari diminta,
                                 // cari apakah ada baris lot lain di gudang asal dengan nomor lot yang sama yang stoknya mencukupi
                                 if (!empty($resLotNo) && (float)$resLotNo->qty < (float)$rowData['qty'] && !empty($resLotNo->lot_no) && !empty($idBarang)) {
-                                    $altLot = $this->db->table($this->tblTrxLots)
+                                    $altBuilder = $this->db->table($this->tblTrxLots)
                                         ->where('TRIM(lot_no)', trim((string)$resLotNo->lot_no))
                                         ->where('id_barang', $idBarang)
                                         ->where('id_gudang', $data['id_gudang_asal'])
-                                        ->where('active', 1)
-                                        ->where('qty >=', (float)$rowData['qty'])
+                                        ->where('active', 1);
+                                    if (!empty($rowData['pack_id'])) {
+                                        $altBuilder->where('pack_id', (int)$rowData['pack_id']);
+                                    }
+                                    $altLot = $altBuilder->where('qty >=', (float)$rowData['qty'])
                                         ->orderBy('qty', 'DESC')
                                         ->get()->getRow();
                                     if (!empty($altLot)) {
@@ -1242,6 +1264,11 @@ class ItemTransferModel extends \App\Models\PrModel
                                 }
 
                                 $idLots = $resLotNo->id;
+                                // Sinkronkan lot_id di trans_barang_trf_detail jika sebelumnya beda (self-healing pada approval)
+                                if (!empty($rowData['id']) && (int)($rowData['lot_id'] ?? 0) !== (int)$idLots) {
+                                    $this->updateRecords($this->tblDet, ['lot_id' => $idLots], ['id' => $rowData['id']]);
+                                }
+
                                 $sisaLot = (float)$resLotNo->qty - (float)$rowData['qty'];
                                 if ($sisaLot < -0.0001) {
                                     throw new \Exception("STOCK_INSUFFICIENT_BLOCKED: Stok lot {$resLotNo->lot_no} tidak mencukupi untuk transfer! Stok tersedia: " . number_format($resLotNo->qty, 2) . ", diminta: " . number_format($rowData['qty'], 2) . "\n\nTransfer barang tidak dapat dilanjutkan. Silakan cek mutasi barang atau riwayat kartu stok pada menu Laporan Persediaan terlebih dahulu.");

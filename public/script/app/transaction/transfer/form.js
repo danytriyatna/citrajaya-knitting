@@ -115,11 +115,11 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
     columns: [
         {
             title: "ID Barang", field: "id", headerSort: false,
-            width: "15%", visible: false
+            visible: false
         },
         {
             title: "ID Lots", field: "lot_id", headerSort: false,
-            width: "15%", visible: false
+            visible: false
         },
         {
             title: "Kode Barang", field: "kode_barang", headerSort: false,
@@ -127,27 +127,29 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
         },
         {
             title: "Nama Barang", field: "nama_barang", headerSort: false,
-            width: "30%"
+            width: "25%"
         },
-
         {
-            title: "Satuan", field: "nama_satuan", headerSort: false,
-            width: "15%"
+            title: "Pack", field: "pack_name", headerSort: false,
+            width: "12%"
+        },
+        {
+            title: "Pack ID", field: "pack_id", visible: false, headerSort: false,
         },
         {
             title: "Lot No.", field: "lot_no", headerSort: false,
             width: "15%"
         },
         {
-            title: "Pack Name", field: "pack_name", headerSort: false,
+            title: "Satuan", field: "nama_satuan", headerSort: false,
             width: "10%"
         },
         {
-            title: "Pack ID", field: "pack_id", visible: false, headerSort: false,
-        },
-        {
-            title: "Qty", field: "qty", headerSort: false,
-            width: "15%"
+            title: "Stok Tersedia", field: "qty", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right",
+            width: "18%",
+            formatter: "money",
+            formatterParams: { decimal: ",", thousand: ".", precision: 2 }
         },
     ],
     locale: 'id',

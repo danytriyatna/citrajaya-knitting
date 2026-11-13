@@ -715,7 +715,6 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 FROM trans_barang_trf_detail uk
                 INNER JOIN ref_barang ebx ON uk.id_barang = ebx.id
                 INNER JOIN ref_satuan fbx ON ebx.id_satuan = fbx.id
-                LEFT  JOIN trans_lots gbx ON ( (TRIM(uk.lot_no) != '-' AND TRIM(uk.lot_no) != '' AND TRIM(uk.lot_no) = TRIM(gbx.lot_no) AND uk.id_barang = gbx.id_barang) OR uk.lot_id = gbx.id ) AND gbx.id_gudang = ?
                 LEFT  JOIN ref_pack hbx ON uk.pack_id = hbx.id
                 WHERE uk.id_header = ?
                 AND uk.active = 1
@@ -726,7 +725,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 sub.kode_barang, sub.nama_barang
             ORDER BY sub.id_barang
         ";
-        $this->_data = $this->db->query($sql, [$id_gudang, $id_header])->getResult();
+        $this->_data = $this->db->query($sql, [$id_header])->getResult();
 
         return $this->_data;
     }

@@ -1263,6 +1263,29 @@ class ItemTransferModel extends \App\Models\PrModel
                                     }
                                 }
 
+                                // SELF-HEALING KARTU STOK: Jika trans_lots.qty masih kurang dari diminta,
+                                // periksa saldo mutasi live di trans_barang_history (Laporan Persediaan) untuk lot & pack ini.
+                                // Jika di Laporan Persediaan saldo live mencukupi, sinkronkan trans_lots.qty ke saldo live tersebut.
+                                if (!empty($resLotNo) && (float)$resLotNo->qty < (float)$rowData['qty'] && !empty($resLotNo->lot_no) && !empty($idBarang)) {
+                                    $liveHistBuilder = $this->db->table('trans_barang_history')
+                                        ->select('jumlah')
+                                        ->where('id_barang', $idBarang)
+                                        ->where('id_gudang', (int)$data['id_gudang_asal'])
+                                        ->where('TRIM(lot_no)', trim((string)$resLotNo->lot_no));
+                                    if (!empty($rowData['pack_id'])) {
+                                        $liveHistBuilder->where('pack_id', (int)$rowData['pack_id']);
+                                    }
+                                    $liveHistRow = $liveHistBuilder
+                                        ->orderBy('(year * 100 + month)', 'DESC')
+                                        ->orderBy('id', 'DESC')
+                                        ->get()->getRow();
+
+                                    if (!empty($liveHistRow) && (float)$liveHistRow->jumlah >= (float)$rowData['qty']) {
+                                        $resLotNo->qty = (float)$liveHistRow->jumlah;
+                                        $this->updateRecords($this->tblTrxLots, ['qty' => (float)$liveHistRow->jumlah], ['id' => $resLotNo->id]);
+                                    }
+                                }
+
                                 $idLots = $resLotNo->id;
                                 // Sinkronkan lot_id di trans_barang_trf_detail jika sebelumnya beda (self-healing pada approval)
                                 if (!empty($rowData['id']) && (int)($rowData['lot_id'] ?? 0) !== (int)$idLots) {

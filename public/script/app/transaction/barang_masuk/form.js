@@ -2342,23 +2342,106 @@ $("#text_barcode").on("keypress", function (e) {
             return;
         }
 
+        if (!inpNoRefTrf.val()) {
+            if (!selectProses.val()) {
+                return Swal.fire({
+                    title: "Pilih Proses Terlebih Dahulu!",
+                    text: "Silakan pilih jenis Proses di dropdown sebelum melakukan scan barcode.",
+                    icon: 'warning',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+            if (!selectOperator.val()) {
+                return Swal.fire({
+                    title: "Pilih CMT Terlebih Dahulu!",
+                    text: "Silakan pilih vendor / operator CMT di dropdown sebelum melakukan scan barcode.",
+                    icon: 'warning',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        }
+
         let isRetryingSoFetch = false;
 
         function showNotFoundError(arrKunci) {
-            const trfInfo = inpNoRefTrf.val() ? ` pada No. Transfer ${inpNoRefTrf.val()}` : '';
-            const soInfo = (arrKunci && arrKunci[0]) ? ` (${arrKunci[0]})` : '';
+            const normStr = str => str ? str.toString().trim().toLowerCase() : '';
+            const normSize = str => str ? str.toString().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            const targetSO = (arrKunci && arrKunci[0]) ? normStr(arrKunci[0]) : '';
+            const targetUkuran = (arrKunci && arrKunci[1]) ? normSize(arrKunci[1]) : '';
+            const rawUkuran = (arrKunci && arrKunci[1]) ? arrKunci[1].trim() : '';
+            const rawWarna = (arrKunci && arrKunci[2]) ? arrKunci[2].trim() : '';
+            const soLabel = (arrKunci && arrKunci[0]) ? arrKunci[0].trim() : 'Barang';
+
+            const namaProses = selectProses.find('option:selected').text() || '';
+            const namaCmt = selectOperator.find('option:selected').text() || '';
+            const isManualBtm = !inpNoRefTrf.val();
+
+            // Cek apakah nomor SO ini ada di refData / memori acuan
+            const soMatches = (refData && refData.length > 0 && targetSO) 
+                ? refData.filter(item => normStr(item.kode_sales_order) === targetSO || normStr(item.kode_transaksi) === targetSO || normStr(item.style) === targetSO)
+                : [];
+
+            if (soMatches.length === 0) {
+                // KASUS 1: Nomor SO tidak ada di acuan proses / transfer saat ini
+                if (!isManualBtm) {
+                    Swal.fire({
+                        title: "Barang Tidak Ada di Surat Transfer!",
+                        text: `Barang (${soLabel}) tidak terdaftar pada Surat Transfer ${inpNoRefTrf.val()}. Mohon periksa kembali fisik barang atau surat transfernya.`,
+                        icon: 'error',
+                        confirmButtonText: 'Tutup'
+                    });
+                } else if (namaProses && namaCmt) {
+                    Swal.fire({
+                        title: "Kombinasi Proses / CMT Tidak Sesuai!",
+                        text: `Barang (${soLabel}) tidak terdaftar untuk kombinasi Proses: '${namaProses}' dan CMT: '${namaCmt}'. Mohon periksa kembali alur proses atau SPK barang ini.`,
+                        icon: 'warning',
+                        confirmButtonText: 'Tutup'
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Data Acuan Belum Lengkap!",
+                        text: "Silakan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.",
+                        icon: 'warning',
+                        confirmButtonText: 'Tutup'
+                    });
+                }
+                return;
+            }
+
+            // KASUS 2: Nomor SO ada, cek apakah ukuran cocok
+            const sizeMatches = targetUkuran 
+                ? soMatches.filter(item => normSize(item.key_ukuran) === targetUkuran || normSize(item.kode_ukuran) === targetUkuran)
+                : [];
+
+            if (sizeMatches.length === 0) {
+                const availSizes = [...new Set(soMatches.map(item => item.kode_ukuran || item.key_ukuran).filter(Boolean))].join(', ');
+                Swal.fire({
+                    title: "Ukuran Tidak Sesuai SO!",
+                    text: `Ukuran '${rawUkuran}' pada barcode tidak terdaftar di ${soLabel}. Ukuran yang terdaftar di SO: [${availSizes || '-'}].`,
+                    icon: 'error',
+                    confirmButtonText: 'Tutup'
+                });
+                return;
+            }
+
+            // KASUS 3: Nomor SO & Ukuran cocok, tapi Urutan / Kombinasi Warna tidak cocok
+            const availColors = [...new Set(sizeMatches.map(item => item.color).filter(Boolean))].join(' | ');
             Swal.fire({
-                title: "Produk Tidak Ditemukan!",
-                text: `Barang${soInfo} tidak terdaftar${trfInfo}. Mohon periksa kembali fisik barang atau surat transfernya.`,
+                title: "Urutan Warna Tidak Sesuai SO!",
+                text: `Kombinasi warna '${rawWarna}' pada barcode tidak cocok dengan urutan warna di ${soLabel}. Urutan warna resmi di SO: [${availColors || '-'}].`,
                 icon: 'error',
                 confirmButtonText: 'Tutup'
             });
         }
 
         function showEmptyRefError() {
+            const namaProses = selectProses.find('option:selected').text() || '';
+            const namaCmt = selectOperator.find('option:selected').text() || '';
             const trfMsg = inpNoRefTrf.val()
                 ? `Tidak ada data barang pada No. Transfer ${inpNoRefTrf.val()} (Pastikan transfer sudah di-Approve).`
-                : "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.";
+                : (namaProses && namaCmt
+                    ? `Tidak ditemukan data acuan barang untuk kombinasi Proses: '${namaProses}' dan CMT: '${namaCmt}'. Mohon periksa kembali pilihan Proses dan CMT Anda.`
+                    : "Silahkan pilih referensi transfer terlebih dahulu atau pilih PROSES dan CMT.");
             Swal.fire({
                 title: "Data Tidak Ditemukan",
                 text: trfMsg,

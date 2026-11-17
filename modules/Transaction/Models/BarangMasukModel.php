@@ -1431,7 +1431,7 @@ class BarangMasukModel extends \App\Models\PrModel
         }
 
         $builder = $this->db->table("trans_barang_masuk_produksi abx");
-        $builder->select("abx.id as id_mp, abx.harga, abx.style, abx.tgl_transaksi, abx.created_at, head.id_proses, head.id_cmt, head.id_perusahaan");
+        $builder->select("abx.id as id_mp, abx.harga, abx.style, abx.tgl_transaksi, head.created_at, head.id_proses, head.id_cmt, head.id_perusahaan");
         $builder->join("trans_barang_header head", "abx.id_header = head.id", "inner");
         $builder->where("head.id_proses", $id_proses);
         $builder->where("head.id_cmt", $id_cmt);

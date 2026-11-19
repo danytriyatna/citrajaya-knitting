@@ -235,18 +235,7 @@ class LaporanStockCardModel extends \App\Models\PrModel
         if (!empty($month))    $params['h_month']   = $month;
         if (!empty($year))     $params['h_year']    = $year;
 
-        $sqlSaldoAwal = "
-            SELECT COALESCE(SUM(h.stok_awal), 0) AS saldo_awal
-            FROM trans_barang_history h
-            WHERE h.id_barang = :id_barang:
-            $gudangHistoryFilter
-            $monthHistoryFilter
-            $yearHistoryFilter
-        ";
-        $rowHistory = $this->db->query($sqlSaldoAwal, $params)->getRow();
-        $saldoAwal  = $rowHistory ? (float) $rowHistory->saldo_awal : 0;
-
-        // --- Saldo Akhir: saldo_awal + net mutasi bulan dari trans_barang ---
+        // --- Filter Rentang Tanggal Periode Berjalan ---
         $dateFilterAsal   = "";
         $dateFilterTujuan = "";
 
@@ -268,6 +257,39 @@ class LaporanStockCardModel extends \App\Models\PrModel
 
         $gudangFilterAsal   = !empty($idGudang) ? "AND abx.id_gudang_asal    = :id_gudang:" : "AND abx.id_gudang_asal    IS NOT NULL";
         $gudangFilterTujuan = !empty($idGudang) ? "AND abx.id_gudang_tujuan  = :id_gudang:" : "AND abx.id_gudang_tujuan  IS NOT NULL";
+
+        // --- Saldo Awal: Dihitung murni akumulatif sejak titik cutoff 1 Juni 2026 dari trans_barang ---
+        // Menghindari saldo awal minus akibat anomali split pack di trans_barang_history masa lalu
+        $cutoffDate = "2026-06-01";
+        $saldoAwal = 0.0;
+        if (!empty($params['tgl_start']) && $params['tgl_start'] > $cutoffDate) {
+            $sqlSaldoAwal = "
+                WITH prev_trans AS (
+                    SELECT abx.*,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY abx.kode_transaksi, abx.id_barang,
+                                   COALESCE(abx.lot_no, ''), COALESCE(abx.pack_id, 0),
+                                   abx.id_gudang_asal, abx.id_gudang_tujuan, abx.jumlah
+                               ORDER BY abx.id DESC
+                           ) AS rn
+                    FROM trans_barang abx
+                    WHERE COALESCE(abx.active, 1) = 1
+                      AND abx.tanggal >= '$cutoffDate'
+                      AND abx.tanggal < :tgl_start:
+                )
+                SELECT
+                    COALESCE(
+                        (SELECT SUM(abx.jumlah) FROM prev_trans abx
+                         WHERE abx.rn = 1 AND abx.id_barang = :id_barang: $gudangFilterTujuan), 0
+                    ) -
+                    COALESCE(
+                        (SELECT SUM(abx.jumlah) FROM prev_trans abx
+                         WHERE abx.rn = 1 AND abx.id_barang = :id_barang: $gudangFilterAsal), 0
+                    ) AS saldo_awal
+            ";
+            $rowHistory = $this->db->query($sqlSaldoAwal, $params)->getRow();
+            $saldoAwal  = $rowHistory ? (float) $rowHistory->saldo_awal : 0;
+        }
 
         $sqlNet = "
             WITH raw_trans AS (

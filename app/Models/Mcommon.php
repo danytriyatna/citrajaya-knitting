@@ -118,4 +118,115 @@ class Mcommon extends Model
             }
         }
     }
+
+    /**
+     * Single Source of Truth: Menghitung Saldo Stok Fisik, Stok Ter-booking, dan Stok Tersedia.
+     * Mengunci Skenario A: spesifik per id_barang, id_gudang, lot_no, dan pack_id.
+     *
+     * @param int $idBarang
+     * @param int $idGudang
+     * @param string|null $lotNo
+     * @param int|null $packId
+     * @param int|null $excludeTrfHeaderId (Opsional: ID header transfer jika sedang mengedit dokumen draft sendiri)
+     * @return object { stok_fisik, stok_booking, stok_tersedia }
+     */
+    public function getLiveStockWithBooking($idBarang, $idGudang, $lotNo = null, $packId = null, $excludeTrfHeaderId = null)
+    {
+        $cutoffDate = '2026-06-01';
+        $cleanLot = trim((string)($lotNo ?? ''));
+        if ($cleanLot === '' || $cleanLot === '-') {
+            $cleanLot = '-';
+        }
+        $packIdInt = !empty($packId) ? (int)$packId : null;
+
+        // 1. STOK FISIK LIVE: Dihitung dari buku besar mutasi trans_barang sejak cutoff 1 Juni 2026
+        $lotCond = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(abx.lot_no, '')) = :lot_no:";
+        $packCond = !empty($packIdInt) ? "AND abx.pack_id = :pack_id:" : "AND (abx.pack_id IS NULL OR abx.pack_id = 0)";
+
+        $params = [
+            'id_barang' => (int)$idBarang,
+            'id_gudang' => (int)$idGudang,
+        ];
+        if ($cleanLot !== '-') {
+            $params['lot_no'] = $cleanLot;
+        }
+        if (!empty($packIdInt)) {
+            $params['pack_id'] = $packIdInt;
+        }
+
+        $sqlFisik = "
+            WITH raw_trans AS (
+                SELECT abx.*,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY abx.kode_transaksi, abx.id_barang,
+                               COALESCE(abx.lot_no, ''), COALESCE(abx.pack_id, 0),
+                               abx.id_gudang_asal, abx.id_gudang_tujuan, abx.jumlah
+                           ORDER BY abx.id DESC
+                       ) AS rn
+                FROM trans_barang abx
+                WHERE COALESCE(abx.active, 1) = 1
+                  AND abx.id_barang = :id_barang:
+                  AND abx.tanggal >= '$cutoffDate'
+                  $lotCond
+                  $packCond
+            )
+            SELECT
+                COALESCE((SELECT SUM(jumlah) FROM raw_trans WHERE rn = 1 AND id_gudang_tujuan = :id_gudang:), 0) -
+                COALESCE((SELECT SUM(jumlah) FROM raw_trans WHERE rn = 1 AND id_gudang_asal = :id_gudang:), 0) AS stok_fisik
+        ";
+        $rowFisik = $this->db->query($sqlFisik, $params)->getRow();
+        $stokFisik = $rowFisik ? round((float)$rowFisik->stok_fisik, 2) : 0.0;
+
+        // 2. STOK TER-BOOKING (DRAFT): Dokumen Transfer yang masih Draft (status = 0) dari gudang asal ini
+        $excludeClause = "";
+        $paramsBooking = [
+            'id_barang' => (int)$idBarang,
+            'id_gudang' => (int)$idGudang,
+        ];
+        if (!empty($excludeTrfHeaderId)) {
+            $paramsBooking['exclude_id'] = (int)$excludeTrfHeaderId;
+            $excludeClause = "AND th.id != :exclude_id:";
+        }
+        $lotCondTd = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(td.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(td.lot_no, '')) = :lot_no:";
+        $packCondTd = !empty($packIdInt) ? "AND td.pack_id = :pack_id:" : "AND (td.pack_id IS NULL OR td.pack_id = 0)";
+
+        if ($cleanLot !== '-') {
+            $paramsBooking['lot_no'] = $cleanLot;
+        }
+        if (!empty($packIdInt)) {
+            $paramsBooking['pack_id'] = $packIdInt;
+        }
+
+        $sqlBooking = "
+            SELECT COALESCE(SUM(td.qty), 0) AS stok_booking
+            FROM trans_barang_trf_detail td
+            JOIN trans_barang_trf_header th ON th.id = td.id_header
+            WHERE th.status = 0
+              AND th.id_gudang_asal = :id_gudang:
+              AND td.id_barang = :id_barang:
+              $excludeClause
+              $lotCondTd
+              $packCondTd
+        ";
+        $rowBooking = $this->db->query($sqlBooking, $paramsBooking)->getRow();
+        $stokBooking = $rowBooking ? round((float)$rowBooking->stok_booking, 2) : 0.0;
+
+        // 3. STOK TERSEDIA (AVAILABLE): Stok Fisik dikurangi Booking
+        $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
+
+        return (object) [
+            'stok_fisik'    => $stokFisik,
+            'stok_booking'  => $stokBooking,
+            'stok_tersedia' => $stokTersedia,
+        ];
+    }
+
+    public function getDefaultPackId()
+    {
+        $row = $this->db->table('ref_pack')->select('id')->where('pack_name', '-')->get()->getRow();
+        if (!empty($row)) {
+            return (int)$row->id;
+        }
+        return null;
+    }
 }

@@ -187,16 +187,21 @@ class BarangKeluar extends BaseController
 
         foreach ($results as $row) {
             $id = encrypt($row->id_barang);
+            $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $row->lot_no, $row->pack_id);
             array_push(
                 $build_array["data"],
                 array(
-                    "id"   => $row->id_barang,
-                    "nama_barang" => $row->nama_barang,
-                    "kode_barang" => $row->kode_barang,
-                    "nama_satuan" => $row->nama_satuan,
-                    "qty" => $row->qty,
-                    "lot_no" => $row->lot_no,
-                    "lot_id" => $row->lot_id,
+                    "id"           => $row->id_barang,
+                    "nama_barang"  => $row->nama_barang,
+                    "kode_barang"  => $row->kode_barang,
+                    "nama_satuan"  => $row->nama_satuan,
+                    "lot_no"       => !empty($row->lot_no) ? $row->lot_no : '-',
+                    "lot_id"       => $row->lot_id,
+                    "pack_id"      => $row->pack_id,
+                    "pack_name"    => !empty($row->pack_name) ? $row->pack_name : '-',
+                    "stok_fisik"   => $stockData->stok_fisik,
+                    "stok_booking" => $stockData->stok_booking,
+                    "qty"          => $stockData->stok_tersedia,
                 )
             );
         }

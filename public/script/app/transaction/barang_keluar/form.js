@@ -27,7 +27,7 @@ let selectKategori = $('#select_kategori');
 let inpLotNo = $('#lot_no');
 let inpIdLot = $('#id_lot');
 let inpPackName = $('#pack_name');
-let inpPackId = $('#id_lot');
+let inpPackId = $('#pack_id');
 let detailData = $("#data-details").val().replace(/&quot;/ig, '"');
 let dataSO = $("#data-so").val().replace(/&quot;/ig, '"');
 let btnAdd = $('#btn-add');
@@ -220,19 +220,39 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
 
         {
             title: "Satuan", field: "nama_satuan", headerSort: false,
-            width: "10%"
+            width: "8%"
         },
         {
             title: "Lot No.", field: "lot_no", headerSort: false,
-            width: "15%"
+            width: "12%"
         },
         {
             title: "Pack", field: "pack_name", headerSort: false,
-            width: "15%"
+            width: "10%"
         },
         {
-            title: "Qty", field: "qty", headerSort: false,
-            width: "25%"
+            title: "Stok Fisik", field: "stok_fisik", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right", width: "12%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return v.toFixed(2);
+            }
+        },
+        {
+            title: "Booking", field: "stok_booking", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right", width: "10%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return v > 0.0001 ? '<span class="text-warning font-weight-bold">' + v.toFixed(2) + '</span>' : '0.00';
+            }
+        },
+        {
+            title: "Tersedia", field: "qty", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right", width: "12%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return '<span class="text-success font-weight-bold">' + v.toFixed(2) + '</span>';
+            }
         },
         {
             title: "Harga Satuan", field: "harga_satuan", headerSort: false,

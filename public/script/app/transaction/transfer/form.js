@@ -122,34 +122,52 @@ let dtListBarang = new Tabulator("#dt-list-barang", {
             visible: false
         },
         {
+            title: "Pack ID", field: "pack_id", visible: false, headerSort: false,
+        },
+        {
             title: "Kode Barang", field: "kode_barang", headerSort: false,
             width: "15%"
         },
         {
             title: "Nama Barang", field: "nama_barang", headerSort: false,
-            width: "25%"
-        },
-        {
-            title: "Pack", field: "pack_name", headerSort: false,
-            width: "12%"
-        },
-        {
-            title: "Pack ID", field: "pack_id", visible: false, headerSort: false,
-        },
-        {
-            title: "Lot No.", field: "lot_no", headerSort: false,
-            width: "15%"
+            width: "22%"
         },
         {
             title: "Satuan", field: "nama_satuan", headerSort: false,
+            width: "8%"
+        },
+        {
+            title: "Lot No.", field: "lot_no", headerSort: false,
+            width: "12%"
+        },
+        {
+            title: "Pack", field: "pack_name", headerSort: false,
             width: "10%"
         },
         {
-            title: "Stok Tersedia", field: "qty", headerSort: false,
+            title: "Stok Fisik", field: "stok_fisik", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right", width: "11%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return v.toFixed(2);
+            }
+        },
+        {
+            title: "Booking", field: "stok_booking", headerSort: false,
+            hozAlign: "right", headerHozAlign: "right", width: "11%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return v > 0.0001 ? '<span class="text-warning font-weight-bold">' + v.toFixed(2) + '</span>' : '0.00';
+            }
+        },
+        {
+            title: "Tersedia", field: "qty", headerSort: false,
             hozAlign: "right", headerHozAlign: "right",
-            width: "18%",
-            formatter: "money",
-            formatterParams: { decimal: ",", thousand: ".", precision: 2 }
+            width: "11%",
+            formatter: function (cell) {
+                let v = parseFloat(cell.getValue()) || 0;
+                return '<span class="text-success font-weight-bold">' + v.toFixed(2) + '</span>';
+            }
         },
     ],
     locale: 'id',

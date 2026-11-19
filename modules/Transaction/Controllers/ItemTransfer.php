@@ -1069,7 +1069,13 @@ class ItemTransfer extends BaseController
           $matchedLotId = $lotMap[$k] ?? null;
 
           $harga_satuan = !empty($row->price) ? (float)$row->price : 0;
-          $saldoAkhir = round((float)($row->saldo_akhir ?? 0), 2);
+          $cleanLot = trim((string)$row->lot_no);
+          $packIdVal = !empty($row->pack_id) ? (int)$row->pack_id : null;
+          
+          $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $cleanLot, $packIdVal);
+          $stokFisik = ($stockData->stok_fisik > 0) ? $stockData->stok_fisik : round((float)($row->saldo_akhir ?? 0), 2);
+          $stokBooking = $stockData->stok_booking;
+          $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
 
           $build_array["data"][] = [
               "id"           => (int)$row->id_barang,
@@ -1077,11 +1083,13 @@ class ItemTransfer extends BaseController
               "kode_barang"  => $row->kode_barang,
               "nama_satuan"  => $row->nama_satuan,
               "harga_satuan" => $harga_satuan,
-              "total_harga"  => $harga_satuan * $saldoAkhir,
-              "qty"          => $saldoAkhir,
-              "lot_no"       => trim((string)$row->lot_no),
+              "total_harga"  => $harga_satuan * $stokTersedia,
+              "stok_fisik"   => $stokFisik,
+              "stok_booking" => $stokBooking,
+              "qty"          => $stokTersedia,
+              "lot_no"       => $cleanLot,
               "lot_id"       => $matchedLotId,
-              "pack_id"      => !empty($row->pack_id) ? (int)$row->pack_id : null,
+              "pack_id"      => $packIdVal,
               "pack_name"    => !empty($row->pack_name) && $row->pack_name !== '-' ? $row->pack_name : (!empty($row->pack_id) ? "Pack {$row->pack_id}" : "-"),
               "id_barang"    => (int)$row->id_barang,
               "month"        => (int)($row->month ?? $currentMonth),

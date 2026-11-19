@@ -411,9 +411,10 @@ class ItemTransferDetailModel extends \App\Models\PrModel
     {
         $builder = $this->db->table($this->table . " abx");
 
-        $builder->select("abx.id as id_detail, abx.id_barang, abx.qty, abx.qty as qty_transfer, abx.qty as qty_exist, abx.lot_id, abx.lot_no, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan as nama_unit, abx.price");
+        $builder->select("abx.id as id_detail, abx.id_barang, abx.qty, abx.qty as qty_transfer, abx.qty as qty_exist, abx.lot_id, abx.lot_no, abx.pack_id, hbx.pack_name, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan as nama_unit, abx.price");
         $builder->join("ref_barang cbx", "abx.id_barang = cbx.id", "inner");
         $builder->join("ref_satuan sbx", "cbx.id_satuan = sbx.id", "inner");
+        $builder->join("ref_pack hbx", "abx.pack_id = hbx.id", "left");
         $builder->join(
             "trans_barang_trf_header trfhead", 
             "CAST(abx.id_header AS INTEGER) = trfhead.id", 
@@ -462,12 +463,12 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             abx.id_barang,
             (ARRAY_AGG(abx.lot_id ORDER BY CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN 0 ELSE 1 END, abx.id DESC))[1] as lot_id,
             COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') as lot_no,
-            abx.pack_id,
+            (ARRAY_AGG(abx.pack_id ORDER BY CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN 0 ELSE 1 END, abx.id DESC) FILTER (WHERE abx.pack_id IS NOT NULL))[1] as pack_id,
             abx.kode_walkorder,
             cbx.kode_barang,
             cbx.nama_barang,
             sbx.nama_satuan as nama_unit,
-            hbx.pack_name,
+            (ARRAY_AGG(hbx.pack_name ORDER BY CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN 0 ELSE 1 END, abx.id DESC) FILTER (WHERE hbx.pack_name IS NOT NULL))[1] as pack_name,
             (ARRAY_AGG(abx.price ORDER BY abx.id DESC) FILTER (WHERE abx.price > 0))[1] as trf_price,
             cbx.harga_satuan,
             SUM(CASE WHEN trfhead.id_gudang_tujuan = {$idGudang} THEN abx.qty ELSE 0 END) as qty_terima,
@@ -485,7 +486,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
         $builder->where("abx.active", 1);
         $builder->where("trfhead.status", 1);
         $builder->where("trfhead.deleted_at IS NULL");
-        $builder->groupBy("abx.id_barang, COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-'), abx.pack_id, abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, hbx.pack_name, cbx.harga_satuan");
+        $builder->groupBy("abx.id_barang, COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-'), abx.kode_walkorder, cbx.kode_barang, cbx.nama_barang, sbx.nama_satuan, cbx.harga_satuan");
 
         $subSql = $builder->getCompiledSelect();
 
@@ -544,6 +545,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         $usedMapLotNo = [];
         $usedMapLotId = [];
+        $usedMapLotOnly = [];
         foreach ($usedRows as $u) {
             $qtyUsed = round((float) $u->qty_pemakaian_sebelumnya, 2);
             // Kunci utama: berbasis nomor lot fisik
@@ -551,6 +553,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             if ($cleanLot !== '' && $cleanLot !== '-') {
                 $keyLot = $u->id_barang . '|' . $cleanLot . '|' . $u->pack_id;
                 $usedMapLotNo[$keyLot] = ($usedMapLotNo[$keyLot] ?? 0) + $qtyUsed;
+                $keyLotOnly = $u->id_barang . '|' . $cleanLot;
+                $usedMapLotOnly[$keyLotOnly] = ($usedMapLotOnly[$keyLotOnly] ?? 0) + $qtyUsed;
             }
             // Kunci fallback: berbasis lot_id lama
             $keyId = $u->id_barang . '|' . $u->lot_id . '|' . $u->pack_id;
@@ -618,7 +622,8 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             if ($hasLot) {
                 $keyLot = $row->id_barang . '|' . $cleanRowLot . '|' . $row->pack_id;
                 $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
-                $row->qty_pemakaian_sebelumnya = $usedMapLotNo[$keyLot] ?? ($usedMapLotId[$keyId] ?? 0);
+                $keyLotOnly = $row->id_barang . '|' . $cleanRowLot;
+                $row->qty_pemakaian_sebelumnya = $usedMapLotOnly[$keyLotOnly] ?? ($usedMapLotNo[$keyLot] ?? ($usedMapLotId[$keyId] ?? 0));
 
                 $lKey = $row->id_barang . '|' . $cleanRowLot;
                 $stokLot = $lotMap[$lKey] ?? 0.0;

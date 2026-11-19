@@ -138,11 +138,12 @@ class Mcommon extends Model
             $cleanLot = '-';
         }
         $packIdInt = !empty($packId) ? (int)$packId : null;
+        $dummyPackId = $this->getDefaultPackId();
+        $isDummyOrNull = (empty($packIdInt) || (!empty($dummyPackId) && $packIdInt === $dummyPackId));
 
         // 1. STOK FISIK LIVE: Dihitung dari buku besar mutasi trans_barang sejak cutoff 1 Juni 2026
         $lotCond = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(abx.lot_no, '')) = :lot_no:";
-        $packCond = !empty($packIdInt) ? "AND abx.pack_id = :pack_id:" : "AND (abx.pack_id IS NULL OR abx.pack_id = 0)";
-
+        
         $params = [
             'id_barang' => (int)$idBarang,
             'id_gudang' => (int)$idGudang,
@@ -150,7 +151,16 @@ class Mcommon extends Model
         if ($cleanLot !== '-') {
             $params['lot_no'] = $cleanLot;
         }
-        if (!empty($packIdInt)) {
+
+        if ($isDummyOrNull) {
+            if (!empty($dummyPackId)) {
+                $packCond = "AND (abx.pack_id = :pack_id: OR abx.pack_id IS NULL OR abx.pack_id = 0)";
+                $params['pack_id'] = $dummyPackId;
+            } else {
+                $packCond = "AND (abx.pack_id IS NULL OR abx.pack_id = 0)";
+            }
+        } else {
+            $packCond = "AND abx.pack_id = :pack_id:";
             $params['pack_id'] = $packIdInt;
         }
 
@@ -188,13 +198,20 @@ class Mcommon extends Model
             $excludeClause = "AND th.id != :exclude_id:";
         }
         $lotCondTd = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(td.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(td.lot_no, '')) = :lot_no:";
-        $packCondTd = !empty($packIdInt) ? "AND td.pack_id = :pack_id:" : "AND (td.pack_id IS NULL OR td.pack_id = 0)";
+        if ($isDummyOrNull) {
+            if (!empty($dummyPackId)) {
+                $packCondTd = "AND (td.pack_id = :pack_id: OR td.pack_id IS NULL OR td.pack_id = 0)";
+                $paramsBooking['pack_id'] = $dummyPackId;
+            } else {
+                $packCondTd = "AND (td.pack_id IS NULL OR td.pack_id = 0)";
+            }
+        } else {
+            $packCondTd = "AND td.pack_id = :pack_id:";
+            $paramsBooking['pack_id'] = $packIdInt;
+        }
 
         if ($cleanLot !== '-') {
             $paramsBooking['lot_no'] = $cleanLot;
-        }
-        if (!empty($packIdInt)) {
-            $paramsBooking['pack_id'] = $packIdInt;
         }
 
         $sqlBooking = "

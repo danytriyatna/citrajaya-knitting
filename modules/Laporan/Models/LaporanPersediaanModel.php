@@ -452,8 +452,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         // dd($idJenisBarang);
         $builder = $this->db->table("trans_barang_history a");
         $builder->select("a.*, b.nama_barang, b.kode_barang, c.nama_jenis_barang, a.pack_id, COALESCE(rp.pack_name, '-') as pack_name, COALESCE(NULLIF(a.lot_no, ''), '-') as lot_no, b.kode_barang || ' ' || b.nama_barang as barang, 
-                            CAST(CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN (a.masuk - a.keluar) ELSE a.jumlah END AS DECIMAL(18,2)) as saldo_akhir,
-                            CAST(CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN 0 ELSE a.stok_awal END AS DECIMAL(18,2)) as saldo_awal,
+                            CAST(CASE WHEN a.year = 2026 AND a.month = 6 THEN (a.masuk - a.keluar) ELSE a.jumlah END AS DECIMAL(18,2)) as saldo_akhir,
+                            CAST(CASE WHEN a.year = 2026 AND a.month = 6 THEN 0 ELSE a.stok_awal END AS DECIMAL(18,2)) as saldo_awal,
                             w.keterangan as color_code, rs.nama_satuan");
         $builder->join("ref_barang b", "a.id_barang = b.id", "inner");
         $builder->join("ref_jenis_barang c", "a.id_jenis_barang = c.id", "inner");
@@ -594,8 +594,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 a.price,
                 a.masuk,
                 a.keluar,
-                (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN 0 ELSE a.stok_awal END) AS stok_awal,
-                (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN (a.masuk - a.keluar) ELSE a.jumlah END) AS jumlah,
+                (CASE WHEN a.year = 2026 AND a.month = 6 THEN 0 ELSE a.stok_awal END) AS stok_awal,
+                (CASE WHEN a.year = 2026 AND a.month = 6 THEN (a.masuk - a.keluar) ELSE a.jumlah END) AS jumlah,
                 b.nama_barang,
                 b.kode_barang,
                 b.nama_barang AS barang,
@@ -687,8 +687,8 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     a.price,
                     a.masuk,
                     a.keluar,
-                    (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN (a.masuk - a.keluar) ELSE a.jumlah END) AS jumlah,
-                    (CASE WHEN a.year = 2026 AND (a.month = 6 OR a.month = 7) THEN 0 ELSE a.stok_awal END) AS stok_awal,
+                    (CASE WHEN a.year = 2026 AND a.month = 6 THEN (a.masuk - a.keluar) ELSE a.jumlah END) AS jumlah,
+                    (CASE WHEN a.year = 2026 AND a.month = 6 THEN 0 ELSE a.stok_awal END) AS stok_awal,
                     a.id AS urutan,
                     b.nama_barang,
                     b.kode_barang,
@@ -1087,6 +1087,10 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             $jenisCurClause  = "AND rb.id_jenis_barang = :id_jenis_barang:";
         }
 
+        $dummyPackId = $this->getDefaultPackId();
+        $dummyPackClauseH = $dummyPackId ? "COALESCE(NULLIF(h.pack_id, 0), {$dummyPackId})" : "h.pack_id";
+        $dummyPackClauseTb = $dummyPackId ? "COALESCE(NULLIF(tb.pack_id, 0), {$dummyPackId})" : "tb.pack_id";
+
         $unionSql = "
             SELECT DISTINCT
                 x.id_barang,
@@ -1097,7 +1101,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 SELECT
                     h.id_barang,
                     COALESCE(NULLIF(h.lot_no, ''), '-') AS lot_no,
-                    h.pack_id,
+                    {$dummyPackClauseH} AS pack_id,
                     h.id_jenis_barang
                 FROM trans_barang_history h
                 WHERE h.year = :prev_year:
@@ -1111,7 +1115,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 SELECT
                     tb.id_barang,
                     COALESCE(NULLIF(tb.lot_no, ''), '-') AS lot_no,
-                    tb.pack_id,
+                    {$dummyPackClauseTb} AS pack_id,
                     rb.id_jenis_barang
                 FROM trans_barang tb
                 JOIN ref_barang rb ON tb.id_barang = rb.id
@@ -1142,9 +1146,23 @@ class LaporanPersediaanModel extends \App\Models\PrModel
 
         foreach ($data_barang_rows as $lot) {
             $lot_no = $lot['lot_no'];
-            $pack_id_val = $lot['pack_id'];
-            $hasPackId = !empty($pack_id_val);
-            $pack_id_clause = $hasPackId ? '= :pack_id:' : 'IS NULL';
+            $pack_id_val = !empty($lot['pack_id']) ? (int)$lot['pack_id'] : null;
+            $isDummyOrNull = (empty($pack_id_val) || (!empty($dummyPackId) && $pack_id_val === $dummyPackId));
+
+            if ($isDummyOrNull) {
+                $pack_id_val = $dummyPackId;
+                $hasPackId = !empty($dummyPackId);
+                $pack_id_clause = !empty($dummyPackId) ? "(pack_id = :pack_id: OR pack_id IS NULL OR pack_id = 0)" : "(pack_id IS NULL OR pack_id = 0)";
+                $pack_id_clause_abx = !empty($dummyPackId) ? "(abx.pack_id = :pack_id: OR abx.pack_id IS NULL OR abx.pack_id = 0)" : "(abx.pack_id IS NULL OR abx.pack_id = 0)";
+                $pack_id_clause_abx2 = !empty($dummyPackId) ? "(abx2.pack_id = :pack_id: OR abx2.pack_id IS NULL OR abx2.pack_id = 0)" : "(abx2.pack_id IS NULL OR abx2.pack_id = 0)";
+                $pack_id_clause_abx3 = !empty($dummyPackId) ? "(abx3.pack_id = :pack_id: OR abx3.pack_id IS NULL OR abx3.pack_id = 0)" : "(abx3.pack_id IS NULL OR abx3.pack_id = 0)";
+            } else {
+                $hasPackId = true;
+                $pack_id_clause = "pack_id = :pack_id:";
+                $pack_id_clause_abx = "abx.pack_id = :pack_id:";
+                $pack_id_clause_abx2 = "abx2.pack_id = :pack_id:";
+                $pack_id_clause_abx3 = "abx3.pack_id = :pack_id:";
+            }
             $id_jenis_barang = $lot['id_jenis_barang'];
             $id_barang_cur = $lot['id_barang'];
 
@@ -1174,7 +1192,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     FROM trans_barang_history
                     WHERE id_barang = :id_barang:
                       AND COALESCE(NULLIF(lot_no, ''), '-') = :lot_no:
-                      AND pack_id $pack_id_clause
+                      AND $pack_id_clause
                       $gudangPrevHClause
                       AND year = :prev_year:
                       AND month = :prev_month:
@@ -1206,7 +1224,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         FROM trans_barang_history
                         WHERE id_barang = :id_barang:
                           AND COALESCE(NULLIF(lot_no, ''), '-') = :lot_no:
-                          AND pack_id $pack_id_clause
+                          AND $pack_id_clause
                           $gudangFallbackClause
                           AND (year * 100 + month) < :cur_ym:
                           AND (year * 100 + month) >= 202606
@@ -1246,7 +1264,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                             FROM trans_barang abx2
                             WHERE abx2.id_barang = :id_barang:
                             AND COALESCE(NULLIF(abx2.lot_no, ''), '-') = :lot_no:
-                            AND abx2.pack_id $pack_id_clause
+                            AND $pack_id_clause_abx2
                             AND abx2.tanggal < :next_cutoff:
                             AND abx2.price IS NOT NULL
                             AND abx2.price > 0
@@ -1268,7 +1286,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                         FROM trans_barang abx3
                         WHERE abx3.id_barang = :id_barang:
                         AND COALESCE(NULLIF(abx3.lot_no, ''), '-') = :lot_no:
-                        AND abx3.pack_id $pack_id_clause
+                        AND $pack_id_clause_abx3
                         AND abx3.tanggal < :next_cutoff:
                         AND COALESCE(abx3.active, 1) = 1
                         ORDER BY abx3.tanggal DESC
@@ -1311,7 +1329,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     AND EXTRACT(YEAR FROM abx.tanggal) = :year:
                     AND abx.id_barang = :id_barang:
                     AND COALESCE(NULLIF(abx.lot_no, ''), '-') = :lot_no:
-                    AND abx.pack_id $pack_id_clause
+                    AND $pack_id_clause_abx
                 GROUP BY
                     abx.id_barang,
                     COALESCE(NULLIF(abx.lot_no, ''), '-'),
@@ -1606,8 +1624,20 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $prevMonth = ($month == 1) ? 12 : $month - 1;
         $prevYear  = ($month == 1) ? $year - 1 : $year;
 
-        $hasPackId = !empty($packId);
-        $packClause = $hasPackId ? "= :pack_id:" : "IS NULL";
+        $dummyPackId = $this->getDefaultPackId();
+        $packIdInt = !empty($packId) ? (int)$packId : null;
+        $isDummyOrNull = (empty($packIdInt) || (!empty($dummyPackId) && $packIdInt === $dummyPackId));
+
+        if ($isDummyOrNull) {
+            $packId = $dummyPackId;
+            $hasPackId = !empty($dummyPackId);
+            $packClause = !empty($dummyPackId) ? "(pack_id = :pack_id: OR pack_id IS NULL OR pack_id = 0)" : "(pack_id IS NULL OR pack_id = 0)";
+            $packClauseTrx = !empty($dummyPackId) ? "(pack_id = :pack_id: OR pack_id IS NULL OR pack_id = 0)" : "(pack_id IS NULL OR pack_id = 0)";
+        } else {
+            $hasPackId = true;
+            $packClause = "pack_id = :pack_id:";
+            $packClauseTrx = "pack_id = :pack_id:";
+        }
 
         // 1. Ambil Saldo Awal (dari bulan sebelumnya)
         $saldoAwal = 0;
@@ -1691,7 +1721,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             FROM trans_barang
             WHERE id_barang = :id_barang:
               AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
-              AND pack_id {$packClause}
+              AND {$packClauseTrx}
               AND EXTRACT(MONTH FROM tanggal) = :month:
               AND EXTRACT(YEAR FROM tanggal) = :year:
               AND COALESCE(active, 1) = 1
@@ -1821,5 +1851,11 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 }
             }
         }
+    }
+
+    public function getDefaultPackId()
+    {
+        $row = $this->db->table('ref_pack')->select('id')->where('pack_name', '-')->get()->getRow();
+        return !empty($row) ? (int)$row->id : null;
     }
 }

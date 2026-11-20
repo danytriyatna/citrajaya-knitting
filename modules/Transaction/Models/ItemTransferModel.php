@@ -796,12 +796,13 @@ class ItemTransferModel extends \App\Models\PrModel
 
                     // Validasi live stock dari Single Stock Engine (dengan exclude header ID transfer ini jika edit)
                     $stockInfo = $this->mcommon->getLiveStockWithBooking($chkIdBarang, (int)$data['id_gudang_asal'], $chkLotNo, $chkPackId, !empty($id) ? (int)$id : null);
-                    $availStock = (float)($stockInfo['stok_fisik'] ?? 0);
+                    $availStock = is_object($stockInfo) ? (float)($stockInfo->stok_fisik ?? 0) : (float)($stockInfo['stok_fisik'] ?? 0);
 
                     if ($availStock - $chkQty < -0.0001) {
                         $itemInfo = $this->db->table('ref_barang')->select('nama_barang, kode_barang')->where('id', $chkIdBarang)->get()->getRow();
                         $namaBrg = !empty($itemInfo) ? "{$itemInfo->kode_barang} - {$itemInfo->nama_barang}" : "Barang ID {$chkIdBarang}";
-                        $packLabel = !empty($stockInfo['pack_name']) && $stockInfo['pack_name'] !== '-' ? " [Pack: {$stockInfo['pack_name']}]" : "";
+                        $packName = !empty($rowCheck['pack_name']) ? $rowCheck['pack_name'] : (is_object($stockInfo) ? ($stockInfo->pack_name ?? '') : ($stockInfo['pack_name'] ?? ''));
+                        $packLabel = !empty($packName) && $packName !== '-' ? " [Pack: {$packName}]" : "";
                         $insufficientLots[] = "• {$namaBrg} (Lot: {$chkLotNo}{$packLabel}, Stok Fisik: " . number_format($availStock, 2) . ", Diminta: " . number_format($chkQty, 2) . ")";
                     }
                 }

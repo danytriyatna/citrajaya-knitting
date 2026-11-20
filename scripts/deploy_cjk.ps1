@@ -50,7 +50,7 @@ if ((Test-Path "$targetDump") -and ((Get-Item "$targetDump").Length -gt 1000)) {
 # ------------------------------------------------------------------------------
 Write-Host ""
 Write-Host "[2/4] Menarik kode terbaru dari remote git di server..." -ForegroundColor Yellow
-$gitPullCmd = "cd $remotePath && git pull origin `$(git rev-parse --abbrev-ref HEAD)"
+$gitPullCmd = "cd $remotePath && git pull origin master"
 & ssh -o StrictHostKeyChecking=no "$sshUser@$sshHost" "$gitPullCmd"
 
 if ($LASTEXITCODE -ne 0) {
@@ -64,7 +64,7 @@ if ($LASTEXITCODE -ne 0) {
 # ------------------------------------------------------------------------------
 Write-Host ""
 Write-Host "[3/4] Membersihkan cache CodeIgniter 4, reset LSPHP OpCache & hak akses..." -ForegroundColor Yellow
-$maintenanceCmd = "cd $remotePath && php spark cache:clear && chmod -R 775 writable && touch .lsphp_restart.txt && (killall -9 lsphp 2>/dev/null || true)"
+$maintenanceCmd = "cd $remotePath && mkdir -p writable/cache && chmod -R 777 writable && php spark cache:clear && touch .lsphp_restart.txt && (killall -9 lsphp 2>/dev/null || true)"
 & ssh -o StrictHostKeyChecking=no "$sshUser@$sshHost" "$maintenanceCmd"
 Write-Host "[OK] Cache aplikasi & OpCache server dibersihkan." -ForegroundColor Green
 

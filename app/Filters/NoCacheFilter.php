@@ -31,6 +31,13 @@ class NoCacheFilter implements FilterInterface
             $response->setHeader('Expires', '0');
         }
 
+        // 2. HTTP Security Hardening Headers (OWASP ZAP Compliance)
+        $response->setHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->setHeader('X-Content-Type-Options', 'nosniff');
+        $response->setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+        $response->setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+
         // 2. Jika respon berupa halaman HTML, otomatis inject parameter versi (?v=filemtime)
         // pada semua script dan stylesheet lokal yang belum memiliki versi dinamis.
         $contentType = $response->getHeaderLine('Content-Type');

@@ -67,6 +67,26 @@ Options All -Indexes
 </IfModule>
 
 <IfModule mod_headers.c>
+    # ----------------------------------------------------------------------
+    # HTTP Security Hardening Headers (OWASP ZAP Compliance)
+    # ----------------------------------------------------------------------
+    # 1. Anti-Clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # 2. Anti-MIME Sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # 3. HTTP Strict Transport Security (HSTS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # 4. Referrer Policy & Permissions Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    
+    # 5. Suppress Header X-Powered-By
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+
     # Static media & fonts cache 1 bulan
     <FilesMatch "\.(png|jpg|jpeg|jfif|gif|webp|ico|svg|woff|woff2|ttf|eot)$">
         Header set Cache-Control "max-age=2592000, public"

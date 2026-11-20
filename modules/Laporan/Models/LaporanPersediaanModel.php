@@ -1660,7 +1660,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                 FROM trans_barang_history
                 WHERE id_barang = :id_barang:
                   AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
-                  AND pack_id {$packClause}
+                  AND {$packClause}
                   AND id_gudang = :id_gudang:
                   AND year = :prev_year:
                   AND month = :prev_month:
@@ -1687,7 +1687,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
                     FROM trans_barang_history
                     WHERE id_barang = :id_barang:
                       AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
-                      AND pack_id {$packClause}
+                      AND {$packClause}
                       AND id_gudang = :id_gudang:
                       AND (year * 100 + month) < :cur_ym:
                       AND (year * 100 + month) >= 202606
@@ -1783,7 +1783,7 @@ class LaporanPersediaanModel extends \App\Models\PrModel
             WHERE id_barang = :id_barang:
               AND id_gudang = :id_gudang:
               AND COALESCE(NULLIF(TRIM(lot_no), ''), '-') = :lot_no:
-              AND pack_id {$packClause}
+              AND {$packClause}
               AND year = :year:
               AND month = :month:
         ";

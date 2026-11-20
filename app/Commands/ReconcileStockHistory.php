@@ -36,14 +36,11 @@ class ReconcileStockHistory extends BaseCommand
 
         // 1. Pastikan Dummy Pack '-' ada di ref_pack
         CLI::write("\n[1/3] Menyiapkan Pack Dummy '-' di ref_pack...", 'cyan');
-        $chkDummy = $db->table('ref_pack')->select('id')->where('pack_name', '-')->get()->getRow();
+        $chkDummy = $db->query("SELECT id FROM ref_pack WHERE pack_name = '-' LIMIT 1")->getRow();
         if (empty($chkDummy)) {
-            $db->table('ref_pack')->insert([
-                'pack_name'  => '-',
-                'keterangan' => 'Non-Pack / Standar',
-                'active'     => 1,
-            ]);
-            $dummyPackId = (int)$db->insertID();
+            $db->query("INSERT INTO ref_pack (pack_name, keterangan, active) VALUES ('-', 'Non-Pack / Standar', true)");
+            $chkDummy = $db->query("SELECT id FROM ref_pack WHERE pack_name = '-' LIMIT 1")->getRow();
+            $dummyPackId = (int)$chkDummy->id;
             CLI::write("  -> Pack Dummy '-' berhasil dibuat dengan ID: {$dummyPackId}", 'green');
         } else {
             $dummyPackId = (int)$chkDummy->id;
@@ -94,7 +91,7 @@ class ReconcileStockHistory extends BaseCommand
         }
 
         // Ambil daftar gudang aktif
-        $listGudang = $db->table('ref_gudang')->select('id, nama_gudang')->where('active', 1)->get()->getResult();
+        $listGudang = $db->query("SELECT id, nama_gudang FROM ref_gudang WHERE active = 1 ORDER BY id ASC")->getResult();
 
         foreach ($periods as $period) {
             $yr = $period['year'];

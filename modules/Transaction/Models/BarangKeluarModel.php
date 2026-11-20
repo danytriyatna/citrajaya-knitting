@@ -208,9 +208,19 @@ class BarangKeluarModel extends \App\Models\PrModel
         $this->db->transStart();
         try {
             $nama = $data['nama'];
-            unset($data['nama']);            // Validasi ketersediaan stok di Gudang sebelum approve (HARUS MENCUKUPI, TIDAK BISA LANJUT JIKA KURANG)
+            unset($data['nama']);
+
+            $getCurrent = !empty($id) ? $this->getData($id) : null;
+            if (!empty($getCurrent) && !empty($getCurrent->kode_transaksi)) {
+                $data['kode_transaksi'] = $getCurrent->kode_transaksi;
+            }
+
+            // Validasi ketersediaan stok di Gudang sebelum approve (HARUS MENCUKUPI, TIDAK BISA LANJUT JIKA KURANG)
             if ($data['status'] == 1 && !empty($detail) && is_array($detail)) {
                 $insufficientLots = [];
+                $excludeTrxKode = !empty($getCurrent) ? $getCurrent->kode_transaksi : null;
+                $excludeBtkId   = !empty($id) ? (int)$id : null;
+
                 foreach ($detail as $rowCheck) {
                     $chkIdBarang = !empty($rowCheck['id_barang']) ? (is_numeric($rowCheck['id_barang']) ? (int)$rowCheck['id_barang'] : decrypt($rowCheck['id_barang'])) : 0;
                     $chkQty = (float)($rowCheck['qty'] ?? 0);
@@ -220,8 +230,16 @@ class BarangKeluarModel extends \App\Models\PrModel
                     if ($chkLotNo === '') $chkLotNo = '-';
                     $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
 
-                    // Validasi live stock dari Single Stock Engine
-                    $stockInfo = $this->mcommon->getLiveStockWithBooking($chkIdBarang, (int)$data['id_gudang'], $chkLotNo, $chkPackId);
+                    // Validasi live stock dari Single Stock Engine (dengan exclude transaksi ini jika edit)
+                    $stockInfo = $this->mcommon->getLiveStockWithBooking(
+                        $chkIdBarang,
+                        (int)$data['id_gudang'],
+                        $chkLotNo,
+                        $chkPackId,
+                        null,
+                        $excludeTrxKode,
+                        $excludeBtkId
+                    );
                     $availStock = is_object($stockInfo) ? (float)($stockInfo->stok_fisik ?? 0) : (float)($stockInfo['stok_fisik'] ?? 0);
 
                     if ($availStock - $chkQty < -0.0001) {
@@ -243,8 +261,9 @@ class BarangKeluarModel extends \App\Models\PrModel
                     "id_header" => $id,
                 ];
                 $this->deleteRecordMultipleColumn($this->tblDet, $arrDelete);
-                $getCurrent = $this->getData($id);
-                $data['kode_transaksi'] = $getCurrent->kode_transaksi;
+                if (empty($data['kode_transaksi']) && !empty($getCurrent)) {
+                    $data['kode_transaksi'] = $getCurrent->kode_transaksi;
+                }
                 $arrParam =  [
                     "id" => $id,
                 ];

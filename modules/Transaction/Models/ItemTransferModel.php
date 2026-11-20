@@ -794,8 +794,16 @@ class ItemTransferModel extends \App\Models\PrModel
                     if ($chkLotNo === '') $chkLotNo = '-';
                     $chkPackId = !empty($rowCheck['pack_id']) ? (int)$rowCheck['pack_id'] : null;
 
-                    // Validasi live stock dari Single Stock Engine (dengan exclude header ID transfer ini jika edit)
-                    $stockInfo = $this->mcommon->getLiveStockWithBooking($chkIdBarang, (int)$data['id_gudang_asal'], $chkLotNo, $chkPackId, !empty($id) ? (int)$id : null);
+                    // Validasi live stock dari Single Stock Engine (dengan exclude header ID transfer & kode_transaksi jika edit)
+                    $stockInfo = $this->mcommon->getLiveStockWithBooking(
+                        $chkIdBarang,
+                        (int)$data['id_gudang_asal'],
+                        $chkLotNo,
+                        $chkPackId,
+                        !empty($id) ? (int)$id : null,
+                        $data['kode_transaksi'] ?? null,
+                        null
+                    );
                     $availStock = is_object($stockInfo) ? (float)($stockInfo->stok_fisik ?? 0) : (float)($stockInfo['stok_fisik'] ?? 0);
 
                     if ($availStock - $chkQty < -0.0001) {

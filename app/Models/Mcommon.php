@@ -134,7 +134,6 @@ class Mcommon extends Model
      */
     public function getLiveStockWithBooking($idBarang, $idGudang, $lotNo = null, $packId = null, $excludeTrfHeaderId = null, $excludeTrxKode = null, $excludeBtkHeaderId = null)
     {
-        $cutoffDate = '2026-06-01';
         $cleanLot = trim((string)($lotNo ?? ''));
         if ($cleanLot === '' || $cleanLot === '-') {
             $cleanLot = '-';
@@ -143,73 +142,115 @@ class Mcommon extends Model
         $dummyPackId = $this->getDefaultPackId();
         $isDummyOrNull = (empty($packIdInt) || (!empty($dummyPackId) && $packIdInt === $dummyPackId));
 
-        // 1. STOK FISIK LIVE: Dihitung dari buku besar mutasi trans_barang sejak cutoff 1 Juni 2026
-        $lotCond = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(abx.lot_no, '')) = :lot_no:";
-        
-        $params = [
-            'id_barang' => (int)$idBarang,
-            'id_gudang' => (int)$idGudang,
-        ];
-        if ($cleanLot !== '-') {
-            $params['lot_no'] = $cleanLot;
-        }
+        $stokFisik = 0.0;
 
-        if ($isDummyOrNull) {
-            if (!empty($dummyPackId)) {
-                $packCond = "AND (abx.pack_id = :pack_id: OR abx.pack_id IS NULL OR abx.pack_id = 0)";
-                $params['pack_id'] = $dummyPackId;
+        // 1. STOK FISIK LIVE:
+        if ($cleanLot !== '-') {
+            // A. UNTUK BARANG BER-LOT:
+            // trans_lots adalah Single Source of Truth saldo lot fisik aktual per gudang.
+            $builderLot = $this->db->table('trans_lots')
+                ->select('COALESCE(SUM(qty), 0) as total_qty')
+                ->where('id_barang', (int)$idBarang)
+                ->where('id_gudang', (int)$idGudang)
+                ->where('TRIM(COALESCE(lot_no, \'\')) =', $cleanLot)
+                ->where('active', 1);
+
+            $lotAllRow = (clone $builderLot)->get()->getRow();
+            $stokLotAll = $lotAllRow ? round((float)$lotAllRow->total_qty, 2) : 0.0;
+
+            if (!$isDummyOrNull) {
+                $lotPackRow = (clone $builderLot)->where('pack_id', $packIdInt)->get()->getRow();
+                $stokLotPack = $lotPackRow ? round((float)$lotPackRow->total_qty, 2) : 0.0;
+                $stokFisik = ($stokLotPack > 0) ? $stokLotPack : $stokLotAll;
             } else {
-                $packCond = "AND (abx.pack_id IS NULL OR abx.pack_id = 0)";
+                $stokFisik = $stokLotAll;
+            }
+
+            // Fallback: jika di trans_lots 0 (belum sync), cek mutasi trans_barang
+            if ($stokFisik <= 0) {
+                $paramsFisik = [
+                    'id_barang' => (int)$idBarang,
+                    'id_gudang' => (int)$idGudang,
+                    'lot_no'    => $cleanLot,
+                ];
+                $excludeTrxCond = "";
+                if (!empty($excludeTrxKode)) {
+                    $paramsFisik['exclude_trx_kode'] = trim((string)$excludeTrxKode);
+                    $excludeTrxCond = "AND (abx.kode_transaksi != :exclude_trx_kode: OR abx.kode_transaksi IS NULL)";
+                }
+
+                $sqlFisikTb = "
+                    SELECT
+                        COALESCE(SUM(CASE WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) -
+                        COALESCE(SUM(CASE WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) AS stok_fisik
+                    FROM trans_barang abx
+                    WHERE COALESCE(abx.active, 1) = 1
+                      AND abx.id_barang = :id_barang:
+                      AND TRIM(COALESCE(abx.lot_no, '')) = :lot_no:
+                      $excludeTrxCond
+                ";
+                $rowFisikTb = $this->db->query($sqlFisikTb, $paramsFisik)->getRow();
+                $stokFisikTb = $rowFisikTb ? round((float)$rowFisikTb->stok_fisik, 2) : 0.0;
+                if ($stokFisikTb > 0) {
+                    $stokFisik = $stokFisikTb;
+                }
             }
         } else {
-            $packCond = "AND abx.pack_id = :pack_id:";
-            $params['pack_id'] = $packIdInt;
+            // B. UNTUK BARANG NON-LOT:
+            $paramsFisik = [
+                'id_barang' => (int)$idBarang,
+                'id_gudang' => (int)$idGudang,
+            ];
+            $excludeTrxCond = "";
+            if (!empty($excludeTrxKode)) {
+                $paramsFisik['exclude_trx_kode'] = trim((string)$excludeTrxKode);
+                $excludeTrxCond = "AND (abx.kode_transaksi != :exclude_trx_kode: OR abx.kode_transaksi IS NULL)";
+            }
+
+            $sqlFisikNonLot = "
+                SELECT
+                    COALESCE(SUM(CASE WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) -
+                    COALESCE(SUM(CASE WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) AS stok_fisik
+                FROM trans_barang abx
+                WHERE COALESCE(abx.active, 1) = 1
+                  AND abx.id_barang = :id_barang:
+                  AND (COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') = '-')
+                  $excludeTrxCond
+            ";
+            $rowFisikNonLot = $this->db->query($sqlFisikNonLot, $paramsFisik)->getRow();
+            $stokFisikTb = $rowFisikNonLot ? round((float)$rowFisikNonLot->stok_fisik, 2) : 0.0;
+
+            $rowLotNonLot = $this->db->table('trans_lots')
+                ->select('COALESCE(SUM(qty), 0) as total_qty')
+                ->where('id_barang', (int)$idBarang)
+                ->where('id_gudang', (int)$idGudang)
+                ->where('(lot_no = \'-\' OR lot_no = \'\' OR lot_no IS NULL)')
+                ->where('active', 1)
+                ->get()->getRow();
+            $stokLotNonLot = $rowLotNonLot ? round((float)$rowLotNonLot->total_qty, 2) : 0.0;
+
+            $stokFisik = max(0.0, max($stokFisikTb, $stokLotNonLot));
         }
 
-        $excludeTrxCond = "";
-        if (!empty($excludeTrxKode)) {
-            $params['exclude_trx_kode'] = trim((string)$excludeTrxKode);
-            $excludeTrxCond = "AND (abx.kode_transaksi != :exclude_trx_kode: OR abx.kode_transaksi IS NULL)";
-        }
+        // 2. STOK TER-BOOKING (DRAFT AKTIF):
+        // Hanya menghitung dokumen draft AKTIF (rentang 30 hari terakhir) yang belum dihapus (deleted_at IS NULL).
+        // Draft kadaluarsa / zombie (> 30 hari) diabaikan agar tidak mengunci inventori gudang.
+        $draftActiveDate = date('Y-m-d', strtotime('-30 days'));
 
-        $sqlFisik = "
-            SELECT
-                COALESCE(SUM(CASE WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) -
-                COALESCE(SUM(CASE WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) AS stok_fisik
-            FROM trans_barang abx
-            WHERE COALESCE(abx.active, 1) = 1
-              AND abx.id_barang = :id_barang:
-              AND abx.tanggal >= '$cutoffDate'
-              $lotCond
-              $packCond
-              $excludeTrxCond
-        ";
-        $rowFisik = $this->db->query($sqlFisik, $params)->getRow();
-        $stokFisik = $rowFisik ? round((float)$rowFisik->stok_fisik, 2) : 0.0;
-
-        // 2. STOK TER-BOOKING (DRAFT):
-        // a. Dokumen Transfer yang masih Draft (status = 0) dari gudang asal ini
+        // a. Dokumen Transfer Draft (status = 0) dari gudang asal ini
         $excludeTrfClause = "";
         $paramsBookingTrf = [
-            'id_barang' => (int)$idBarang,
-            'id_gudang' => (int)$idGudang,
+            'id_barang'         => (int)$idBarang,
+            'id_gudang'         => (int)$idGudang,
+            'draft_active_date' => $draftActiveDate,
         ];
         if (!empty($excludeTrfHeaderId)) {
             $paramsBookingTrf['exclude_trf_id'] = (int)$excludeTrfHeaderId;
             $excludeTrfClause = "AND th.id != :exclude_trf_id:";
         }
-        $lotCondTd = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(td.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(td.lot_no, '')) = :lot_no:";
-        if ($isDummyOrNull) {
-            if (!empty($dummyPackId)) {
-                $packCondTd = "AND (td.pack_id = :pack_id: OR td.pack_id IS NULL OR td.pack_id = 0)";
-                $paramsBookingTrf['pack_id'] = $dummyPackId;
-            } else {
-                $packCondTd = "AND (td.pack_id IS NULL OR td.pack_id = 0)";
-            }
-        } else {
-            $packCondTd = "AND td.pack_id = :pack_id:";
-            $paramsBookingTrf['pack_id'] = $packIdInt;
-        }
+        $lotCondTd = ($cleanLot === '-') 
+            ? "AND (COALESCE(NULLIF(TRIM(td.lot_no), ''), '-') = '-')" 
+            : "AND TRIM(COALESCE(td.lot_no, '')) = :lot_no:";
         if ($cleanLot !== '-') {
             $paramsBookingTrf['lot_no'] = $cleanLot;
         }
@@ -221,35 +262,28 @@ class Mcommon extends Model
             WHERE th.status = 0
               AND th.id_gudang_asal = :id_gudang:
               AND td.id_barang = :id_barang:
+              AND (th.tanggal >= :draft_active_date: OR th.created_at >= :draft_active_date:)
+              AND th.deleted_at IS NULL
               $excludeTrfClause
               $lotCondTd
-              $packCondTd
         ";
         $rowBookingTrf = $this->db->query($sqlBookingTrf, $paramsBookingTrf)->getRow();
         $stokBookingTrf = $rowBookingTrf ? round((float)$rowBookingTrf->stok_booking, 2) : 0.0;
 
-        // b. Dokumen Barang Keluar (BTK) yang masih Draft (status = 0) dari gudang ini
+        // b. Dokumen Barang Keluar (BTK) Draft (status = 0) dari gudang ini
         $excludeBtkClause = "";
         $paramsBookingBtk = [
-            'id_barang' => (int)$idBarang,
-            'id_gudang' => (int)$idGudang,
+            'id_barang'         => (int)$idBarang,
+            'id_gudang'         => (int)$idGudang,
+            'draft_active_date' => $draftActiveDate,
         ];
         if (!empty($excludeBtkHeaderId)) {
             $paramsBookingBtk['exclude_btk_id'] = (int)$excludeBtkHeaderId;
             $excludeBtkClause = "AND tbh.id != :exclude_btk_id:";
         }
-        $lotCondTbd = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(tbd.lot_no, '')) = :lot_no:";
-        if ($isDummyOrNull) {
-            if (!empty($dummyPackId)) {
-                $packCondTbd = "AND (tbd.pack_id = :pack_id: OR tbd.pack_id IS NULL OR tbd.pack_id = 0)";
-                $paramsBookingBtk['pack_id'] = $dummyPackId;
-            } else {
-                $packCondTbd = "AND (tbd.pack_id IS NULL OR tbd.pack_id = 0)";
-            }
-        } else {
-            $packCondTbd = "AND tbd.pack_id = :pack_id:";
-            $paramsBookingBtk['pack_id'] = $packIdInt;
-        }
+        $lotCondTbd = ($cleanLot === '-') 
+            ? "AND (COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = '-')" 
+            : "AND TRIM(COALESCE(tbd.lot_no, '')) = :lot_no:";
         if ($cleanLot !== '-') {
             $paramsBookingBtk['lot_no'] = $cleanLot;
         }
@@ -262,9 +296,10 @@ class Mcommon extends Model
               AND tbh.jenis_transaksi = 2
               AND tbh.id_gudang = :id_gudang:
               AND tbd.id_barang = :id_barang:
+              AND (tbh.tanggal >= :draft_active_date: OR tbh.created_at >= :draft_active_date:)
+              AND tbh.deleted_at IS NULL
               $excludeBtkClause
               $lotCondTbd
-              $packCondTbd
         ";
         $rowBookingBtk = $this->db->query($sqlBookingBtk, $paramsBookingBtk)->getRow();
         $stokBookingBtk = $rowBookingBtk ? round((float)$rowBookingBtk->stok_booking, 2) : 0.0;

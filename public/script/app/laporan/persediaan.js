@@ -34,16 +34,16 @@ let dtList = new Tabulator("#dt-list", {
   },
 
   columns: [
-    { title: "PACK", field: "pack_name", width: "9%" },
-    { title: "LOT", field: "lot_no", width: "9%" },
-    { title: "Size/Warna", field: "nama_satuan", hozAlign: "left", width: "15%" },
+    { title: "PACK", field: "pack_name", width: "7%" },
+    { title: "LOT", field: "lot_no", width: "8%" },
+    { title: "Size/Warna", field: "nama_satuan", hozAlign: "left", width: "10%" },
     {
-      title: "Qty<br>Awal", field: "saldo_awal", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      title: "Qty<br>Awal", field: "saldo_awal", hozAlign: "right", width: "9%", headerHozAlign: "right",
       formatter: "money",
       formatterParams: { decimal: ",", thousand: ".", precision: 2 }
     },
     {
-      title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      title: "Qty<br>Masuk", field: "masuk", hozAlign: "right", width: "9%", headerHozAlign: "right",
       formatter: "money",
       formatterParams: { decimal: ",", thousand: ".", precision: 2 },
       bottomCalc: "sum",
@@ -51,7 +51,7 @@ let dtList = new Tabulator("#dt-list", {
       bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
     },
     {
-      title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      title: "Qty<br>Keluar", field: "keluar", hozAlign: "right", width: "9%", headerHozAlign: "right",
       formatter: "money",
       formatterParams: { decimal: ",", thousand: ".", precision: 2 },
       bottomCalc: "sum",
@@ -59,7 +59,7 @@ let dtList = new Tabulator("#dt-list", {
       bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
     },
     {
-      title: "Qty<br>Akhir", field: "saldo_akhir", hozAlign: "right", width: "12%", headerHozAlign: "right",
+      title: "Qty<br>Akhir", field: "saldo_akhir", hozAlign: "right", width: "10%", headerHozAlign: "right",
       formatter: "money",
       formatterParams: { decimal: ",", thousand: ".", precision: 2 },
       bottomCalc: "sum",
@@ -67,12 +67,47 @@ let dtList = new Tabulator("#dt-list", {
       bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
     },
     {
-      title: "Nilai", field: "price", hozAlign: "right", width: "17%",
+      title: "Qty<br>Booked", field: "qty_booked", hozAlign: "right", width: "10%", headerHozAlign: "right",
+      formatter: function (cell, formatterParams, onRendered) {
+        let val = parseFloat(cell.getValue() || 0);
+        if (val > 0) {
+          let str = val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          return `<span class="badge bg-warning text-dark font-weight-bold" style="cursor:pointer; font-size:11px;" title="Klik untuk melihat rincian dokumen booking">${str} <i class="ti-info-alt"></i></span>`;
+        }
+        return `<span style="color:#aaa;">0,00</span>`;
+      },
+      cellClick: function (e, cell) {
+        let rowData = cell.getRow().getData();
+        let val = parseFloat(rowData.qty_booked || 0);
+        if (val > 0) {
+          showBookingDetailModal(rowData);
+        }
+      },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
+    },
+    {
+      title: "Available<br>Qty", field: "available_qty", hozAlign: "right", width: "10%", headerHozAlign: "right",
+      formatter: function (cell, formatterParams, onRendered) {
+        let val = parseFloat(cell.getValue() || 0);
+        let str = val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (val <= 0) {
+          return `<span class="text-danger font-weight-bold">${str}</span>`;
+        }
+        return `<span class="text-success font-weight-bold">${str}</span>`;
+      },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { decimal: ",", thousand: ".", precision: 2 }
+    },
+    {
+      title: "Nilai", field: "price", hozAlign: "right", width: "10%",
       formatter: "money",
       formatterParams: { decimal: ",", thousand: ".", symbol: "Rp", precision: 0 },
       headerHozAlign: "right",
     },
-    { title: "Tanggal", field: "tanggal", hozAlign: "right", width: "10%" },
+    { title: "Tanggal", field: "tanggal", hozAlign: "right", width: "8%" },
   ],
 
   locale: 'id',
@@ -371,3 +406,96 @@ document.addEventListener("DOMContentLoaded", function () {
     selectTahun.dispatchEvent(new Event('change', { bubbles: true }));
   }
 });
+
+/**
+ * Menampilkan modal rincian transaksi draft yang sedang booking lot/pack ini.
+ */
+function showBookingDetailModal(data) {
+  let modalEl = document.getElementById('modal-detail-booking');
+  if (!modalEl) return;
+  let modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+  let idBarang = data.id_barang;
+  let lotNo = data.lot_no || '-';
+  let packId = data.pack_id || '';
+  let packName = data.pack_name || '-';
+  let namaBarang = data.nama_barang || data.barang || `ID ${idBarang}`;
+  let kodeBarang = data.kode_barang || '';
+  let idGudang = $('#filter_gudang').val() || '';
+  let namaGudang = $('#filter_gudang option:selected').text() || 'Semua Gudang';
+
+  $('#modal-booking-info-barang').html(`${kodeBarang} - ${namaBarang}`);
+  $('#modal-booking-info-meta').html(`<b>Gudang:</b> ${namaGudang} &nbsp;|&nbsp; <b>Lot:</b> ${lotNo} &nbsp;|&nbsp; <b>Pack:</b> ${packName}`);
+
+  $('#modal-booking-loading').show();
+  $('#modal-booking-content').hide();
+  $('#tbl-booking-body').empty();
+  $('#tbl-booking-total').text('0,00');
+
+  modal.show();
+
+  $.ajax({
+    url: 'laporan/persediaan/get-booked-details',
+    type: 'GET',
+    data: {
+      id_barang: idBarang,
+      lot_no: lotNo,
+      pack_id: packId,
+      id_gudang: idGudang
+    },
+    dataType: 'json',
+    success: function (res) {
+      $('#modal-booking-loading').hide();
+      $('#modal-booking-content').show();
+
+      if (res && res.status && res.data && res.data.length > 0) {
+        let rowsHtml = '';
+        let total = 0;
+        res.data.forEach((item, idx) => {
+          let qty = parseFloat(item.qty || 0);
+          total += qty;
+          let qtyStr = qty.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          let badgeTipe = item.jenis_transaksi === 'Transfer Antar Gudang'
+            ? '<span class="badge bg-info text-white">Transfer</span>'
+            : '<span class="badge bg-primary text-white">Barang Keluar</span>';
+
+          let routeUrl = item.url ? item.url : (item.jenis_transaksi === 'Transfer Antar Gudang'
+            ? `trans/transfer/edit/${item.header_id}`
+            : `trans/outgoing-goods/edit/${item.header_id}`);
+
+          let ruteGudang = item.jenis_transaksi === 'Transfer Antar Gudang'
+            ? `${item.gudang_asal || '-'} &rarr; ${item.gudang_tujuan || '-'}`
+            : (item.gudang_asal || '-');
+
+          let tglStr = item.tanggal ? item.tanggal : '-';
+
+          rowsHtml += `
+            <tr>
+              <td class="text-center">${idx + 1}</td>
+              <td class="font-weight-bold">
+                <a href="${routeUrl}" target="_blank" class="text-primary text-decoration-underline" title="Buka transaksi">
+                  ${item.kode_transaksi} <i class="ti-new-window small"></i>
+                </a>
+              </td>
+              <td class="text-center">${tglStr}</td>
+              <td class="text-center">${badgeTipe}</td>
+              <td>${ruteGudang}</td>
+              <td class="text-end font-weight-bold text-dark">${qtyStr}</td>
+              <td><small>${item.pembuat || '-'}</small></td>
+            </tr>
+          `;
+        });
+
+        $('#tbl-booking-body').html(rowsHtml);
+        $('#tbl-booking-total').text(total.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kg');
+      } else {
+        $('#tbl-booking-body').html('<tr><td colspan="7" class="text-center text-muted py-3">Tidak ada dokumen draft booking aktif.</td></tr>');
+      }
+    },
+    error: function () {
+      $('#modal-booking-loading').hide();
+      $('#modal-booking-content').show();
+      $('#tbl-booking-body').html('<tr><td colspan="7" class="text-center text-danger py-3">Gagal memuat rincian booking. Silakan coba lagi.</td></tr>');
+    }
+  });
+}

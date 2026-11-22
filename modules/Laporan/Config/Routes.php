@@ -9,4 +9,5 @@ $routes->group('laporan/persediaan', ['namespace' => 'Modules\Laporan\Controller
     $routes->get('list', 'LaporanPersediaan::getDataLaporanPersediaan');
     $routes->get('print_excel_lists', 'LaporanPersediaan::print_excel_lists');
     $routes->get('update-list', 'LaporanPersediaan::getUpdateDataLaporanPersediaan');
+    $routes->get('get-booked-details', 'LaporanPersediaan::getBookedDetails');
 });

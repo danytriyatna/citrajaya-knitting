@@ -22,24 +22,28 @@ Write-Host "========================================================" -Foregroun
 Write-Host ""
 
 # ------------------------------------------------------------------------------
-# 1. SOP DATABASE BACKUP (PostgreSQL Dump ke sql/)
+# 1. SOP DATABASE BACKUP (PostgreSQL Dump ke sql/ - Selalu Replace 1 File Tunggal)
 # ------------------------------------------------------------------------------
-$timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
-$backupDir = Join-Path $repoRoot "sql"
+$backupDir  = Join-Path $repoRoot "sql"
 if (-not (Test-Path $backupDir)) { New-Item -ItemType Directory -Path $backupDir | Out-Null }
-$targetDump = Join-Path $backupDir "backup_cjk_$timestamp.dump"
+$targetDump = Join-Path $backupDir "backup_cjk_latest.dump"
+$tempDump   = Join-Path $backupDir "backup_temp.dump"
 
 Write-Host "[1/4] SOP: Menjalankan dump & backup database PostgreSQL..." -ForegroundColor Yellow
 if (Test-Path $pgDumpPath) {
-    & "$pgDumpPath" -h $dbHost -p $dbPort -U $dbUser -d $dbName -F c -b -f "$targetDump"
+    & "$pgDumpPath" -h $dbHost -p $dbPort -U $dbUser -d $dbName -F c -b -f "$tempDump"
 } else {
     Write-Host "[WARN] pg_dump lokal tidak ditemukan di $pgDumpPath, mencoba koneksi via server..." -ForegroundColor Yellow
 }
 
-if ((Test-Path "$targetDump") -and ((Get-Item "$targetDump").Length -gt 1000)) {
+if ((Test-Path "$tempDump") -and ((Get-Item "$tempDump").Length -gt 100000)) {
+    # Bersihkan file .dump lama dan ganti dengan yang terbaru agar hemat storage
+    Get-ChildItem -Path $backupDir -Filter "*.dump" | Remove-Item -Force
+    Move-Item -Path "$tempDump" -Destination "$targetDump" -Force
     $sizeMB = [math]::Round((Get-Item "$targetDump").Length / 1MB, 2)
-    Write-Host "[OK] Snapshot database tersimpan ($sizeMB MB): sql\backup_cjk_$timestamp.dump" -ForegroundColor Green
+    Write-Host "[OK] Snapshot database terbaru tersimpan ($sizeMB MB): sql\backup_cjk_latest.dump" -ForegroundColor Green
 } else {
+    if (Test-Path "$tempDump") { Remove-Item -Path "$tempDump" -Force }
     Write-Host "[ERROR] Gagal membuat snapshot database! Deployment dibatalkan demi keamanan." -ForegroundColor Red
     pause
     exit 1

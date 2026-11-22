@@ -1,30 +1,56 @@
 <?= $this->extend('template'); ?>
 <?= $this->section('modal') ?>
-<!-- <div id="modal-barang" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
+<!-- Modal Rincian Dokumen Booking -->
+<div id="modal-detail-booking" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">List Barang</h5>
-        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header bg-warning text-dark py-2">
+        <h5 class="modal-title font-weight-bold" id="modal-booking-title"><i class="ti-bookmark-alt"></i> Rincian Dokumen Booking</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row">
-          <div class="col-md-12 mb-3">
-            <div class="col-md-4" style="float: right; position: relative; right: 15px;">
-              <div class="homeSearch w-100" style="width: 100%; margin-left: 5%; margin-top: 0;">
-                <input type="text" id="tb-search" class="form-control" placeholder="Pencarian . . .">
-              </div>
-            </div>
+        <div id="modal-booking-loading" class="text-center py-4">
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Memuat data...</span>
+          </div>
+          <p class="mt-2 text-muted">Mengambil data transaksi booking...</p>
+        </div>
+        <div id="modal-booking-content" style="display:none;">
+          <div class="alert alert-light border mb-3 py-2">
+            <div id="modal-booking-info-barang" class="font-weight-bold fs-5 text-dark"></div>
+            <div id="modal-booking-info-meta" class="text-muted mt-1 small"></div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-striped table-hover mb-0" id="tbl-booking-details">
+              <thead class="table-light">
+                <tr class="text-center align-middle">
+                  <th width="5%">No</th>
+                  <th width="20%">No. Transaksi</th>
+                  <th width="15%">Tanggal</th>
+                  <th width="15%">Jenis Transaksi</th>
+                  <th width="20%">Gudang / Tujuan</th>
+                  <th width="12%" class="text-end">Qty (kg)</th>
+                  <th width="13%">Pembuat</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-booking-body"></tbody>
+              <tfoot class="table-light font-weight-bold">
+                <tr>
+                  <td colspan="5" class="text-end">Total Booked:</td>
+                  <td id="tbl-booking-total" class="text-end text-warning font-weight-bold"></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
-        <div class="row">
-          <div id="dt-list-barang" class="table-responsive table-striped"></div>
-        </div>
       </div>
-
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+      </div>
     </div>
   </div>
-</div> -->
+</div>
 <?= $this->endSection('modal') ?>
 <?= $this->section('content'); ?>
 

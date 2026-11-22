@@ -1858,4 +1858,159 @@ class LaporanPersediaanModel extends \App\Models\PrModel
         $row = $this->db->table('ref_pack')->select('id')->where('pack_name', '-')->get()->getRow();
         return !empty($row) ? (int)$row->id : null;
     }
+
+    /**
+     * Mengambil ringkasan Qty Booked (dokumen draft aktif 30 hari) per kombinasi barang, lot, dan pack.
+     * @param int|null $idGudang
+     * @return array [ 'id_barang|lot_no|pack_id' => float, 'id_barang|lot_no|all' => float ]
+     */
+    public function getBookingSummaryMap($idGudang = null)
+    {
+        $draftActiveDate = date('Y-m-d', strtotime('-30 days'));
+        $gudangCond = !empty($idGudang) ? "AND b.id_gudang = " . (int)$idGudang : "";
+
+        $sql = "
+            SELECT 
+                b.id_barang,
+                TRIM(COALESCE(b.lot_no, '-')) as lot_no,
+                COALESCE(b.pack_id, 0) as pack_id,
+                SUM(b.qty) as total_booked
+            FROM (
+                SELECT td.id_barang, td.lot_no, td.pack_id, td.qty, th.id_gudang_asal as id_gudang
+                FROM trans_barang_trf_detail td
+                JOIN trans_barang_trf_header th ON th.id = td.id_header
+                WHERE th.status = 0 AND th.deleted_at IS NULL
+                  AND (th.tanggal >= '{$draftActiveDate}' OR th.created_at >= '{$draftActiveDate}')
+                UNION ALL
+                SELECT tbd.id_barang, tbd.lot_no, tbd.pack_id, tbd.qty, tbh.id_gudang
+                FROM trans_barang_detail tbd
+                JOIN trans_barang_header tbh ON tbh.id = tbd.id_header
+                WHERE tbh.status = 0 AND tbh.deleted_at IS NULL AND tbh.jenis_transaksi = 2
+                  AND (tbh.tanggal >= '{$draftActiveDate}' OR tbh.created_at >= '{$draftActiveDate}')
+            ) b
+            WHERE 1=1 {$gudangCond}
+            GROUP BY b.id_barang, TRIM(COALESCE(b.lot_no, '-')), COALESCE(b.pack_id, 0)
+        ";
+
+        $rows = $this->db->query($sql)->getResult();
+        $map = [];
+
+        if (!empty($rows)) {
+            foreach ($rows as $r) {
+                $cleanLot = trim((string)$r->lot_no);
+                if ($cleanLot === '') $cleanLot = '-';
+                $packId = (int)$r->pack_id;
+                $qty = round((float)$r->total_booked, 2);
+
+                $keyExact = "{$r->id_barang}|{$cleanLot}|{$packId}";
+                $map[$keyExact] = ($map[$keyExact] ?? 0.0) + $qty;
+
+                $keyAll = "{$r->id_barang}|{$cleanLot}|all";
+                $map[$keyAll] = ($map[$keyAll] ?? 0.0) + $qty;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Mengambil daftar rincian transaksi draft yang sedang mem-booking stok item, lot, dan pack tertentu.
+     * @param int $idBarang
+     * @param string $lotNo
+     * @param int|null $packId
+     * @param int|null $idGudang
+     * @return array
+     */
+    public function getBookingDetails($idBarang, $lotNo = null, $packId = null, $idGudang = null)
+    {
+        $draftActiveDate = date('Y-m-d', strtotime('-30 days'));
+        $cleanLot = trim((string)($lotNo ?? ''));
+        if ($cleanLot === '') $cleanLot = '-';
+
+        $idBarang = (int)$idBarang;
+        $paramsTrf = [
+            'id_barang'   => $idBarang,
+            'draft_date'  => $draftActiveDate
+        ];
+        $paramsBtk = [
+            'id_barang'   => $idBarang,
+            'draft_date'  => $draftActiveDate
+        ];
+
+        $lotCondTrf = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(td.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(td.lot_no, '')) = :lot_no:";
+        $lotCondBtk = ($cleanLot === '-') ? "AND (COALESCE(NULLIF(TRIM(tbd.lot_no), ''), '-') = '-')" : "AND TRIM(COALESCE(tbd.lot_no, '')) = :lot_no:";
+        if ($cleanLot !== '-') {
+            $paramsTrf['lot_no'] = $cleanLot;
+            $paramsBtk['lot_no'] = $cleanLot;
+        }
+
+        $packCondTrf = "";
+        $packCondBtk = "";
+        if (!empty($packId)) {
+            $paramsTrf['pack_id'] = (int)$packId;
+            $paramsBtk['pack_id'] = (int)$packId;
+            $packCondTrf = "AND td.pack_id = :pack_id:";
+            $packCondBtk = "AND tbd.pack_id = :pack_id:";
+        }
+
+        $gudangCondTrf = "";
+        $gudangCondBtk = "";
+        if (!empty($idGudang)) {
+            $paramsTrf['id_gudang'] = (int)$idGudang;
+            $paramsBtk['id_gudang'] = (int)$idGudang;
+            $gudangCondTrf = "AND th.id_gudang_asal = :id_gudang:";
+            $gudangCondBtk = "AND tbh.id_gudang = :id_gudang:";
+        }
+
+        $sql = "
+            SELECT 
+                'Transfer Antar Gudang' AS jenis_transaksi,
+                th.id AS header_id,
+                th.kode_transaksi,
+                th.tanggal,
+                ga.nama_gudang AS gudang_asal,
+                gt.nama_gudang AS gudang_tujuan,
+                td.qty,
+                COALESCE(u.first_name || ' ' || COALESCE(u.last_name, ''), CAST(th.created_by AS VARCHAR), '-') AS pembuat,
+                th.keterangan
+            FROM trans_barang_trf_header th
+            JOIN trans_barang_trf_detail td ON td.id_header = th.id
+            LEFT JOIN ref_gudang ga ON th.id_gudang_asal = ga.id
+            LEFT JOIN ref_gudang gt ON th.id_gudang_tujuan = gt.id
+            LEFT JOIN sec_user u ON th.created_by = u.id
+            WHERE th.status = 0 AND th.deleted_at IS NULL
+              AND td.id_barang = :id_barang:
+              AND (th.tanggal >= :draft_date: OR th.created_at >= :draft_date:)
+              {$lotCondTrf}
+              {$packCondTrf}
+              {$gudangCondTrf}
+
+            UNION ALL
+
+            SELECT 
+                'Barang Keluar' AS jenis_transaksi,
+                tbh.id AS header_id,
+                tbh.kode_transaksi,
+                tbh.tanggal,
+                ga.nama_gudang AS gudang_asal,
+                '-' AS gudang_tujuan,
+                tbd.qty,
+                COALESCE(u.first_name || ' ' || COALESCE(u.last_name, ''), CAST(tbh.created_by AS VARCHAR), '-') AS pembuat,
+                tbh.keterangan
+            FROM trans_barang_header tbh
+            JOIN trans_barang_detail tbd ON tbd.id_header = tbh.id
+            LEFT JOIN ref_gudang ga ON tbh.id_gudang = ga.id
+            LEFT JOIN sec_user u ON tbh.created_by = u.id
+            WHERE tbh.status = 0 AND tbh.deleted_at IS NULL AND tbh.jenis_transaksi = 2
+              AND tbd.id_barang = :id_barang:
+              AND (tbh.tanggal >= :draft_date: OR tbh.created_at >= :draft_date:)
+              {$lotCondBtk}
+              {$packCondBtk}
+              {$gudangCondBtk}
+
+            ORDER BY tanggal ASC, kode_transaksi ASC
+        ";
+
+        return $this->db->query($sql, array_merge($paramsTrf, $paramsBtk))->getResultArray();
+    }
 }

@@ -90,6 +90,28 @@ class LaporanPersediaan extends BaseController
         $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan, $params);
         $resData = $this->groupByLotPack($resData);
 
+        // Pasang data Qty Booked & Available Qty secara real-time
+        $bookingMap = $this->mLaporan->getBookingSummaryMap($filter_gudang);
+        foreach ($resData as &$row) {
+            $lotClean = trim((string)($row->lot_no ?? ''));
+            if ($lotClean === '') $lotClean = '-';
+            $packId = !empty($row->pack_id) ? (int)$row->pack_id : 0;
+
+            $keyExact = "{$row->id_barang}|{$lotClean}|{$packId}";
+            $keyAll   = "{$row->id_barang}|{$lotClean}|all";
+
+            $booked = 0.0;
+            if (isset($bookingMap[$keyExact])) {
+                $booked = (float)$bookingMap[$keyExact];
+            } elseif ($packId === 0 && isset($bookingMap[$keyAll])) {
+                $booked = (float)$bookingMap[$keyAll];
+            }
+
+            $row->qty_booked = round($booked, 2);
+            $row->available_qty = round((float)$row->saldo_akhir - $row->qty_booked, 2);
+        }
+        unset($row);
+
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];
         $build_array["status"] = true;
@@ -177,11 +199,71 @@ class LaporanPersediaan extends BaseController
         $resData = $this->mLaporan->getDataGudang($idJenisBarang, $filter_gudang, $tahun, $bulan);
         $resData = $this->groupByLotPack($resData);
 
+        // Pasang data Qty Booked & Available Qty secara real-time
+        $bookingMap = $this->mLaporan->getBookingSummaryMap($filter_gudang);
+        foreach ($resData as &$row) {
+            $lotClean = trim((string)($row->lot_no ?? ''));
+            if ($lotClean === '') $lotClean = '-';
+            $packId = !empty($row->pack_id) ? (int)$row->pack_id : 0;
+
+            $keyExact = "{$row->id_barang}|{$lotClean}|{$packId}";
+            $keyAll   = "{$row->id_barang}|{$lotClean}|all";
+
+            $booked = 0.0;
+            if (isset($bookingMap[$keyExact])) {
+                $booked = (float)$bookingMap[$keyExact];
+            } elseif ($packId === 0 && isset($bookingMap[$keyAll])) {
+                $booked = (float)$bookingMap[$keyAll];
+            }
+
+            $row->qty_booked = round($booked, 2);
+            $row->available_qty = round((float)$row->saldo_akhir - $row->qty_booked, 2);
+        }
+        unset($row);
+
         $build_array["message"] = "Data ditemukan";
         $build_array["data"] =  !empty($resData) ? $resData : [];
         $build_array["status"] = true;
 
         return $this->response->setJSON($build_array);
+    }
+
+    /**
+     * AJAX endpoint untuk mengambil rincian transaksi draft yang sedang booking item, lot & pack tertentu.
+     */
+    public function getBookedDetails()
+    {
+        $idBarang = $this->request->getGet('id_barang');
+        $lotNo    = $this->request->getGet('lot_no');
+        $packId   = $this->request->getGet('pack_id');
+        $idGudang = $this->request->getGet('id_gudang');
+
+        if (empty($idBarang)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Parameter barang tidak valid'
+            ]);
+        }
+
+        helper('encrypter');
+        $list = $this->mLaporan->getBookingDetails($idBarang, $lotNo, $packId, $idGudang);
+        $totalQty = 0.0;
+        foreach ($list as &$item) {
+            $totalQty += (float)($item['qty'] ?? 0);
+            $encId = encrypt($item['header_id']);
+            if ($item['jenis_transaksi'] === 'Transfer Antar Gudang') {
+                $item['url'] = 'trans/transfer/edit/' . $encId;
+            } else {
+                $item['url'] = 'trans/outgoing-goods/edit/' . $encId;
+            }
+        }
+        unset($item);
+
+        return $this->response->setJSON([
+            'status'    => true,
+            'data'      => $list,
+            'total_qty' => round($totalQty, 2)
+        ]);
     }
 
     public function print_excel_lists(){

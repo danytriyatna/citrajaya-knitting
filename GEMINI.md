@@ -26,9 +26,9 @@ Setiap kali ada perbaikan bug, penambahan fitur, atau migrasi di CJK, **DILARANG
 1. **[1/4] Mandatory Database Snapshot (pg_dump)**:
    * Sebelum satu baris kode pun ditarik, script wajib mengeksekusi dump PostgreSQL menggunakan format custom archive (`-F c`):
      ```powershell
-     & "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h 103.102.153.192 -p 5432 -U citradev -d citra_knitt_db -F c -b -f "sql\backup_cjk_<timestamp>.dump"
+     & "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h 103.102.153.192 -p 5432 -U citradev -d citra_knitt_db -F c -b -f "sql\backup_cjk_latest.dump"
      ```
-   * File dump berukuran ~8.5 MB otomatis disimpan di folder `sql/`.
+   * File dump berukuran ~8.5 MB otomatis disimpan di folder `sql/backup_cjk_latest.dump` (selalu me-replace backup sebelumnya agar hemat disk space, hanya 1 file backup yang dipertahankan).
    * **Abort Policy**: Jika proses backup database gagal atau file corrupt, deployment seketika dibatalkan demi integritas data transaksi rajut/yarn.
 
 2. **[2/4] Remote Git Pull Branch**:

@@ -1072,6 +1072,10 @@ function submitData(status, message) {
         });
     }
 
+    let isOverSisa = false;
+    let overSisaMessages = [];
+    let overSisaRowDetails = [];
+
     if (selectKategori.val() == 5) {
         if ((inpNoRefWO.val() == null || inpNoRefWO.val() == '' || inpNoRefWO.val() == undefined)) {
             return toastr.warning('Apabila kategori: <strong style="color: cyan;">' + selectKategori.select2('data')[0].text + '</strong> Maka <strong style="color: black;">No. WO</strong> Wajib Diisi!', "Warning", {
@@ -1096,34 +1100,53 @@ function submitData(status, message) {
             });
         }
 
-        // Total Pemakaian (baik input maupun akumulasi detail) tidak boleh
-        // melebihi Total Qty Sisa yang tersedia (dari data transfer per WO).
-        let toleransiSisa = 0.01;
-        if (totalQtyValidasi > totalQtySisaValidasi + toleransiSisa) {
-            return Swal.fire({
-                text: 'Total Pemakaian (' + totalQtyValidasi.toFixed(2) + ') tidak boleh melebihi Total Qty Sisa (' + totalQtySisaValidasi.toFixed(2) + ')!',
-                icon: 'error',
-                showConfirmButton: false,
-                timer: 3500
-            });
+        // 1. HARD BLOCK: Pengecekan Ketersediaan Stok Gudang Fisik (Khusus saat Approval / status == 1)
+        // Barang tidak boleh dikeluarkan jika fisik di gudang memang tidak ada / kurang.
+        if (status == 1) {
+            let overStockRows = [];
+            for (let i = 0; i < detailRowsValidasi.length; i++) {
+                let r = detailRowsValidasi[i];
+                let qBaris = parseFloat(r.qty) || 0;
+                if (r.stok_gudang !== undefined && r.stok_gudang !== null && r.stok_gudang !== '') {
+                    let stok = parseFloat(r.stok_gudang) || 0;
+                    if (qBaris > (stok + 0.0001)) {
+                        let itemDesc = r.item_description || r.nama_barang || ('Baris ke-' + (i + 1));
+                        let lotStr = r.lot_no ? ` [Lot: ${r.lot_no}]` : '';
+                        overStockRows.push(`• <b>${itemDesc}${lotStr}</b>: Diminta <b>${qBaris.toFixed(2)}</b>, Stok Gudang <b>${stok.toFixed(2)}</b>`);
+                    }
+                }
+            }
+            if (overStockRows.length > 0) {
+                return Swal.fire({
+                    title: 'Stok Gudang Tidak Mencukupi!',
+                    html: `<div style="text-align: left; font-size: 13px;">Kuantitas pemakaian melebihi stok fisik gudang yang tersedia:<br><br>${overStockRows.join('<br>')}<br><br><b>Pengeluaran barang tidak dapat di-approve.</b> Silakan sesuaikan Qty pemakaian terlebih dahulu.</div>`,
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Tutup'
+                });
+            }
         }
 
-        // Pengecekan per baris detail: pastikan tidak ada baris yang qty-nya melebihi qty_sisa
+        // 2. SOFT WARNING: Pengecekan Qty Sisa WO / Transfer
+        // Jika Total Pemakaian atau Qty per baris melebihi Qty Sisa, sistem HANYA memperingatkan (soft warning),
+        // keputusan tetap diserahkan kepada user untuk lanjut atau membatalkan.
+        let toleransiSisa = 0.01;
+        if (totalQtyValidasi > totalQtySisaValidasi + toleransiSisa) {
+            isOverSisa = true;
+            overSisaMessages.push(`Total Pemakaian (<b>${totalQtyValidasi.toFixed(2)}</b>) melebihi Total Qty Sisa (<b>${totalQtySisaValidasi.toFixed(2)}</b>).`);
+        }
+
         for (let i = 0; i < detailRowsValidasi.length; i++) {
             let r = detailRowsValidasi[i];
             let qBaris = parseFloat(r.qty) || 0;
             let sBaris = parseFloat(r.qty_sisa) || 0;
             if (sBaris > 0 && qBaris > (sBaris + toleransiSisa)) {
-                return Swal.fire({
-                    text: 'Qty pada baris ' + (r.nama_barang || ('ke-' + (i + 1))) + ' (' + qBaris.toFixed(2) + ') melebihi Qty Sisa (' + sBaris.toFixed(2) + ')!',
-                    icon: 'error',
-                    showConfirmButton: false,
-                    timer: 3500
-                });
+                isOverSisa = true;
+                let itemDesc = r.item_description || r.nama_barang || ('Baris ke-' + (i + 1));
+                overSisaRowDetails.push(`• <b>${itemDesc}</b>: Qty ${qBaris.toFixed(2)} (Sisa: ${sBaris.toFixed(2)})`);
             }
         }
     }
-
 
     if (dtListDetail.getData().length == 0) {
         return Swal.fire({
@@ -1134,19 +1157,45 @@ function submitData(status, message) {
         });
     }
 
-    Swal.fire({
-        title: `Apakah anda ingin ${message} data Barang Keluar?`,
-        icon: 'question',
-        confirmButtonText: 'Simpan',
-        confirmButtonColor: '#198754',
-        showCancelButton: true,
-        cancelButtonText: 'Batal',
-        cancelButtonColor: '#6C757D'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            simpanData(status)
+    if (isOverSisa) {
+        let warningHtml = `<div style="text-align: left; font-size: 13px;">`;
+        if (overSisaMessages.length > 0) {
+            warningHtml += overSisaMessages.join('<br>') + '<br><br>';
         }
-    })
+        if (overSisaRowDetails.length > 0) {
+            warningHtml += `Rincian baris melebihi sisa:<br>${overSisaRowDetails.join('<br>')}<br><br>`;
+        }
+        warningHtml += `<b>Apakah Anda yakin ingin tetap ${message} data Barang Keluar ini?</b></div>`;
+
+        Swal.fire({
+            title: 'Perhatian: Qty Melebihi Sisa',
+            html: warningHtml,
+            icon: 'warning',
+            confirmButtonText: 'Ya, Tetap Lanjutkan',
+            confirmButtonColor: '#ffc107',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#6C757D'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                simpanData(status);
+            }
+        });
+    } else {
+        Swal.fire({
+            title: `Apakah anda ingin ${message} data Barang Keluar?`,
+            icon: 'question',
+            confirmButtonText: 'Simpan',
+            confirmButtonColor: '#198754',
+            showCancelButton: true,
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#6C757D'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                simpanData(status);
+            }
+        });
+    }
 }
 
 
@@ -1424,16 +1473,28 @@ function openModalDetail(row = null) {
             });
         }
 
-        if (selectKategori.val() == 5 && row) {
+        if (row) {
             let qtyInput = parseFloat(inpQtyItem.val()) || 0;
-            let sisaBaris = parseFloat(row.getData().qty_sisa) || 0;
-            if (sisaBaris > 0 && qtyInput > (sisaBaris + 0.01)) {
-                return Swal.fire({
-                    text: "Quantity (" + qtyInput.toFixed(2) + ") tidak boleh melebihi Qty Sisa baris ini (" + sisaBaris.toFixed(2) + ")",
-                    icon: 'error',
-                    showConfirmButton: false,
-                    timer: 3000
-                });
+            let rowData = row.getData();
+            if (rowData.stok_gudang !== undefined && rowData.stok_gudang !== null && rowData.stok_gudang !== '') {
+                let stokGudang = parseFloat(rowData.stok_gudang) || 0;
+                if (qtyInput > (stokGudang + 0.0001)) {
+                    return Swal.fire({
+                        text: "Quantity (" + qtyInput.toFixed(2) + ") melebihi Stok Gudang (" + stokGudang.toFixed(2) + ")!",
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }
+            if (selectKategori.val() == 5) {
+                let sisaBaris = parseFloat(rowData.qty_sisa) || 0;
+                if (sisaBaris > 0 && qtyInput > (sisaBaris + 0.01)) {
+                    toastr.warning("Perhatian: Quantity (" + qtyInput.toFixed(2) + ") melebihi Qty Sisa (" + sisaBaris.toFixed(2) + ").", "Warning", {
+                        positionClass: "toast-top-right",
+                        timeOut: 4000
+                    });
+                }
             }
         }
 

@@ -421,33 +421,10 @@ class BarangKeluar extends BaseController
             return $this->response->setJSON($build_array);
         }
 
-        // Validasi server-side: untuk kategori "Pemakaian Bahan Baku atau Barang" (id=5),
-        // Total Pemakaian tidak boleh melebihi Total Qty Sisa (baik Tambah Baru maupun Edit).
-        if ($id_kategori == 5) {
-            $totalQtyPakai = 0;
-            $totalQtySisa = 0;
-            if (!empty($dataDetail) && is_array($dataDetail)) {
-                foreach ($dataDetail as $det) {
-                    $q = (float)($det['qty'] ?? 0);
-                    $s = (float)($det['qty_sisa'] ?? 0);
-                    $totalQtyPakai += $q;
-                    $totalQtySisa += $s;
-
-                    if ($s > 0 && $q > ($s + 0.01)) {
-                        $namaBarang = $det['nama_barang'] ?? 'Barang';
-                        $build_array['message'] = "Qty pemakaian untuk {$namaBarang} (" . number_format($q, 2) . ") tidak boleh melebihi Qty Sisa (" . number_format($s, 2) . ")!";
-                        $build_array['status']  = false;
-                        return $this->response->setJSON($build_array);
-                    }
-                }
-            }
-
-            if ($totalQtySisa > 0 && $totalQtyPakai > ($totalQtySisa + 0.01)) {
-                $build_array['message'] = "Total Pemakaian (" . number_format($totalQtyPakai, 2) . ") tidak boleh melebihi Total Qty Sisa (" . number_format($totalQtySisa, 2) . ")!";
-                $build_array['status']  = false;
-                return $this->response->setJSON($build_array);
-            }
-        }
+        // Kebijakan Operasional Pemakaian Bahan Baku / Barang (id=5):
+        // Jika Total Pemakaian melebihi Total Qty Sisa, sistem hanya memperingatkan di UI (soft warning),
+        // keputusan tetap diserahkan kepada user/otoritas pabrik (tidak diblokir keras di server).
+        // Hard-block di server hanya berlaku jika ketersediaan stok fisik gudang tidak mencukupi (dikelola oleh BarangKeluarModel).
 
         // Kunci harga: pastikan harga setiap barang keluar selalu mengikuti harga resmi
         // perolehan lot (trans_receive_detail) atau ref_barang, tidak boleh dimanipulasi user.

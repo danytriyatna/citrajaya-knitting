@@ -169,7 +169,12 @@
 
   <div class="row page-titles">
     <div class="col-md-5 align-self-center">
-      <h4 class="text-themecolor"><?= $titlehead ?></h4>
+      <h4 class="text-themecolor d-flex align-items-center">
+        <?= $titlehead ?>
+        <?php if (isset($resData->status) && (int)$resData->status === 2) : ?>
+          <span class="badge bg-danger fs-6 ms-2"><i class="fa fa-ban me-1"></i> CANCELED</span>
+        <?php endif; ?>
+      </h4>
     </div>
     <div class="col-md-7 align-self-center text-right">
       <div class="d-flex justify-content-end align-items-center">
@@ -196,7 +201,7 @@
                   <div class="form-group row">
                     <label class="control-label text-start text-md-end col-md-3 col-form-label" for="trans_no">Trans No.</label>
                     <div class="col-md-9">
-                      <input type="hidden" id="status" name="status" value="<?= !empty($resData->status) ? $resData->status : null ?>" class="form-control" required>
+                      <input type="hidden" id="status" name="status" value="<?= isset($resData->status) ? $resData->status : 0 ?>" class="form-control" required>
                       <input type="hidden" id="data-details" value='<?= !empty($detail) ? $detail : null; ?>'>
                       <input type="hidden" id="data-so" value='<?= !empty($dataSO) ? $dataSO : null; ?>'>
                       <input type="hidden" id="role_id" value="<?=  !empty($role_id) ? $role_id : null ?>">
@@ -375,6 +380,7 @@
                   </button>
                   <button type="button" class="m-s-5 btn btn-info" id="btn-approve"> <i class="fa fa-paper-plane"></i> Approval</button>
                   <button <?= !empty($role_id) && ($role_id == 1 || $role_id == 2 || $role_id == 4) ? null : 'hidden' ?> type="button" class="m-s-5 btn btn-danger" id="btn-cancel-approve"> <i class="fa fa-undo"></i> Batalkan Approve</button>
+                  <button type="button" class="m-s-5 btn btn-outline-danger" id="btn-cancel-draft"><i class="fa fa-ban"></i> Cancel Transaksi</button>
                 </div>
               </div>
             </div>

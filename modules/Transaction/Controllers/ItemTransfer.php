@@ -145,16 +145,33 @@ class ItemTransfer extends BaseController
         $atr_other['class'] = '';
         $atr_other['icon_class'] = 'fa-print';
       // }
-      if ($atr_edit || $atr_del)
-        $btnAction = btn_action_group($id, $atr_edit, $atr_del, $atr_other);
+      $btnAction = '<div class="btn-group">
+                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog"></i> Aksi <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-act" role="menu">';
 
-      // $aktif =  ($row->active) ? "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/deactivate/".$id."' data-confirm-message='Anda yakin ingin menonaktifkan user ini?'><i class='fa fa-check text-success'>&nbsp;</i></a>" :
-      //                            "<a href='javascript:void(0)' class='atr_active' data-item-active='utilitas/users/activate/".$id."' data-confirm-message='Anda yakin ingin mengaktifkan user ini?'><i class='fa fa-times text-danger'>&nbsp;</i></a>";
+      if ($this->_edit) {
+        $editLabel = ((int)$row->status === 2) ? 'Lihat' : 'Edit';
+        $editIcon  = ((int)$row->status === 2) ? 'fa-eye' : 'fa-edit';
+        $btnAction .= '<li><a href="' . base_url($this->urlv . '/edit/' . $id) . '" title="' . $editLabel . '"><i class="fa fa-fw ' . $editIcon . '"></i> ' . $editLabel . '</a></li>';
+      }
+
+      $btnAction .= '<li><a href="' . base_url($this->urlv . '/print/' . $id) . '" target="_blank" title="Print"><i class="fa fa-fw fa-print"></i> Print</a></li>';
+
+      if ((int)$row->status === 0) {
+        $btnAction .= '<li><a href="javascript:void(0)" class="btn-cancel-transfer-row text-danger" data-id="' . $id . '" data-kode="' . $row->kode_transaksi . '" title="Cancel Transaksi"><i class="fa fa-fw fa-ban"></i> Cancel Transaksi</a></li>';
+      }
+
+      $btnAction .= '</ul></div>';
+
       $status = "";
       if ($row->status == 0) {
         $status = "<span class='badge bg-secondary'>Draft</span>";
       } else if ($row->status == 1) {
         $status = "<span class='badge bg-success'>Approved</span>";
+      } else if ($row->status == 2) {
+        $status = "<span class='badge bg-danger'>Canceled</span>";
       }
       array_push(
         $build_array["data"],
@@ -249,6 +266,8 @@ class ItemTransfer extends BaseController
         $status = "<span class='badge bg-secondary'>Draft</span>";
       } else if ($row->status == 1) {
         $status = "<span class='badge bg-success'>Approved</span>";
+      } else if ($row->status == 2) {
+        $status = "<span class='badge bg-danger'>Canceled</span>";
       }
       array_push(
         $build_array["data"],
@@ -785,6 +804,12 @@ class ItemTransfer extends BaseController
 
     if ($id != "") {
       $id = decrypt($id);
+      $currDoc = $this->mRef->getData($id);
+      if ($currDoc && (int)$currDoc->status === 2) {
+        $build_array['message'] = "Transaksi ini sudah berstatus Canceled dan tidak dapat diedit atau disimpan ulang.";
+        $build_array['status'] = false;
+        return $this->response->setJSON($build_array);
+      }
     }
 
     // Auto-detect id_perusahaan dari gudang asal atau parameter form
@@ -941,6 +966,57 @@ class ItemTransfer extends BaseController
     $build_array['message'] = $msg;
     $build_array['status']  = $status;
     return $this->response->setJSON($build_array);
+  }
+
+  // "Cancel Draft" - Membatalkan transaksi draft menjadi Canceled (status = 2), melepas booking stok otomatis.
+  public function cancel()
+  {
+    $id = $this->request->getPost('id');
+    if (empty($id)) {
+      return $this->response->setJSON(['status' => false, 'message' => 'ID transaksi tidak valid.']);
+    }
+
+    try {
+      $id = decrypt($id);
+      $doc = $this->mRef->getData($id);
+      if (!$doc) {
+        return $this->response->setJSON(['status' => false, 'message' => 'Dokumen transaksi tidak ditemukan.']);
+      }
+
+      if ((int)$doc->status === 1) {
+        return $this->response->setJSON([
+          'status' => false, 
+          'message' => 'Dokumen sudah berstatus Approved. Gunakan fitur Batalkan Approve jika ingin membalik transaksi ke Draft terlebih dahulu.'
+        ]);
+      }
+
+      if ((int)$doc->status === 2) {
+        return $this->response->setJSON(['status' => false, 'message' => 'Dokumen ini sudah berstatus Canceled.']);
+      }
+
+      if ((int)$doc->status !== 0) {
+        return $this->response->setJSON(['status' => false, 'message' => 'Hanya dokumen berstatus Draft yang dapat di-cancel.']);
+      }
+
+      // Update status ke 2 (Canceled)
+      $this->db->table('trans_barang_trf_header')
+        ->where('id', $id)
+        ->update([
+          'status'     => 2,
+          'updated_at' => date('Y-m-d H:i:s'),
+          'updated_by' => $this->get_userid(),
+        ]);
+
+      // Catat aktivitas log
+      $this->mcommon->setLog($this->get_userid(), 'ItemTransfer', $id, 'CANCEL_DRAFT', 'Cancel draft transaksi transfer ' . $doc->kode_transaksi . ', stok booking dilepas.');
+
+      return $this->response->setJSON([
+        'status'  => true,
+        'message' => 'Transaksi Transfer ' . $doc->kode_transaksi . ' berhasil di-cancel. Stok booking otomatis dilepaskan.'
+      ]);
+    } catch (\Throwable $e) {
+      return $this->response->setJSON(['status' => false, 'message' => 'Gagal membatalkan transaksi: ' . $e->getMessage()]);
+    }
   }
 
   public function print($id = null)

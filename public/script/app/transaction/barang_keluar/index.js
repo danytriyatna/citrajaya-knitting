@@ -129,6 +129,58 @@ $(document).ready(function () {
         }
     });
 
+    // Handler Cancel Transaksi BTK (khusus draft)
+    $(document).on("click", ".btn-cancel-btk-row", function (e) {
+        e.preventDefault();
+        let id = $(this).data("id");
+        let kode = $(this).data("kode");
+
+        Swal.fire({
+            title: 'Cancel Transaksi BTK?',
+            text: 'Transaksi ' + kode + ' akan diubah statusnya menjadi Canceled dan seluruh kuantiti yang ter-booking akan otomatis dilepaskan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Cancel Transaksi',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(".preloader").css("opacity", "0.7").show();
+                $.ajax({
+                    type: "POST",
+                    url: "/trans/outgoing-goods/cancel",
+                    data: { id: id },
+                    dataType: "json",
+                    success: function (res) {
+                        $(".preloader").hide().css("opacity", "1");
+                        if (res.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                text: res.message,
+                                showConfirmButton: false,
+                                timer: 1800
+                            });
+                            dtList.replaceData();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function () {
+                        $(".preloader").hide().css("opacity", "1");
+                        Swal.fire({
+                            icon: 'error',
+                            text: 'Terjadi kesalahan sistem saat membatalkan transaksi.'
+                        });
+                    }
+                });
+            }
+        });
+    });
+
     function parseDate(str) {
         // format dd-mm-yyyy
         let parts = str.split("-");

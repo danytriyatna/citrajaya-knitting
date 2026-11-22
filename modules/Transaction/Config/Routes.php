@@ -115,6 +115,7 @@ $routes->group('trans/item-transfer', ['namespace' => 'Modules\Transaction\Contr
   $routes->get('form', 'ItemTransfer::form_static');
   $routes->get('edit/(:any)', 'ItemTransfer::form_static/$1');
   $routes->post('save', 'ItemTransfer::save');
+  $routes->post('cancel', 'ItemTransfer::cancel');
   $routes->post('cancel-approve', 'ItemTransfer::cancelApprove');
   $routes->post('list-barang', 'ItemTransfer::lists_persediaan');
   $routes->get('print_excel_lists/(:any)/(:any)', 'ItemTransfer::print_excel_lists/$1/$2');
@@ -156,6 +157,7 @@ $routes->group('trans/outgoing-goods', ['namespace' => 'Modules\Transaction\Cont
   $routes->get('form', 'BarangKeluar::form');
   $routes->get('edit/(:any)', 'BarangKeluar::form/$1');
   $routes->post('save', 'BarangKeluar::save');
+  $routes->post('cancel', 'BarangKeluar::cancel');
   $routes->post('cancel-approve', 'BarangKeluar::cancelApprove');
   $routes->get('print/(:any)', 'BarangKeluar::print/$1');
   $routes->get('print_excel_lists/(:any)/(:any)', 'BarangKeluar::print_excel_lists/$1/$2');

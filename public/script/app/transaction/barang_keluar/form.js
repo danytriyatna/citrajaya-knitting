@@ -38,6 +38,7 @@ let inpBtmKg = $('#btm_kg');
 let btnSimpan = $('#btn-simpan');
 let btnApprove = $('#btn-approve');
 let btnCancelApprove = $('#btn-cancel-approve');
+let btnCancelDraft = $('#btn-cancel-draft');
 let inpRole = $('#role_id');
 let inpNoRefTrf = $('#no_ref_transfer');
 let inpNoRefWO = $('#no_ref_wo');
@@ -81,10 +82,26 @@ if (inpStatus.val() == 0) {
     btnSimpan.show()
     btnApprove.show()
     btnCancelApprove.hide()
+    if (inpIdHeader.val().length > 0) {
+        btnCancelDraft.show()
+    } else {
+        btnCancelDraft.hide()
+    }
+} else if (inpStatus.val() == 2) {
+    // Status Canceled
+    btnAdd.hide()
+    btnSimpan.hide()
+    btnApprove.hide()
+    btnCancelApprove.hide()
+    btnCancelDraft.hide()
+    setTimeout(() => {
+        $('input:not(#tb-search, #tb-search-vendor, #tb-search-wo, #tb-search-trf), select, textarea').prop('disabled', true);
+    }, 600);
 } else {
     btnAdd.hide()
     btnSimpan.hide()
     btnApprove.hide()
+    btnCancelDraft.hide()
     // TAMBAHAN (2026-08-09): tombol "Batalkan Approve" hanya muncul kalau
     // dokumen sudah Approved (status == 1), sedang mengedit dokumen yg
     // sudah tersimpan (ada id_header - bukan form transaksi baru), DAN role
@@ -1146,6 +1163,63 @@ btnApprove.on("click", function (e) {
 // TAMBAHAN (2026-08-09): "Batalkan Approve" - membalik semua efek approve
 // (stok trans_lots/trans_barang) & kembalikan dokumen ke status Draft.
 // Lihat BarangKeluarModel::cancelApprove().
+// Handler Cancel Draft Transaksi BTK (status = 2)
+btnCancelDraft.on("click", function (e) {
+    e.preventDefault();
+    if (!inpIdHeader.val()) return;
+
+    Swal.fire({
+        title: 'Cancel Transaksi BTK?',
+        text: 'Dokumen draft ini akan diubah statusnya menjadi Canceled dan seluruh kuantiti yang ter-booking akan otomatis dilepaskan.',
+        icon: 'warning',
+        confirmButtonText: 'Ya, Cancel Transaksi',
+        confirmButtonColor: '#dc3545',
+        showCancelButton: true,
+        cancelButtonText: 'Batal',
+        cancelButtonColor: '#6C757D'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $(".preloader").css("opacity", "0.7").show();
+        $.ajax({
+            type: 'POST',
+            url: appUrl('trans/outgoing-goods/cancel'),
+            data: {
+                id: inpIdHeader.val()
+            },
+            dataType: "json",
+            success: function (response) {
+                $(".preloader").hide().css("opacity", "1");
+                if (response.status == true) {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 1800
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    Swal.fire({
+                        text: response.message,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            },
+            error: function () {
+                $(".preloader").hide().css("opacity", "1");
+                Swal.fire({
+                    text: 'Terjadi kesalahan sistem saat membatalkan transaksi.',
+                    icon: 'error'
+                });
+            }
+        });
+    });
+});
+
 btnCancelApprove.on("click", function (e) {
     e.preventDefault()
 

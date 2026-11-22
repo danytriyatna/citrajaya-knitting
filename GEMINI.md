@@ -9,6 +9,7 @@
 * **Web Server**: LiteSpeed Web Server
 * **Server Host**: `103.102.153.192` (Cloud Linux VPS)
 * **Web Root Dev**: `/pejuang/development/html` (Port: `81` — `http://citraknitt.com:81`)
+* **Web Root Prod**: `/pejuang/production` (Port: `443` / `80` — `https://citraknitt.com`)
 * **Database**: **PostgreSQL 16** (`citra_knitt_db`)
   * Host: `103.102.153.192:5432`
   * User: `citradev`
@@ -17,8 +18,9 @@
 ---
 
 ## 🛡️ 2. SOP MUTLAK SEBELUM UPDATE & DEPLOYMENT
-Setiap kali ada perbaikan bug, penambahan fitur, atau migrasi di CJK, **DILARANG MELAKUKAN PULL LANGSUNG TANPA BACKUP**. SOP deployment wajib melalui file otomasi:
-📂 `Deploy_Dev_Server.bat` (yang menjalankan `scripts/deploy_cjk.ps1`).
+Setiap kali ada perbaikan bug, penambahan fitur, atau migrasi di CJK, **DILARANG MELAKUKAN PULL/COPY LANGSUNG TANPA BACKUP**. SOP deployment wajib melalui file otomasi:
+* 📂 `Deploy_Dev_Server.bat` (yang menjalankan `scripts/deploy_cjk.ps1` ke Dev `citraknitt.com:81`).
+* 📂 `Deploy_Prod_Server.bat` (yang menjalankan `scripts/deploy_prod.ps1` ke Production `https://citraknitt.com`).
 
 ### Tahapan 4-Pilar Deployment CJK:
 1. **[1/4] Mandatory Database Snapshot (pg_dump)**:

@@ -882,7 +882,7 @@ function recalcAlokasiPemakaian() {
     }
 
     rows.forEach(function (r, idx) {
-        r.qty_sisa = maxArr[idx];
+        // Jangan menimpa r.qty_sisa agar sisa kebutuhan WO tetap utuh dan akurat di tabel
         r.qty = alloc[idx];
     });
 

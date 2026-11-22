@@ -673,10 +673,11 @@ class ItemTransferDetailModel extends \App\Models\PrModel
             $calcSisa = round($row->qty_terima - $row->qty_retur - $row->qty_pemakaian_sebelumnya, 2);
             $sisaWo = max(0, $calcSisa);
 
-            // Auto-cap qty_sisa dengan stok fisik riil di gudang agar tidak melebihi saldo yang tersedia
+            // Stok fisik riil di gudang (Laporan Persediaan)
             $row->stok_gudang = $stokGudang;
             $row->qty_sisa_wo = $sisaWo;
-            $row->qty_sisa = ($idGudang > 0) ? min($sisaWo, $stokGudang) : $sisaWo;
+            // Qty sisa murni mencerminkan sisa kebutuhan Work Order (tidak di-cap oleh stok gudang)
+            $row->qty_sisa = $sisaWo;
             $row->qty = 0;
             $row->qty_exist = $row->qty_sisa;
         }

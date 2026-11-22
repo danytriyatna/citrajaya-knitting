@@ -31,6 +31,7 @@ class BarangKeluar extends BaseController
     protected $mBarangKeluar;
     protected $mTrf;
     protected $mTrfDet;
+    protected $mRefPersediaan;
     protected $views = '\Modules\Transaction\Views';
     protected $urlv  = 'trans/outgoing-goods';
 
@@ -47,6 +48,7 @@ class BarangKeluar extends BaseController
         $this->mGudang = new GudangModel();
         $this->mTrf = new ItemTransferModel();
         $this->mTrfDet = new ItemTransferDetailModel();
+        $this->mRefPersediaan = new \Modules\Laporan\Models\LaporanPersediaanModel();
         $this->files  = new FileModel();
         $this->mBarangKeluar = new OutgoingGoodsModel();
     }
@@ -172,55 +174,114 @@ class BarangKeluar extends BaseController
 
     public function listsBarang()
     {
-        $start      = $this->request->getPost('start');
-        $limit      = $this->request->getPost('length');
+        $start      = (int)$this->request->getPost('start');
+        $limit      = (int)$this->request->getPost('length');
+        if ($limit <= 0) $limit = 50;
         $filters    = $this->request->getPost('filter');
         $order      = $this->request->getPost('sort');
 
-        $idGudang      = $this->request->getPost('idGudang');
-
-        $params = [];
-        if ($idGudang != "") {
-
-            $params['id_gudang'] = $idGudang;
-        } else {
-            $build_array = array(
-                "data" => array()
-            );
-            return $this->response->setJSON($build_array);
+        $idGudang   = $this->request->getPost('idGudang');
+        $idWo       = $this->request->getPost('kode_walkorder');
+        if (empty($idGudang)) {
+            return $this->response->setJSON([
+                "last_page" => 1,
+                "recordsTotal" => 0,
+                "recordsFiltered" => 0,
+                "data" => []
+            ]);
         }
 
-        $results = $this->mRef->getDataBarang(null, $start, $limit, $order, $filters, $params);
-        $totalfiltered = $this->mRef->getDataBarangCnt($filters, $params);
-        $totaldata = $this->mRef->getDataBarangCnt(null, $params);
-        $maxpage = ceil($totalfiltered / $limit);
+        $params = [];
+        if (!empty($idWo)) {
+            $params['kode_walkorder'] = $idWo;
+        }
+        if (!empty($filters) && is_array($filters) && !empty($filters[0]['value'])) {
+            $params['search'] = trim($filters[0]['value']);
+        }
 
-        $build_array = array(
-            "last_page" => $maxpage,
-            "recordsTotal" => $totaldata,
-            "recordsFiltered" => $totalfiltered,
-            "data" => array()
-        );
+        // Ambil data menggunakan engine yang identik 1:1 dengan Laporan Persediaan
+        $currentYear  = (int)date('Y');
+        $currentMonth = (int)date('n');
 
-        foreach ($results as $row) {
-            $id = encrypt($row->id_barang);
-            $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $row->lot_no, $row->pack_id);
-            array_push(
-                $build_array["data"],
-                array(
-                    "id"           => $row->id_barang,
-                    "nama_barang"  => $row->nama_barang,
-                    "kode_barang"  => $row->kode_barang,
-                    "nama_satuan"  => $row->nama_satuan,
-                    "lot_no"       => !empty($row->lot_no) ? $row->lot_no : '-',
-                    "lot_id"       => $row->lot_id,
-                    "pack_id"      => $row->pack_id,
-                    "pack_name"    => !empty($row->pack_name) ? $row->pack_name : '-',
-                    "stok_fisik"   => $stockData->stok_fisik,
-                    "stok_booking" => $stockData->stok_booking,
-                    "qty"          => $stockData->stok_tersedia,
-                )
-            );
+        $rawGudang = $this->mRefPersediaan->getDataGudang(null, (int)$idGudang, $currentYear, $currentMonth, $params);
+        $groupedData = $this->mRefPersediaan->groupByLotPack($rawGudang);
+
+        // Hanya ambil barang yang memiliki saldo akhir fisik positif (saldo_akhir > 0)
+        $availableData = [];
+        foreach ($groupedData as $row) {
+            $saldoAkhir = round((float)($row->saldo_akhir ?? 0), 2);
+            if ($saldoAkhir > 0.0001) {
+                $availableData[] = $row;
+            }
+        }
+
+        $totalData = count($availableData);
+
+        // Ambil mapping trans_lots untuk mengunci lot_id fisik per pack di gudang asal
+        $lotMap = [];
+        if (!empty($availableData)) {
+            $barangIds = array_values(array_unique(array_filter(array_map(function ($r) {
+                return (int)($r->id_barang ?? 0);
+            }, $availableData))));
+
+            if (!empty($barangIds)) {
+                $db = \Config\Database::connect();
+                $lotRows = $db->table('trans_lots')
+                    ->select('id, id_barang, TRIM(lot_no) as lot_no, pack_id')
+                    ->where('id_gudang', (int)$idGudang)
+                    ->where('active', 1)
+                    ->whereIn('id_barang', $barangIds)
+                    ->orderBy('id', 'ASC')
+                    ->get()->getResult();
+
+                foreach ($lotRows as $lr) {
+                    $k = $lr->id_barang . '|' . trim((string)$lr->lot_no) . '|' . ($lr->pack_id ?? '');
+                    $lotMap[$k] = (int)$lr->id;
+                }
+            }
+        }
+
+        // Paginasi slice
+        $pagedData = array_slice($availableData, $start, $limit);
+        $maxpage = ceil($totalData / $limit);
+
+        $build_array = [
+            "last_page" => $maxpage > 0 ? (int)$maxpage : 1,
+            "recordsTotal" => $totalData,
+            "recordsFiltered" => $totalData,
+            "data" => []
+        ];
+
+        foreach ($pagedData as $row) {
+            $k = $row->id_barang . '|' . trim((string)$row->lot_no) . '|' . ($row->pack_id ?? '');
+            $matchedLotId = $lotMap[$k] ?? null;
+
+            $harga_satuan = !empty($row->price) ? (float)$row->price : 0;
+            $cleanLot = trim((string)$row->lot_no);
+            $packIdVal = !empty($row->pack_id) ? (int)$row->pack_id : null;
+
+            $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $cleanLot, $packIdVal);
+            $stokFisik = round((float)($row->saldo_akhir ?? 0), 2);
+            $stokBooking = $stockData->stok_booking;
+            $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
+
+            $build_array["data"][] = [
+                "id"           => (int)$row->id_barang,
+                "nama_barang"  => $row->nama_barang,
+                "kode_barang"  => $row->kode_barang,
+                "nama_satuan"  => $row->nama_satuan,
+                "harga_satuan" => $harga_satuan,
+                "total_harga"  => $harga_satuan * $stokTersedia,
+                "stok_fisik"   => $stokFisik,
+                "stok_booking" => $stokBooking,
+                "qty"          => $stokTersedia,
+                "lot_no"       => $cleanLot,
+                "lot_id"       => $matchedLotId,
+                "pack_id"      => $packIdVal,
+                "pack_name"    => !empty($row->pack_name) && $row->pack_name !== '-' ? $row->pack_name : (!empty($row->pack_id) ? "Pack {$row->pack_id}" : "-"),
+                "id_barang"    => (int)$row->id_barang,
+                "month"        => (int)($row->month ?? $currentMonth),
+            ];
         }
         return $this->response->setJSON($build_array);
     }

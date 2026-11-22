@@ -144,93 +144,101 @@ class Mcommon extends Model
 
         $stokFisik = 0.0;
 
-        // 1. STOK FISIK LIVE:
+        // 1. STOK FISIK LIVE (SINGLE SOURCE OF TRUTH: LAPORAN PERSEDIAAN / KARTU STOK):
+        // Mengambil saldo akhir aktual dari trans_barang_history (periode berjalan sejak cutoff Juni 2026)
+        $currentYM = (int)date('Ym');
+        $paramsHist = [
+            'id_barang'  => (int)$idBarang,
+            'id_gudang'  => (int)$idGudang,
+            'current_ym' => $currentYM,
+        ];
+
         if ($cleanLot !== '-') {
             // A. UNTUK BARANG BER-LOT:
-            // trans_lots adalah Single Source of Truth saldo lot fisik aktual per gudang.
-            $builderLot = $this->db->table('trans_lots')
-                ->select('COALESCE(SUM(qty), 0) as total_qty')
-                ->where('id_barang', (int)$idBarang)
-                ->where('id_gudang', (int)$idGudang)
-                ->where('TRIM(COALESCE(lot_no, \'\')) =', $cleanLot)
-                ->where('active', 1);
-
-            $lotAllRow = (clone $builderLot)->get()->getRow();
-            $stokLotAll = $lotAllRow ? round((float)$lotAllRow->total_qty, 2) : 0.0;
+            $paramsHist['lot_no'] = $cleanLot;
 
             if (!$isDummyOrNull) {
-                $lotPackRow = (clone $builderLot)->where('pack_id', $packIdInt)->get()->getRow();
-                $stokLotPack = $lotPackRow ? round((float)$lotPackRow->total_qty, 2) : 0.0;
-                $stokFisik = ($stokLotPack > 0) ? $stokLotPack : $stokLotAll;
-            } else {
-                $stokFisik = $stokLotAll;
-            }
-
-            // Fallback: jika di trans_lots 0 (belum sync), cek mutasi trans_barang
-            if ($stokFisik <= 0) {
-                $paramsFisik = [
-                    'id_barang' => (int)$idBarang,
-                    'id_gudang' => (int)$idGudang,
-                    'lot_no'    => $cleanLot,
-                ];
-                $excludeTrxCond = "";
-                if (!empty($excludeTrxKode)) {
-                    $paramsFisik['exclude_trx_kode'] = trim((string)$excludeTrxKode);
-                    $excludeTrxCond = "AND (abx.kode_transaksi != :exclude_trx_kode: OR abx.kode_transaksi IS NULL)";
-                }
-
-                $sqlFisikTb = "
-                    SELECT
-                        COALESCE(SUM(CASE WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) -
-                        COALESCE(SUM(CASE WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) AS stok_fisik
-                    FROM trans_barang abx
-                    WHERE COALESCE(abx.active, 1) = 1
-                      AND abx.id_barang = :id_barang:
-                      AND TRIM(COALESCE(abx.lot_no, '')) = :lot_no:
-                      $excludeTrxCond
+                $paramsHist['pack_id'] = $packIdInt;
+                $sqlHistPack = "
+                    SELECT tbh.jumlah
+                    FROM trans_barang_history tbh
+                    WHERE tbh.id_gudang = :id_gudang:
+                      AND tbh.id_barang = :id_barang:
+                      AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = :lot_no:
+                      AND tbh.pack_id = :pack_id:
+                      AND (tbh.year * 100 + tbh.month) >= 202606
+                      AND (tbh.year * 100 + tbh.month) <= :current_ym:
+                    ORDER BY (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                    LIMIT 1
                 ";
-                $rowFisikTb = $this->db->query($sqlFisikTb, $paramsFisik)->getRow();
-                $stokFisikTb = $rowFisikTb ? round((float)$rowFisikTb->stok_fisik, 2) : 0.0;
-                if ($stokFisikTb > 0) {
-                    $stokFisik = $stokFisikTb;
+                $rowPack = $this->db->query($sqlHistPack, $paramsHist)->getRow();
+                $stokPackHist = $rowPack ? (float)$rowPack->jumlah : 0.0;
+
+                // Total lot lintas pack (jika per pack minus karena anomali pack masa lalu, jangan izinkan melebihi total lot yang riil tersedia)
+                $sqlHistLotTotal = "
+                    SELECT SUM(sub_h.jumlah) as total_qty
+                    FROM (
+                        SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'))
+                            tbh.jumlah
+                        FROM trans_barang_history tbh
+                        WHERE tbh.id_gudang = :id_gudang:
+                          AND tbh.id_barang = :id_barang:
+                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = :lot_no:
+                          AND (tbh.year * 100 + tbh.month) >= 202606
+                          AND (tbh.year * 100 + tbh.month) <= :current_ym:
+                        ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                    ) sub_h
+                ";
+                $rowLotTotal = $this->db->query($sqlHistLotTotal, $paramsHist)->getRow();
+                $stokLotTotal = $rowLotTotal ? (float)$rowLotTotal->total_qty : 0.0;
+
+                if ($stokPackHist > 0 && $stokLotTotal > 0) {
+                    $stokFisik = min($stokPackHist, $stokLotTotal);
+                } elseif ($stokPackHist > 0) {
+                    $stokFisik = $stokPackHist;
+                } else {
+                    $stokFisik = 0.0;
                 }
+            } else {
+                // Tanpa filter pack spesifik (total saldo lot fisik di gudang tersebut)
+                $sqlHistLotTotal = "
+                    SELECT SUM(sub_h.jumlah) as total_qty
+                    FROM (
+                        SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'))
+                            tbh.jumlah
+                        FROM trans_barang_history tbh
+                        WHERE tbh.id_gudang = :id_gudang:
+                          AND tbh.id_barang = :id_barang:
+                          AND COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = :lot_no:
+                          AND (tbh.year * 100 + tbh.month) >= 202606
+                          AND (tbh.year * 100 + tbh.month) <= :current_ym:
+                        ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                    ) sub_h
+                ";
+                $rowLotTotal = $this->db->query($sqlHistLotTotal, $paramsHist)->getRow();
+                $stokFisik = $rowLotTotal ? max(0.0, (float)$rowLotTotal->total_qty) : 0.0;
             }
         } else {
             // B. UNTUK BARANG NON-LOT:
-            $paramsFisik = [
-                'id_barang' => (int)$idBarang,
-                'id_gudang' => (int)$idGudang,
-            ];
-            $excludeTrxCond = "";
-            if (!empty($excludeTrxKode)) {
-                $paramsFisik['exclude_trx_kode'] = trim((string)$excludeTrxKode);
-                $excludeTrxCond = "AND (abx.kode_transaksi != :exclude_trx_kode: OR abx.kode_transaksi IS NULL)";
-            }
-
-            $sqlFisikNonLot = "
-                SELECT
-                    COALESCE(SUM(CASE WHEN abx.id_gudang_tujuan = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) -
-                    COALESCE(SUM(CASE WHEN abx.id_gudang_asal = :id_gudang: THEN abx.jumlah ELSE 0 END), 0) AS stok_fisik
-                FROM trans_barang abx
-                WHERE COALESCE(abx.active, 1) = 1
-                  AND abx.id_barang = :id_barang:
-                  AND (COALESCE(NULLIF(TRIM(abx.lot_no), ''), '-') = '-')
-                  $excludeTrxCond
+            $sqlHistNonLot = "
+                SELECT SUM(sub_h.jumlah) as total_qty
+                FROM (
+                    SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id)
+                        tbh.jumlah
+                    FROM trans_barang_history tbh
+                    WHERE tbh.id_gudang = :id_gudang:
+                      AND tbh.id_barang = :id_barang:
+                      AND (COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') = '-')
+                      AND (tbh.year * 100 + tbh.month) >= 202606
+                      AND (tbh.year * 100 + tbh.month) <= :current_ym:
+                    ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+                ) sub_h
             ";
-            $rowFisikNonLot = $this->db->query($sqlFisikNonLot, $paramsFisik)->getRow();
-            $stokFisikTb = $rowFisikNonLot ? round((float)$rowFisikNonLot->stok_fisik, 2) : 0.0;
-
-            $rowLotNonLot = $this->db->table('trans_lots')
-                ->select('COALESCE(SUM(qty), 0) as total_qty')
-                ->where('id_barang', (int)$idBarang)
-                ->where('id_gudang', (int)$idGudang)
-                ->where('(lot_no = \'-\' OR lot_no = \'\' OR lot_no IS NULL)')
-                ->where('active', 1)
-                ->get()->getRow();
-            $stokLotNonLot = $rowLotNonLot ? round((float)$rowLotNonLot->total_qty, 2) : 0.0;
-
-            $stokFisik = max(0.0, max($stokFisikTb, $stokLotNonLot));
+            $rowNonLot = $this->db->query($sqlHistNonLot, $paramsHist)->getRow();
+            $stokFisik = $rowNonLot ? max(0.0, (float)$rowNonLot->total_qty) : 0.0;
         }
+
+        $stokFisik = round(max(0.0, $stokFisik), 2);
 
         // 2. STOK TER-BOOKING (DRAFT AKTIF):
         // Hanya menghitung dokumen draft AKTIF (rentang 30 hari terakhir) yang belum dihapus (deleted_at IS NULL).

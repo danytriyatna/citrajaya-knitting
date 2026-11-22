@@ -1149,7 +1149,7 @@ class ItemTransfer extends BaseController
           $packIdVal = !empty($row->pack_id) ? (int)$row->pack_id : null;
           
           $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $cleanLot, $packIdVal);
-          $stokFisik = ($stockData->stok_fisik > 0) ? $stockData->stok_fisik : round((float)($row->saldo_akhir ?? 0), 2);
+          $stokFisik = round((float)($row->saldo_akhir ?? 0), 2);
           $stokBooking = $stockData->stok_booking;
           $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
 

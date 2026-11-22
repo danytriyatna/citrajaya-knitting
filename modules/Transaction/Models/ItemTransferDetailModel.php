@@ -568,6 +568,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
         $lotMap = [];
         $histMapByLot = [];
+        $histMapByLotPack = [];
         $histMapTotalByBarang = [];
 
         if (!empty($barangIds) && $idGudang > 0) {
@@ -585,7 +586,7 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 $lotMap[$lKey] = (float)$lr->lot_qty;
             }
 
-            // 2. Batch query dari kartu stok trans_barang_history (sinkron dgn BarangKeluarModel::save)
+            // 2. Batch query dari kartu stok trans_barang_history (Single Source of Truth: Laporan Persediaan)
             $currentYM = (int)date('Ym');
             $inList = implode(',', array_map('intval', $barangIds));
             $histRows = $this->db->query("
@@ -611,6 +612,25 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 $histMapByLot[$hKey] = $hQty;
                 $histMapTotalByBarang[$hr->id_barang] = ($histMapTotalByBarang[$hr->id_barang] ?? 0.0) + $hQty;
             }
+
+            $histRowsPack = $this->db->query("
+                SELECT DISTINCT ON (tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'))
+                    tbh.id_barang,
+                    COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-') as lot_no,
+                    tbh.pack_id,
+                    tbh.jumlah
+                FROM trans_barang_history tbh
+                WHERE tbh.id_gudang = ?
+                  AND tbh.id_barang IN ({$inList})
+                  AND (tbh.year * 100 + tbh.month) >= 202606
+                  AND (tbh.year * 100 + tbh.month) <= {$currentYM}
+                ORDER BY tbh.id_barang, tbh.id_gudang, tbh.pack_id, COALESCE(NULLIF(TRIM(tbh.lot_no), ''), '-'), (tbh.year * 100 + tbh.month) DESC, tbh.id DESC
+            ", [$idGudang])->getResult();
+
+            foreach ($histRowsPack as $hrp) {
+                $hpKey = $hrp->id_barang . '|' . trim((string)$hrp->lot_no) . '|' . ($hrp->pack_id ?? '');
+                $histMapByLotPack[$hpKey] = (float)$hrp->jumlah;
+            }
         }
 
         foreach ($results as $row) {
@@ -626,9 +646,21 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 $row->qty_pemakaian_sebelumnya = $usedMapLotOnly[$keyLotOnly] ?? ($usedMapLotNo[$keyLot] ?? ($usedMapLotId[$keyId] ?? 0));
 
                 $lKey = $row->id_barang . '|' . $cleanRowLot;
-                $stokLot = $lotMap[$lKey] ?? 0.0;
-                $stokHist = $histMapByLot[$lKey] ?? 0.0;
-                $stokGudang = round(max(0.0, max($stokLot, $stokHist)), 2);
+                $lpKey = $row->id_barang . '|' . $cleanRowLot . '|' . ($row->pack_id ?? '');
+
+                // Saldo fisik riil Laporan Persediaan
+                $stokHistLot = $histMapByLot[$lKey] ?? 0.0;
+                $stokHistPack = $histMapByLotPack[$lpKey] ?? null;
+
+                if ($stokHistPack !== null && $stokHistPack > 0 && $stokHistLot > 0) {
+                    $stokGudang = round(min($stokHistPack, $stokHistLot), 2);
+                } elseif ($stokHistPack !== null && $stokHistPack > 0) {
+                    $stokGudang = round($stokHistPack, 2);
+                } elseif ($stokHistLot > 0) {
+                    $stokGudang = round($stokHistLot, 2);
+                } else {
+                    $stokGudang = 0.0;
+                }
             } else {
                 $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
                 $row->qty_pemakaian_sebelumnya = $usedMapLotId[$keyId] ?? 0;

@@ -44,8 +44,8 @@ if (Test-Path $pgDumpPath) {
 }
 
 if ((Test-Path "$tempDump") -and ((Get-Item "$tempDump").Length -gt 100000)) {
-    # Bersihkan file .dump lama dan ganti dengan yang terbaru agar hemat storage
-    Get-ChildItem -Path $backupDir -Filter "*.dump" | Remove-Item -Force
+    # Hapus dump lama dan ganti dengan yang terbaru agar hemat storage (hanya 1 file)
+    if (Test-Path "$targetDump") { Remove-Item -Path "$targetDump" -Force }
     Move-Item -Path "$tempDump" -Destination "$targetDump" -Force
     $sizeMB = [math]::Round((Get-Item "$targetDump").Length / 1MB, 2)
     Write-Host "[OK] Snapshot database terbaru tersimpan ($sizeMB MB): sql\backup_cjk_latest.dump" -ForegroundColor Green

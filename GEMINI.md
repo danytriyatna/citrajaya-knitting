@@ -17,35 +17,23 @@
 
 ---
 
-## 🛡️ 2. SOP MUTLAK SEBELUM UPDATE & DEPLOYMENT
-Setiap kali ada perbaikan bug, penambahan fitur, atau migrasi di CJK, **DILARANG MELAKUKAN PULL/COPY LANGSUNG TANPA BACKUP**. SOP deployment wajib melalui file otomasi:
-* 📂 `Deploy_Dev_Server.bat` (yang menjalankan `scripts/deploy_cjk.ps1` ke Dev `citraknitt.com:81`).
-* 📂 `Deploy_Prod_Server.bat` (yang menjalankan `scripts/deploy_prod.ps1` ke Production `https://citraknitt.com`).
+## 🛡️ 2. SOP MUTLAK PENYELESAIAN PROJECT & DEPLOYMENT (ATURAN RESMI DANY TRIYATNA)
+Alur resmi penyelesaian setiap issue, perbaikan bug, atau penambahan fitur di CJK:
 
-### Tahapan 4-Pilar Deployment CJK:
-1. **[1/4] Mandatory Database Snapshot (pg_dump)**:
-   * Sebelum satu baris kode pun ditarik, script wajib mengeksekusi dump PostgreSQL menggunakan format custom archive (`-F c`):
-     ```powershell
-     & "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h 103.102.153.192 -p 5432 -U citradev -d citra_knitt_db -F c -b -f "sql\backup_cjk_latest.dump"
-     ```
-   * File dump berukuran ~8.5 MB otomatis disimpan di folder `sql/backup_cjk_latest.dump` (selalu me-replace backup sebelumnya agar hemat disk space, hanya 1 file backup yang dipertahankan).
-   * **Abort Policy**: Jika proses backup database gagal atau file corrupt, deployment seketika dibatalkan demi integritas data transaksi rajut/yarn.
+### 3-Pilar Siklus Kerja CJK:
+1. **[1/3] Cek & Review pada Local**:
+   - Seluruh analisa, investigasi error, dan penelusuran alur dilakukan langsung di environment lokal (`localhost:8085` / CLI lokal / database lokal).
+   - Pastikan konteks masalah teridentifikasi dengan jelas sebelum menyentuh file produksi.
 
-2. **[2/4] Remote Git Pull Branch**:
-   * Menjalankan penarikan kode terbaru di server (mengikuti branch aktif / `master`):
-     ```bash
-     cd /pejuang/development/html && git pull origin $(git rev-parse --abbrev-ref HEAD)
-     ```
+2. **[2/3] Update pada Local & Uji Mandiri**:
+   - Terapkan perbaikan / modifikasi kode pada repository lokal.
+   - Uji mandiri secara menyeluruh (syntax check, simulasi logika, verifikasi fungsional) hingga dipastikan zero-error.
 
-3. **[3/4] CI4 Cache Clear, OpCache Reset & Writable Permissions**:
-   * Membersihkan view & routing cache lama, reset OpCache LiteSpeed, serta menjaga hak akses folder writable:
-     ```bash
-     cd /pejuang/development/html && php spark cache:clear && chmod -R 775 writable && touch .lsphp_restart.txt && (killall -9 lsphp 2>/dev/null || true)
-     ```
-
-4. **[4/4] Live Health Check Verification**:
-   * Menguji respon HTTP ke `http://citraknitt.com:81/` dengan header `Host: citraknitt.com:81`.
-   * Status harus mengembalikan `HTTP 200` atau `HTTP 307` (Redirect ke auth login).
+3. **[3/3] Update ke Server Produksi (Tanpa Perlu Backup DB)**:
+   - Kode yang sudah terverifikasi di lokal langsung di-push / di-sync ke server produksi (`https://citraknitt.com`).
+   - **Tanpa Ada Perlu Backup DB**: Menghilangkan overhead backup pg_dump agar deployment cepat, lincah, dan direct.
+   - Bersihkan cache CodeIgniter 4 (`php spark cache:clear`), reload OpCache LiteSpeed (`touch .lsphp_restart.txt`), dan pastikan permission folder `writable/` tetap aman (`chmod -R 777 writable`).
+   - Verifikasi akhir via live health check (HTTP 200 / 307).
 
 ---
 

@@ -192,12 +192,10 @@ class Mcommon extends Model
                 $rowLotTotal = $this->db->query($sqlHistLotTotal, $paramsHist)->getRow();
                 $stokLotTotal = $rowLotTotal ? (float)$rowLotTotal->total_qty : 0.0;
 
-                if ($stokPackHist > 0 && $stokLotTotal > 0) {
-                    $stokFisik = min($stokPackHist, $stokLotTotal);
-                } elseif ($stokPackHist > 0) {
-                    $stokFisik = $stokPackHist;
+                if ($rowPack !== null) {
+                    $stokFisik = (float)$rowPack->jumlah;
                 } else {
-                    $stokFisik = 0.0;
+                    $stokFisik = $rowLotTotal ? (float)$rowLotTotal->total_qty : 0.0;
                 }
             } else {
                 // Tanpa filter pack spesifik (total saldo lot fisik di gudang tersebut)
@@ -216,7 +214,7 @@ class Mcommon extends Model
                     ) sub_h
                 ";
                 $rowLotTotal = $this->db->query($sqlHistLotTotal, $paramsHist)->getRow();
-                $stokFisik = $rowLotTotal ? max(0.0, (float)$rowLotTotal->total_qty) : 0.0;
+                $stokFisik = $rowLotTotal ? (float)$rowLotTotal->total_qty : 0.0;
             }
         } else {
             // B. UNTUK BARANG NON-LOT:
@@ -235,10 +233,10 @@ class Mcommon extends Model
                 ) sub_h
             ";
             $rowNonLot = $this->db->query($sqlHistNonLot, $paramsHist)->getRow();
-            $stokFisik = $rowNonLot ? max(0.0, (float)$rowNonLot->total_qty) : 0.0;
+            $stokFisik = $rowNonLot ? (float)$rowNonLot->total_qty : 0.0;
         }
 
-        $stokFisik = round(max(0.0, $stokFisik), 2);
+        $stokFisik = round($stokFisik, 2);
 
         // 2. STOK TER-BOOKING (DRAFT AKTIF):
         // Hanya menghitung dokumen draft AKTIF (rentang 30 hari terakhir) yang belum dihapus (deleted_at IS NULL).
@@ -315,7 +313,7 @@ class Mcommon extends Model
         $stokBooking = round($stokBookingTrf + $stokBookingBtk, 2);
 
         // 3. STOK TERSEDIA (AVAILABLE): Stok Fisik dikurangi Booking
-        $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
+        $stokTersedia = round($stokFisik - $stokBooking, 2);
 
         return (object) [
             'stok_fisik'    => $stokFisik,

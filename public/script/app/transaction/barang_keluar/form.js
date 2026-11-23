@@ -467,7 +467,10 @@ let dtListDetail = new Tabulator("#dt-list-detail", {
             title: "QTY SISA", field: "qty_sisa", hozAlign: "right", headerHozAlign: "right", width: "7%",
             formatter: function (cell) {
                 let val = parseFloat(cell.getValue()) || 0;
-                if (val < 0) val = 0;
+                if (val < 0) {
+                    cell.getElement().style.color = "#dc3545";
+                    cell.getElement().style.fontWeight = "700";
+                }
                 return val.toFixed(2);
             },
             bottomCalc: "sum", bottomCalcParams: { precision: 2 }

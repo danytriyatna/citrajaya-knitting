@@ -1167,7 +1167,11 @@ let dtListProduksi = new Tabulator("#dt-list-so-produksi", {
             headerHozAlign: "right",
             formatter: function (cell) {
                 let val = parseFloat(cell.getValue() || 0);
-                return val < 0 ? 0 : val.toFixed(0);
+                if (val < 0) {
+                    cell.getElement().style.color = "#dc3545";
+                    cell.getElement().style.fontWeight = "700";
+                }
+                return val.toFixed(0);
             }
         },
         {

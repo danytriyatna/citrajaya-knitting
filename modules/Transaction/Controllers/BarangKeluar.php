@@ -263,7 +263,7 @@ class BarangKeluar extends BaseController
             $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $cleanLot, $packIdVal);
             $stokFisik = round((float)($row->saldo_akhir ?? 0), 2);
             $stokBooking = $stockData->stok_booking;
-            $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
+            $stokTersedia = round($stokFisik - $stokBooking, 2);
 
             $build_array["data"][] = [
                 "id"           => (int)$row->id_barang,

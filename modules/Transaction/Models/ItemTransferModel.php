@@ -1192,7 +1192,7 @@ class ItemTransferModel extends \App\Models\PrModel
                                 !empty($rowData['pack_id']) ? (int)$rowData['pack_id'] : null,
                                 $trxTanggal
                             );
-                        $saldoBalance = max(0.0, round((float)$liveStock, 2));
+                        $saldoBalance = round((float)$liveStock, 2);
                         $arrStockBalances = [
                             "id_barang" => $idBarang,
                             "id_gudang" => !empty($data['id_gudang_asal']) ? $data['id_gudang_asal'] : null,

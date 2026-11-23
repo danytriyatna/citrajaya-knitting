@@ -652,14 +652,10 @@ class ItemTransferDetailModel extends \App\Models\PrModel
                 $stokHistLot = $histMapByLot[$lKey] ?? 0.0;
                 $stokHistPack = $histMapByLotPack[$lpKey] ?? null;
 
-                if ($stokHistPack !== null && $stokHistPack > 0 && $stokHistLot > 0) {
-                    $stokGudang = round(min($stokHistPack, $stokHistLot), 2);
-                } elseif ($stokHistPack !== null && $stokHistPack > 0) {
+                if ($stokHistPack !== null) {
                     $stokGudang = round($stokHistPack, 2);
-                } elseif ($stokHistLot > 0) {
-                    $stokGudang = round($stokHistLot, 2);
                 } else {
-                    $stokGudang = 0.0;
+                    $stokGudang = round($stokHistLot, 2);
                 }
             } else {
                 $keyId = $row->id_barang . '|' . $row->lot_id . '|' . $row->pack_id;
@@ -667,11 +663,11 @@ class ItemTransferDetailModel extends \App\Models\PrModel
 
                 $stokNonLot = $histMapByLot[$row->id_barang . '|-'] ?? 0.0;
                 $stokAll = $histMapTotalByBarang[$row->id_barang] ?? 0.0;
-                $stokGudang = round(max(0.0, max($stokNonLot, $stokAll)), 2);
+                $stokGudang = round(($stokNonLot != 0.0 ? $stokNonLot : $stokAll), 2);
             }
 
             $calcSisa = round($row->qty_terima - $row->qty_retur - $row->qty_pemakaian_sebelumnya, 2);
-            $sisaWo = max(0, $calcSisa);
+            $sisaWo = $calcSisa;
 
             // Stok fisik riil di gudang (Laporan Persediaan)
             $row->stok_gudang = $stokGudang;

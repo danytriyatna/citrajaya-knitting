@@ -360,9 +360,7 @@ class ItemTransfer extends BaseController
         }
       }
 
-      if (empty($sisa) || $sisa < 0) {
-        $sisa = 0;
-      }
+      $sisa = !empty($sisa) ? (float)$sisa : 0;
       array_push(
         $build_array["data"],
         array(
@@ -460,9 +458,7 @@ class ItemTransfer extends BaseController
           }
         }
 
-        if (empty($sisa) || $sisa < 0) {
-          $sisa = 0;
-        }
+        $sisa = !empty($sisa) ? (float)$sisa : 0;
 
         $row->qty_ref = $sisa;
       }
@@ -1151,7 +1147,7 @@ class ItemTransfer extends BaseController
           $stockData = $this->mcommon->getLiveStockWithBooking($row->id_barang, (int)$idGudang, $cleanLot, $packIdVal);
           $stokFisik = round((float)($row->saldo_akhir ?? 0), 2);
           $stokBooking = $stockData->stok_booking;
-          $stokTersedia = round(max(0.0, $stokFisik - $stokBooking), 2);
+          $stokTersedia = round($stokFisik - $stokBooking, 2);
 
           $build_array["data"][] = [
               "id"           => (int)$row->id_barang,
@@ -1249,9 +1245,7 @@ class ItemTransfer extends BaseController
             }
           }
 
-          if (empty($sisa) || $sisa < 0) {
-            $sisa = 0;
-          }
+          $sisa = !empty($sisa) ? (float)$sisa : 0;
 
           $isi = [];
           $isi = [
@@ -1434,9 +1428,7 @@ class ItemTransfer extends BaseController
             }
           }
 
-          if (empty($sisa) || $sisa < 0) {
-            $sisa = 0;
-          }
+          $sisa = !empty($sisa) ? (float)$sisa : 0;
 
           $isi = [];
           $isi = [

@@ -1087,7 +1087,7 @@ class ProductionModel extends \App\Models\PrModel
                 FROM trans_barang_detail tbd
                 INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
                 LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
-                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
             ", [$kodeWo])->getRow();
             $nilai_bahan = (float)($bbRow->total_bahan ?? 0);
         }
@@ -1210,7 +1210,7 @@ class ProductionModel extends \App\Models\PrModel
                 INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
                 LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
                 LEFT JOIN ref_warna rw ON rw.id = rb.id_warna
-                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.active = 1
+                WHERE tbh.no_ref_wo = ? AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
                 GROUP BY rb.kode_barang, rb.nama_barang, rw.kode_warna, rw.keterangan, tbd.price, rb.harga_satuan
                 ORDER BY rb.nama_barang ASC
             ", [$kodeWo])->getResult();
@@ -1316,7 +1316,7 @@ class ProductionModel extends \App\Models\PrModel
                     FROM trans_barang_detail tbd
                     INNER JOIN trans_barang_header tbh ON tbh.id = CAST(tbd.id_header AS INTEGER)
                     LEFT JOIN ref_barang rb ON rb.id = tbd.id_barang
-                    WHERE tbh.no_ref_wo IN ({$woList}) AND tbh.id_kategori = 5 AND tbh.active = 1
+                    WHERE tbh.no_ref_wo IN ({$woList}) AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
                 ")->getRow();
                 $tot_bahan = (float)($bbRow->tot_bahan ?? 0);
             }

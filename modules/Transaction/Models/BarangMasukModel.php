@@ -1436,6 +1436,7 @@ class BarangMasukModel extends \App\Models\PrModel
         $builder->where("head.id_proses", $id_proses);
         $builder->where("head.id_cmt", $id_cmt);
         $builder->where("abx.style", $style);
+        $builder->where("head.status", 1);
         $builder->where("head.active", 1);
         $builder->where("abx.harga >", 0);
 

@@ -834,6 +834,7 @@ class Production extends BaseController
         WHERE tbtd.kode_walkorder = ?
           AND tbtd.id_barang = ?
           AND tbth.id_gudang_asal = 1
+          AND tbth.status = 1
           AND tbth.active = 1
         ORDER BY tbth.tanggal ASC, tbth.kode_transaksi ASC, tbtd.id ASC
       ";
@@ -858,6 +859,7 @@ class Production extends BaseController
         WHERE tbtd.kode_walkorder = ?
           AND tbtd.id_barang = ?
           AND tbth.id_gudang_tujuan = 1
+          AND tbth.status = 1
           AND tbth.active = 1
         ORDER BY tbth.tanggal ASC, tbth.kode_transaksi ASC, tbtd.id ASC
       ";
@@ -881,6 +883,7 @@ class Production extends BaseController
         LEFT JOIN ref_pack rp ON rp.id = tbd.pack_id
         WHERE tbh.no_ref_wo = ?
           AND tbh.id_kategori = 5 
+          AND tbh.status = 1
           AND tbh.active = 1
           AND tbd.id_barang = ?
           AND tbd.qty > 0

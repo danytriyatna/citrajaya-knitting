@@ -975,6 +975,8 @@ class WalkorderModel extends \App\Models\PrModel
                     )
                 AND tbtd.id_barang      = abx.id_barang
                 AND tbth.id_gudang_asal = 1
+                AND tbth.status         = 1
+                AND tbth.active         = 1
             ) AS total_qty_trf,
             (
                 SELECT ROUND(COALESCE(SUM(tbtd.qty), 0)::numeric, 2)
@@ -987,6 +989,8 @@ class WalkorderModel extends \App\Models\PrModel
                     )
                 AND tbtd.id_barang         = abx.id_barang
                 AND tbth.id_gudang_tujuan  = 1
+                AND tbth.status            = 1
+                AND tbth.active            = 1
             ) AS total_qty_kembali,
              (
                 SELECT ROUND(COALESCE(SUM(tbd.qty), 0)::numeric, 2)
@@ -997,7 +1001,7 @@ class WalkorderModel extends \App\Models\PrModel
                         FROM trans_walkorder wo3
                         WHERE wo3.id = " . (int)$id . "
                     )
-                AND tbh.id_kategori = 5 AND tbh.active = 1
+                AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_qty_pakai,
              (
@@ -1010,7 +1014,7 @@ class WalkorderModel extends \App\Models\PrModel
                         FROM trans_walkorder wo3
                         WHERE wo3.id = " . (int)$id . "
                     )
-                AND tbh.id_kategori = 5 AND tbh.active = 1
+                AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
                 AND tbd.id_barang      = abx.id_barang
             ) AS total_nilai_pakai,
              (
@@ -1025,6 +1029,8 @@ class WalkorderModel extends \App\Models\PrModel
                         )
                     AND tbtd.id_barang      = abx.id_barang
                     AND tbth.id_gudang_asal = 1
+                    AND tbth.status         = 1
+                    AND tbth.active         = 1
                 )
                 -
                 (
@@ -1038,6 +1044,8 @@ class WalkorderModel extends \App\Models\PrModel
                         )
                     AND tbtd.id_barang        = abx.id_barang
                     AND tbth.id_gudang_tujuan = 1
+                    AND tbth.status           = 1
+                    AND tbth.active           = 1
                 )
                 -
                 (
@@ -1049,7 +1057,7 @@ class WalkorderModel extends \App\Models\PrModel
                             FROM trans_walkorder wo3
                             WHERE wo3.id = " . (int)$id . "
                         )
-                    AND tbh.id_kategori = 5 AND tbh.active = 1
+                    AND tbh.id_kategori = 5 AND tbh.status = 1 AND tbh.active = 1
                     AND tbd.id_barang      = abx.id_barang
                 )
             ) AS sisa
@@ -1093,6 +1101,8 @@ class WalkorderModel extends \App\Models\PrModel
                     WHERE wo2.id = {$id}
                 )
             AND tbth.id_gudang_asal = 1
+            AND tbth.status         = 1
+            AND tbth.active         = 1
 
             UNION
 
@@ -1104,6 +1114,8 @@ class WalkorderModel extends \App\Models\PrModel
                     FROM trans_walkorder wo3 
                     WHERE wo3.id = {$id}
                 )
+            AND tbh.status = 1
+            AND tbh.active = 1
         ) lot
     ";
 
@@ -1143,6 +1155,8 @@ class WalkorderModel extends \App\Models\PrModel
             AND tbtd.id_barang      = abx.id_barang
             AND tbtd.lot_no         = lot.lot_no
             AND tbth.id_gudang_asal = 1
+            AND tbth.status         = 1
+            AND tbth.active         = 1
         ) AS total_qty_trf,
 
         (
@@ -1156,6 +1170,8 @@ class WalkorderModel extends \App\Models\PrModel
                 )
             AND tbd.id_barang = abx.id_barang
             AND tbd.lot_no    = lot.lot_no
+            AND tbh.status    = 1
+            AND tbh.active    = 1
         ) AS total_qty_pakai,
 
         (
@@ -1171,6 +1187,8 @@ class WalkorderModel extends \App\Models\PrModel
                 AND tbtd.id_barang      = abx.id_barang
                 AND tbtd.lot_no         = lot.lot_no
                 AND tbth.id_gudang_asal = 1
+                AND tbth.status         = 1
+                AND tbth.active         = 1
             )
             -
             (
@@ -1184,6 +1202,8 @@ class WalkorderModel extends \App\Models\PrModel
                     )
                 AND tbd.id_barang = abx.id_barang
                 AND tbd.lot_no    = lot.lot_no
+                AND tbh.status    = 1
+                AND tbh.active    = 1
             )
         ) AS sisa
     ");

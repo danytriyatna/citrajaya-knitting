@@ -480,6 +480,8 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->select("abx.id");
         $builder->where("id_proses", $idProses);
         $builder->where("id_cmt", $idOperator);
+        $builder->where("abx.status", 1);
+        $builder->where("abx.active", 1);
         $this->_data = $builder->get()->getResult();
         
         return $this->_data;
@@ -497,6 +499,8 @@ class ItemTransferModel extends \App\Models\PrModel
                 $builder->where("abx.id_cmt", $idOperator);
             }
         }
+        $builder->where("abx.status", 1);
+        $builder->where("abx.active", 1);
 
         return array_column($builder->get()->getResultArray(), 'id');
     }
@@ -571,6 +575,8 @@ class ItemTransferModel extends \App\Models\PrModel
         $builder->where("tbh.id_proses",  $id_proses);
         $builder->where("tbh.id_cmt", $id_cmt);
         $builder->where("tbh.id_perusahaan != 2");
+        $builder->where("tbh.status", 1);
+        $builder->where("tbh.active", 1);
         $this->_data = $builder->get()->getRow();
         return $this->_data;
     }
@@ -1415,6 +1421,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_proses = tbth.id_proses
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.status = 1
                 AND tbh.active = 1
                 AND (
                     CASE 
@@ -1614,6 +1621,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_proses = tbth.id_proses
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.status = 1
                 AND tbh.active = 1
                 AND tbh.status = 1
             ), 0) AS qty_terima",
@@ -1628,6 +1636,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND tbh.id_proses = tbth.id_proses
                 AND tbh.id_cmt = tbth.id_cmt
                 AND LEFT(tbh.kode_transaksi, 3) = 'BTM'
+                AND tbh.status = 1
                 AND tbh.active = 1
                 AND tbh.status = 1
             ), 0)) AS qty_kirim",
@@ -2321,6 +2330,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 "SUM(CASE WHEN tbtsd.is_reject = 1 THEN tbtsd.qty ELSE 0 END) AS qty_reject",
                 "SUM(tbtsd.qty) AS qty_transfer_total"
             ])
+            ->where('tbth.status', 1)
             ->where('tbth.active', 1);
 
         // Filter periode tanggal HANYA untuk pemilihan nomor SO / Sample yang tampil
@@ -2379,6 +2389,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 "tbmp.kode_ukuran",
                 "SUM(tbmp.qty) AS qty_terima"
             ])
+            ->where('tbh.status', 1)
             ->where('tbh.active', 1)
             ->where("LEFT(tbh.kode_transaksi, 3) =", "BTM");
 

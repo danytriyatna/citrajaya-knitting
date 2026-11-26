@@ -48,16 +48,6 @@
 **Rp 6.200.000,-** *(Terbilang: Enam Juta Dua Ratus Ribu Rupiah)*  
 *(Dihitung proporsional 2 periode bulanan: Oktober & November 2026)*
 
-```
-Mengetahui / Menyetujui,                           Bandung, 27 November 2026
-PT CITRA JAYA KNITTING                             Pengembang / Konsultan Sistem
-
-
-
-( ......................................... )      DANY TRIYATNA
-Direksi / Manajemen                                Lead System Architect & Developer
-```
-
 ---
 
 <br><br>

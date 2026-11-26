@@ -5,29 +5,37 @@
 
 ---
 
-### I. KEGIATAN PENGEMBANGAN SISTEM (FITUR BARU, MODUL & ARSITEKTUR)
+### I. KEGIATAN PENGEMBANGAN SISTEM (BERDASARKAN MENU / MODUL)
 
-| No | Tanggal | Modul / Menu | Deskripsi Kegiatan Pengembangan Sistem | Status |
-|:--:|:-------:|:-------------|:---------------------------------------|:------:|
-| 1 | 29-09-2026 | Core Architecture | **[Arsitektur]** Implementasi universal auto-versioning asset (`?v=timestamp`) dan anti-cache HTTP headers (`no-cache, no-store`) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik. | **Done** |
-| 2 | 16-10-2026 | Item Transfer | **[Fitur Baru]** Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak. | **Done** |
-| 3 | 26-10-2026 | Item Transfer | **[Fitur Baru]** Fitur Export Excel khusus tipe **Sisa Transfer CMT (Outstanding Inventory)** untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar. | **Done** |
-| 4 | 26-10-2026 | Item Transfer | **[Fitur Baru]** Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak. | **Done** |
-| 5 | 27-10-2026 | Laporan Persediaan | **[Fitur Baru]** Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved). | **Done** |
-| 6 | 30-10-2026 | Barang Keluar (BTK) | **[Fitur Baru]** Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel. | **Done** |
-| 7 | 30-10-2026 | Keuangan & SDM | **[Menu Baru]** Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik. | **Done** |
-| 8 | 31-10-2026 | Laporan Persediaan | **[Fitur Baru]** Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya. | **Done** |
-| 9 | 31-10-2026 | Dashboard Persediaan | **[Fitur Baru]** Penambahan kolom **QTY WO Booked** (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik. | **Done** |
-| 10 | 31-10-2026 | Dashboard Persediaan | **[Fitur Baru]** Penambahan kolom fisik **QTY AKHIR (Gudang)** dan penyesuaian redaksi **QTY TERSEDIA (Stok Bersih Siap Pakai)** pada ringkasan persediaan bahan baku. | **Done** |
-| 11 | 31-10-2026 | Dashboard Persediaan | **[Fitur Baru]** Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan. | **Done** |
-| 12 | 31-10-2026 | Work Order (WO) | **[Fitur Baru]** Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard. | **Done** |
-| 13 | 31-10-2026 | Produksi | **[Fitur Baru]** Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen. | **Done** |
-| 14 | 31-10-2026 | Persediaan & Laba Rugi | **[Fitur Baru]** Penambahan kategori transaksi baru **"Pemakaian Lainnya"** yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional. | **Done** |
-| 15 | 31-10-2026 | Delivery Order (DO) | **[Fitur Baru]** Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time. | **Done** |
-| 16 | 02-11-2026 | Core Architecture | **[Arsitektur]** Implementasi arsitektur **Zero-Client-Cache** permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache. | **Done** |
-| 17 | 09-11-2026 | Dashboard Persediaan | **[Fitur Baru]** Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock. | **Done** |
-| 18 | 11-11-2026 | Barang Keluar (BTK) | **[Fitur Baru]** Penambahan kolom live **STOK GUDANG**, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik. | **Done** |
-| 19 | 23-11-2026 | Pergudangan & Persediaan | **[Arsitektur & Fitur]** Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik. | **Done** |
+| No | Rincian Kegiatan Pengembangan Sistem | Status |
+|:--:|:-------------------------------------|:------:|
+| **1.** | **DASHBOARD & RINGKASAN PERSEDIAAN** | |
+| 1 | **[Fitur Baru]** Penambahan kolom **QTY WO Booked** (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik. | **Done** |
+| 2 | **[Fitur Baru]** Penambahan kolom fisik **QTY AKHIR (Gudang)** dan penyesuaian redaksi **QTY TERSEDIA (Stok Bersih Siap Pakai)** pada ringkasan persediaan bahan baku. | **Done** |
+| 3 | **[Fitur Baru]** Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan. | **Done** |
+| 4 | **[Fitur Baru]** Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock. | **Done** |
+| **2.** | **LAPORAN PERSEDIAAN & PERGUDANGAN** | |
+| 5 | **[Fitur Baru]** Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved). | **Done** |
+| 6 | **[Fitur Baru]** Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya. | **Done** |
+| 7 | **[Fitur Baru]** Penambahan kategori transaksi baru **"Pemakaian Lainnya"** yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional. | **Done** |
+| 8 | **[Arsitektur]** Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik. | **Done** |
+| **3.** | **ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)** | |
+| 9 | **[Fitur Baru]** Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak. | **Done** |
+| 10 | **[Fitur Baru]** Fitur Export Excel khusus tipe **Sisa Transfer CMT (Outstanding Inventory)** untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar. | **Done** |
+| 11 | **[Fitur Baru]** Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak. | **Done** |
+| **4.** | **BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)** | |
+| 12 | **[Fitur Baru]** Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel. | **Done** |
+| 13 | **[Fitur Baru]** Penambahan kolom live **STOK GUDANG**, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik. | **Done** |
+| **5.** | **WORK ORDER (WO) & PRODUKSI** | |
+| 14 | **[Fitur Baru]** Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard. | **Done** |
+| 15 | **[Fitur Baru]** Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen. | **Done** |
+| **6.** | **DELIVERY ORDER (SURAT JALAN DO)** | |
+| 16 | **[Fitur Baru]** Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time. | **Done** |
+| **7.** | **KEUANGAN & SDM** | |
+| 17 | **[Menu Baru]** Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik. | **Done** |
+| **8.** | **CORE ARCHITECTURE & INFRASTRUKTUR** | |
+| 18 | **[Arsitektur]** Implementasi universal auto-versioning asset (`?v=timestamp`) dan anti-cache HTTP headers (`no-cache, no-store`) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik. | **Done** |
+| 19 | **[Arsitektur]** Implementasi arsitektur **Zero-Client-Cache** permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache. | **Done** |
 
 ---
 

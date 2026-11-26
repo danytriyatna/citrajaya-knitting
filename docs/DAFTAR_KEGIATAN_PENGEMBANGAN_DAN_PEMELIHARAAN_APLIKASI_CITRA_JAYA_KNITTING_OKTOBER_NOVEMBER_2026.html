@@ -82,7 +82,7 @@
         td {
             padding: 2.2px 5px;
             border: 1px solid #cbd5e1;
-            vertical-align: top;
+            vertical-align: middle;
         }
         tr:nth-child(even) {
             background-color: #f8fafc;
@@ -96,68 +96,62 @@
             letter-spacing: 0.4px;
             padding: 3px 6px;
             border: 1px solid #93c5fd;
+            vertical-align: middle;
         }
         .badge-new {
             background-color: #0284c7;
             color: #ffffff;
             font-size: 7.5px;
             font-weight: 700;
-            padding: 1px 4px;
+            padding: 1.5px 6px;
             border-radius: 3px;
-            margin-right: 4px;
             display: inline-block;
-            vertical-align: middle;
+            white-space: nowrap;
         }
         .badge-core {
             background-color: #0d9488;
             color: #ffffff;
             font-size: 7.5px;
             font-weight: 700;
-            padding: 1px 4px;
+            padding: 1.5px 6px;
             border-radius: 3px;
-            margin-right: 4px;
             display: inline-block;
-            vertical-align: middle;
+            white-space: nowrap;
         }
         .badge-audit {
             background-color: #9333ea;
             color: #ffffff;
             font-size: 7.5px;
             font-weight: 700;
-            padding: 1px 4px;
+            padding: 1.5px 6px;
             border-radius: 3px;
-            margin-right: 4px;
             display: inline-block;
-            vertical-align: middle;
+            white-space: nowrap;
         }
         .badge-fix {
             background-color: #64748b;
             color: #ffffff;
             font-size: 7.5px;
             font-weight: 700;
-            padding: 1px 4px;
+            padding: 1.5px 6px;
             border-radius: 3px;
-            margin-right: 4px;
             display: inline-block;
-            vertical-align: middle;
+            white-space: nowrap;
         }
         .badge-done {
             background-color: #10b981;
             color: #ffffff;
             font-size: 8px;
             font-weight: 700;
-            padding: 1px 5px;
+            padding: 1.5px 6px;
             border-radius: 3px;
             display: inline-block;
             text-align: center;
-        }
-        .modul-title {
-            font-weight: 700;
-            color: #0f172a;
             white-space: nowrap;
         }
         .desc-text {
             color: #1e293b;
+            vertical-align: top;
         }
         .desc-text code {
             font-family: Consolas, monospace;
@@ -303,91 +297,111 @@
         <span>Status Pekerjaan: <strong style="color: #10b981;">100% Selesai (Done)</strong></span>
     </div>
 
-    <!-- TABEL UTAMA: PENGEMBANGAN GROUPING PER MENU TANPA TANGGAL -->
+    <!-- TABEL UTAMA: PENGEMBANGAN DENGAN KOLOM KATEGORI KHUSUS -->
     <table>
         <thead>
             <tr>
-                <th style="width: 5%; text-align: center;">No</th>
-                <th style="width: 87%;">Rincian Kegiatan Pengembangan Sistem (Berdasarkan Menu / Modul)</th>
+                <th style="width: 4%; text-align: center;">No</th>
+                <th style="width: 14%; text-align: center;">Kategori</th>
+                <th style="width: 74%;">Rincian Kegiatan Pengembangan Sistem</th>
                 <th style="width: 8%; text-align: center;">Status</th>
             </tr>
         </thead>
         <tbody>
-            <tr class="group-header-row"><td colspan="3"><strong>1. DASHBOARD & RINGKASAN PERSEDIAAN</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">1</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Penambahan kolom <strong>QTY WO Booked</strong> (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik.</td>
+            <tr class="group-header-row"><td colspan="4"><strong>1. DASHBOARD & RINGKASAN PERSEDIAAN</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">1</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom <strong>QTY WO Booked</strong> (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">2</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Penambahan kolom fisik <strong>QTY AKHIR (Gudang)</strong> dan penyesuaian redaksi <strong>QTY TERSEDIA (Stok Bersih Siap Pakai)</strong> pada ringkasan persediaan bahan baku.</td>
+            <td class="text-center" style="width: 4%;">2</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom fisik <strong>QTY AKHIR (Gudang)</strong> dan penyesuaian redaksi <strong>QTY TERSEDIA (Stok Bersih Siap Pakai)</strong> pada ringkasan persediaan bahan baku.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">3</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan.</td>
+            <td class="text-center" style="width: 4%;">3</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">4</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock.</td>
+            <td class="text-center" style="width: 4%;">4</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>2. LAPORAN PERSEDIAAN & PERGUDANGAN</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">5</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved).</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr>
-            <td class="text-center" style="width: 5%;">6</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya.</td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>2. LAPORAN PERSEDIAAN & PERGUDANGAN</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">5</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved).</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">7</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Penambahan kategori transaksi baru <strong>"Pemakaian Lainnya"</strong> yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional.</td>
+            <td class="text-center" style="width: 4%;">6</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">8</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-core">Arsitektur</span> Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>3. ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">9</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak.</td>
+            <td class="text-center" style="width: 4%;">7</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kategori transaksi baru <strong>"Pemakaian Lainnya"</strong> yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">10</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Fitur Export Excel khusus tipe <strong>Sisa Transfer CMT (Outstanding Inventory)</strong> untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar.</td>
+            <td class="text-center" style="width: 4%;">8</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>3. ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">9</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">11</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>4. BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">12</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel.</td>
+            <td class="text-center" style="width: 4%;">10</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur Export Excel khusus tipe <strong>Sisa Transfer CMT (Outstanding Inventory)</strong> untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">13</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Penambahan kolom live <strong>STOK GUDANG</strong>, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik.</td>
+            <td class="text-center" style="width: 4%;">11</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>5. WORK ORDER (WO) & PRODUKSI</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">14</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr>
-            <td class="text-center" style="width: 5%;">15</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>6. DELIVERY ORDER (SURAT JALAN DO)</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">16</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-new">Fitur Baru</span> Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>7. KEUANGAN & SDM</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">17</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-audit">Menu Baru</span> Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik.</td>
-            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="3"><strong>8. CORE ARCHITECTURE & INFRASTRUKTUR</strong></td></tr><tr>
-            <td class="text-center" style="width: 5%;">18</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-core">Arsitektur</span> Implementasi universal auto-versioning asset (<code>?v=timestamp</code>) dan anti-cache HTTP headers (<code>no-cache, no-store</code>) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik.</td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>4. BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">12</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
-            <td class="text-center" style="width: 5%;">19</td>
-            <td class="desc-text" style="width: 87%;"><span class="badge-core">Arsitektur</span> Implementasi arsitektur <strong>Zero-Client-Cache</strong> permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache.</td>
+            <td class="text-center" style="width: 4%;">13</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom live <strong>STOK GUDANG</strong>, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>5. WORK ORDER (WO) & PRODUKSI</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">14</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">15</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>6. DELIVERY ORDER (SURAT JALAN DO)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">16</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>7. KEUANGAN & SDM</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">17</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Menu Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>8. CORE ARCHITECTURE & INFRASTRUKTUR</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">18</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Implementasi universal auto-versioning asset (<code>?v=timestamp</code>) dan anti-cache HTTP headers (<code>no-cache, no-store</code>) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">19</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Implementasi arsitektur <strong>Zero-Client-Cache</strong> permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr>
         </tbody>
@@ -444,307 +458,258 @@
         <span>Status: <strong style="color: #10b981;">100% Selesai (Done)</strong></span>
     </div>
 
-    <!-- TABEL LAMPIRAN: PEMELIHARAAN SISTEM LENGKAP -->
+    <!-- TABEL LAMPIRAN: PEMELIHARAAN SISTEM (GROUPING PER MENU, TANPA TGL, KOLOM KATEGORI) -->
     <table>
         <thead>
             <tr>
                 <th style="width: 4%; text-align: center;">No</th>
-                <th style="width: 10%; text-align: center;">Tanggal</th>
-                <th style="width: 22%;">Modul / Menu</th>
-                <th style="width: 56%;">Deskripsi Pemeliharaan, Perbaikan Bug & Optimasi Sistem</th>
+                <th style="width: 14%; text-align: center;">Kategori</th>
+                <th style="width: 74%;">Rincian Pemeliharaan & Penyesuaian Sistem</th>
                 <th style="width: 8%; text-align: center;">Status</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-        <td class="text-center">1</td>
-        <td class="text-center">29-09-2026</td>
-        <td class="modul-title">Purchasing (Receive Item)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penanganan presisi desimal dan pencegahan floating point error pada entri kuantitas dan harga penerimaan barang.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">2</td>
-        <td class="text-center">29-09-2026</td>
-        <td class="modul-title">Customer Receipt</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Validasi kelengkapan header relasi customer receipt untuk mencegah record yatim (orphaned records).</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">3</td>
-        <td class="text-center">30-09-2026</td>
-        <td class="modul-title">Sales Order & SPK</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penguncian status approved pada Sales Order dan sinkronisasi otomatis status SPK terkait.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">4</td>
-        <td class="text-center">30-09-2026</td>
-        <td class="modul-title">Delivery Order (DO)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penyesuaian relasi data delivery order terhadap varian warna dan nomor lot kain rajut.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">5</td>
-        <td class="text-center">01-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Koreksi query join mutasi antar gudang agar saldo tidak terpotong ganda saat editing transfer.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">6</td>
-        <td class="text-center">01-10-2026</td>
-        <td class="modul-title">Barang Masuk (BTM)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penanganan nomor lot kosong dengan penetapan default strip (-) untuk menjaga relasi kartu stok.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">7</td>
-        <td class="text-center">02-10-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Rekonsiliasi saldo fisik riil dan perbaikan anomali kartu stok pada periode sebelum cut-off.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">8</td>
-        <td class="text-center">06-10-2026</td>
-        <td class="modul-title">Work Order (WO)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan tampilan breakdown kebutuhan benang pada printout Work Order rajut.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">9</td>
-        <td class="text-center">07-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penegakan validasi kuota maksimal transfer agar tidak melebihi alokasi order yang disetujui.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">10</td>
-        <td class="text-center">08-10-2026</td>
-        <td class="modul-title">Barang Keluar (BTK)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Sinkronisasi pengeluaran bahan baku rajut dengan nomor referensi WO yang valid.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">11</td>
-        <td class="text-center">10-10-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-audit">Audit</span> Audit konsistensi ledger <code>trans_barang</code> terhadap snapshot history bulanan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">12</td>
-        <td class="text-center">12-10-2026</td>
-        <td class="modul-title">Keuangan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Koreksi formula perhitungan PPh dan pembulatan pada jurnal kas operasional.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">13</td>
-        <td class="text-center">13-10-2026</td>
-        <td class="modul-title">Delivery Order (DO)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penyesuaian kalkulasi sisa kuota kirim pada Sales Order saat DO dibatalkan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">14</td>
-        <td class="text-center">14-10-2026</td>
-        <td class="modul-title">Purchasing</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penanganan purchase invoice berstatus void agar membatalkan mutasi stok terkait.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">15</td>
-        <td class="text-center">15-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penambahan proteksi transaksi ganda (double submission prevention) saat submit form transfer.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">16</td>
-        <td class="text-center">17-10-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Koreksi filter gudang pada laporan mutasi persediaan agar menampilkan transaksi transit.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">17</td>
-        <td class="text-center">18-10-2026</td>
-        <td class="modul-title">Customer Receipt</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan pencetakan kwitansi pelunasan konsumen dengan format currency standar.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">18</td>
-        <td class="text-center">19-10-2026</td>
-        <td class="modul-title">Barang Keluar (BTK)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penanganan error null pointer saat pemilihan lot barang pada dokumen draft.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">19</td>
-        <td class="text-center">21-10-2026</td>
-        <td class="modul-title">SDM & Penggajian</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan formula insentif operator rajut berbasis target meter kain yang dihasilkan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">20</td>
-        <td class="text-center">22-10-2026</td>
-        <td class="modul-title">Barang Masuk (BTM)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Sinkronisasi nomor surat jalan vendor CMT pada form penerimaan barang hasil rajut.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">21</td>
-        <td class="text-center">23-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan sorting tanggal transfer agar surat jalan tercetak kronologis.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">22</td>
-        <td class="text-center">27-10-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Sanitasi nomor lot dan perlindungan whitespace tersembunyi pada validasi persediaan berlapis.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">23</td>
-        <td class="text-center">29-10-2026</td>
-        <td class="modul-title">Infrastruktur & Jaringan</td>
-        <td class="desc-text"><span class="badge-audit">Jaringan</span> Dukungan akses direct IP Server ketika jaringan lokal atau DNS domain kantor mengalami kendala resolusi.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">24</td>
-        <td class="text-center">29-10-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Sanitasi menyeluruh nomor lot pada form Barang Masuk & Barang Keluar serta pembersihan script debug.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">25</td>
-        <td class="text-center">29-10-2026</td>
-        <td class="modul-title">Barang Keluar (BTK)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Filter seleksi hanya memunculkan lot bersaldo positif (<code>qty > 0</code>) pada modal pemilihan Barang Keluar.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">26</td>
-        <td class="text-center">30-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Standarisasi pencocokan sisa kuota WO dan join transfer berbasis nomor lot dengan dual fallback.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">27</td>
-        <td class="text-center">30-10-2026</td>
-        <td class="modul-title">Customer Receipt</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Proteksi debouncing anti-double-click dan perbaikan mekanisme rollback status saat nota penerimaan dibatalkan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">28</td>
-        <td class="text-center">31-10-2026</td>
-        <td class="modul-title">Work Order (WO)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Sinkronisasi QTY on hand Work Order ke saldo akhir per item_id dan gudang produksi terkait.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">29</td>
-        <td class="text-center">31-10-2026</td>
-        <td class="modul-title">Work Order (WO)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan pemanggilan method <code>getData</code> pada <code>lists_detail</code> dan filter WO aktif non-sampel di dashboard.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">30</td>
-        <td class="text-center">31-10-2026</td>
-        <td class="modul-title">Barang Keluar (BTK)</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Penguncian tombol approve jika stok lot gudang fisik kurang, serta arahan interaktif ke mutasi barang.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">31</td>
-        <td class="text-center">31-10-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Penguncian tombol approve jika stok lot gudang asal kurang, serta arahan interaktif ke mutasi barang.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">32</td>
-        <td class="text-center">01-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penyempurnaan validasi stok fisik untuk barang non-lot (<code>-</code>) pada Barang Keluar dan Item Transfer.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">33</td>
-        <td class="text-center">01-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Pembatasan input tanggal transaksi maksimal hari ini dan filter pembukuan persediaan tidak melebihi bulan berjalan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">34</td>
-        <td class="text-center">02-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Pencegahan carry forward persediaan melompat ke bulan masa depan dan penguncian saldo mutasi persediaan bulanan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">35</td>
-        <td class="text-center">06-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penegakan parameter nomor lot dan satuan kemasan (pack) pada pengecekan stok fisik di Transfer & Barang Keluar.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">36</td>
-        <td class="text-center">09-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Dukungan validasi total stok gudang untuk barang non-lot dan multi-pack pada Item Transfer dan Barang Keluar.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">37</td>
-        <td class="text-center">10-11-2026</td>
-        <td class="modul-title">Work Order & Produksi</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Menyembunyikan baris varian bernilai qty 0 yang dibatalkan pada lembar kerja WO/Produksi serta penegakan validasi gudang pada lot_id.</td></td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">38</td>
-        <td class="text-center">11-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perhitungan saldo mutasi <code>trans_barang_balances</code> live langsung dari database (bukan nilai frontend <code>qty_exist</code>), perbaikan join edit transfer, dan filter approved BTK pada rendemen.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">39</td>
-        <td class="text-center">11-11-2026</td>
-        <td class="modul-title">Laporan Persediaan</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perhitungan live saldo barang non-lot dan pemasangan non-negative guard pada ledger balances.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">40</td>
-        <td class="text-center">11-11-2026</td>
-        <td class="modul-title">Barang Keluar (BTK)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Pembungkusan agregasi <code>getDataByWalkorder</code> ke derived table agar kompatibel dengan strict mode PostgreSQL.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">41</td>
-        <td class="text-center">12-11-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Unifikasi katalog item picker dengan Laporan Persediaan dan penegakan pencocokan nomor lot spesifik per kemasan saat approval.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">42</td>
-        <td class="text-center">13-11-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penambahan validasi mandiri (self-healing stock verification) terhadap <code>trans_barang_history</code> saat approval transfer.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">43</td>
-        <td class="text-center">13-11-2026</td>
-        <td class="modul-title">Item Transfer</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Eliminasi join redundan <code>trans_lots</code> pada fungsi <code>getDataPrint</code> untuk menghilangkan duplikasi baris barang pada Surat Jalan.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">44</td>
-        <td class="text-center">17-11-2026</td>
-        <td class="modul-title">Barang Masuk (BTM)</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan query log fatal <code>abx.created_at does not exist</code> menjadi <code>head.created_at</code>, serta upgrade validasi scanner barcode cerdas yang kontekstual mengidentifikasi ketidaksesuaian kombinasi Proses dan CMT.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">45</td>
-        <td class="text-center">20-11-2026</td>
-        <td class="modul-title">Transaksi & Routing</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Perbaikan routing dan handling parameter token terenkripsi pada link URL detail pengeluaran barang (outgoing-goods) untuk mencegah unhandled exceptions.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">46</td>
-        <td class="text-center">22-11-2026</td>
-        <td class="modul-title">Infrastruktur Server</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Rekonfigurasi ownership dan hak akses direktori penyimpanan session/cache <code>/pejuang/production/writable</code> di server web LiteSpeed (LSPHP 8.3) untuk mencegah HTTP 500 error pada saat user mengakses form transaksi.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">47</td>
-        <td class="text-center">23-11-2026</td>
-        <td class="modul-title">Produksi & Walk Order</td>
-        <td class="desc-text"><span class="badge-fix">Bugfix</span> Penguncian relasi transaksi Transfer (TRF), BTK, dan BTM hanya membaca dokumen approved (<code>status = 1 AND active = 1</code>) pada modal pop-up Form Produksi, laporan laba kotor, dan rekapitulasi monitoring, mencegah transaksi yang dibatalkan ikut terhitung ke riwayat produksi.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr><tr>
-        <td class="text-center">48</td>
-        <td class="text-center">23-11-2026</td>
-        <td class="modul-title">Database Engine</td>
-        <td class="desc-text"><span class="badge-audit">Maintenance</span> Penghapusan constraint <code>chk_trans_barang_balances_non_negative</code> pada tabel <code>trans_barang_balances</code> di database PostgreSQL produksi & lokal untuk mendukung integritas mutasi riil ketika terjadi stok minus.</td>
-        <td class="text-center"><span class="badge-done">Done</span></td>
-    </tr>
+            <tr class="group-header-row"><td colspan="4"><strong>1. LAPORAN PERSEDIAAN & PERGUDANGAN</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">1</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Rekonsiliasi saldo fisik riil dan perbaikan anomali kartu stok pada periode sebelum cut-off.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">2</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Audit</span></td>
+            <td class="desc-text" style="width: 74%;">Audit konsistensi ledger <code>trans_barang</code> terhadap snapshot history bulanan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">3</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Koreksi filter gudang pada laporan mutasi persediaan agar menampilkan transaksi transit.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">4</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Sanitasi nomor lot dan perlindungan whitespace tersembunyi pada validasi persediaan berlapis.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">5</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Sanitasi menyeluruh nomor lot pada form Barang Masuk & Barang Keluar serta pembersihan script debug.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">6</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penyempurnaan validasi stok fisik untuk barang non-lot (<code>-</code>) pada Barang Keluar dan Item Transfer.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">7</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Pembatasan input tanggal transaksi maksimal hari ini dan filter pembukuan persediaan tidak melebihi bulan berjalan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">8</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Pencegahan carry forward persediaan melompat ke bulan masa depan dan penguncian saldo mutasi persediaan bulanan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">9</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penegakan parameter nomor lot dan satuan kemasan (pack) pada pengecekan stok fisik di Transfer & Barang Keluar.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">10</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Dukungan validasi total stok gudang untuk barang non-lot dan multi-pack pada Item Transfer dan Barang Keluar.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">11</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perhitungan saldo mutasi <code>trans_barang_balances</code> live langsung dari database (bukan nilai frontend <code>qty_exist</code>), perbaikan join edit transfer, dan filter approved BTK pada rendemen.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">12</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perhitungan live saldo barang non-lot dan pemasangan non-negative guard pada ledger balances.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>2. ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">13</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Koreksi query join mutasi antar gudang agar saldo tidak terpotong ganda saat editing transfer.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">14</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penegakan validasi kuota maksimal transfer agar tidak melebihi alokasi order yang disetujui.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">15</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan proteksi transaksi ganda (double submission prevention) saat submit form transfer.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">16</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan sorting tanggal transfer agar surat jalan tercetak kronologis.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">17</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Standarisasi pencocokan sisa kuota WO dan join transfer berbasis nomor lot dengan dual fallback.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">18</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Penguncian tombol approve jika stok lot gudang asal kurang, serta arahan interaktif ke mutasi barang.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">19</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Unifikasi katalog item picker dengan Laporan Persediaan dan penegakan pencocokan nomor lot spesifik per kemasan saat approval.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">20</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan validasi mandiri (self-healing stock verification) terhadap <code>trans_barang_history</code> saat approval transfer.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">21</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Eliminasi join redundan <code>trans_lots</code> pada fungsi <code>getDataPrint</code> untuk menghilangkan duplikasi baris barang pada Surat Jalan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>3. BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">22</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Sinkronisasi pengeluaran bahan baku rajut dengan nomor referensi WO yang valid.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">23</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penanganan error null pointer saat pemilihan lot barang pada dokumen draft.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">24</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Filter seleksi hanya memunculkan lot bersaldo positif (<code>qty > 0</code>) pada modal pemilihan Barang Keluar.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">25</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Penguncian tombol approve jika stok lot gudang fisik kurang, serta arahan interaktif ke mutasi barang.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">26</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Pembungkusan agregasi <code>getDataByWalkorder</code> ke derived table agar kompatibel dengan strict mode PostgreSQL.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">27</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan routing dan handling parameter token terenkripsi pada link URL detail pengeluaran barang (outgoing-goods) untuk mencegah unhandled exceptions.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>4. BARANG MASUK (BTM - HASIL RAJUT & CMT)</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">28</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penanganan nomor lot kosong dengan penetapan default strip (-) untuk menjaga relasi kartu stok.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">29</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Sinkronisasi nomor surat jalan vendor CMT pada form penerimaan barang hasil rajut.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">30</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan query log fatal <code>abx.created_at does not exist</code> menjadi <code>head.created_at</code>, serta upgrade validasi scanner barcode cerdas yang kontekstual mengidentifikasi ketidaksesuaian kombinasi Proses dan CMT.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>5. WORK ORDER (WO) & PRODUKSI</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">31</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan tampilan breakdown kebutuhan benang pada printout Work Order rajut.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">32</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Sinkronisasi QTY on hand Work Order ke saldo akhir per item_id dan gudang produksi terkait.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">33</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan pemanggilan method <code>getData</code> pada <code>lists_detail</code> dan filter WO aktif non-sampel di dashboard.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">34</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Menyembunyikan baris varian bernilai qty 0 yang dibatalkan pada lembar kerja WO/Produksi serta penegakan validasi gudang pada lot_id.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">35</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penguncian relasi transaksi Transfer (TRF), BTK, dan BTM hanya membaca dokumen approved (<code>status = 1 AND active = 1</code>) pada modal pop-up Form Produksi, laporan laba kotor, dan rekapitulasi monitoring, mencegah transaksi yang dibatalkan ikut terhitung ke riwayat produksi.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>6. SALES ORDER, DO & SURAT JALAN</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">36</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penguncian status approved pada Sales Order dan sinkronisasi otomatis status SPK terkait.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">37</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penyesuaian relasi data delivery order terhadap varian warna dan nomor lot kain rajut.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">38</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penyesuaian kalkulasi sisa kuota kirim pada Sales Order saat DO dibatalkan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>7. PURCHASING & CUSTOMER RECEIPT</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">39</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penanganan presisi desimal dan pencegahan floating point error pada entri kuantitas dan harga penerimaan barang.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">40</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Validasi kelengkapan header relasi customer receipt untuk mencegah record yatim (orphaned records).</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">41</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Penanganan purchase invoice berstatus void agar membatalkan mutasi stok terkait.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">42</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan pencetakan kwitansi pelunasan konsumen dengan format currency standar.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">43</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Proteksi debouncing anti-double-click dan perbaikan mekanisme rollback status saat nota penerimaan dibatalkan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>8. KEUANGAN & SDM</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">44</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Koreksi formula perhitungan PPh dan pembulatan pada jurnal kas operasional.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">45</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-fix">Bugfix</span></td>
+            <td class="desc-text" style="width: 74%;">Perbaikan formula insentif operator rajut berbasis target meter kain yang dihasilkan.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>9. INFRASTRUKTUR SERVER & DATABASE</strong></td></tr><tr>
+            <td class="text-center" style="width: 4%;">46</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Jaringan</span></td>
+            <td class="desc-text" style="width: 74%;">Dukungan akses direct IP Server ketika jaringan lokal atau DNS domain kantor mengalami kendala resolusi.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">47</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Rekonfigurasi ownership dan hak akses direktori penyimpanan session/cache <code>/pejuang/production/writable</code> di server web LiteSpeed (LSPHP 8.3) untuk mencegah HTTP 500 error pada saat user mengakses form transaksi.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr><tr>
+            <td class="text-center" style="width: 4%;">48</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-audit">Maintenance</span></td>
+            <td class="desc-text" style="width: 74%;">Penghapusan constraint <code>chk_trans_barang_balances_non_negative</code> pada tabel <code>trans_barang_balances</code> di database PostgreSQL produksi & lokal untuk mendukung integritas mutasi riil ketika terjadi stok minus.</td>
+            <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
+        </tr>
         </tbody>
     </table>
 

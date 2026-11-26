@@ -80,7 +80,7 @@
             text-align: center;
         }
         td {
-            padding: 2.3px 5px;
+            padding: 2.4px 5px;
             border: 1px solid #cbd5e1;
             vertical-align: middle;
         }
@@ -204,7 +204,7 @@
             background-color: #eff6ff;
             border: 1.5px solid #3b82f6;
             border-radius: 4px;
-            padding: 5px 8px;
+            padding: 6px 10px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -218,21 +218,15 @@
             margin-bottom: 2px;
         }
         .summary-right .cost-value {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 800;
             color: #1e3a8a;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
         }
         .summary-right .cost-terbilang {
-            font-size: 7.5px;
+            font-size: 8px;
             font-style: italic;
             color: #475569;
-        }
-        .summary-right .cost-calc {
-            font-size: 7.5px;
-            font-weight: 600;
-            color: #0284c7;
-            margin-top: 2px;
         }
         .page-break {
             page-break-before: always;
@@ -281,131 +275,111 @@
         <span>Status Pekerjaan: <strong style="color: #10b981;">100% Selesai (Done)</strong></span>
     </div>
 
-    <!-- TABEL UTAMA: PENGEMBANGAN DENGAN KOLOM KATEGORI & AI HOUR -->
+    <!-- TABEL UTAMA: PENGEMBANGAN DENGAN KOLOM KATEGORI KHUSUS -->
     <table>
         <thead>
             <tr>
                 <th style="width: 4%; text-align: center;">No</th>
-                <th style="width: 13%; text-align: center;">Kategori</th>
-                <th style="width: 67%;">Rincian Kegiatan Pengembangan Sistem</th>
-                <th style="width: 8%; text-align: center;">AI Hour</th>
+                <th style="width: 14%; text-align: center;">Kategori</th>
+                <th style="width: 74%;">Rincian Kegiatan Pengembangan Sistem</th>
                 <th style="width: 8%; text-align: center;">Status</th>
             </tr>
         </thead>
         <tbody>
-            <tr class="group-header-row"><td colspan="5"><strong>1. DASHBOARD & RINGKASAN PERSEDIAAN</strong></td></tr><tr>
+            <tr class="group-header-row"><td colspan="4"><strong>1. DASHBOARD & RINGKASAN PERSEDIAAN</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">1</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Penambahan kolom <strong>QTY WO Booked</strong> (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom <strong>QTY WO Booked</strong> (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">2</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Penambahan kolom fisik <strong>QTY AKHIR (Gudang)</strong> dan penyesuaian redaksi <strong>QTY TERSEDIA (Stok Bersih Siap Pakai)</strong> pada ringkasan persediaan bahan baku.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom fisik <strong>QTY AKHIR (Gudang)</strong> dan penyesuaian redaksi <strong>QTY TERSEDIA (Stok Bersih Siap Pakai)</strong> pada ringkasan persediaan bahan baku.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">3</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">4</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>2. LAPORAN PERSEDIAAN & PERGUDANGAN</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>2. LAPORAN PERSEDIAAN & PERGUDANGAN</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">5</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved).</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved).</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">6</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">7</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Penambahan kategori transaksi baru <strong>"Pemakaian Lainnya"</strong> yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kategori transaksi baru <strong>"Pemakaian Lainnya"</strong> yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">8</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-core">Arsitektur</span></td>
-            <td class="desc-text" style="width: 67%;">Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">2.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>3. ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>3. ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">9</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">10</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Fitur Export Excel khusus tipe <strong>Sisa Transfer CMT (Outstanding Inventory)</strong> untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur Export Excel khusus tipe <strong>Sisa Transfer CMT (Outstanding Inventory)</strong> untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">11</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>4. BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>4. BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">12</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">13</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Penambahan kolom live <strong>STOK GUDANG</strong>, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Penambahan kolom live <strong>STOK GUDANG</strong>, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>5. WORK ORDER (WO) & PRODUKSI</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>5. WORK ORDER (WO) & PRODUKSI</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">14</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">15</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>6. DELIVERY ORDER (SURAT JALAN DO)</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>6. DELIVERY ORDER (SURAT JALAN DO)</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">16</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Fitur Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Fitur Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>7. KEUANGAN & SDM</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>7. KEUANGAN & SDM</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">17</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-new">Menu Baru</span></td>
-            <td class="desc-text" style="width: 67%;">Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-new">Menu Baru</span></td>
+            <td class="desc-text" style="width: 74%;">Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
-        </tr><tr class="group-header-row"><td colspan="5"><strong>8. CORE ARCHITECTURE & INFRASTRUKTUR</strong></td></tr><tr>
+        </tr><tr class="group-header-row"><td colspan="4"><strong>8. CORE ARCHITECTURE & INFRASTRUKTUR</strong></td></tr><tr>
             <td class="text-center" style="width: 4%;">18</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-core">Arsitektur</span></td>
-            <td class="desc-text" style="width: 67%;">Implementasi universal auto-versioning asset (<code>?v=timestamp</code>) dan anti-cache HTTP headers (<code>no-cache, no-store</code>) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">0.5 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Implementasi universal auto-versioning asset (<code>?v=timestamp</code>) dan anti-cache HTTP headers (<code>no-cache, no-store</code>) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr><tr>
             <td class="text-center" style="width: 4%;">19</td>
-            <td class="text-center" style="width: 13%;"><span class="badge-core">Arsitektur</span></td>
-            <td class="desc-text" style="width: 67%;">Implementasi arsitektur <strong>Zero-Client-Cache</strong> permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache.</td>
-            <td class="text-center" style="width: 8%; font-weight: 700; color: #1e3a8a;">1.0 Jam</td>
+            <td class="text-center" style="width: 14%;"><span class="badge-core">Arsitektur</span></td>
+            <td class="desc-text" style="width: 74%;">Implementasi arsitektur <strong>Zero-Client-Cache</strong> permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache.</td>
             <td class="text-center" style="width: 8%;"><span class="badge-done">Done</span></td>
         </tr>
         </tbody>
@@ -416,7 +390,7 @@
             <h4>Ringkasan Kegiatan Pengembangan (28 September – 27 November 2026)</h4>
             <ul>
                 <li><strong>Kegiatan Pengembangan (19 Poin):</strong> Integrasi Barcode Scanner DO, Booking WO Persediaan, Interactive Breakdown Produksi, Zero-Client-Cache, Auto-Cascade Closed WO, Export Sisa CMT, Integritas Saldo Minus Riil Persediaan, dsb.</li>
-                <li><strong>Total Waktu Pengembangan:</strong> 24 AI Hours (100% Selesai &amp; Teruji Live di Server Produksi).</li>
+                <li><strong>Status Implementasi:</strong> Seluruh 19 inisiatif pengembangan sistem telah selesai 100% dan teruji live di server produksi.</li>
                 <li><strong>Garansi Pemeliharaan Sistem:</strong> Seluruh 48 poin kegiatan pemeliharaan, bugfix &amp; integritas data pada dokumen Lampiran merupakan <strong>Garansi Sistem Sepenuhnya (Free of Charge / Rp 0,-)</strong> sesuai komitmen pengembang.</li>
             </ul>
         </div>
@@ -424,7 +398,6 @@
             <div class="cost-title">Total Biaya Pengembangan Aplikasi</div>
             <div class="cost-value">Rp 1.200.000,-</div>
             <div class="cost-terbilang">Terbilang: Satu Juta Dua Ratus Ribu Rupiah</div>
-            <div class="cost-calc">(24 AI Hours &times; Rp 50.000,- / Jam)</div>
         </div>
     </div>
 

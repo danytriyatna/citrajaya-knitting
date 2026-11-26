@@ -1,48 +1,48 @@
 # LAPORAN KEGIATAN PENGEMBANGAN APLIKASI
 ## PT CITRA JAYA KNITTING
 **Periode:** 28 September 2026 – 27 November 2026  
-**Aplikasi:** Aplikasi Citra Jaya Knitting (ERP) | **Pengembang:** Dany Triyatna | **Status Pekerjaan:** 100% Selesai (Done)
+**Aplikasi:** Aplikasi Citra Jaya Knitting (ERP) | **Pengembang:** Dany Triyatna | **Status Pekerjaan:** 100% Selesai
 
 ---
 
-### I. KEGIATAN PENGEMBANGAN SISTEM (BERDASARKAN MENU / MODUL)
+### I. KEGIATAN PENGEMBANGAN SISTEM (BERDASARKAN MENU / BAGIAN OPERASIONAL)
 
-| No | Kategori | Rincian Kegiatan Pengembangan Sistem | Status |
-|:--:|:--------:|:-------------------------------------|:------:|
+| No | Kategori | Rincian Peningkatan & Fitur Baru Aplikasi | Status |
+|:--:|:--------:|:------------------------------------------|:------:|
 | **1.** | | **DASHBOARD & RINGKASAN PERSEDIAAN** | |
-| 1 | **Fitur Baru** | Penambahan kolom **QTY WO Booked** (alokasi bahan benang yang sedang dipesan SPK/WO aktif) sebagai pengurang otomatis real-time dari stok fisik. | **Done** |
-| 2 | **Fitur Baru** | Penambahan kolom fisik **QTY AKHIR (Gudang)** dan penyesuaian redaksi **QTY TERSEDIA (Stok Bersih Siap Pakai)** pada ringkasan persediaan bahan baku. | **Done** |
-| 3 | **Fitur Baru** | Fitur pop-up modal drill-down rincian daftar Work Order pemesan saat angka QTY WO diklik langsung di layar dashboard, transparan untuk tim PPIC/Pengadaan. | **Done** |
-| 4 | **Fitur Baru** | Penampilan item bersaldo fisik nol yang memiliki antrean booking WO aktif di Ringkasan Persediaan agar bagian purchasing segera memproses restock. | **Done** |
+| 1 | **Fitur Baru** | Penguncian otomatis stok benang yang sudah dialokasikan untuk pesanan rajut aktif (**Stok Dipesan WO**), sehingga aman dan tidak bisa terambil oleh pesanan lain. | **Done** |
+| 2 | **Fitur Baru** | Pemisahan tampilan yang jelas antara **Total Stok Fisik di Gudang** dengan **Stok Bersih yang Siap Dipakai**, memudahkan kontrol ketersediaan bahan. | **Done** |
+| 3 | **Fitur Baru** | Fitur klik pada angka stok dipesan untuk langsung melihat rincian daftar Surat Perintah Kerja (SPK) mana saja yang sedang memakai bahan tersebut. | **Done** |
+| 4 | **Fitur Baru** | Menampilkan bahan yang stok fisiknya sudah habis namun masih memiliki antrean pesanan rajut, agar bagian pengadaan (Purchasing) segera membeli bahan. | **Done** |
 | **2.** | | **LAPORAN PERSEDIAAN & PERGUDANGAN** | |
-| 5 | **Fitur Baru** | Mekanisme auto-sync real-time snapshot saldo persediaan fisik otomatis setiap kali transaksi pergudangan disetujui (Approved). | **Done** |
-| 6 | **Fitur Baru** | Pergeseran titik cut-off pembukuan persediaan ke Juni 2026 dan pembukaan sistem carry forward saldo otomatis ke Juli 2026 dan seterusnya. | **Done** |
-| 7 | **Fitur Baru** | Penambahan kategori transaksi baru **"Pemakaian Lainnya"** yang memotong kartu stok dan terintegrasi otomatis ke laporan Laba Rugi operasional. | **Done** |
-| 8 | **Arsitektur** | Unifikasi integritas saldo minus riil tanpa clamping (Zero-Guard Bypass): sinkronisasi tampilan saldo fisik, stok tersedia, sisa kebutuhan WO, dan kuota transfer agar konsisten 100% menampilkan nilai minus dan penanda visual merah sesuai Laporan Persediaan fisik. | **Done** |
+| 5 | **Fitur Baru** | Pembaruan kartu stok secara instan dan otomatis setiap kali transaksi barang masuk, keluar, atau transfer disetujui kepala gudang. | **Done** |
+| 6 | **Fitur Baru** | Pembaruan periode tutup buku ke Juni 2026 dan otomatisasi pemindahan sisa stok akhir menjadi stok awal bulan berikutnya tanpa hitung manual. | **Done** |
+| 7 | **Fitur Baru** | Penambahan jenis transaksi **"Pemakaian Lainnya"** untuk mencatat pemakaian bahan di luar rajut rutin, langsung memotong kartu stok dan tercatat di biaya operasional. | **Done** |
+| 8 | **Penyempurnaan** | Penampilan angka stok minus apa adanya dengan penanda warna merah jika fisik gudang tekor, agar selisih barang di lapangan langsung terlihat dan segera dicari fisiknya. | **Done** |
 | **3.** | | **ITEM TRANSFER (DISTRIBUSI ANTAR GUDANG & CMT)** | |
-| 9 | **Fitur Baru** | Dialog konfirmasi interaktif saat proses approval jika terdeteksi stok lot fisik menipis/kurang agar alur distribusi antar gudang tidak terhenti mendadak. | **Done** |
-| 10 | **Fitur Baru** | Fitur Export Excel khusus tipe **Sisa Transfer CMT (Outstanding Inventory)** untuk audit saldo bahan/barang yang masih mengendap di pihak vendor CMT luar. | **Done** |
-| 11 | **Fitur Baru** | Pemisahan kolom barang Reject dari transfer normal, sehingga perhitungan saldo sisa kirim murni tidak terdistorsi oleh barang cacat/rusak. | **Done** |
+| 9 | **Fitur Baru** | Peringatan otomatis saat pengiriman jika stok nomor lot di gudang asal menipis, disertai opsi konfirmasi agar operasional pengiriman barang tidak macet. | **Done** |
+| 10 | **Fitur Baru** | Fitur download Excel khusus untuk **Laporan Sisa Barang di CMT**, memudahkan pengawasan dan penagihan sisa bahan/kain yang masih ada di vendor luar. | **Done** |
+| 11 | **Fitur Baru** | Pemisahan pencatatan barang rusak (Reject) dari pengiriman normal, agar catatan sisa barang yang wajib dikirim tidak kacau oleh barang cacat. | **Done** |
 | **4.** | | **BARANG KELUAR (BTK - PEMAKAIAN BAHAN RAJUT)** | |
-| 12 | **Fitur Baru** | Dialog konfirmasi interaktif pada approval pengeluaran bahan rajut saat kuota stok lot menipis dengan opsi alokasi fleksibel. | **Done** |
-| 13 | **Fitur Baru** | Penambahan kolom live **STOK GUDANG**, fitur live refresh stok draft, auto-merge transfer & return per lot, dan proteksi auto-cap sisa kuota ke stok fisik. | **Done** |
+| 12 | **Fitur Baru** | Peringatan otomatis saat pengeluaran bahan rajut jika stok lot menipis, memberi kemudahan admin gudang untuk menyesuaikan alokasi bahan di lapangan. | **Done** |
+| 13 | **Fitur Baru** | Tampilan sisa stok gudang terkini pada form pengeluaran bahan, penggabungan otomatis retur sisa bahan per lot, dan proteksi agar pengeluaran tidak melebihi stok. | **Done** |
 | **5.** | | **WORK ORDER (WO) & PRODUKSI** | |
-| 14 | **Fitur Baru** | Pemindahan fungsi penutupan status (Closed) langsung ke form Work Order dengan efek auto-cascade otomatis ke status Produksi dan pelepasan booking bahan di Dashboard. | **Done** |
-| 15 | **Fitur Baru** | Fitur pop-up modal interaktif rincian breakdown alur bahan per WO: transfer benang, retur sisa bahan, dan pemakaian riil untuk kontrol rendemen. | **Done** |
+| 14 | **Fitur Baru** | Fitur penutupan pesanan rajut (Tutup WO) langsung dari form, otomatis menyelesaikan status produksi dan membebaskan cadangan bahan kembali ke stok umum. | **Done** |
+| 15 | **Fitur Baru** | Layar rincian alur bahan per pesanan rajut (benang yang dikirim, sisa benang yang dikembalikan, dan kain yang jadi) untuk memantau rendemen dan susut bahan. | **Done** |
 | **6.** | | **DELIVERY ORDER (SURAT JALAN DO)** | |
-| 16 | **Fitur Baru** | Integrasi scanner Barcode / QR Code pada entri Surat Jalan DO dengan validasi pencocokan ketat terhadap Sales Order dan rekap kuota sisa kirim real-time. | **Done** |
+| 16 | **Fitur Baru** | Fitur scan barcode / QR code pada pembuatan Surat Jalan pengiriman kain, otomatis mencocokkan barang dengan pesanan pelanggan untuk mencegah salah kirim. | **Done** |
 | **7.** | | **KEUANGAN & SDM** | |
-| 17 | **Menu Baru** | Sinkronisasi menu baru Kas/Bank Masuk, modul Target Proses Produksi harian, dan integrasi utilitas operasional pabrik. | **Done** |
-| **8.** | | **CORE ARCHITECTURE & INFRASTRUKTUR** | |
-| 18 | **Arsitektur** | Implementasi universal auto-versioning asset (`?v=timestamp`) dan anti-cache HTTP headers (`no-cache, no-store`) untuk update instan tanpa perlu manual Ctrl+F5 di sisi user pabrik. | **Done** |
-| 19 | **Arsitektur** | Implementasi arsitektur **Zero-Client-Cache** permanen & SOP automated deployment server agar rilis fitur baru langsung aktif di seluruh workstation tanpa clear browser cache. | **Done** |
+| 17 | **Menu Baru** | Penambahan menu pencatatan penerimaan uang kas/bank, pemantauan target proses produksi harian, dan pencatatan biaya operasional pabrik. | **Done** |
+| **8.** | | **KEMUDAHAN AKSES & PEMBARUAN SISTEM** | |
+| 18 | **Penyempurnaan** | Pembaruan sistem otomatis agar setiap ada perbaikan atau fitur baru langsung aktif di seluruh komputer pabrik tanpa perlu repot tekan Ctrl+F5. | **Done** |
+| 19 | **Penyempurnaan** | Standarisasi update aplikasi ke server pabrik agar komputer staf kantor dan admin gudang selalu memakai versi terbaru tanpa kendala tampilan lama tersangkut. | **Done** |
 
 ---
 
 ### RINGKASAN KEGIATAN PENGEMBANGAN (28 SEPTEMBER – 27 NOVEMBER 2026)
-* **Kegiatan Pengembangan (19 Poin):** Integrasi Barcode Scanner DO, Booking WO Persediaan, Interactive Breakdown Produksi, Zero-Client-Cache, Auto-Cascade Closed WO, Export Sisa CMT, Integritas Saldo Minus Riil Persediaan, dsb.
-* **Status Implementasi:** Seluruh 19 inisiatif pengembangan sistem telah selesai 100% dan teruji live di server produksi.
-* **Garansi Pemeliharaan Sistem:** Seluruh 48 poin kegiatan pemeliharaan, bugfix & integritas data pada dokumen Lampiran merupakan **Garansi Sistem Sepenuhnya (Free of Charge / Rp 0,-)** sesuai komitmen pengembang.
+* **Kegiatan Pengembangan (19 Poin):** Integrasi Barcode Scanner Surat Jalan DO, Penguncian Stok Dipesan WO, Pemantauan Rendemen Kain, Update Sistem Otomatis, Laporan Sisa Barang CMT, Tampilan Stok Minus Riil, dsb.
+* **Status Pengerjaan:** Seluruh 19 inisiatif pengembangan sistem telah selesai 100% dan teruji siap pakai di operasional pabrik.
+* **Garansi Pemeliharaan Sistem:** Seluruh 48 poin kegiatan pemeliharaan & penyesuaian sistem pada dokumen Lampiran merupakan **Garansi Bebas Biaya (Free of Charge / Rp 0,-)** selama aplikasi digunakan sesuai komitmen pengembang.
 
 **TOTAL BIAYA PENGEMBANGAN APLIKASI:**  
 **Rp 1.200.000,-** *(Terbilang: Satu Juta Dua Ratus Ribu Rupiah)*
@@ -52,63 +52,63 @@
 <br><br>
 
 # DOKUMEN LAMPIRAN
-## DAFTAR KEGIATAN PEMELIHARAAN SISTEM & INTEGRITAS DATA
+## DAFTAR PEMELIHARAAN SISTEM & PENYESUAIAN OPERASIONAL
 ### APLIKASI PT CITRA JAYA KNITTING (ERP)
 **Periode:** 28 September 2026 – 27 November 2026  
-**Kategori:** Maintenance & Bugfix | **Komitmen Layanan:** Garansi Aplikasi (Free / Rp 0,-) | **Total Volume:** 48 Poin Kegiatan | **Status:** 100% Selesai (Done)
+**Kategori:** Pemeliharaan & Penyesuaian Sistem | **Komitmen Layanan:** Garansi Aplikasi Bebas Biaya (Rp 0,-) | **Total Volume:** 48 Poin Kegiatan | **Status:** 100% Selesai
 
 ---
 
-| No | Tanggal | Modul / Menu | Kategori | Deskripsi Pemeliharaan & Penyesuaian Sistem | Status |
-|:--:|:-------:|:-------------|:--------:|:------------------------------------------|:------:|
-| 1 | 29-09-2026 | Purchasing (Receive Item) | **Bugfix** | Penanganan presisi desimal dan pencegahan floating point error pada entri kuantitas dan harga penerimaan barang. | **Done** |
-| 2 | 29-09-2026 | Customer Receipt | **Bugfix** | Validasi kelengkapan header relasi customer receipt untuk mencegah record yatim (orphaned records). | **Done** |
-| 3 | 30-09-2026 | Sales Order & SPK | **Bugfix** | Penguncian status approved pada Sales Order dan sinkronisasi otomatis status SPK terkait. | **Done** |
-| 4 | 30-09-2026 | Delivery Order (DO) | **Bugfix** | Penyesuaian relasi data delivery order terhadap varian warna dan nomor lot kain rajut. | **Done** |
-| 5 | 01-10-2026 | Item Transfer | **Bugfix** | Koreksi query join mutasi antar gudang agar saldo tidak terpotong ganda saat editing transfer. | **Done** |
-| 6 | 01-10-2026 | Barang Masuk (BTM) | **Bugfix** | Penanganan nomor lot kosong dengan penetapan default strip (-) untuk menjaga relasi kartu stok. | **Done** |
-| 7 | 02-10-2026 | Laporan Persediaan | **Maintenance** | Rekonsiliasi saldo fisik riil dan perbaikan anomali kartu stok pada periode sebelum cut-off. | **Done** |
-| 8 | 06-10-2026 | Work Order (WO) | **Bugfix** | Perbaikan tampilan breakdown kebutuhan benang pada printout Work Order rajut. | **Done** |
-| 9 | 07-10-2026 | Item Transfer | **Bugfix** | Penegakan validasi kuota maksimal transfer agar tidak melebihi alokasi order yang disetujui. | **Done** |
-| 10 | 08-10-2026 | Barang Keluar (BTK) | **Bugfix** | Sinkronisasi pengeluaran bahan baku rajut dengan nomor referensi WO yang valid. | **Done** |
-| 11 | 10-10-2026 | Laporan Persediaan | **Audit** | Audit konsistensi ledger `trans_barang` terhadap snapshot history bulanan. | **Done** |
-| 12 | 12-10-2026 | Keuangan | **Bugfix** | Koreksi formula perhitungan PPh dan pembulatan pada jurnal kas operasional. | **Done** |
-| 13 | 13-10-2026 | Delivery Order (DO) | **Bugfix** | Penyesuaian kalkulasi sisa kuota kirim pada Sales Order saat DO dibatalkan. | **Done** |
-| 14 | 14-10-2026 | Purchasing | **Bugfix** | Penanganan purchase invoice berstatus void agar membatalkan mutasi stok terkait. | **Done** |
-| 15 | 15-10-2026 | Item Transfer | **Bugfix** | Penambahan proteksi transaksi ganda (double submission prevention) saat submit form transfer. | **Done** |
-| 16 | 17-10-2026 | Laporan Persediaan | **Bugfix** | Koreksi filter gudang pada laporan mutasi persediaan agar menampilkan transaksi transit. | **Done** |
-| 17 | 18-10-2026 | Customer Receipt | **Bugfix** | Perbaikan pencetakan kwitansi pelunasan konsumen dengan format currency standar. | **Done** |
-| 18 | 19-10-2026 | Barang Keluar (BTK) | **Bugfix** | Penanganan error null pointer saat pemilihan lot barang pada dokumen draft. | **Done** |
-| 19 | 21-10-2026 | SDM & Penggajian | **Bugfix** | Perbaikan formula insentif operator rajut berbasis target meter kain yang dihasilkan. | **Done** |
-| 20 | 22-10-2026 | Barang Masuk (BTM) | **Bugfix** | Sinkronisasi nomor surat jalan vendor CMT pada form penerimaan barang hasil rajut. | **Done** |
-| 21 | 23-10-2026 | Item Transfer | **Bugfix** | Perbaikan sorting tanggal transfer agar surat jalan tercetak kronologis. | **Done** |
-| 22 | 27-10-2026 | Laporan Persediaan | **Maintenance** | Sanitasi nomor lot dan perlindungan whitespace tersembunyi pada validasi persediaan berlapis. | **Done** |
-| 23 | 29-10-2026 | Infrastruktur & Jaringan | **Jaringan** | Dukungan akses direct IP Server ketika jaringan lokal atau DNS domain kantor mengalami kendala resolusi. | **Done** |
-| 24 | 29-10-2026 | Laporan Persediaan | **Maintenance** | Sanitasi menyeluruh nomor lot pada form Barang Masuk & Barang Keluar serta pembersihan script debug. | **Done** |
-| 25 | 29-10-2026 | Barang Keluar (BTK) | **Bugfix** | Filter seleksi hanya memunculkan lot bersaldo positif (`qty > 0`) pada modal pemilihan Barang Keluar. | **Done** |
-| 26 | 30-10-2026 | Item Transfer | **Bugfix** | Standarisasi pencocokan sisa kuota WO dan join transfer berbasis nomor lot dengan dual fallback. | **Done** |
-| 27 | 30-10-2026 | Customer Receipt | **Bugfix** | Proteksi debouncing anti-double-click dan perbaikan mekanisme rollback status saat nota penerimaan dibatalkan. | **Done** |
-| 28 | 31-10-2026 | Work Order (WO) | **Bugfix** | Sinkronisasi QTY on hand Work Order ke saldo akhir per item_id dan gudang produksi terkait. | **Done** |
-| 29 | 31-10-2026 | Work Order (WO) | **Bugfix** | Perbaikan pemanggilan method `getData` pada `lists_detail` dan filter WO aktif non-sampel di dashboard. | **Done** |
-| 30 | 31-10-2026 | Barang Keluar (BTK) | **Maintenance** | Penguncian tombol approve jika stok lot gudang fisik kurang, serta arahan interaktif ke mutasi barang. | **Done** |
-| 31 | 31-10-2026 | Item Transfer | **Maintenance** | Penguncian tombol approve jika stok lot gudang asal kurang, serta arahan interaktif ke mutasi barang. | **Done** |
-| 32 | 01-11-2026 | Laporan Persediaan | **Bugfix** | Penyempurnaan validasi stok fisik untuk barang non-lot (`-`) pada Barang Keluar dan Item Transfer. | **Done** |
-| 33 | 01-11-2026 | Laporan Persediaan | **Bugfix** | Pembatasan input tanggal transaksi maksimal hari ini dan filter pembukuan persediaan tidak melebihi bulan berjalan. | **Done** |
-| 34 | 02-11-2026 | Laporan Persediaan | **Bugfix** | Pencegahan carry forward persediaan melompat ke bulan masa depan dan penguncian saldo mutasi persediaan bulanan. | **Done** |
-| 35 | 06-11-2026 | Laporan Persediaan | **Bugfix** | Penegakan parameter nomor lot dan satuan kemasan (pack) pada pengecekan stok fisik di Transfer & Barang Keluar. | **Done** |
-| 36 | 09-11-2026 | Laporan Persediaan | **Bugfix** | Dukungan validasi total stok gudang untuk barang non-lot dan multi-pack pada Item Transfer dan Barang Keluar. | **Done** |
-| 37 | 10-11-2026 | Work Order & Produksi | **Bugfix** | Menyembunyikan baris varian bernilai qty 0 yang dibatalkan pada lembar kerja WO/Produksi serta penegakan validasi gudang pada lot_id. | **Done** |
-| 38 | 11-11-2026 | Laporan Persediaan | **Bugfix** | Perhitungan saldo mutasi `trans_barang_balances` live langsung dari database (bukan nilai frontend `qty_exist`), perbaikan join edit transfer, dan filter approved BTK pada rendemen. | **Done** |
-| 39 | 11-11-2026 | Laporan Persediaan | **Bugfix** | Perhitungan live saldo barang non-lot dan pemasangan non-negative guard pada ledger balances. | **Done** |
-| 40 | 11-11-2026 | Barang Keluar (BTK) | **Bugfix** | Pembungkusan agregasi `getDataByWalkorder` ke derived table agar kompatibel dengan strict mode PostgreSQL. | **Done** |
-| 41 | 12-11-2026 | Item Transfer | **Bugfix** | Unifikasi katalog item picker dengan Laporan Persediaan dan penegakan pencocokan nomor lot spesifik per kemasan saat approval. | **Done** |
-| 42 | 13-11-2026 | Item Transfer | **Bugfix** | Penambahan validasi mandiri (*self-healing stock verification*) terhadap `trans_barang_history` saat approval transfer. | **Done** |
-| 43 | 13-11-2026 | Item Transfer | **Bugfix** | Eliminasi join redundan `trans_lots` pada fungsi `getDataPrint` untuk menghilangkan duplikasi baris barang pada Surat Jalan. | **Done** |
-| 44 | 17-11-2026 | Barang Masuk (BTM) | **Bugfix** | Perbaikan query log fatal `abx.created_at does not exist` menjadi `head.created_at`, serta upgrade validasi scanner barcode cerdas yang kontekstual mengidentifikasi ketidaksesuaian kombinasi Proses dan CMT. | **Done** |
-| 45 | 20-11-2026 | Transaksi & Routing | **Bugfix** | Perbaikan routing dan handling parameter token terenkripsi pada link URL detail pengeluaran barang (outgoing-goods) untuk mencegah unhandled exceptions. | **Done** |
-| 46 | 22-11-2026 | Infrastruktur Server | **Maintenance** | Rekonfigurasi ownership dan hak akses direktori penyimpanan session/cache `/pejuang/production/writable` di server web LiteSpeed (LSPHP 8.3) untuk mencegah HTTP 500 error pada saat user mengakses form transaksi. | **Done** |
-| 47 | 23-11-2026 | Produksi & Walk Order | **Bugfix** | Penguncian relasi transaksi Transfer (TRF), BTK, dan BTM hanya membaca dokumen approved (`status = 1 AND active = 1`) pada modal pop-up Form Produksi, laporan laba kotor, dan rekapitulasi monitoring, mencegah transaksi yang dibatalkan ikut terhitung ke riwayat produksi. | **Done** |
-| 48 | 23-11-2026 | Database Engine | **Maintenance** | Penghapusan constraint `chk_trans_barang_balances_non_negative` pada tabel `trans_barang_balances` di database PostgreSQL produksi & lokal untuk mendukung integritas mutasi riil ketika terjadi stok minus. | **Done** |
+| No | Tanggal | Bagian / Menu | Kategori | Deskripsi Penyesuaian & Pemeliharaan Sistem | Status |
+|:--:|:-------:|:--------------|:--------:|:--------------------------------------------|:------:|
+| 1 | 29-09-2026 | Pembelian (Penerimaan Barang) | **Perbaikan** | Perbaikan pembulatan desimal kuantitas dan harga saat penerimaan barang pembelian agar hitungan rupiah tidak selisih koma. | **Selesai** |
+| 2 | 29-09-2026 | Pelunasan Konsumen | **Perbaikan** | Perapihan data bukti pelunasan konsumen agar tersimpan lengkap dan tidak hilang saat dicari kembali di laporan. | **Selesai** |
+| 3 | 30-09-2026 | Pesanan Penjualan (SO) | **Perbaikan** | Penguncian pesanan penjualan yang sudah disetujui agar tidak bisa diubah sepihak, serta sinkronisasi otomatis ke status pengerjaan rajut. | **Selesai** |
+| 4 | 30-09-2026 | Surat Jalan (DO) | **Perbaikan** | Penyesuaian Surat Jalan pengiriman kain agar rincian varian warna dan nomor lot gulungan sesuai dengan fisik yang dikirim. | **Selesai** |
+| 5 | 01-10-2026 | Distribusi Antar Gudang | **Perbaikan** | Perbaikan pencatatan transfer antar gudang agar saldo stok tidak terpotong dua kali saat surat transfer diedit ulang. | **Selesai** |
+| 6 | 01-10-2026 | Penerimaan Hasil Rajut (BTM) | **Perbaikan** | Penanganan nomor lot kosong dengan penetapan tanda strip (-) otomatis agar kartu stok tetap rapi dan tidak error. | **Selesai** |
+| 7 | 02-10-2026 | Laporan Persediaan | **Pemeliharaan** | Pencocokan kartu stok dengan kondisi fisik barang di gudang sebelum penetapan batas tutup buku. | **Selesai** |
+| 8 | 06-10-2026 | Pesanan Produksi (WO) | **Perbaikan** | Perbaikan cetakan lembar kerja rajut (WO) agar rincian kebutuhan jenis dan berat benang tercetak jelas untuk operator mesin. | **Selesai** |
+| 9 | 07-10-2026 | Distribusi Antar Gudang | **Perbaikan** | Pembatasan jumlah pengiriman bahan agar tidak melebihi alokasi yang sudah disetujui di pesanan rajut. | **Selesai** |
+| 10 | 08-10-2026 | Pengeluaran Bahan Rajut (BTK) | **Perbaikan** | Penyesuaian form pengeluaran benang rajut agar selalu terhubung ke nomor pesanan rajut yang benar. | **Selesai** |
+| 11 | 10-10-2026 | Laporan Persediaan | **Pemeriksaan** | Pemeriksaan menyeluruh buku pencatatan persediaan barang agar selalu cocok dengan rekapan stok bulanan. | **Selesai** |
+| 12 | 12-10-2026 | Keuangan & Kas | **Perbaikan** | Perbaikan rumus perhitungan pajak PPh dan pembulatan pada buku kas harian operasional pabrik. | **Selesai** |
+| 13 | 13-10-2026 | Surat Jalan (DO) | **Perbaikan** | Pengembalian sisa kuota pesanan pelanggan secara otomatis saat Surat Jalan pengiriman dibatalkan. | **Selesai** |
+| 14 | 14-10-2026 | Nota Pembelian Supplier | **Perbaikan** | Pembatalan otomatis penerimaan barang di gudang jika nota pembelian dari supplier dibatalkan. | **Selesai** |
+| 15 | 15-10-2026 | Distribusi Antar Gudang | **Perbaikan** | Pencegahan data transfer tersimpan dobel jika staf gudang tidak sengaja mengklik tombol simpan berkali-kali. | **Selesai** |
+| 16 | 17-10-2026 | Laporan Persediaan | **Perbaikan** | Perbaikan filter laporan stok agar barang yang sedang dalam perjalanan antar gudang tetap terpantau jelas. | **Selesai** |
+| 17 | 18-10-2026 | Kwitansi Pembayaran | **Perbaikan** | Perbaikan cetakan kwitansi pelunasan konsumen dengan format angka rupiah standar yang rapi. | **Selesai** |
+| 18 | 19-10-2026 | Pengeluaran Bahan Rajut (BTK) | **Perbaikan** | Perbaikan kendala saat pemilihan lot barang pada draf pengeluaran bahan rajut agar form berjalan lancar. | **Selesai** |
+| 19 | 21-10-2026 | SDM & Penggajian | **Perbaikan** | Penyesuaian rumus insentif operator rajut berdasarkan panjang meter kain yang dihasilkan mesin. | **Selesai** |
+| 20 | 22-10-2026 | Penerimaan Kain Jadi (BTM) | **Perbaikan** | Pencatatan nomor surat jalan vendor CMT pada bukti terima kain rajut agar mudah dilacak dan dicocokkan. | **Selesai** |
+| 21 | 23-10-2026 | Distribusi Antar Gudang | **Perbaikan** | Perapihan urutan tanggal pada Surat Jalan transfer agar dokumen tercetak berurutan sesuai waktu pengiriman. | **Selesai** |
+| 22 | 27-10-2026 | Laporan Persediaan | **Pemeliharaan** | Pembersihan spasi tersembunyi pada nomor lot barang agar nama lot seragam dan mudah dicari di sistem. | **Selesai** |
+| 23 | 29-10-2026 | Jaringan & Server | **Jaringan** | Penyediaan jalur akses langsung via IP server saat jaringan internet atau nama domain kantor mengalami kendala. | **Selesai** |
+| 24 | 29-10-2026 | Laporan Persediaan | **Pemeliharaan** | Pembersihan menyeluruh format nomor lot pada barang masuk dan keluar agar pencarian stok lebih cepat. | **Selesai** |
+| 25 | 29-10-2026 | Pengeluaran Bahan Rajut (BTK) | **Perbaikan** | Pengaturan agar daftar pilihan lot hanya memunculkan barang yang masih ada stoknya saat admin mengeluarkan bahan. | **Selesai** |
+| 26 | 30-10-2026 | Distribusi Antar Gudang | **Perbaikan** | Penyelarasan pencocokan sisa pesanan rajut dengan stok lot yang ada agar pengiriman bahan tepat sasaran. | **Selesai** |
+| 27 | 30-10-2026 | Pelunasan Konsumen | **Perbaikan** | Perlindungan klik ganda saat membatalkan kwitansi pembayaran dan pengembalian status nota secara aman. | **Selesai** |
+| 28 | 31-10-2026 | Pesanan Produksi (WO) | **Perbaikan** | Penyesuaian sisa kebutuhan bahan pada pesanan rajut agar cocok dengan sisa stok fisik di gudang produksi. | **Selesai** |
+| 29 | 31-10-2026 | Pesanan Produksi (WO) | **Perbaikan** | Perbaikan daftar rincian pesanan rajut di dashboard agar memisahkan pesanan produksi massal dari pesanan sampel. | **Selesai** |
+| 30 | 31-10-2026 | Pengeluaran Bahan Rajut (BTK) | **Pemeliharaan** | Penguncian tombol persetujuan pengeluaran bahan jika stok fisik kurang, disertai panduan cek mutasi barang. | **Selesai** |
+| 31 | 31-10-2026 | Distribusi Antar Gudang | **Pemeliharaan** | Penguncian tombol persetujuan transfer jika stok gudang asal kurang, mencegah barang terkirim tanpa stok riil. | **Selesai** |
+| 32 | 01-11-2026 | Laporan Persediaan | **Perbaikan** | Penyempurnaan pemeriksaan stok untuk barang tanpa nomor lot pada form pengeluaran dan transfer barang. | **Selesai** |
+| 33 | 01-11-2026 | Laporan Persediaan | **Perbaikan** | Pembatasan tanggal transaksi agar tidak bisa menginput tanggal masa depan dan mengunci laporan bulan berjalan. | **Selesai** |
+| 34 | 02-11-2026 | Laporan Persediaan | **Perbaikan** | Penguncian sistem agar sisa stok akhir bulan tidak melompat ke bulan yang belum berjalan. | **Selesai** |
+| 35 | 06-11-2026 | Laporan Persediaan | **Perbaikan** | Pengetatan pemeriksaan satuan kemasan (karung/pack) dan nomor lot saat staf gudang memproses bahan. | **Selesai** |
+| 36 | 09-11-2026 | Laporan Persediaan | **Perbaikan** | Dukungan pengecekan total stok gudang untuk barang kemasan campur agar admin mengetahui total berat riil. | **Selesai** |
+| 37 | 10-11-2026 | Pesanan Produksi (WO) | **Perbaikan** | Menyembunyikan varian kain bernilai nol yang sudah dibatalkan agar lembar kerja operator rajut bersih dan jelas. | **Selesai** |
+| 38 | 11-11-2026 | Laporan Persediaan | **Perbaikan** | Sinkronisasi perhitungan saldo mutasi langsung dari buku persediaan dan pemisahan pengeluaran bahan sah pada rendemen. | **Selesai** |
+| 39 | 11-11-2026 | Laporan Persediaan | **Perbaikan** | Perhitungan langsung sisa stok barang non-lot di gudang agar kartu stok selalu terkini. | **Selesai** |
+| 40 | 11-11-2026 | Pengeluaran Bahan Rajut (BTK) | **Perbaikan** | Optimalisasi pengelompokan data pengeluaran bahan rajut agar laporan pemakaian bahan tampil cepat dan tidak lemot. | **Selesai** |
+| 41 | 12-11-2026 | Distribusi Antar Gudang | **Perbaikan** | Penyeragaman daftar pilihan barang di form transfer dengan Laporan Persediaan agar tidak ada salah pilih barang. | **Selesai** |
+| 42 | 13-11-2026 | Distribusi Antar Gudang | **Perbaikan** | Pengecekan otomatis riwayat stok sebelum transfer disetujui, memastikan stok fisik benar-benar ada di gudang. | **Selesai** |
+| 43 | 13-11-2026 | Distribusi Antar Gudang | **Perbaikan** | Perbaikan cetakan Surat Jalan pengiriman agar baris nama barang tidak tercetak dobel atau berulang. | **Selesai** |
+| 44 | 17-11-2026 | Penerimaan Kain Jadi (BTM) | **Perbaikan** | Peningkatan validasi scanner barcode penerimaan kain, otomatis menolak jika kombinasi jenis proses dan vendor CMT keliru. | **Selesai** |
+| 45 | 20-11-2026 | Pengeluaran Barang | **Perbaikan** | Perbaikan tautan detail surat pengeluaran barang agar bisa dibuka lancar oleh admin tanpa pesan error. | **Selesai** |
+| 46 | 22-11-2026 | Kestabilan Server Pabrik | **Pemeliharaan** | Pengaturan izin folder sistem di server web agar admin pabrik tidak mengalami error saat membuka dan menyimpan form transaksi. | **Selesai** |
+| 47 | 23-11-2026 | Laporan Hasil Produksi | **Perbaikan** | Penguncian riwayat produksi dan laporan laba kotor agar hanya menghitung dokumen yang resmi disetujui pimpinan. | **Selesai** |
+| 48 | 23-11-2026 | Penyelarasan Data Gudang | **Pemeliharaan** | Pengaturan database server untuk mendukung pencatatan stok minus apa adanya jika terjadi selisih fisik di pabrik. | **Selesai** |
 
 ---
-*Dokumen Lampiran resmi pemeliharaan sistem & integritas data Aplikasi PT Citra Jaya Knitting (28 Sept – 27 Nov 2026)*
+*Dokumen Lampiran resmi pemeliharaan & penyesuaian operasional Aplikasi PT Citra Jaya Knitting (28 Sept – 27 Nov 2026)*

@@ -1,6 +1,6 @@
 # LAPORAN KEGIATAN PENGEMBANGAN APLIKASI
 ## PT CITRA JAYA KNITTING
-**Periode:** 28 September 2026 – 27 November 2026  
+**Periode:** 28 September 2026 – 26 November 2026  
 **Aplikasi:** Aplikasi Citra Jaya Knitting (ERP) | **Pengembang:** Dany Triyatna | **Status Pekerjaan:** 100% Selesai
 
 ---
@@ -54,7 +54,7 @@
 # DOKUMEN LAMPIRAN
 ## DAFTAR PEMELIHARAAN SISTEM & PENYESUAIAN OPERASIONAL
 ### APLIKASI PT CITRA JAYA KNITTING (ERP)
-**Periode:** 28 September 2026 – 27 November 2026  
+**Periode:** 28 September 2026 – 26 November 2026  
 **Kategori:** Pemeliharaan & Penyesuaian Sistem | **Komitmen Layanan:** Garansi Aplikasi Bebas Biaya (Rp 0,-) | **Total Volume:** 48 Poin Kegiatan | **Status:** 100% Selesai
 
 ---
@@ -111,4 +111,4 @@
 | 48 | 23-11-2026 | Penyelarasan Data Gudang | **Pemeliharaan** | Pengaturan database server untuk mendukung pencatatan stok minus apa adanya jika terjadi selisih fisik di pabrik. | **Selesai** |
 
 ---
-*Dokumen Lampiran resmi pemeliharaan & penyesuaian operasional Aplikasi PT Citra Jaya Knitting (28 Sept – 27 Nov 2026)*
+*Dokumen Lampiran resmi pemeliharaan & penyesuaian operasional Aplikasi PT Citra Jaya Knitting (28 Sept – 26 Nov 2026)*

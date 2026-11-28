@@ -192,7 +192,34 @@ class LaporanPersediaan extends BaseController
         $tahun = $this->request->getGet('tahun');
         $bulan = $this->request->getGet('bulan');
 
-        $resUpdate = $this->mLaporan->updateDataHistory($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        // Jika filter_gudang kosong / 'all' / 'Semua Gudang', loop semua gudang yang aktif/relevan pada periode ini
+        if (empty($filter_gudang) || $filter_gudang === 'all') {
+            $db = \Config\Database::connect();
+            $listGudang = $db->query("
+                SELECT id FROM ref_gudang 
+                WHERE active = 1 
+                  AND (
+                      id IN (
+                          SELECT id_gudang_asal FROM trans_barang WHERE id_gudang_asal IS NOT NULL AND EXTRACT(YEAR FROM tanggal) = ? AND EXTRACT(MONTH FROM tanggal) = ?
+                          UNION
+                          SELECT id_gudang_tujuan FROM trans_barang WHERE id_gudang_tujuan IS NOT NULL AND EXTRACT(YEAR FROM tanggal) = ? AND EXTRACT(MONTH FROM tanggal) = ?
+                          UNION
+                          SELECT id_gudang FROM trans_barang_history WHERE (year * 100 + month) >= 202606
+                      )
+                  )
+                ORDER BY id ASC
+            ", [$tahun, $bulan, $tahun, $bulan])->getResult();
+
+            if (empty($listGudang)) {
+                $listGudang = $db->query("SELECT id FROM ref_gudang WHERE active = 1 ORDER BY id ASC")->getResult();
+            }
+
+            foreach ($listGudang as $g) {
+                $this->mLaporan->updateDataHistory($idJenisBarang, (int)$g->id, $tahun, $bulan);
+            }
+        } else {
+            $this->mLaporan->updateDataHistory($idJenisBarang, $filter_gudang, $tahun, $bulan);
+        }
         // dd($resUpdate);
 
         // $resData = $this->mLaporan->getLaporanPersediaan($idJenisBarang, $filter_gudang, $tahun, $bulan);

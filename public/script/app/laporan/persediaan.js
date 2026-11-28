@@ -332,18 +332,35 @@ function getDataLaporan() {
 }
 
 $("#updateData").click(function () {
-  $(".preloader").css("opacity", "0.7").show();
-  if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "" || $('#filter_gudang').val() == "") {
+  if ($("#filter_tahun").val() == "" || $("#filter_bulan").val() == "") {
     Swal.fire({
       title: 'Warning',
-      text: 'Tahun,Bulan & Gudang harus dipilih',
+      text: 'Tahun & Bulan harus dipilih terlebih dahulu',
       icon: 'warning',
-    })
-    $(".preloader").hide().css("opacity", "1");
-    return false
+    });
+    return false;
   }
-  getUpdateDataLaporan()
 
+  let isAllGudang = ($('#filter_gudang').val() == "");
+  let namaGudang = isAllGudang ? "SEMUA GUDANG" : $('#filter_gudang option:selected').text();
+  let tahun = $("#filter_tahun").val();
+  let bulan = $("#filter_bulan option:selected").text();
+
+  Swal.fire({
+    title: 'Konfirmasi Update Data',
+    text: `Perbarui snapshot data persediaan untuk ${namaGudang} pada periode ${bulan} ${tahun}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#007bff',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, Perbarui!',
+    cancelButtonText: 'Batal'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $(".preloader").css("opacity", "0.7").show();
+      getUpdateDataLaporan();
+    }
+  });
 });
 
 function getUpdateDataLaporan() {
@@ -353,17 +370,29 @@ function getUpdateDataLaporan() {
     dataType: 'json',
     success: function (data) {
 
-      dtList.setData(data.data)
+      dtList.setData(data.data);
 
       setTimeout(() => {
-        dtList.redraw(true)
+        dtList.redraw(true);
       }, 500);
 
       $(".preloader").hide().css("opacity", "1");
+      Swal.fire({
+        title: 'Berhasil',
+        text: 'Data persediaan berhasil disinkronkan & diperbarui.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
     },
     error: function (xhr, status, error) {
       console.error('Error fetching data:', error);
       $(".preloader").hide().css("opacity", "1");
+      Swal.fire({
+        title: 'Error',
+        text: 'Terjadi kesalahan saat memperbarui data persediaan.',
+        icon: 'error'
+      });
     }
   });
 }

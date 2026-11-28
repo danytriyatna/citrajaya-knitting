@@ -2336,12 +2336,14 @@ class ItemTransferModel extends \App\Models\PrModel
         // Filter periode tanggal HANYA untuk pemilihan nomor SO / Sample yang tampil
         if (!empty($from_date) && !empty($to_date)) {
             $subTrf->groupStart()
-                ->where('tso.tgl_transaksi >=', $from_date)
-                ->where('tso.tgl_transaksi <=', $to_date)
-            ->groupEnd()
-            ->orGroupStart()
-                ->where('ts.tgl_transaksi >=', $from_date)
-                ->where('ts.tgl_transaksi <=', $to_date)
+                ->groupStart()
+                    ->where('tso.tgl_transaksi >=', $from_date)
+                    ->where('tso.tgl_transaksi <=', $to_date)
+                ->groupEnd()
+                ->orGroupStart()
+                    ->where('ts.tgl_transaksi >=', $from_date)
+                    ->where('ts.tgl_transaksi <=', $to_date)
+                ->groupEnd()
             ->groupEnd();
         }
 
@@ -2447,6 +2449,7 @@ class ItemTransferModel extends \App\Models\PrModel
                 AND m.color = t.color
                 AND m.kode_ukuran = t.kode_ukuran
             ORDER BY 
+                t.id_perusahaan ASC,
                 t.nama_cmt ASC,
                 t.nama_proses ASC,
                 t.kode_sales_order ASC,

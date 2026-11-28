@@ -2282,11 +2282,11 @@ class ItemTransfer extends BaseController
             ],
         ];
 
-        // Kelompokkan data per CMT & Proses
+        // Kelompokkan data per CMT, Proses & Perusahaan
         $grouped = [];
         if (!empty($results)) {
             foreach ($results as $r) {
-                $groupKey = ($r->nama_cmt ?? '-') . '||' . ($r->nama_proses ?? '-');
+                $groupKey = ($r->id_perusahaan ?? 1) . '||' . ($r->nama_cmt ?? '-') . '||' . ($r->nama_proses ?? '-');
                 $grouped[$groupKey][] = $r;
             }
         }
